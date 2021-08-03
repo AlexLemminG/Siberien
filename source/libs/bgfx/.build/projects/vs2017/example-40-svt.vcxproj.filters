@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="examples">
+      <UniqueIdentifier>{84D830B1-70A5-8BBC-99BE-796485EAC04A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\40-svt">
+      <UniqueIdentifier>{2EF078FF-9A7B-E6C3-A38C-69B80F9742C4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\runtime">
+      <UniqueIdentifier>{642DBE38-5026-DD8A-7958-C20F65B0BC96}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\examples\runtime\iOS-Info.plist">
+      <Filter>examples\runtime</Filter>
+    </None>
+    <None Include="..\..\..\examples\runtime\tvOS-Info.plist">
+      <Filter>examples\runtime</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\examples\40-svt\vt.h">
+      <Filter>examples\40-svt</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\examples\40-svt\svt.cpp">
+      <Filter>examples\40-svt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\40-svt\vt.cpp">
+      <Filter>examples\40-svt</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
