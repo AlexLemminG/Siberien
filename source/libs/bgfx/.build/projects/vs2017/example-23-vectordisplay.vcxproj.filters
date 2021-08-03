@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="examples">
+      <UniqueIdentifier>{84D830B1-70A5-8BBC-99BE-796485EAC04A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\23-vectordisplay">
+      <UniqueIdentifier>{BB9762D5-275A-965F-700A-25ECDC0B6F3D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\runtime">
+      <UniqueIdentifier>{642DBE38-5026-DD8A-7958-C20F65B0BC96}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\examples\runtime\iOS-Info.plist">
+      <Filter>examples\runtime</Filter>
+    </None>
+    <None Include="..\..\..\examples\runtime\tvOS-Info.plist">
+      <Filter>examples\runtime</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\examples\23-vectordisplay\vectordisplay.h">
+      <Filter>examples\23-vectordisplay</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\examples\23-vectordisplay\main.cpp">
+      <Filter>examples\23-vectordisplay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\23-vectordisplay\vectordisplay.cpp">
+      <Filter>examples\23-vectordisplay</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
