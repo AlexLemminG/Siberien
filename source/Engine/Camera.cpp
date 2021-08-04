@@ -1,3 +1,5 @@
 #include "Camera.h"
 
-Camera* Camera::mainCamera = nullptr;
+std::shared_ptr<Camera> Camera::mainCamera = nullptr;
+
+DECLARE_ASSET(Camera);

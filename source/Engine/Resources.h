@@ -16,14 +16,12 @@ public:
 
 
 class Asset {
-public:
-	//TODO AssetLoadingFactory or some shit
-	virtual bool Load(AssetLoadingContext& context) = 0;
+
 };
 
 class TextAsset : public Asset {
 public:
-	bool Load(AssetLoadingContext& context) override {
+	bool Load(AssetLoadingContext& context) {
 		yaml = YAML::Load(*(context.inputFile));
 		return yaml.IsDefined();
 	}
@@ -37,9 +35,17 @@ class TextureAsset : public Asset {
 
 };
 
+class AssetDatabase;
+
+class AssetImporter {
+public:
+	virtual std::shared_ptr<Asset> Import(AssetDatabase& database, const std::string& path) = 0;
+};
+
 class MeshAsset : public Asset {
 
 };
+
 class AssetDatabase {
 public:
 	bool Init() {
@@ -47,75 +53,29 @@ public:
 
 		return true;
 	}
+
 	void Term() {}
+
+	std::shared_ptr<TextAsset> LoadTextAsset(std::string path);
+
 
 	template<typename AssetType>
 	std::shared_ptr<AssetType> LoadByPath(std::string path) {
-		auto it = assets.find(path);
-
-		if (it != assets.end()) {
-			return std::static_pointer_cast<AssetType>(it->second);
-		}
-		if (TryLoad(path)) {
-			it = assets.find(path);
-		}
-
-		if (it != assets.end()) {
-			return std::static_pointer_cast<AssetType>(it->second);
-		}
-		return nullptr;
+		return std::static_pointer_cast<AssetType>(LoadByPath(path));
 	}
+
+	std::shared_ptr<Asset> LoadByPath(std::string path);
+
+	static void RegisterImporter(std::string assetType, std::unique_ptr<AssetImporter>&& importer);
 
 private:
 	std::string assetsFolderPrefix = "assets\\";
 
-	std::string GetFileName(std::string path) {
-		auto lastSlash = path.find_last_of('\\');
-		if (lastSlash == -1) {
-			return "";
-		}
-		else {
-			return path.substr(lastSlash + 1, path.length() - lastSlash - 1);
-		}
-	}
-	std::string GetFileExtension(std::string path) {
-		auto name = GetFileName(path);
-		if (name == "") {
-			return "";
-		}
-		auto lastDot = path.find_last_of('.');
-		if (lastDot == -1) {
-			return "";
-		}
-		else {
-			return path.substr(lastDot + 1, path.length() - lastDot - 1);
-		}
-	}
-
-	bool TryLoad(std::string path) {
-		auto fullPath = assetsFolderPrefix + path;
-		std::ifstream input(fullPath);
-		if (!input) {
-			//TODO
-			//ASSERT(false);
-			return false;
-		}
-
-		AssetLoadingContext context;
-		context.inputFile = &input;
-
-		auto ext = GetFileExtension(fullPath);
-		if (ext == "asset") {
-			auto textAsset = std::make_shared<TextAsset>();
-			if (textAsset->Load(context)) {
-				assets[path] = textAsset;
-				return true;
-			}
-			return false;
-		}
-		//ASSERT(false);
-		return false;
-	}
+	std::string GetFileName(std::string path);
+	std::string GetFileExtension(std::string path);
 
 	std::unordered_map<std::string, std::shared_ptr<Asset>> assets;
+	std::unordered_map<std::string, std::shared_ptr<TextAsset>> textAssets;
+
+	static std::unordered_map<std::string, std::unique_ptr<AssetImporter>>& GetAssetImporters();
 };

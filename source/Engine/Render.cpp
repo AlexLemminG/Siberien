@@ -24,8 +24,10 @@ bool Render::Init()
 
 	int width = CfgGetInt("screenWidth");
 	int height = CfgGetInt("screenHeight");
+	int posX = CfgGetInt("screenPosX");
+	int posY = CfgGetInt("screenPosY");
 	//Create window
-	window = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
+	window = SDL_CreateWindow("SDL Tutorial", posX, posY, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	if (window == NULL)
 	{
 		printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
@@ -58,7 +60,7 @@ bool Render::Init()
 
 void Render::Draw()
 {
-	Camera* camera = Camera::GetMain();
+	auto camera = Camera::GetMain();
 	if (camera == nullptr) {
 		bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Colors::black.ToIntRGBA(), 1.0f, 0);
 	}
@@ -78,8 +80,24 @@ void Render::Draw()
 
 void Render::Term()
 {
+	bgfx::shutdown();
+
+	if (window != nullptr) {
+		int width;
+		int height;
+		SDL_GetWindowSize(window, &width, &height);
+		CfgSetInt("screenWidth", width);
+		CfgSetInt("screenHeight", height);
+
+		int posX;
+		int posY;
+		SDL_GetWindowPosition(window, &posX, &posY);
+		CfgSetInt("screenPosX", posX);
+		CfgSetInt("screenPosY", posY);
+	
+		SDL_DestroyWindow(window);
+	}
 	//Destroy window
-	SDL_DestroyWindow(window);
 
 	//Quit SDL subsystems
 	SDL_Quit();

@@ -3,7 +3,11 @@
 #include "yaml-cpp/yaml.h"
 //#include "Math.h"
 
-extern YAML::Node config;
-
 int CfgGetInt(std::string name);
-//Color CfgGetColor(std::string name);
+void CfgSetInt(std::string name, int i);
+
+class Config {
+public:
+	bool Init();
+	void Term();
+};

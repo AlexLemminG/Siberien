@@ -14,11 +14,17 @@
 //#include <bgfx_utils.h>
 
 
-YAML::Node config;
 
 int main(int argc, char* argv[]) {
+	//TODO no sins here please
+	start:
+	bool needReload = false;
 
-	config = YAML::LoadFile("config.yaml");
+	Config config;
+
+	if (!config.Init()) {
+		return -1;
+	}
 
 	Render render;
 
@@ -32,10 +38,8 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	auto cameraAsset = assets.LoadByPath<TextAsset>("camera.asset");
-	Camera c;
-	c.Deserialize(SerializedObject(*cameraAsset));
-	Camera::SetMain(&c);
+	auto camera = assets.LoadByPath<Camera>("camera.asset");
+	Camera::SetMain(camera);
 
 	bool quit = false;
 	while (!quit) {
@@ -45,6 +49,12 @@ int main(int argc, char* argv[]) {
 			{
 				quit = true;
 			}
+			if (e.type == SDL_KEYDOWN) {
+				if (e.key.keysym.scancode == SDL_SCANCODE_F5) {
+					needReload = true;
+					quit = true;
+				}
+			}
 		}
 		render.Draw();
 	}
@@ -53,6 +63,11 @@ int main(int argc, char* argv[]) {
 
 	assets.Term();
 
+	config.Term();
+
+	if (needReload) {
+		goto start;
+	}
 
 	return 0;
 }

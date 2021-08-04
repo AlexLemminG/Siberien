@@ -22,7 +22,7 @@ public:
 	}
 
 	int AsInt() const { return yamlNode.as<unsigned int>(); }
-	int AsFloat() const { return yamlNode.as<float>();  }
+	int AsFloat() const { return yamlNode.as<float>(); }
 
 	const SerializedObject Child(const std::string& name) const {
 		return SerializedObject(yamlNode[name]);
@@ -74,6 +74,31 @@ void Deserialize(const SerializedObject& serializedObject){
 
 #define REFLECT_END() \
 };
+
+template <typename ImporterType>
+class AssetImporterRegistrator {
+public:
+	AssetImporterRegistrator(std::string typeName) {
+		AssetDatabase::RegisterImporter(typeName, std::make_unique<ImporterType>());
+	}
+};
+
+template <typename Type>
+class SerializedObjectImporter : public AssetImporter {
+	std::shared_ptr<Asset> Import(AssetDatabase& database, const std::string& path) override {
+		auto textAsset = database.LoadTextAsset(path);
+		if (textAsset == nullptr) {
+			return nullptr;
+		}
+		std::unique_ptr<Type> asset = std::make_unique<Type>();
+		auto serializedObject = SerializedObject(*textAsset);
+		asset->Deserialize(serializedObject);
+		return std::shared_ptr<Asset>(std::move(asset));
+	}
+};
+
+#define DECLARE_ASSET(className) \
+static AssetImporterRegistrator<SerializedObjectImporter<##className>> AssetImporterRegistrator_##className{#className};
 
 class TestMiniClass {
 	float f;
