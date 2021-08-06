@@ -1,0 +1,9 @@
+GameObject:
+  components:
+  - $MeshRenderer
+  - camera.asset
+MeshRenderer:
+  mesh: hero.glb$hero_mesh
+  material: $Material
+Material:
+  color: 0xff0000ff

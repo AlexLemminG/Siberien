@@ -2,4 +2,4 @@
 
 std::shared_ptr<Camera> Camera::mainCamera = nullptr;
 
-DECLARE_ASSET(Camera);
+DECLARE_TEXT_ASSET(Camera);

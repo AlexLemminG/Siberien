@@ -13,6 +13,12 @@
       <Optimization>MaxSpeed</Optimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
+    <Lib>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+    </Lib>
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>

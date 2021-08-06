@@ -11,6 +11,8 @@
 #include "Resources.h"
 #include "Serialization.h"
 #include "Camera.h"
+#include "GameObject.h"
+#include "MeshRenderer.h"
 //#include <bgfx_utils.h>
 
 
@@ -40,6 +42,8 @@ int main(int argc, char* argv[]) {
 
 	auto camera = assets.LoadByPath<Camera>("camera.asset");
 	Camera::SetMain(camera);
+
+	auto gameObject = assets.LoadByPath<GameObject>("gameObject.asset");
 
 	bool quit = false;
 	while (!quit) {

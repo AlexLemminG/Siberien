@@ -1,2 +1,2 @@
-__type: Camera
-clearColor: 0xf0ddddff
+Camera:
+  clearColor: 0xf0ddddff

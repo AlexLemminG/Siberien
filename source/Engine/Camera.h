@@ -3,8 +3,9 @@
 #include "Math.h"
 #include "Serialization.h"
 #include "Resources.h"
+#include "Component.h"
 
-class Camera :public Asset {
+class Camera :public Component{
 public:
 	Color GetClearColor() { return clearColor; }
 
