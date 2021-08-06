@@ -45,6 +45,12 @@ int main(int argc, char* argv[]) {
 
 	auto gameObject = assets.LoadByPath<GameObject>("gameObject.asset");
 
+	if (gameObject) {
+		for (auto component : gameObject->components) {
+			component->OnEnable();
+		}
+	}
+
 	bool quit = false;
 	while (!quit) {
 		SDL_Event e;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Math.h"
+#include "MeshRenderer.h"
 
 class SDL_Window;
 class SDL_Surface;
@@ -12,6 +13,8 @@ public:
 	void Term();
 
 private:
+	void DrawMesh(MeshRenderer* renderer);
+	
 	//The window we'll be rendering to
 	SDL_Window* window = nullptr;
 

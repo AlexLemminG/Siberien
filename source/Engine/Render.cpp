@@ -10,7 +10,8 @@
 #include <SDL_syswm.h>
 #include <bgfx/platform.h>
 #include "Camera.h"
-
+#include "MeshRenderer.h"
+#include "bgfx/bgfx.h"
 
 
 bool Render::Init()
@@ -55,6 +56,8 @@ bool Render::Init()
 
 	bgfx::setViewRect(0, 0, 0, width, height);
 
+	InitVertexLayouts();
+
 	return true;
 }
 
@@ -74,6 +77,9 @@ void Render::Draw()
 		bgfx::dbgTextPrintf(1, 1, 0x0f, "NO CAMERA");
 	}
 
+	for (auto mesh : MeshRenderer::enabledMeshRenderers) {
+		DrawMesh(mesh);
+	}
 
 	bgfx::frame();
 }
@@ -94,11 +100,38 @@ void Render::Term()
 		SDL_GetWindowPosition(window, &posX, &posY);
 		CfgSetInt("screenPosX", posX);
 		CfgSetInt("screenPosY", posY);
-	
+
 		SDL_DestroyWindow(window);
 	}
 	//Destroy window
 
 	//Quit SDL subsystems
 	SDL_Quit();
+}
+
+void Render::DrawMesh(MeshRenderer* renderer) {
+	if (!renderer->mesh) {
+		return;
+	}
+	//TODO wtf is this
+	uint64_t state = 0
+		| BGFX_STATE_WRITE_R
+		| BGFX_STATE_WRITE_G
+		| BGFX_STATE_WRITE_B
+		| BGFX_STATE_WRITE_A
+		| BGFX_STATE_WRITE_Z
+		| BGFX_STATE_DEPTH_TEST_LESS
+		| BGFX_STATE_CULL_CW
+		| BGFX_STATE_MSAA
+		| BGFX_STATE_PT_TRISTRIP
+		;
+
+	bgfx::setTransform(&renderer->worldMatrix[0]);
+
+	bgfx::setVertexBuffer(0, renderer->mesh->vertexBuffer);
+	bgfx::setIndexBuffer(renderer->mesh->indexBuffer);
+
+	bgfx::setState(state);
+
+	bgfx::submit(0, bgfx::ProgramHandle{});
 }

@@ -5,12 +5,15 @@
 #include <memory>
 #include <algorithm>
 #include "Math.h"
+#include "bgfx/bgfx.h"
 
 class aiMesh;
 
 class Mesh : public Object{
 public:
 	aiMesh* originalMeshPtr = nullptr;
+	bgfx::VertexBufferHandle vertexBuffer{};
+	bgfx::IndexBufferHandle indexBuffer{};
 private:
 	REFLECT_BEGIN(Mesh);
 	REFLECT_END();
@@ -25,11 +28,15 @@ class Material : public Object {
 };
 
 class Shader : public Object {
-
+public:
+	bgfx::ProgramHandle program;
 };
+
+void InitVertexLayouts();
 
 class MeshRenderer : public Component {
 public:
+	mat4 worldMatrix;
 	std::shared_ptr<Mesh> mesh;
 	std::shared_ptr<Material> material;
 	static std::vector<MeshRenderer*> enabledMeshRenderers;

@@ -3,6 +3,7 @@
 #include "Component.h"
 
 class GameObject : public Object {
+public:
 	std::vector<std::shared_ptr<Component>> components;
 
 	REFLECT_BEGIN(GameObject);
