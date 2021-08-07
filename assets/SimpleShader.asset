@@ -1,0 +1,3 @@
+Shader:
+  vs: shaders\vs_simple.sc
+  fs: shaders\fs_simple.sc

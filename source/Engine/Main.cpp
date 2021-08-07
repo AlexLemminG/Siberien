@@ -13,6 +13,8 @@
 #include "Camera.h"
 #include "GameObject.h"
 #include "MeshRenderer.h"
+#include "Input.h"
+#include "Scene.h"
 //#include <bgfx_utils.h>
 
 
@@ -40,34 +42,35 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	auto camera = assets.LoadByPath<Camera>("camera.asset");
-	Camera::SetMain(camera);
+	//auto camera = assets.LoadByPath<Camera>("camera.asset");
+	//Camera::SetMain(camera);
 
-	auto gameObject = assets.LoadByPath<GameObject>("gameObject.asset");
+	auto scene = assets.LoadByPath<Scene>("scene.asset");
 
-	if (gameObject) {
-		for (auto component : gameObject->components) {
-			component->OnEnable();
-		}
-	}
+	scene->Init();
+
+	//auto gameObject = assets.LoadByPath<GameObject>("gameObject.asset");
+
+	Input::Init();
 
 	bool quit = false;
 	while (!quit) {
-		SDL_Event e;
-		while (SDL_PollEvent(&e) != 0) {
-			if (e.type == SDL_QUIT)
-			{
-				quit = true;
-			}
-			if (e.type == SDL_KEYDOWN) {
-				if (e.key.keysym.scancode == SDL_SCANCODE_F5) {
-					needReload = true;
-					quit = true;
-				}
-			}
-		}
+		Input::Update();
+		
+		scene->Update();
+		
 		render.Draw();
+
+		quit |= Input::GetQuit();
+		if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F5)) {
+			quit = true;
+			needReload = true;
+		}
 	}
+
+	Input::Term();
+
+	scene->Term();
 
 	render.Term();
 

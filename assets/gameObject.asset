@@ -1,9 +1,16 @@
 GameObject:
   components:
   - $MeshRenderer
-  - camera.asset
+  - $Transform
+  - $DirLight
+  - $FlyCameraMovement
 MeshRenderer:
   mesh: hero.glb$hero_mesh
-  material: $Material
-Material:
-  color: 0xff0000ff
+  material: material.asset
+DirLight:
+  color: 0xffffffff
+  dir: [0,-1,0]
+Transform:
+FlyCameraMovement:
+  speed: 3.1
+  rotationSpeed: -1

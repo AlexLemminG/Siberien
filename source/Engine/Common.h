@@ -10,3 +10,6 @@
 if (!InitFunc()) {	\
 	ASSERT(false);				\
 }
+
+#define LOG_ERROR(msg) \
+std::cout << msg << std::endl;

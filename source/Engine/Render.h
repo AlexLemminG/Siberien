@@ -20,4 +20,9 @@ private:
 
 	//The surface contained by the window
 	SDL_Surface* screenSurface = nullptr;
+
+	bgfx::UniformHandle u_time;
+	
+	int prevWidth;
+	int prevHeight;
 };

@@ -32,6 +32,13 @@ class TextureAsset : public Object {
 
 };
 
+class BinaryAsset : public Object {
+public:
+	std::vector<char> buffer;
+	BinaryAsset(std::vector<char>&& buffer) :
+		buffer(buffer) {}
+};
+
 class AssetDatabase;
 
 class AssetImporter {
@@ -75,7 +82,11 @@ public:
 	}
 
 
+	//TODO make sure everyone knows that it does not cache
 	std::shared_ptr<TextAsset> LoadTextAsset(std::string path);
+	std::shared_ptr<TextAsset> LoadTextAssetFromLibrary(std::string path);
+	std::shared_ptr<BinaryAsset> LoadBinaryAsset(std::string path);
+	std::shared_ptr<BinaryAsset> LoadBinaryAssetFromLibrary(std::string path);
 
 	template<typename AssetType>
 	std::shared_ptr<AssetType> LoadByPath(std::string path) {
@@ -99,6 +110,18 @@ public:
 	void AddAsset(std::shared_ptr<Object> asset, std::string path, std::string id);
 
 	static const std::string assetsFolderPrefix;
+	static const std::string libraryAssetsFolderPrefix;
+
+	std::string GetLibraryPath(std::string assetPath);
+
+	std::string GetFileName(std::string path);
+
+	//TODO this class is getting out of hand
+	std::string GetToolsPath(std::string path) { return "tools\\" + path; }
+	std::string GetAssetPath(std::string path) { return assetsFolderPrefix + "\\" + path; }
+	long GetLastModificationTime(std::string path);
+	void CreateFolders(std::string fullPath);
+
 private:
 	class PathDescriptor {
 	public:
@@ -106,13 +129,12 @@ private:
 		std::string assetPath;
 		std::string assetId;
 	};
-	
+
 	std::string currentAssetLoadingPath;
-	
+
 	void LoadAllAtPath(std::string path);
 	void LoadNextWhileNotEmpty();
 
-	std::string GetFileName(std::string path);
 	std::string GetFileExtension(std::string path);
 
 
@@ -120,7 +142,7 @@ private:
 
 	//TODO main asset
 	std::unordered_map<std::string, std::vector<std::pair<PathDescriptor, std::shared_ptr<Object>>>> assets;
-	std::unordered_map<std::string, std::shared_ptr<TextAsset>> textAssets;
+	//std::unordered_map<std::string, std::shared_ptr<TextAsset>> textAssets;
 
 	std::vector<std::string> requestedAssetsToLoad;
 	//TODO typeinfo for safety

@@ -6,6 +6,7 @@
 #include "Resources.h"
 #include "Object.h"
 #include <type_traits>
+#include "Math.h"
 
 class ReflectedObjectVar {
 	std::string name;
@@ -79,6 +80,13 @@ inline void Deserialize(const SerializedObject& src, int& dst, const int& defaul
 inline void Deserialize(const SerializedObject& src, float& dst, const float& defaultValue) {
 	dst = src.AsFloat();
 }
+
+
+inline void Deserialize(const SerializedObject& src, Vector3& dst, const Vector3& defaultValue) {
+	dst.x = src.yamlNode[0].as<float>();
+	dst.y = src.yamlNode[1].as<float>();
+	dst.z = src.yamlNode[2].as<float>();
+}
 //
 //inline void Deserialize(const SerializedObject& src, Object*& dst, const Object*& defaultValue) {
 //	dst = nullptr;
@@ -102,6 +110,7 @@ virtual ObjectType* GetType()const;\
 private:\
 static ObjectType type;
 
+//TODO remove default and just use original varName value
 #define REFLECT_VAR(varName, defaultValue)\
 {\
 	const auto& child = serializedObject.Child(std::string(#varName)); \
@@ -152,6 +161,9 @@ static BinaryAssetImporterRegistrator<##importerClassName> AssetImporterRegistra
 
 #define DECLARE_TEXT_ASSET(className) \
 static TextAssetImporterRegistrator<SerializedObjectImporter<##className>> AssetImporterRegistrator_##className{#className};
+
+#define DECLARE_CUSTOM_TEXT_ASSET(className, importerClassName) \
+static TextAssetImporterRegistrator<##importerClassName> AssetImporterRegistrator_##className{#className};
 
 class TestMiniClass {
 	float f;

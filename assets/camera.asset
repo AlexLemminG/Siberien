@@ -1,2 +1,9 @@
+GameObject:
+  components:
+    - $Camera
+    - $Transform
 Camera:
-  clearColor: 0xf0ddddff
+  clearColor: 0x663355ff
+Transform:
+FlyCameraMovement:
+  speed: 10

@@ -14,34 +14,40 @@ public:
 	aiMesh* originalMeshPtr = nullptr;
 	bgfx::VertexBufferHandle vertexBuffer{};
 	bgfx::IndexBufferHandle indexBuffer{};
+	std::vector<uint8_t> buffer;
+	std::vector<uint16_t> indices;
 private:
 	REFLECT_BEGIN(Mesh);
 	REFLECT_END();
 };
 
-class Material : public Object {
-	Color color;
-
-	REFLECT_BEGIN(Material);
-	REFLECT_VAR(color, Colors::white);
-	REFLECT_END();
-};
-
 class Shader : public Object {
 public:
-	bgfx::ProgramHandle program;
+	bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
+	std::vector<std::shared_ptr<BinaryAsset>> buffers;
+};
+
+class Material : public Object {
+public:
+	std::shared_ptr<Shader> shader;
+
+	REFLECT_BEGIN(Material);
+	REFLECT_VAR(shader, nullptr);
+	REFLECT_END();
 };
 
 void InitVertexLayouts();
 
 class MeshRenderer : public Component {
 public:
-	mat4 worldMatrix;
+	//bx::
+	Matrix4 worldMatrix;
 	std::shared_ptr<Mesh> mesh;
 	std::shared_ptr<Material> material;
 	static std::vector<MeshRenderer*> enabledMeshRenderers;
 
 	void OnEnable() override {
+		this->worldMatrix = Matrix4::Identity();
 		enabledMeshRenderers.push_back(this);
 	}
 	void OnDisable() override {
@@ -51,5 +57,30 @@ public:
 	REFLECT_BEGIN(MeshRenderer);
 	REFLECT_VAR(mesh, nullptr);
 	REFLECT_VAR(material, nullptr);
+	REFLECT_END();
+};
+
+class DirLight : public Component {
+public:
+	Color color;
+	Vector3 dir;
+	void OnEnable() override {
+		dirHandle = bgfx::createUniform("u_lightDir", bgfx::UniformType::Vec4);
+		colorHandle = bgfx::createUniform("u_lightColor", bgfx::UniformType::Vec4);
+
+		bgfx::setUniform(dirHandle, &dir);
+		bgfx::setUniform(colorHandle, &color);
+	}
+	void OnDisable() override {
+		bgfx::destroy(dirHandle);
+		bgfx::destroy(colorHandle);
+	}
+
+	bgfx::UniformHandle dirHandle;
+	bgfx::UniformHandle colorHandle;
+
+	REFLECT_BEGIN(DirLight);
+	REFLECT_VAR(color, Colors::white);
+	REFLECT_VAR(dir, Vector3(0, -1, 0));
 	REFLECT_END();
 };

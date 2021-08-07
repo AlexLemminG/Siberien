@@ -2,6 +2,7 @@
 
 #include "Resources.h"
 #include <memory>
+#include <windows.h>
 
 std::unordered_map<std::string, std::unique_ptr<AssetImporter>>& AssetDatabase::GetAssetImporters() {
 	static std::unordered_map<std::string, std::unique_ptr<AssetImporter>> assetImporters{};
@@ -51,6 +52,10 @@ void AssetDatabase::AddAsset(std::shared_ptr<Object> asset, std::string path, st
 
 }
 
+std::string AssetDatabase::GetLibraryPath(std::string assetPath) {
+	return libraryAssetsFolderPrefix + assetPath;
+}
+
 std::shared_ptr<Object> AssetDatabase::LoadByPath(std::string path) {
 	auto desc = PathDescriptor{ path };
 	auto loaded = GetLoaded(path);
@@ -63,18 +68,11 @@ std::shared_ptr<Object> AssetDatabase::LoadByPath(std::string path) {
 	return GetLoaded(path);
 }
 
+//TODO remove doublecoding shit
 std::shared_ptr<TextAsset> AssetDatabase::LoadTextAsset(std::string path) {
-	auto it = textAssets.find(path);
-
-	if (it != textAssets.end()) {
-		return std::static_pointer_cast<TextAsset>(it->second);
-	}
-
 	auto fullPath = assetsFolderPrefix + path;
 	std::ifstream input(fullPath);
 	if (!input) {
-		//TODO
-		//ASSERT(false);
 		return nullptr;
 	}
 
@@ -84,10 +82,80 @@ std::shared_ptr<TextAsset> AssetDatabase::LoadTextAsset(std::string path) {
 	auto ext = GetFileExtension(fullPath);
 	auto textAsset = std::make_shared<TextAsset>();
 	if (textAsset->Load(context)) {
-		textAssets[path] = textAsset;
 		return textAsset;
 	}
 	return nullptr;
+}
+
+
+std::shared_ptr<TextAsset> AssetDatabase::LoadTextAssetFromLibrary(std::string path) {
+	auto fullPath = libraryAssetsFolderPrefix + path;
+	std::ifstream input(fullPath);
+	if (!input) {
+		return nullptr;
+	}
+
+	AssetLoadingContext context;
+	context.inputFile = &input;
+
+	auto ext = GetFileExtension(fullPath);
+	auto textAsset = std::make_shared<TextAsset>();
+	if (textAsset->Load(context)) {
+		return textAsset;
+	}
+	return nullptr;
+}
+
+std::shared_ptr<BinaryAsset> AssetDatabase::LoadBinaryAsset(std::string path) {
+	auto fullPath = assetsFolderPrefix + path;
+
+	std::ifstream file(fullPath, std::ios::binary | std::ios::ate);
+
+	if (!file) {
+		auto fullPath = libraryAssetsFolderPrefix + path;
+		file.open(fullPath, std::ios::binary | std::ios::ate);
+	}
+	if (!file) {
+		return nullptr;
+	}
+	std::streamsize size = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	std::vector<char> buffer(size);
+	if (file.read(buffer.data(), size))
+	{
+		return std::make_shared<BinaryAsset>(std::move(buffer));
+	}
+	else {
+		ASSERT(false);
+		return nullptr;
+	}
+}
+//TODO remove doublecoding shit
+std::shared_ptr<BinaryAsset> AssetDatabase::LoadBinaryAssetFromLibrary(std::string path) {
+	auto fullPath = libraryAssetsFolderPrefix + path;
+
+	std::ifstream file(fullPath, std::ios::binary | std::ios::ate);
+
+	if (!file) {
+		auto fullPath = libraryAssetsFolderPrefix + path;
+		file.open(fullPath, std::ios::binary | std::ios::ate);
+	}
+	if (!file) {
+		return nullptr;
+	}
+	std::streamsize size = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	std::vector<char> buffer(size);
+	if (file.read(buffer.data(), size))
+	{
+		return std::make_shared<BinaryAsset>(std::move(buffer));
+	}
+	else {
+		ASSERT(false);
+		return nullptr;
+	}
 }
 
 void AssetDatabase::RegisterBinaryAssetImporter(std::string assetType, std::unique_ptr<AssetImporter>&& importer) {
@@ -126,13 +194,13 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 			auto asset = importer->Import(*this, node);
 
 			std::string id = type;
-			
+
 			if (asset != nullptr) {
 				AddAsset(asset, path, id);
 			}
 		}
 	}
-	else if (ext == "fbx" || ext=="glb") {
+	else if (ext == "fbx" || ext == "glb") {
 		std::string type = "Mesh";
 		auto& importer = GetAssetImporters()[type];
 		if (importer) {
@@ -142,6 +210,7 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 	currentAssetLoadingPath = "";
 }
 const std::string AssetDatabase::assetsFolderPrefix = "assets\\";
+const std::string AssetDatabase::libraryAssetsFolderPrefix = "library\\assets\\";
 
 void AssetDatabase::LoadNextWhileNotEmpty() {
 	for (int i = 0; i < requestedAssetsToLoad.size(); i++) {
@@ -152,6 +221,7 @@ void AssetDatabase::LoadNextWhileNotEmpty() {
 	requestedAssetsToLoad.clear();
 	for (auto it : requestedObjectPtrs) {
 		auto object = GetLoaded(it.second);
+		//TODO check type
 		*(std::shared_ptr<Object>*)(it.first) = object;
 	}
 }
@@ -163,6 +233,30 @@ std::string AssetDatabase::GetFileName(std::string path) {
 	}
 	else {
 		return path.substr(lastSlash + 1, path.length() - lastSlash - 1);
+	}
+}
+
+long AssetDatabase::GetLastModificationTime(std::string path) {
+	struct stat result;
+	auto fullPath = assetsFolderPrefix + path;
+
+	if (stat(fullPath.c_str(), &result) == 0)
+	{
+		auto mod_time = result.st_mtime;
+		return mod_time;
+	}
+	else {
+		return 0;
+	}
+}
+
+void AssetDatabase::CreateFolders(std::string fullPath) {
+	auto firstFolder = fullPath.find_first_of("\\");
+	for (int i = 0; i < fullPath.size(); i++) {
+		if (fullPath[i] == '\\') {
+			auto subpath = fullPath.substr(0, i);
+			CreateDirectoryA(subpath.c_str(), NULL);
+		}
 	}
 }
 

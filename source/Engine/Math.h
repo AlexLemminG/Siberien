@@ -1,10 +1,19 @@
 #pragma once
 
-#include "algebra3.h"
-#include "Serialization.h"
+#include "mathfu/vector.h"
+#include "mathfu/matrix.h"
+#include "mathfu/quaternion.h"
 
-typedef vec3 Vector3;
-typedef mat4 Matrix;
+typedef mathfu::Vector<float, 3> Vector3;
+typedef mathfu::Matrix<float, 4, 4> Matrix4;
+typedef mathfu::Quaternion<float> Quaternion;
+
+extern const Vector3 Vector3_zero;
+extern const Vector3 Vector3_forward;
+extern const Vector3 Vector3_up;
+extern const Vector3 Vector3_right;
+
+class SerializedObject;
 
 class Mathf {
 public:
@@ -27,6 +36,7 @@ public:
 		return Clamp(byte, 0, 255) / 255.f;
 	}
 };
+
 
 class Color {
 public:
@@ -55,17 +65,7 @@ public:
 			Mathf::NormalizedFloatToByte(a) << 0;
 	}
 
-	void Deserialize(const SerializedObject& serializedObject) {
-		if (serializedObject.IsObject()) {
-			::Deserialize(serializedObject.Child("r"), r, 0.f);
-			::Deserialize(serializedObject.Child("g"), g, 0.f);
-			::Deserialize(serializedObject.Child("b"), b, 0.f);
-			::Deserialize(serializedObject.Child("a"), a, 1.f);
-		}
-		else {
-			*this = FromIntRGBA(serializedObject.AsInt());
-		}
-	}
+	void Deserialize(const SerializedObject& serializedObject);
 };
 
 namespace Colors {

@@ -5,17 +5,25 @@
 #include "Resources.h"
 #include "Component.h"
 
-class Camera :public Component{
+class Camera :public Component {
 public:
 	Color GetClearColor() { return clearColor; }
 
-	static std::shared_ptr<Camera> GetMain() { return mainCamera; }
-	static void SetMain(std::shared_ptr<Camera> mainCamera) { Camera::mainCamera = mainCamera; }
+	static Camera* GetMain() { return mainCamera; }
+	static void SetMain(Camera* mainCamera) { Camera::mainCamera = mainCamera; }
+
+	virtual void OnEnable() { SetMain(this); }
+	virtual void OnDisable() { SetMain(nullptr); }
 private:
 	Color clearColor;
-	static std::shared_ptr<Camera> mainCamera;
+	Vector3 pos;
+	Vector3 dir;
+
+	static Camera* mainCamera;
 
 	REFLECT_BEGIN(Camera);
+	REFLECT_VAR(pos, Vector3());
+	REFLECT_VAR(dir, Vector3());
 	REFLECT_VAR(clearColor, Colors::black);
 	REFLECT_END();
 };
