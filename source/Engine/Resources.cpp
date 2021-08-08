@@ -200,7 +200,7 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 			}
 		}
 	}
-	else if (ext == "fbx" || ext == "glb") {
+	else if (ext == "fbx" || ext == "glb" || ext == "blend") {
 		std::string type = "Mesh";
 		auto& importer = GetAssetImporters()[type];
 		if (importer) {

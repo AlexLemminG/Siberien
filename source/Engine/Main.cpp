@@ -71,7 +71,7 @@ start:
 		}
 		systemsManager.Update();
 
-		render.Draw();
+		render.Draw(systemsManager);
 
 		quit |= Input::GetQuit();
 		if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F5)) {
@@ -91,6 +91,8 @@ start:
 			scene = LoadScene(assets);
 		}
 	}
+
+	//vv.Init();
 
 	Input::Term();
 

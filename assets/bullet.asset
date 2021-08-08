@@ -1,0 +1,3 @@
+MeshRenderer:
+  mesh: meshes\bullet.glb$bullet_mesh
+  material: bulletMaterial.asset

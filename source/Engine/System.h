@@ -8,28 +8,31 @@ public:
 	}
 	virtual ~SystemBase() {
 	}
-	virtual bool Init() { }
+	virtual bool Init() { return true; }
 	virtual void Update() {}
+	virtual void Draw() {}
 	virtual void Term() {  }
 };
 
 template<typename T>
-class System {
+class System : public SystemBase {
 public:
 	System() {
-		instance = this;
+		instance = (T*)this;
 	}
 	virtual ~System() {
 		instance = nullptr;
 	}
 
-	static T Get() { return instance; }
+	static T* Get() { return instance; }
 private:
 	static T* instance;
 };
 
 class SystemRegistratorBase {
 public:
+	SystemRegistratorBase() {}
+	virtual ~SystemRegistratorBase() {}
 	virtual std::shared_ptr<SystemBase> CreateSystem() = 0;
 };
 
@@ -61,6 +64,12 @@ public:
 		}
 	}
 
+	void Draw() {
+		for (auto system : systems) {
+			system->Draw();
+		}
+	}
+
 	void Term() {
 		//TODO term only inited
 		for (auto system : systems) {
@@ -79,14 +88,21 @@ private:
 
 
 template<typename T>
-class SystemRegistrator {
+class SystemRegistrator : public SystemRegistratorBase {
 public:
-	SystemRegistrator() {
+	SystemRegistrator() :SystemRegistratorBase() {
 		SystemsManager::Register(this);
 	}
-	virtual std::shared_ptr<SystemBase> CreateSystem() override { return new T(); }
+	~SystemRegistrator() {
+	}
+	virtual std::shared_ptr<SystemBase> CreateSystem() override { return std::make_shared<T>(); }
 };
 
 
 #define REGISTER_SYSTEM(systemName) \
-SystemRegistrator<systemName> SystemRegistrator_##SystemRegistrator();
+static SystemRegistrator<##systemName> SystemRegistrator_##systemName{}; \
+systemName* ##systemName::instance;
+
+//
+//#define DECLARE_TEXT_ASSET(className) \
+//static TextAssetImporterRegistrator<SerializedObjectImporter<##className>> AssetImporterRegistrator_##className{#className};

@@ -5,11 +5,12 @@
 
 struct SDL_Window;
 class SDL_Surface;
+class SystemsManager;
 
 class Render {
 public:
 	bool Init();
-	void Draw();
+	void Draw(SystemsManager& systems);
 	void Term();
 
 	//The window we'll be rendering to

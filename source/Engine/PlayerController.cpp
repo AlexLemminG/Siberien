@@ -6,6 +6,7 @@
 #include "Time.h"
 #include "Camera.h"
 #include "Dbg.h"
+#include "BulletSystem.h"
 
 void PlayerController::Update() {
 	UpdateMovement();
@@ -64,6 +65,10 @@ void PlayerController::UpdateShooting() {
 
 	SetRot(matrix, Quaternion::LookAt(deltaPos, Vector3_up));
 	gameObject()->transform()->matrix = matrix;
+
+	if (Input::GetKey(SDL_SCANCODE_SPACE)) {
+		BulletSystem::Get()->CreateBullet(playerPos, deltaPos.Normalized() * bulletSpeed);
+	}
 }
 
 DECLARE_TEXT_ASSET(PlayerController);

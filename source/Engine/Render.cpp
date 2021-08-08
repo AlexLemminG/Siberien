@@ -16,6 +16,8 @@
 #include "GameObject.h"
 #include "Transform.h"
 #include "Dbg.h"
+#include "System.h"
+#include "Time.h"
 
 SDL_Window* Render::window = nullptr;
 
@@ -75,7 +77,7 @@ bool Render::Init()
 
 	return true;
 }
-void Render::Draw()
+void Render::Draw(SystemsManager& systems)
 {
 	Matrix4 cameraViewMatrix;
 	auto camera = Camera::GetMain();
@@ -105,18 +107,29 @@ void Render::Draw()
 
 		near
 	}
-	float time = (float)(SDL_GetTicks()) / 1000.f;
+	float time = Time::time();
 	bgfx::setUniform(u_time, &time);
+
+	static float prevTimeCheck = 0;
+	static int prevFramesCount = 0;
+	static float fps = 0;
+	if ((int)time != (int)prevTimeCheck) {
+		fps = (Time::frameCount() - prevFramesCount) / (time - prevTimeCheck);
+		prevTimeCheck = time;
+		prevFramesCount = Time::frameCount();
+	}
 
 	bgfx::touch(0);
 	bgfx::dbgTextClear();
+
+	bgfx::dbgTextPrintf(1, 2, 0x0f, "FPS: %.1f", fps);
+
 	if (camera == nullptr) {
 		bgfx::dbgTextPrintf(1, 1, 0x0f, "NO CAMERA");
 	}
 	else {
 		bgfx::dbgTextPrintf(1, 1, 0x0f, "YES CAMERA");
 	}
-
 
 	{
 		float proj[16];
@@ -128,6 +141,8 @@ void Render::Draw()
 	for (auto mesh : MeshRenderer::enabledMeshRenderers) {
 		DrawMesh(mesh);
 	}
+
+	systems.Draw();
 
 	Dbg::DrawAll();
 
