@@ -1,0 +1,17 @@
+GameObject:
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $BoxCollider
+  - $RigidBody
+MeshRenderer:
+  mesh: meshes\physCube.glb$cdt_cube
+  material: material.asset
+Transform:
+  pos: [0, 5, 12]
+  euler: [0, 0, 0]
+BoxCollider:
+  size: [1,1,1]
+RigidBody:
+  isStatic: false
+  mass: 20

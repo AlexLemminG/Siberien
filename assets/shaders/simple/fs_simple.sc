@@ -11,13 +11,14 @@ $input v_pos, v_view, v_normal, v_color0
 uniform vec4 u_time;
 uniform vec4 u_lightDir;
 uniform vec4 u_lightColor;
+uniform vec4 u_color;
 
 vec2 blinn(vec3 _lightDir, vec3 _normal, vec3 _viewDir)
 {
 	float ndotl = dot(_normal, _lightDir);
 	vec3 reflected = _lightDir - 2.0*ndotl*_normal; // reflect(_lightDir, _normal);
 	float rdotv = dot(reflected, _viewDir);
-	return vec2(ndotl, rdotv);
+	return vec2(-ndotl, -rdotv);
 }
 
 float fresnel(float _ndotl, float _bias, float _pow)
@@ -42,8 +43,10 @@ void main()
 	vec4 lc = lit(bln.x, bln.y, 1.0);
 	float fres = fresnel(bln.x, 0.2, 5.0);
 
-	vec3 color = v_color0.xyz;
+	vec3 color = u_color.xyz;
 
 	gl_FragColor.xyz = pow(vec3(0.07, 0.06, 0.08) + color*lc.y + fres*pow(lc.z, 128.0), vec3_splat(1.0/2.2) );
 	gl_FragColor.w = 1.0;
+	
+	gl_FragColor.xyz = color * (bln.x);
 }

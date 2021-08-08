@@ -1,16 +1,18 @@
 #include "Dbg.h"
+#include "Common.h"
 #include "debugdraw/debugdraw.h"
 
 
 std::vector<Ray> Dbg::rays;
-std::vector<Vector3> Dbg::points;
+std::vector<Dbg::Point> Dbg::points;
+std::vector<std::string> Dbg::texts;
 
 void Dbg::Draw(Ray ray) {
 	rays.push_back(ray);
 }
 
-void Dbg::Draw(Vector3 point) {
-	points.push_back(point);
+void Dbg::Draw(Vector3 point, float radius) {
+	points.push_back(Point{ point, radius });
 }
 
 void Dbg::Init() {
@@ -20,6 +22,7 @@ void Dbg::Init() {
 void Dbg::ClearAll(){
 	rays.clear();
 	points.clear();
+	texts.clear();
 }
 void Dbg::Term() {
 	ClearAll();
@@ -37,7 +40,12 @@ void Dbg::DrawAll() {
 	}
 
 	for (const auto& point: points) {
-		dde.drawOrb(point.x, point.y, point.z, 0.1f);
+		dde.drawOrb(point.pos.x, point.pos.y, point.pos.z, point.radius);
+	}
+
+	int yTextOffset = 3;
+	for (int i = 0; i < texts.size(); i++) {
+		bgfx::dbgTextPrintf(1, yTextOffset + i, 0x0f, texts[i].c_str());
 	}
 
 	dde.drawGrid(bx::Vec3(0, 1, 0), bx::Vec3(0, 0, 0));

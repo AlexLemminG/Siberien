@@ -1,0 +1,3 @@
+Material:
+  color: 0xff2233ff
+  shader: SimpleSHader.asset

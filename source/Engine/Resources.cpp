@@ -38,6 +38,7 @@ std::shared_ptr<Object> AssetDatabase::GetLoaded(std::string path) {
 		return bestVariant;
 	}
 	else {
+		//LogError("Asset with path '%s' not loaded", path.c_str());
 		return nullptr;
 	}
 }
@@ -73,6 +74,7 @@ std::shared_ptr<TextAsset> AssetDatabase::LoadTextAsset(std::string path) {
 	auto fullPath = assetsFolderPrefix + path;
 	std::ifstream input(fullPath);
 	if (!input) {
+		LogError("Failed to load '%s': file not found", path.c_str());
 		return nullptr;
 	}
 
@@ -84,6 +86,7 @@ std::shared_ptr<TextAsset> AssetDatabase::LoadTextAsset(std::string path) {
 	if (textAsset->Load(context)) {
 		return textAsset;
 	}
+	LogError("Failed to load '%s': failed to import", path.c_str());
 	return nullptr;
 }
 
@@ -92,6 +95,7 @@ std::shared_ptr<TextAsset> AssetDatabase::LoadTextAssetFromLibrary(std::string p
 	auto fullPath = libraryAssetsFolderPrefix + path;
 	std::ifstream input(fullPath);
 	if (!input) {
+		LogError("Failed to load '%s' from library: file not found", path.c_str());
 		return nullptr;
 	}
 
@@ -103,6 +107,7 @@ std::shared_ptr<TextAsset> AssetDatabase::LoadTextAssetFromLibrary(std::string p
 	if (textAsset->Load(context)) {
 		return textAsset;
 	}
+	LogError("Failed to load '%s' from library: import error", path.c_str());
 	return nullptr;
 }
 
@@ -116,6 +121,7 @@ std::shared_ptr<BinaryAsset> AssetDatabase::LoadBinaryAsset(std::string path) {
 		file.open(fullPath, std::ios::binary | std::ios::ate);
 	}
 	if (!file) {
+		LogError("Failed to load binary asset '%s': file not found", path.c_str());
 		return nullptr;
 	}
 	std::streamsize size = file.tellg();
@@ -127,6 +133,7 @@ std::shared_ptr<BinaryAsset> AssetDatabase::LoadBinaryAsset(std::string path) {
 		return std::make_shared<BinaryAsset>(std::move(buffer));
 	}
 	else {
+		LogError("Failed to load binary asset '%s': failed to read file", path.c_str());
 		ASSERT(false);
 		return nullptr;
 	}
@@ -142,6 +149,7 @@ std::shared_ptr<BinaryAsset> AssetDatabase::LoadBinaryAssetFromLibrary(std::stri
 		file.open(fullPath, std::ios::binary | std::ios::ate);
 	}
 	if (!file) {
+		LogError("Failed to load binary asset '%s' from library: file not found", path.c_str());
 		return nullptr;
 	}
 	std::streamsize size = file.tellg();
@@ -153,6 +161,7 @@ std::shared_ptr<BinaryAsset> AssetDatabase::LoadBinaryAssetFromLibrary(std::stri
 		return std::make_shared<BinaryAsset>(std::move(buffer));
 	}
 	else {
+		LogError("Failed to load binary asset '%s' from library: failed to read file", path.c_str());
 		ASSERT(false);
 		return nullptr;
 	}
@@ -183,20 +192,26 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 		}
 
 		for (const auto& kv : textAsset->GetYamlNode()) {
-			std::string type = kv.first.as<std::string>();
+			PathDescriptor descriptor(kv.first.as<std::string>());
+			std::string type = descriptor.assetPath;
+			std::string id = descriptor.assetId.size() > 0 ? descriptor.assetId : descriptor.assetPath;
+
 			auto node = kv.second;
 
 			auto& importer = GetTextAssetImporters()[type];
 			if (!importer) {
+				LogError("Unknown asset type '%s' in '%s'", type.c_str(), currentAssetLoadingPath.c_str());
 				continue;
 			}
 
 			auto asset = importer->Import(*this, node);
 
-			std::string id = type;
-
 			if (asset != nullptr) {
 				AddAsset(asset, path, id);
+			}
+			else {
+				LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
+
 			}
 		}
 	}
@@ -206,6 +221,12 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 		if (importer) {
 			importer->Import(*this, path);
 		}
+		else {
+			ASSERT(false);
+		}
+	}
+	else {
+		LogError("unknown extension '%s' at file '%s'", ext.c_str(), currentAssetLoadingPath.c_str());
 	}
 	currentAssetLoadingPath = "";
 }
@@ -221,8 +242,14 @@ void AssetDatabase::LoadNextWhileNotEmpty() {
 	requestedAssetsToLoad.clear();
 	for (auto it : requestedObjectPtrs) {
 		auto object = GetLoaded(it.second);
-		//TODO check type
-		*(std::shared_ptr<Object>*)(it.first) = object;
+		if (!object) {
+			LogError("Asset not found '%s'", it.second.c_str());
+			*(std::shared_ptr<Object>*)(it.first) = nullptr;
+		}
+		else {
+			//TODO check type
+			*(std::shared_ptr<Object>*)(it.first) = object;
+		}
 	}
 }
 

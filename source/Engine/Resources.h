@@ -20,7 +20,12 @@ class TextAsset : public Object {
 public:
 	bool Load(AssetLoadingContext& context) {
 		yaml = YAML::Load(*(context.inputFile));
-		return yaml.IsDefined();
+		if (!yaml.IsDefined()) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 
 	const YAML::Node& GetYamlNode() const { return yaml; }

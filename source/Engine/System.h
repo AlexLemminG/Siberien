@@ -10,6 +10,7 @@ public:
 	}
 	virtual bool Init() { return true; }
 	virtual void Update() {}
+	virtual void FixedUpdate() {}
 	virtual void Draw() {}
 	virtual void Term() {  }
 };
@@ -41,10 +42,15 @@ public:
 	static void Register(SystemRegistratorBase* registrator) {
 		GetRegistrators().push_back(registrator);
 	}
+	static SystemsManager* manager;
+	static SystemsManager* Get() {
+		return manager;
+	}
 
 	SystemsManager() {}
 
 	bool Init() {
+		manager = this;
 		for (auto registrator : GetRegistrators()) {
 			systems.push_back(registrator->CreateSystem());
 		}
@@ -64,6 +70,12 @@ public:
 		}
 	}
 
+	void FixedUpdate() {
+		for (auto system : systems) {
+			system->FixedUpdate();
+		}
+	}
+
 	void Draw() {
 		for (auto system : systems) {
 			system->Draw();
@@ -72,9 +84,11 @@ public:
 
 	void Term() {
 		//TODO term only inited
-		for (auto system : systems) {
+		for (int i = systems.size() - 1; i >= 0;i--){
+			auto system = systems[i];
 			system->Term();
 		}
+		manager = nullptr;
 	}
 
 private:

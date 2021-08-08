@@ -7,6 +7,8 @@
 #include "Camera.h"
 #include "Dbg.h"
 #include "BulletSystem.h"
+#include "PhysicsSystem.h"
+#include "btBulletDynamicsCommon.h"
 
 void PlayerController::Update() {
 	UpdateMovement();
@@ -55,7 +57,18 @@ void PlayerController::UpdateShooting() {
 		return;
 	}
 
-	Dbg::Draw(ray.GetPoint(dist));
+
+	btCollisionWorld::ClosestRayResultCallback cb(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f));
+	PhysicsSystem::Get()->dynamicsWorld->rayTest(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f), cb);
+
+	if (cb.hasHit()) {
+		Dbg::Draw(btConvert(cb.m_hitPointWorld), 1);
+	}
+	else {
+		Dbg::Draw(ray.GetPoint(dist));
+
+	}
+
 
 	auto deltaPos = ray.GetPoint(dist) - playerPos;
 

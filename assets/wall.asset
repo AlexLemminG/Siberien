@@ -1,0 +1,17 @@
+GameObject:
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $BoxCollider
+  - $RigidBody
+MeshRenderer:
+  mesh: meshes\wall.glb$cdt_wall
+  material: material.asset
+Transform:
+  pos: [0, 0, 12]
+  euler: [0, 0, 0]
+BoxCollider:
+  size: [10,2,2]
+  center: [0,1,0]
+RigidBody:
+  isStatic: false

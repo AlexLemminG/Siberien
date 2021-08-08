@@ -53,6 +53,9 @@ public:
 	static int Round(float f) {
 		return (int)(f + 0.5f - (f < 0));
 	}
+	static float Max(float a, float b) {
+		return a > b ? a : b;
+	}
 	static float Clamp(float f, float a, float b) {
 		return f > b ? b : (f < a ? a : f);
 	}

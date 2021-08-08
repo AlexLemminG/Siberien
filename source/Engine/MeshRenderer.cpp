@@ -84,6 +84,7 @@ public:
 		auto fullPath = AssetDatabase::assetsFolderPrefix + path; //TODO pass full path or file as argument
 		auto* scene = importer.ReadFile(fullPath, aiProcess_ValidateDataStructure);
 		if (!scene) {
+			LogError("failed to import '%s': failed to open mesh", path.c_str());
 			return nullptr;
 		}
 		scene = importer.GetOrphanedScene();
@@ -92,6 +93,7 @@ public:
 		//TODO pass separate database handle
 		database.AddAsset(fullAsset, path, "FullMeshAsset");
 
+		int importedMeshesCount = 0;
 		for (int iMesh = 0; iMesh < scene->mNumMeshes; iMesh++) {
 			auto* aiMesh = scene->mMeshes[iMesh];
 			auto mesh = std::make_shared<Mesh>();
@@ -106,7 +108,11 @@ public:
 			mesh->indexBuffer = bgfx::createIndexBuffer(bgfx::makeRef(&mesh->indices[0], mesh->indices.size() * sizeof(uint16_t)));
 			bgfx::setName(mesh->indexBuffer, mesh->originalMeshPtr->mName.C_Str());
 
+			importedMeshesCount++;
 			//bgfx::createVertexBuffer(bgfx::makeRef(aiMesh->mVertices, aiMesh->mNumVertices), VertexLayouts::);
+		}
+		if (importedMeshesCount == 0) {
+			LogError("failed to import '%s': no meshes", path.c_str());
 		}
 
 
@@ -260,6 +266,7 @@ class ShaderAssetImporter : public TextAssetImporter {
 
 		if (!result)
 		{
+			LogError("Failed to compile shader '%s'", path.c_str());
 			return nullptr;
 		}
 		else

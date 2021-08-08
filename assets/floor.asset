@@ -1,0 +1,17 @@
+GameObject:
+  tag: Floor
+  components:
+    - $BoxCollider
+    - $RigidBody
+    - $Transform
+    - $MeshRenderer
+RigidBody:
+  isStatic: true
+BoxCollider:
+  size: [100, 1, 100]
+  center: [0,-0.5,0]
+Transform:
+  position: [0, 0, 0]
+MeshRenderer:
+  mesh: meshes\floor.glb$floor
+  material: floorMaterial.asset

@@ -9,6 +9,17 @@ void Scene::Init() {
 	//TOOD remove nullptr components here ?
 	current = this;
 
+	for (int iG = gameObjects.size() - 1; iG >= 0; iG--) {
+		if (gameObjects[iG] == nullptr) {
+			gameObjects.erase(gameObjects.begin() + iG);
+			continue;
+		}
+		for (int iC = gameObjects[iG]->components.size() - 1; iC >= 0; iC--) {
+			if (gameObjects[iG]->components[iC] == nullptr) {
+				gameObjects[iG]->components.erase(gameObjects[iG]->components.begin() + iC);
+			}
+		}
+	}
 	for (auto go : gameObjects) {
 		if (!go->transform()) {
 			go->components.push_back(std::make_shared<Transform>());
@@ -37,10 +48,18 @@ void Scene::Update() {
 	}
 }
 
-void Scene::Term() {
+void Scene::FixedUpdate() {
 	for (auto go : gameObjects) {
 		for (auto c : go->components) {
-			c->OnDisable();
+			c->FixedUpdate();
+		}
+	}
+}
+
+void Scene::Term() {
+	for (auto go : gameObjects) {
+		for (int iC = go->components.size() - 1; iC >= 0; iC--) {
+			go->components[iC]->OnDisable();
 		}
 	}
 	current = nullptr;

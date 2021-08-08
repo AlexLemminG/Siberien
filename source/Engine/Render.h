@@ -24,6 +24,7 @@ private:
 	SDL_Surface* screenSurface = nullptr;
 
 	bgfx::UniformHandle u_time;
+	bgfx::UniformHandle u_color;
 	
 	int prevWidth;
 	int prevHeight;

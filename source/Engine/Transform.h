@@ -15,6 +15,16 @@ public:
 		return GetPos(matrix);
 	}
 
+	Vector3 GetRight() const {
+		return matrix.GetColumn(0).xyz();
+	}
+	Vector3 GetUp() const {
+		return matrix.GetColumn(1).xyz();
+	}
+	Vector3 GetForward() const {
+		return matrix.GetColumn(2).xyz();
+	}
+
 public:
 	Matrix4 matrix = Matrix4::Identity();
 

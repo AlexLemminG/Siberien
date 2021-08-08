@@ -69,6 +69,7 @@ bool Render::Init()
 	InitVertexLayouts();
 
 	u_time = bgfx::createUniform("u_time", bgfx::UniformType::Vec4);
+	u_color = bgfx::createUniform("u_color", bgfx::UniformType::Vec4);
 
 	prevWidth = width;
 	prevHeight = height;
@@ -154,6 +155,7 @@ void Render::Term()
 	Dbg::Term();
 	//TODO destroy programs, buffers and other shit
 	bgfx::destroy(u_time);
+	bgfx::destroy(u_color);
 
 	bgfx::shutdown();
 
@@ -200,6 +202,7 @@ void Render::DrawMesh(MeshRenderer* renderer) {
 	float f = renderer->worldMatrix(0, 0);
 	//float* ff = &(renderer->worldMatrix[0][0]);
 	bgfx::setTransform(&(renderer->gameObject()->transform()->matrix));
+	bgfx::setUniform(u_color, &renderer->material->color);
 
 	bgfx::setVertexBuffer(0, renderer->mesh->vertexBuffer);
 	bgfx::setIndexBuffer(renderer->mesh->indexBuffer);

@@ -1,0 +1,3 @@
+Material:
+  color: 0x554466ff
+  shader: SimpleSHader.asset

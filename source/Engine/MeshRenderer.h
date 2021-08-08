@@ -29,9 +29,11 @@ public:
 
 class Material : public Object {
 public:
+	Color color = Colors::white;
 	std::shared_ptr<Shader> shader;
 
 	REFLECT_BEGIN(Material);
+	REFLECT_VAR(color);
 	REFLECT_VAR(shader);
 	REFLECT_END();
 };

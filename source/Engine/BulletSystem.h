@@ -23,9 +23,11 @@ private:
 		Vector3 pos;
 		Vector3 dir;
 		Color color;
+		float speed = 1.f;
 		float timeLeft = 5.f;
 	};
-
+	float bulletImpulse = 1.f;
+	float bulletRadius = 0.04f;
 	std::vector<Bullet> bullets;
 	std::shared_ptr<MeshRenderer> bulletRenderer;
 };

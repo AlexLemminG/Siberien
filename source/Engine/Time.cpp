@@ -1,9 +1,13 @@
 #include "Time.h"
 #include "SDL.h"
+#include "Config.h"
 
 REGISTER_SYSTEM(Time);
 
 bool Time::Init() {
+	m_maxDeltaTime = CfgGetFloat("maximumDeltaTime");//TODO use
+	m_fixedDeltaTime = CfgGetFloat("fixedDeltaTime");
+
 	m_prevTicks = SDL_GetTicks();
 	m_startTicks = m_prevTicks;
 

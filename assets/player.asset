@@ -4,10 +4,20 @@ GameObject:
   - $MeshRenderer
   - $Transform
   - $PlayerController
+  - $SphereCollider
+  - $RigidBody
 MeshRenderer:
   mesh: hero.glb$hero_mesh
-  material: material.asset
+  material: playerMaterial.asset
 Transform:
+  pos: [0,0.5,0]
   euler: [0, 60, 0]
 PlayerController:
-  speed: 3.1
+  speed: 6.2
+SphereCollider:
+  radius: 1
+  center: [0, 0.5, 0]
+RigidBody:
+  isStatic: true
+  isKinematic: true
+  mass: 100

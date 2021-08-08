@@ -3,6 +3,9 @@
 #include "Resources.h"
 #include "MeshRenderer.h"
 #include "Time.h"
+#include "PhysicsSystem.h"
+#include "btBulletDynamicsCommon.h"
+#include "Dbg.h"
 
 REGISTER_SYSTEM(BulletSystem);
 
@@ -13,16 +16,39 @@ bool BulletSystem::Init() {
 
 void BulletSystem::Update() {
 	float dt = Time::deltaTime();
+	auto* physics = PhysicsSystem::Get()->dynamicsWorld;
 	for (auto& bullet : bullets) {
-		bullet.pos += bullet.dir * dt;
+		Vector3 bulletPrevPos = bullet.pos;
+		bullet.pos += bullet.dir * (dt * bullet.speed);
 		bullet.timeLeft -= dt;
+		//TODO bullet.dir is not normalized, but maybe for better
+
+		btVector3 castFrom = btConvert(bulletPrevPos - bullet.dir * bulletRadius);
+		btVector3 castTo = btConvert(bullet.pos + bullet.dir * bulletRadius);
+		btCollisionWorld::ClosestRayResultCallback cb(castFrom, castTo);
+		physics->rayTest(castFrom, castTo, cb);
+		if (cb.hasHit()) {
+			bullet.timeLeft = 0.f;
+			auto obj = dynamic_cast<const btRigidBody*>(cb.m_collisionObject);
+			if (obj) {
+				auto nonConst = const_cast<btRigidBody*>(obj);
+				auto localPos = nonConst->getCenterOfMassTransform().inverse() * btConvert(bullet.pos);
+				nonConst->activate(true);
+   				nonConst->applyImpulse(btConvert(bullet.dir * bulletImpulse), localPos);
+			}
+		}
+
 	}
+	int bulletsCountBefore = bullets.size();
 	for (int i = bullets.size() - 1; i >= 0; i--) {
-		if (bullets[i].timeLeft < 0) {
+		if (bullets[i].timeLeft <= 0) {
 			bullets[i] = bullets.back();
 			bullets.pop_back();
 		}
 	}
+	int bulletsDestroyed = bulletsCountBefore - bullets.size();
+	int k = 0;
+	Dbg::Text("bullets alive: %d, bullets destroyed: %d", bullets.size(), bulletsDestroyed);
 }
 
 void BulletSystem::Draw() {
@@ -97,7 +123,8 @@ void BulletSystem::Term() {}
 void BulletSystem::CreateBullet(const Vector3& pos, const Vector3& velocity) {
 	Bullet bullet;
 	bullet.pos = pos;
-	bullet.dir = velocity;
+	bullet.speed = velocity.Length();
+	bullet.dir = velocity / bullet.speed;
 	bullet.color = Colors::red;
 
 	bullets.push_back(bullet);

@@ -3,3 +3,7 @@ Scene:
     - camera.asset
     - player.asset
     - Light.asset
+    - Wall.asset
+    - physCube.asset
+    - floor.asset
+    - enemyCreep.asset
