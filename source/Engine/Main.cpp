@@ -69,6 +69,7 @@ start:
 		if (scene) {
 			scene->Update();
 		}
+		systemsManager.Update();
 
 		render.Draw();
 

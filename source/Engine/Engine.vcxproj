@@ -85,6 +85,7 @@
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="Resources.cpp" />
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="System.cpp" />
     <ClCompile Include="TopDownCameraRig.cpp" />
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
@@ -105,6 +106,7 @@
     <ClInclude Include="Resources.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Serialization.h" />
+    <ClInclude Include="System.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="TopDownCameraRig.h" />
     <ClInclude Include="Transform.h" />

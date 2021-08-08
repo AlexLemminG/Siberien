@@ -25,7 +25,7 @@ public:
 
 	static T Get() { return instance; }
 private:
-	static T* instance
+	static T* instance;
 };
 
 class SystemRegistratorBase {
@@ -36,13 +36,13 @@ public:
 class SystemsManager {
 public:
 	static void Register(SystemRegistratorBase* registrator) {
-		registrators.push_back(registrator);
+		GetRegistrators().push_back(registrator);
 	}
 
 	SystemsManager() {}
 
 	bool Init() {
-		for (auto registrator : registrators) {
+		for (auto registrator : GetRegistrators()) {
 			systems.push_back(registrator->CreateSystem());
 		}
 
@@ -51,11 +51,13 @@ public:
 				return false;
 			}
 		}
+
+		return true;
 	}
 
 	void Update() {
 		for (auto system : systems) {
-			system->Update()
+			system->Update();
 		}
 	}
 
@@ -67,7 +69,10 @@ public:
 	}
 
 private:
-	static std::vector<SystemRegistratorBase*> registrators;
+	static std::vector<SystemRegistratorBase*>& GetRegistrators() {
+		static std::vector<SystemRegistratorBase*> registrators;
+		return registrators;
+	}
 
 	std::vector<std::shared_ptr<SystemBase>> systems;
 };
