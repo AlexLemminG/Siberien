@@ -5,6 +5,7 @@ std::vector<SDL_Scancode> Input::justPressed;
 std::vector<SDL_Scancode> Input::pressed;
 std::vector<SDL_Scancode> Input::justReleased;
 bool Input::quitPressed = false;
+Vector2 Input::mousePos = Vector2{ 0,0 };
 
 void Input::Update() {
 	quitPressed = false;
@@ -31,4 +32,10 @@ void Input::Update() {
 			justReleased.push_back(e.key.keysym.scancode);
 		}
 	}
+
+	int mouseX;
+	int mouseY;
+	SDL_GetMouseState(&mouseX, &mouseY);
+	mousePos.x = mouseX;
+	mousePos.y = mouseY;
 }

@@ -25,8 +25,9 @@ public:
 		return yamlNode.IsMap();
 	}
 
-	int AsInt() const { return yamlNode.as<unsigned int>(); }
-	int AsFloat() const { return yamlNode.as<float>(); }
+	int AsUInt() const { return yamlNode.as<unsigned int>(); }
+	int AsInt() const { return yamlNode.as<int>(); }
+	float AsFloat() const { return yamlNode.as<float>(); }
 
 	const SerializedObject Child(const std::string& name) const {
 		return SerializedObject(yamlNode[name]);
@@ -35,6 +36,12 @@ public:
 public:
 	YAML::Node yamlNode;
 };
+
+template<typename Type>
+void Deserialize(const SerializedObject& src, Type& dst) {
+	Type defaultValue = dst;
+	Deserialize(src, dst, defaultValue);
+}
 
 template<typename Type,
 	typename Type2,
@@ -77,12 +84,24 @@ inline void Deserialize(const SerializedObject& src, int& dst, const int& defaul
 	dst = src.AsInt();
 }
 
+inline void Deserialize(const SerializedObject& src, bool& dst, const bool& defaultValue) {
+	dst = src.yamlNode.as<bool>();
+}
+
 inline void Deserialize(const SerializedObject& src, float& dst, const float& defaultValue) {
 	dst = src.AsFloat();
 }
 
+inline void Deserialize(const SerializedObject& src, std::string& dst, const std::string& defaultValue) {
+	dst = src.yamlNode.as<std::string>();
+}
+
 
 inline void Deserialize(const SerializedObject& src, Vector3& dst, const Vector3& defaultValue) {
+	if (!src.IsValid() || !src.yamlNode.IsSequence() || src.yamlNode.size() < 3) {
+		dst = defaultValue;
+		return;
+	}
 	dst.x = src.yamlNode[0].as<float>();
 	dst.y = src.yamlNode[1].as<float>();
 	dst.z = src.yamlNode[2].as<float>();
@@ -100,32 +119,42 @@ inline void Deserialize(const SerializedObject& src, Vector3& dst, const Vector3
 
 
 
-class ObjectType {
-
-};
-
-#define CLASS_DECLARATION(className) \
-public:\
-virtual ObjectType* GetType()const;\
-private:\
-static ObjectType type;
-
 //TODO remove default and just use original varName value
-#define REFLECT_VAR(varName, defaultValue)\
+#define REFLECT_VAR_WITH_DEFAULT(varName, defaultValue)\
 {\
 	const auto& child = serializedObject.Child(std::string(#varName)); \
 	if(child.IsValid())\
 	{\
-		::Deserialize(child, varName, defaultValue);\
+		Deserialize(child, varName, defaultValue);\
 	}else{\
 		varName = defaultValue; \
 	}\
 	\
 }\
 
+
+#define REFLECT_VAR(varName)\
+{\
+	auto defaultValue = varName;\
+	const auto& child = serializedObject.Child(std::string(#varName)); \
+	if(child.IsValid())\
+	{\
+		Deserialize(child, varName, defaultValue);\
+	}else{\
+		varName = defaultValue; \
+	}\
+	\
+}\
+
+
+#define REFLECT_BEGIN_CUSTOM(className, Des) \
+public:\
+void __Deserialize(const SerializedObject& serializedObject){ \
+Des(serializedObject);
+
 #define REFLECT_BEGIN(className) \
 public:\
-void Deserialize(const SerializedObject& serializedObject){
+void __Deserialize(const SerializedObject& serializedObject){
 
 #define REFLECT_END() \
 };
@@ -151,7 +180,7 @@ class SerializedObjectImporter : public TextAssetImporter {
 	std::shared_ptr<Object> Import(AssetDatabase& database, const YAML::Node& node) override {
 		std::unique_ptr<Type> asset = std::make_unique<Type>();
 		auto serializedObject = SerializedObject(node);
-		asset->Deserialize(serializedObject);
+		asset->__Deserialize(serializedObject);
 		return std::shared_ptr<Object>(std::move(asset));
 	}
 };
@@ -166,14 +195,20 @@ static TextAssetImporterRegistrator<SerializedObjectImporter<##className>> Asset
 static TextAssetImporterRegistrator<##importerClassName> AssetImporterRegistrator_##className{#className};
 
 class TestMiniClass {
+public:
 	float f;
 	bool b;
+	REFLECT_BEGIN(TestMiniClass);
+	REFLECT_VAR(f);
+	REFLECT_VAR(b);
+	REFLECT_END();
 };
 class TestSerializationClass {
 	int i;
 	TestMiniClass c;
 
 	REFLECT_BEGIN(TestSerializationClass);
-	REFLECT_VAR(i, 666);
+	REFLECT_VAR(i);
+	//REFLECT_VAR_WITH_DEFAULT(c, TestMiniClass{ 0.1, true });
 	REFLECT_END();
 };

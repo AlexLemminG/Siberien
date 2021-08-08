@@ -1,0 +1,13 @@
+GameObject:
+  tag: Player
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $PlayerController
+MeshRenderer:
+  mesh: hero.glb$hero_mesh
+  material: material.asset
+Transform:
+  euler: [0, 60, 0]
+PlayerController:
+  speed: 3.1

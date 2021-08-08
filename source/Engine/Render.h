@@ -3,7 +3,7 @@
 #include "Math.h"
 #include "MeshRenderer.h"
 
-class SDL_Window;
+struct SDL_Window;
 class SDL_Surface;
 
 class Render {
@@ -12,11 +12,12 @@ public:
 	void Draw();
 	void Term();
 
+	//The window we'll be rendering to
+	//TODO make non static
+	static SDL_Window* window;
 private:
 	void DrawMesh(MeshRenderer* renderer);
 	
-	//The window we'll be rendering to
-	SDL_Window* window = nullptr;
 
 	//The surface contained by the window
 	SDL_Surface* screenSurface = nullptr;
@@ -25,4 +26,6 @@ private:
 	
 	int prevWidth;
 	int prevHeight;
+
+
 };

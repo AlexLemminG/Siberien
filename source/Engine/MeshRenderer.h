@@ -32,7 +32,7 @@ public:
 	std::shared_ptr<Shader> shader;
 
 	REFLECT_BEGIN(Material);
-	REFLECT_VAR(shader, nullptr);
+	REFLECT_VAR(shader);
 	REFLECT_END();
 };
 
@@ -55,15 +55,15 @@ public:
 	}
 
 	REFLECT_BEGIN(MeshRenderer);
-	REFLECT_VAR(mesh, nullptr);
-	REFLECT_VAR(material, nullptr);
+	REFLECT_VAR(mesh);
+	REFLECT_VAR(material);
 	REFLECT_END();
 };
 
 class DirLight : public Component {
 public:
-	Color color;
-	Vector3 dir;
+	Color color = Colors::white;
+	Vector3 dir = Vector3(0, -1, 0);
 	void OnEnable() override {
 		dirHandle = bgfx::createUniform("u_lightDir", bgfx::UniformType::Vec4);
 		colorHandle = bgfx::createUniform("u_lightColor", bgfx::UniformType::Vec4);
@@ -80,7 +80,7 @@ public:
 	bgfx::UniformHandle colorHandle;
 
 	REFLECT_BEGIN(DirLight);
-	REFLECT_VAR(color, Colors::white);
-	REFLECT_VAR(dir, Vector3(0, -1, 0));
+	REFLECT_VAR(color);
+	REFLECT_VAR(dir);
 	REFLECT_END();
 };

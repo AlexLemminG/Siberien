@@ -6,6 +6,7 @@
 
 class GameObject : public Object {
 public:
+	std::string tag;
 	std::vector<std::shared_ptr<Component>> components;
 
 	template<typename T>
@@ -24,7 +25,7 @@ public:
 	}
 
 	REFLECT_BEGIN(GameObject);
-	//TODO default someting
-	REFLECT_VAR(components, std::vector<std::shared_ptr<Component>>());
+	REFLECT_VAR(tag);
+	REFLECT_VAR(components);
 	REFLECT_END();
 };

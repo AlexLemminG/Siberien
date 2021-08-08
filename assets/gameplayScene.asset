@@ -1,0 +1,5 @@
+Scene:
+  gameObjects:
+    - camera.asset
+    - player.asset
+    - Light.asset

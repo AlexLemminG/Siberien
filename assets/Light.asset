@@ -1,0 +1,9 @@
+GameObject:
+  components:
+  - $Transform
+  - $DirLight
+DirLight:
+  color: 0xffffffff
+  dir: [0,-1,0]
+Transform:
+  pos: [0,0,0]

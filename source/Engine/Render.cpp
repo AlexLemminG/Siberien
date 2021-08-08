@@ -15,7 +15,9 @@
 #include <bx\math.h>
 #include "GameObject.h"
 #include "Transform.h"
+#include "Dbg.h"
 
+SDL_Window* Render::window = nullptr;
 
 bool Render::Init()
 {
@@ -26,10 +28,10 @@ bool Render::Init()
 		return false;
 	}
 
-	int width = CfgGetInt("screenWidth");
-	int height = CfgGetInt("screenHeight");
-	int posX = CfgGetInt("screenPosX");
-	int posY = CfgGetInt("screenPosY");
+	int width = SettingsGetInt("screenWidth");
+	int height = SettingsGetInt("screenHeight");
+	int posX = SettingsGetInt("screenPosX");
+	int posY = SettingsGetInt("screenPosY");
 	//Create window
 	window = SDL_CreateWindow("SDL Tutorial", posX, posY, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	if (window == NULL)
@@ -69,14 +71,19 @@ bool Render::Init()
 	prevWidth = width;
 	prevHeight = height;
 
+	Dbg::Init();
+
 	return true;
 }
-
 void Render::Draw()
 {
+	Matrix4 cameraViewMatrix;
 	auto camera = Camera::GetMain();
 	int width;
 	int height;
+	float fov = 60.f;
+	float nearPlane = 0.1f;
+	float farPlane = 100.f;
 	SDL_GetWindowSize(window, &width, &height);
 
 	if (height != prevHeight || width != prevWidth) {
@@ -89,6 +96,14 @@ void Render::Draw()
 	}
 	else {
 		bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, camera->GetClearColor().ToIntRGBA(), 1.0f, 0);
+		auto cameraMatrix = camera->gameObject()->transform()->matrix;
+		SetScale(cameraMatrix, Vector3_one);
+		cameraViewMatrix = cameraMatrix.Inverse();
+		fov = camera->GetFov();
+		nearPlane = camera->GetNearPlane();
+		farPlane = camera->GetFarPlane();
+
+		near
 	}
 	float time = (float)(SDL_GetTicks()) / 1000.f;
 	bgfx::setUniform(u_time, &time);
@@ -99,21 +114,13 @@ void Render::Draw()
 		bgfx::dbgTextPrintf(1, 1, 0x0f, "NO CAMERA");
 	}
 	else {
-
 		bgfx::dbgTextPrintf(1, 1, 0x0f, "YES CAMERA");
 	}
 
-	auto cameraViewMatrix = camera->gameObject()->transform()->matrix.Inverse();
 
-	//const auto at = camera->pos + camera->dir;
-	//const auto eye = camera->pos;
-	// Set view and projection matrix for view 0.
 	{
-		//float view[16];
-		//bx::mtxLookAt(view, bx::Vec3(eye.x, eye.y, eye.z), bx::Vec3(at.x, at.y, at.z));
-
 		float proj[16];
-		bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
+		bx::mtxProj(proj, fov, float(width) / float(height), nearPlane, farPlane, bgfx::getCaps()->homogeneousDepth);
 		bgfx::setViewTransform(0, &cameraViewMatrix(0, 0), proj);
 
 	}
@@ -122,11 +129,14 @@ void Render::Draw()
 		DrawMesh(mesh);
 	}
 
+	Dbg::DrawAll();
+
 	bgfx::frame();
 }
 
 void Render::Term()
 {
+	Dbg::Term();
 	//TODO destroy programs, buffers and other shit
 	bgfx::destroy(u_time);
 
@@ -136,14 +146,14 @@ void Render::Term()
 		int width;
 		int height;
 		SDL_GetWindowSize(window, &width, &height);
-		CfgSetInt("screenWidth", width);
-		CfgSetInt("screenHeight", height);
+		SettingsSetInt("screenWidth", width);
+		SettingsSetInt("screenHeight", height);
 
 		int posX;
 		int posY;
 		SDL_GetWindowPosition(window, &posX, &posY);
-		CfgSetInt("screenPosX", posX);
-		CfgSetInt("screenPosY", posY);
+		SettingsSetInt("screenPosX", posX);
+		SettingsSetInt("screenPosY", posY);
 
 		SDL_DestroyWindow(window);
 	}

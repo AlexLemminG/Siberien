@@ -3,7 +3,7 @@
 void FlyCameraMovement::Update() {
 
 	Matrix4 matrix = gameObject()->transform()->matrix;
-	auto rotation = Quaternion::FromMatrix(matrix);
+	auto rotation = GetRot(matrix);
 
 	Vector3 deltaPos = Vector3_zero;
 	if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_W)) {
@@ -25,16 +25,17 @@ void FlyCameraMovement::Update() {
 		deltaPos -= rotation * Vector3_up;
 	}
 	if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LEFT)) {
-		rotation = rotation * Quaternion::FromEulerAngles(0, rotationSpeed * Time::deltaTime(), 0);
+		rotation = Quaternion::FromEulerAngles(0, -rotationSpeed * Time::deltaTime(), 0) * rotation;
 	}
 	if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_RIGHT)) {
-		rotation = rotation * Quaternion::FromEulerAngles(0, -rotationSpeed * Time::deltaTime(), 0);
+		rotation = Quaternion::FromEulerAngles(0, rotationSpeed * Time::deltaTime(), 0) * rotation;
 	}
 	rotation.Normalize();
 
 	deltaPos *= speed * Time::deltaTime();
 
-	matrix = Matrix4::Transform(matrix.TranslationVector3D() + deltaPos, rotation.ToMatrix(), matrix.ScaleVector3D());
+	SetRot(matrix, rotation);
+	SetPos(matrix, GetPos(matrix) + deltaPos);
 
 	gameObject()->transform()->matrix = matrix;
 }

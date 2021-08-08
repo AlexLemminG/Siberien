@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "SDL_scancode.h"
+#include "Math.h"
 
 class Input {
 public:
@@ -32,6 +33,10 @@ public:
 		return std::find(justReleased.begin(), justReleased.end(), code) != justReleased.end();
 	}
 
+	static Vector2 GetMousePosition() {
+		return mousePos;
+	}
+
 	static bool GetQuit() {
 		return quitPressed;
 	}
@@ -42,4 +47,5 @@ private:
 	static std::vector<SDL_Scancode> pressed;
 	static std::vector<SDL_Scancode> justReleased;
 	static bool quitPressed;
+	static Vector2 mousePos;
 };

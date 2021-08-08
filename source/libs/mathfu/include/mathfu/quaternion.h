@@ -589,7 +589,7 @@ class Quaternion {
   static inline Quaternion<T> LookAt(const Vector<T, 3>& forward,
                                      const Vector<T, 3>& up) {
     return FromMatrix(
-        Matrix<T, 3>::LookAt(forward, Vector<T, 3>(static_cast<T>(0)), up));
+        Matrix<T, 3>::LookAt(forward, Vector<T, 3>(static_cast<T>(0)), up).Transpose());
   }
 
   /// @brief Contains a quaternion doing the identity transform.

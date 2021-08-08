@@ -7,13 +7,13 @@
 #include "Time.h"
 
 class FlyCameraMovement : public Component {
-	float speed = 0.f;
+	float speed = 5.f;
 	float rotationSpeed = 0.1f;
 
 	void Update() override;
 
 	REFLECT_BEGIN(FlyCameraMovement);
-	REFLECT_VAR(speed, 5.f);
-	REFLECT_VAR(rotationSpeed, 0.1f);
+	REFLECT_VAR(speed);
+	REFLECT_VAR(rotationSpeed);
 	REFLECT_END();
 };

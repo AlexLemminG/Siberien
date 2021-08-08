@@ -2,8 +2,16 @@ GameObject:
   components:
     - $Camera
     - $Transform
+    - $TopDownCameraRig
 Camera:
   clearColor: 0x663355ff
+  fov: 90.0
+  nearPlane: 0.1
+  farPlane: 1000
 Transform:
-FlyCameraMovement:
-  speed: 10
+  pos: [0, 0.999, -5]
+  euler: [60, 0, 0]
+TopDownCameraRig:
+  targetTag: "Player"
+  offset: [0, 10, -5]
+  lerpT: 1

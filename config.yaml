@@ -1,4 +1,1 @@
-screenWidth: 927
-screenHeight: 1048
-screenPosX: 63
-screenPosY: 31
+scene: gameplayScene
