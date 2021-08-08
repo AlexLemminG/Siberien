@@ -126,8 +126,8 @@ public:
 	static Color FromIntRGBA(int rgbaColor) {
 		Color c;
 		c.r = ((rgbaColor >> 24) & 0xff) / 255.f;
-		c.b = ((rgbaColor >> 16) & 0xff) / 255.f;
-		c.g = ((rgbaColor >> 8) & 0xff) / 255.f;
+		c.g = ((rgbaColor >> 16) & 0xff) / 255.f;
+		c.b = ((rgbaColor >> 8) & 0xff) / 255.f;
 		c.a = ((rgbaColor >> 0) & 0xff) / 255.f;
 		return c;
 	}

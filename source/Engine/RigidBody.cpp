@@ -36,6 +36,8 @@ void RigidBody::OnEnable() {
 	//using motionstate is optional, it provides interpolation capabilities, and only synchronizes 'active' objects
 	pMotionState = new btDefaultMotionState(groundTransform);
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, pMotionState, shape, localInertia);
+	rbInfo.m_friction = friction;
+	rbInfo.m_restitution = restitution;
 	pBody = new btRigidBody(rbInfo);
 
 	if (isKinematic) {

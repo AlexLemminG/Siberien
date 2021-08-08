@@ -19,9 +19,13 @@ private:
 	bool isStatic = false;
 	bool isKinematic = false;
 	float mass = 1.f;
+	float friction = 0.5f;
+	float restitution = 0.f;
 	REFLECT_BEGIN(RigidBody);
 	REFLECT_VAR(mass);
 	REFLECT_VAR(isStatic);
 	REFLECT_VAR(isKinematic);
+	REFLECT_VAR(friction);
+	REFLECT_VAR(restitution);
 	REFLECT_END();
 };

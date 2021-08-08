@@ -231,7 +231,7 @@ class ShaderAssetImporter : public TextAssetImporter {
 		params += (isVertex ? "v" : "f");
 		params += " --platform ";
 		params += "windows";
-		params += " -i C:\\Projects\\Siberien\\assets\\shaders\\include";
+		params += " -i assets\\shaders\\include";
 		params += " -p ";
 		params += (isVertex ? "v" : "p");
 		params += "s_5_0";

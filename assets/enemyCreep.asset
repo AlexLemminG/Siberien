@@ -1,5 +1,4 @@
 GameObject:
-  tag: Player
   components:
   - $MeshRenderer
   - $Transform
@@ -7,8 +6,8 @@ GameObject:
   - $SphereCollider
   - $RigidBody
 MeshRenderer:
-  mesh: hero.glb$hero_mesh
-  material: material.asset
+  mesh: meshes/enemy.glb$Suzanne
+  material: enemyMaterial.asset
 Transform:
   pos: [5,0.5,0]
   euler: [0, 60, 0]
@@ -19,7 +18,9 @@ EnemyCreepController:
   angularAcc: 1.4
 SphereCollider:
   radius: 0.5
-  center: [0, 0.25, 0]
+  center: [0, 0.15, 0]
 RigidBody:
   isStatic: false
+  friction: 0.3
+  restitution: 10
   mass: 5
