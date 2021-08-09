@@ -1,4 +1,5 @@
 GameObject:
+  tag: "Creep"
   components:
   - $MeshRenderer
   - $Transform
@@ -22,5 +23,5 @@ SphereCollider:
 RigidBody:
   isStatic: false
   friction: 0.3
-  restitution: 10
-  mass: 5
+  restitution: 0
+  mass: 50

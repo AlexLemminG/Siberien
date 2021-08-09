@@ -23,8 +23,9 @@ bool PhysicsSystem::Init() {
 	overlappingPairCache = new btDbvtBroadphase();
 
 	///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
-	solver = new btSequentialImpulseConstraintSolver;
+	solver = new btSequentialImpulseConstraintSolver();
 
+	
 	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
 
 	dynamicsWorld->setGravity(btVector3(0, -10, 0));
@@ -35,7 +36,7 @@ bool PhysicsSystem::Init() {
 	/// Do some simulation
 
 	///-----stepsimulation_start-----
-	prevSimulationTime = 0.f;
+	prevSimulationTime = Time::time();
 
 
 	return true;
@@ -45,7 +46,7 @@ void PhysicsSystem::Update() {
 	while (prevSimulationTime < Time::time()) {
 		float currentSimulationTime = prevSimulationTime + Time::fixedDeltaTime();
 
-		dynamicsWorld->stepSimulation(Time::fixedDeltaTime(), 10);
+		dynamicsWorld->stepSimulation(Time::fixedDeltaTime(), 0, Time::fixedDeltaTime());
 
 		prevSimulationTime = currentSimulationTime;
 

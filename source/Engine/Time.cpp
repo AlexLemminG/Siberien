@@ -1,3 +1,4 @@
+#include "Math.h"
 #include "Time.h"
 #include "SDL.h"
 #include "Config.h"
@@ -20,7 +21,10 @@ void Time::Update() {
 
 	m_deltaTime = (currentTicks - m_prevTicks) / ticksPerSecond;
 
-	m_time = (currentTicks - m_startTicks) / ticksPerSecond;
+	m_deltaTime = Mathf::Min(m_deltaTime, m_maxDeltaTime);
+
+	m_time += m_deltaTime;
+
 	m_prevTicks = currentTicks;
 	m_frameCount++;
 }

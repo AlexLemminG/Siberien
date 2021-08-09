@@ -1,6 +1,7 @@
 #include "BoxCollider.h"
 #include "btBulletCollisionCommon.h"
 #include "PhysicsSystem.h"
+#include "Math.h"
 
 DECLARE_TEXT_ASSET(BoxCollider);
 DECLARE_TEXT_ASSET(SphereCollider);
@@ -23,7 +24,8 @@ btCollisionShape* SphereCollider::CreateShape() {
 	transform.setIdentity();
 	transform.setOrigin(btConvert(center));
 
-	sphereShape.reset(new btSphereShape(radius));
+	//TODO move random somewhere else
+	sphereShape.reset(new btSphereShape(radius + Random::Range(-0.5f, 0.2f) * radius));
 	compound->addChildShape(transform, sphereShape.get());
 	return compound;
 }

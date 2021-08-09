@@ -14,6 +14,8 @@ public:
 	void FixedUpdate();
 	void Term();
 
+	void AddGameObject(std::shared_ptr<GameObject> go);
+
 	static std::shared_ptr<GameObject> FindGameObjectByTag(std::string tag);
 
 	static Scene* Get() { return current; }//TODO remove singletons
@@ -21,6 +23,7 @@ public:
 
 private:
 	static Scene* current;
+	bool isInited = false;
 
 	REFLECT_BEGIN(Scene);
 	REFLECT_VAR(gameObjects);

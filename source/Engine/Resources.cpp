@@ -167,12 +167,56 @@ std::shared_ptr<BinaryAsset> AssetDatabase::LoadBinaryAssetFromLibrary(std::stri
 	}
 }
 
+std::shared_ptr<Object> AssetDatabase::LoadFromYaml(const YAML::Node& node) {
+	std::string path = "***temp_storage***";
+	currentAssetLoadingPath = path;
+	LoadAllAtYaml(node, path);
+	currentAssetLoadingPath = "";
+
+	LoadNextWhileNotEmpty();
+
+	auto asset = GetLoaded(path);
+
+	assets[path].clear();
+
+	return asset;
+}
+
 void AssetDatabase::RegisterBinaryAssetImporter(std::string assetType, std::unique_ptr<AssetImporter>&& importer) {
 	GetAssetImporters()[assetType] = std::move(importer);
 }
 
 void AssetDatabase::RegisterTextAssetImporter(std::string assetType, std::unique_ptr<TextAssetImporter>&& importer) {
 	GetTextAssetImporters()[assetType] = std::move(importer);
+}
+
+void AssetDatabase::LoadAllAtYaml(const YAML::Node& node, const std::string& path) {
+	//TODO return invalid asset ?
+	if (!node.IsDefined()) {
+		currentAssetLoadingPath = "";//TODO scope exis shit
+		return;
+	}
+	for (const auto& kv : node) {
+		PathDescriptor descriptor(kv.first.as<std::string>());
+		std::string type = descriptor.assetPath;
+		std::string id = descriptor.assetId.size() > 0 ? descriptor.assetId : descriptor.assetPath;
+
+		auto node = kv.second;
+
+		auto& importer = GetTextAssetImporters()[type];
+		if (!importer) {
+			LogError("Unknown asset type '%s' in '%s'", type.c_str(), currentAssetLoadingPath.c_str());
+			continue;
+		}
+
+		auto asset = importer->Import(*this, node);
+
+		if (asset != nullptr) {
+			AddAsset(asset, path, id);
+		} else {
+			LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
+		}
+	}
 }
 
 void AssetDatabase::LoadAllAtPath(std::string path)
@@ -185,35 +229,8 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 			currentAssetLoadingPath = "";//TODO scope exis shit
 			return;
 		}
-		//TODO return invalid asset ?
-		if (!textAsset->GetYamlNode().IsDefined()) {
-			currentAssetLoadingPath = "";//TODO scope exis shit
-			return;
-		}
 
-		for (const auto& kv : textAsset->GetYamlNode()) {
-			PathDescriptor descriptor(kv.first.as<std::string>());
-			std::string type = descriptor.assetPath;
-			std::string id = descriptor.assetId.size() > 0 ? descriptor.assetId : descriptor.assetPath;
-
-			auto node = kv.second;
-
-			auto& importer = GetTextAssetImporters()[type];
-			if (!importer) {
-				LogError("Unknown asset type '%s' in '%s'", type.c_str(), currentAssetLoadingPath.c_str());
-				continue;
-			}
-
-			auto asset = importer->Import(*this, node);
-
-			if (asset != nullptr) {
-				AddAsset(asset, path, id);
-			}
-			else {
-				LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
-
-			}
-		}
+		LoadAllAtYaml(textAsset->GetYamlNode(), path);
 	}
 	else if (ext == "fbx" || ext == "glb" || ext == "blend") {
 		std::string type = "Mesh";
@@ -251,6 +268,7 @@ void AssetDatabase::LoadNextWhileNotEmpty() {
 			*(std::shared_ptr<Object>*)(it.first) = object;
 		}
 	}
+	requestedObjectPtrs.clear();
 }
 
 std::string AssetDatabase::GetFileName(std::string path) {

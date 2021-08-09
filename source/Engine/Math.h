@@ -58,6 +58,9 @@ public:
 	static float Max(float a, float b) {
 		return a > b ? a : b;
 	}
+	static float Min(float a, float b) {
+		return a < b ? a : b;
+	}
 	static float Clamp(float f, float a, float b) {
 		return f > b ? b : (f < a ? a : f);
 	}
@@ -111,6 +114,13 @@ public:
 	static constexpr float pi = 3.14f;//TODO lol
 	static constexpr float pi2 = pi * 2;
 	static constexpr float epsilon = 0.00001f;
+};
+
+class Random {
+public:
+	static float Range(float min, float max) {
+		return (rand() / (float)RAND_MAX) * (max - min) + min;
+	}
 };
 
 

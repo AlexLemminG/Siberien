@@ -107,8 +107,16 @@ public:
 		auto& asset = LoadByPath(path);
 		return std::dynamic_pointer_cast<AssetType>(asset);
 	}
-
 	std::shared_ptr<Object> LoadByPath(std::string path);
+
+	//TODO does it belong here ?
+	template<typename AssetType>
+	std::shared_ptr<AssetType> LoadFromYaml(const YAML::Node& node) {
+		auto& asset = LoadFromYaml(node);
+		return std::dynamic_pointer_cast<AssetType>(asset);
+	}
+	std::shared_ptr<Object> LoadFromYaml(const YAML::Node& node);
+
 
 	static void RegisterBinaryAssetImporter(std::string assetType, std::unique_ptr<AssetImporter>&& importer);
 	static void RegisterTextAssetImporter(std::string assetType, std::unique_ptr<TextAssetImporter>&& importer);
@@ -159,6 +167,7 @@ private:
 
 	void LoadAllAtPath(std::string path);
 	void LoadNextWhileNotEmpty();
+	void LoadAllAtYaml(const YAML::Node& node, const std::string& path);
 
 	std::string GetFileExtension(std::string path);
 

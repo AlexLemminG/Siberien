@@ -18,14 +18,32 @@
 #include "System.h"
 //#include <bgfx_utils.h>
 
+std::string GetFirstSceneName() {
+	return CfgGetString("scene") + ".asset";
+}
 
-std::shared_ptr<Scene> LoadScene(AssetDatabase& assets) {
-	auto scene = assets.LoadByPath<Scene>(CfgGetString("scene") + ".asset");
+
+std::shared_ptr<Scene> LoadScene(AssetDatabase& assets, std::string sceneName) {
+	auto scene = assets.LoadByPath<Scene>(sceneName);
+	scene = Object::Instantiate(scene);
 	if (scene) {
 		scene->Init();
+		auto creep = scene->FindGameObjectByTag("Creep");
+		if (creep) {
+			static int h = 1000;
+			for (int i = 0; i < h; i++) {
+				auto go = Object::Instantiate(creep);
+				float r = 10.f;
+				SetPos(go->transform()->matrix, GetPos(go->transform()->matrix) + Vector3{ Random::Range(-r, r), 5.f, Random::Range(-r, r) });
+				if (go) {
+					scene->AddGameObject(go);
+				}
+			}
+		}
 	}
 	return scene;
 }
+
 
 int main(int argc, char* argv[]) {
 	bool needConstantSceneReload = false;
@@ -56,7 +74,7 @@ start:
 
 	//auto camera = assets.LoadByPath<Camera>("camera.asset");
 	//Camera::SetMain(camera);
-	auto scene = LoadScene(assets);
+	auto scene = LoadScene(assets, GetFirstSceneName());
 
 	//auto gameObject = assets.LoadByPath<GameObject>("gameObject.asset");
 
@@ -88,7 +106,7 @@ start:
 			assets.Term();
 			assets = AssetDatabase();
 			assets.Init();
-			scene = LoadScene(assets);
+			scene = LoadScene(assets, GetFirstSceneName());;
 		}
 	}
 

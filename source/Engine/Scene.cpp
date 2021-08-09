@@ -38,6 +38,8 @@ void Scene::Init() {
 			c->OnEnable();
 		}
 	}
+
+	isInited = true;
 }
 
 void Scene::Update() {
@@ -62,7 +64,40 @@ void Scene::Term() {
 			go->components[iC]->OnDisable();
 		}
 	}
+	isInited = false;
 	current = nullptr;
+}
+
+void Scene::AddGameObject(std::shared_ptr<GameObject> go) {
+	//TODO share code with Init()
+
+	if (go == nullptr) {
+		return;
+	}
+
+	gameObjects.push_back(go);
+
+	if (!isInited) {
+		return;
+	}
+
+	for (int iC = go->components.size() - 1; iC >= 0; iC--) {
+		if (go->components[iC] == nullptr) {
+			go->components.erase(go->components.begin() + iC);
+		}
+	}
+	if (!go->transform()) {
+		go->components.push_back(std::make_shared<Transform>());
+	}
+
+
+	for (auto c : go->components) {
+		c->m_gameObject = go;
+	}
+
+	for (auto c : go->components) {
+		c->OnEnable();
+	}
 }
 
 std::shared_ptr<GameObject> Scene::FindGameObjectByTag(std::string tag) {
