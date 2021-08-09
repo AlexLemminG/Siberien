@@ -4,6 +4,8 @@
 #include "mathfu/matrix.h"
 #include "mathfu/quaternion.h"
 
+#include "Reflect.h"
+
 typedef mathfu::Vector<float, 2> Vector2;
 typedef mathfu::Vector<float, 3> Vector3;
 typedef mathfu::Vector<float, 4> Vector4;
@@ -139,7 +141,8 @@ public:
 			Mathf::NormalizedFloatToByte(a) << 0;
 	}
 
-	void Deserialize(const SerializedObject& serializedObject);
+	static void Deserialize(const SerializationContext& serializedObject, Color& color);
+	static void Serialize(SerializationContext& serializedObject, const Color& color);
 };
 
 namespace Colors {
@@ -177,3 +180,21 @@ public:
 		return distance > 0.f;
 	}
 };
+
+inline void SerializeVector(SerializationContext& context, const Vector3& src) {
+	context.yamlNode = YAML::Node(YAML::NodeType::Sequence);
+	context.yamlNode[0] = src.x;
+	context.yamlNode[1] = src.y;
+	context.yamlNode[2] = src.z;
+}
+inline void DeserializeVector(const SerializationContext& context, Vector3& dst) {
+	if (!context.IsDefined() || !context.yamlNode.IsSequence() || context.yamlNode.size() < 3) {
+		//v = defaultValue;
+		return;
+	}
+	dst.x = context.yamlNode[0].as<float>();
+	dst.y = context.yamlNode[1].as<float>();
+	dst.z = context.yamlNode[2].as<float>();
+}
+REFLECT_CUSTOM_EXT(Vector3, SerializeVector, DeserializeVector);
+REFLECT_CUSTOM_EXT(Color, Color::Serialize, Color::Deserialize);

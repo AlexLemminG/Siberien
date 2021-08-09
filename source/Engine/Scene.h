@@ -17,6 +17,8 @@ public:
 	static std::shared_ptr<GameObject> FindGameObjectByTag(std::string tag);
 
 	static Scene* Get() { return current; }//TODO remove singletons
+	virtual void OnBeforeSerializeCallback(SerializationContext& context) const override;
+
 private:
 	static Scene* current;
 

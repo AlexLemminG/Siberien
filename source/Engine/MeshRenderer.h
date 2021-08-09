@@ -25,6 +25,8 @@ class Shader : public Object {
 public:
 	bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
 	std::vector<std::shared_ptr<BinaryAsset>> buffers;
+	REFLECT_BEGIN(Shader);
+	REFLECT_END();
 };
 
 class Material : public Object {

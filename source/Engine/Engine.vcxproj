@@ -85,8 +85,10 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="MeshRenderer.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="PhysicsSystem.cpp" />
     <ClCompile Include="PlayerController.cpp" />
+    <ClCompile Include="Reflect.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="Resources.cpp" />
     <ClCompile Include="RigidBody.cpp" />
@@ -114,6 +116,7 @@
     <ClInclude Include="Object.h" />
     <ClInclude Include="PhysicsSystem.h" />
     <ClInclude Include="PlayerController.h" />
+    <ClInclude Include="Reflect.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Resources.h" />
     <ClInclude Include="RigidBody.h" />

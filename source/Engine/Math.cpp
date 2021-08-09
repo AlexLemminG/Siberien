@@ -1,17 +1,24 @@
 #include "Math.h"
 #include "Serialization.h"
 
-void Color::Deserialize(const SerializedObject& serializedObject) {
-	if (serializedObject.IsObject()) {
-		::Deserialize(serializedObject.Child("r"), r, 0.f);
-		::Deserialize(serializedObject.Child("g"), g, 0.f);
-		::Deserialize(serializedObject.Child("b"), b, 0.f);
-		::Deserialize(serializedObject.Child("a"), a, 1.f);
+void Color::Deserialize(const SerializationContext& context, Color& color) {
+	if (context.yamlNode.IsMap()) {
+		::Deserialize(context.Child("r"), color.r);
+		::Deserialize(context.Child("g"), color.g);
+		::Deserialize(context.Child("b"), color.b);
+		::Deserialize(context.Child("a"), color.a);
 	}
 	else {
-		*this = FromIntRGBA(serializedObject.AsUInt());
+		color = Color::FromIntRGBA(context.yamlNode.as<unsigned int>());
 	}
 }
+void Color::Serialize(SerializationContext& context, const Color& color) {
+	::Serialize(context.Child("r"), color.r);
+	::Serialize(context.Child("g"), color.g);
+	::Serialize(context.Child("b"), color.b);
+	::Serialize(context.Child("a"), color.a);
+}
+
 
 const Vector3 Vector3_zero = Vector3{ 0,0,0 };
 const Vector3 Vector3_one = Vector3{ 1,1,1 };

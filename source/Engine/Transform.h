@@ -28,19 +28,28 @@ public:
 public:
 	Matrix4 matrix = Matrix4::Identity();
 
-	REFLECT_BEGIN_CUSTOM(Transform, Des);
-	REFLECT_END();
 
-private:
-	void Des(const SerializedObject& so) {
+public:
+	static void Des(const SerializationContext& so, Transform& t) {
 		Vector3 pos = Vector3_zero;
 		Vector3 euler = Vector3_zero;
 		Vector3 scale = Vector3_one;
 
-		Deserialize(so.yamlNode["pos"], pos);
-		Deserialize(so.yamlNode["euler"], euler);
-		Deserialize(so.yamlNode["scale"], scale);
+		Deserialize(so.Child("pos"), pos);
+		Deserialize(so.Child("euler"), euler);
+		Deserialize(so.Child("scale"), scale);
 
-		matrix = Matrix4::Transform(pos, Quaternion::FromEulerAngles(Mathf::DegToRad(euler)).ToMatrix(), scale);
+		t.matrix = Matrix4::Transform(pos, Quaternion::FromEulerAngles(Mathf::DegToRad(euler)).ToMatrix(), scale);
 	}
+	static void Ser(SerializationContext& so, const Transform& t) {
+		Vector3 pos = GetPos(t.matrix);
+		Vector3 euler = Mathf::RadToDeg(GetRot(t.matrix).ToEulerAngles());
+		Vector3 scale = GetScale(t.matrix);
+
+		Serialize(so.Child("pos"), pos);
+		Serialize(so.Child("euler"), euler);
+		Serialize(so.Child("scale"), scale);
+	}
+
+	REFLECT_CUSTOM(Transform, Transform::Ser, Transform::Des);
 };

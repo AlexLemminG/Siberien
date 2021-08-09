@@ -19,4 +19,7 @@ public:
 
 private:
 	std::shared_ptr<GameObject> m_gameObject;
+
+	REFLECT_BEGIN(Component);
+	REFLECT_END();
 };

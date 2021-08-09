@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 #include <fstream>
+#include "Reflect.h"
 #include "Object.h"
 
 
@@ -31,10 +32,15 @@ public:
 	const YAML::Node& GetYamlNode() const { return yaml; }
 private:
 	YAML::Node yaml;
+
+	REFLECT_BEGIN(TextAsset);
+	REFLECT_END();
 };
 
 class TextureAsset : public Object {
 
+	REFLECT_BEGIN(TextureAsset);
+	REFLECT_END();
 };
 
 class BinaryAsset : public Object {
@@ -42,6 +48,9 @@ public:
 	std::vector<char> buffer;
 	BinaryAsset(std::vector<char>&& buffer) :
 		buffer(buffer) {}
+
+	REFLECT_BEGIN(BinaryAsset);
+	REFLECT_END();
 };
 
 class AssetDatabase;
@@ -105,9 +114,11 @@ public:
 	static void RegisterTextAssetImporter(std::string assetType, std::unique_ptr<TextAssetImporter>&& importer);
 
 	template<typename T>
-	void RequestObjectPtr(std::shared_ptr<T>& dest, std::string objectPath) {
-		RequestObjectPtr((void*)&dest, objectPath);
+	void RequestObjPtr(std::shared_ptr<T>& dest, std::string objectPath) {
+		RequestObjPtr((void*)&dest, objectPath);
 	}
+	void RequestObjPtr(void* dest, std::string objectPath);
+
 	static AssetDatabase* Get();
 
 	std::shared_ptr<Object> GetLoaded(std::string path);
@@ -126,6 +137,11 @@ public:
 	std::string GetAssetPath(std::string path) { return assetsFolderPrefix + "\\" + path; }
 	long GetLastModificationTime(std::string path);
 	void CreateFolders(std::string fullPath);
+	template<typename T>
+	std::string GetAssetPath(std::shared_ptr<T> obj) {
+		return GetAssetPath(std::dynamic_pointer_cast<Object>(obj));
+	}
+	std::string GetAssetPath(std::shared_ptr<Object> obj);
 
 private:
 	class PathDescriptor {
@@ -133,6 +149,10 @@ private:
 		PathDescriptor(std::string path);
 		std::string assetPath;
 		std::string assetId;
+
+		std::string ToFullPath() {
+			return assetId.size() > 0 ? FormatString("%s$%s", assetPath.c_str(), assetId.c_str()) : assetPath;
+		}
 	};
 
 	std::string currentAssetLoadingPath;
@@ -143,7 +163,6 @@ private:
 	std::string GetFileExtension(std::string path);
 
 
-	void RequestObjectPtr(void* dest, std::string objectPath);
 
 	//TODO main asset
 	std::unordered_map<std::string, std::vector<std::pair<PathDescriptor, std::shared_ptr<Object>>>> assets;

@@ -76,3 +76,11 @@ std::shared_ptr<GameObject> Scene::FindGameObjectByTag(std::string tag) {
 	}
 	return nullptr;
 }
+
+//TODO remove singletons
+
+void Scene::OnBeforeSerializeCallback(SerializationContext& context) const {
+	for (auto go : gameObjects) {
+		context.AddAllowedToSerializeObject(go);
+	}
+}

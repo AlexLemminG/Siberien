@@ -24,6 +24,8 @@ public:
 		return GetComponent<Transform>();
 	}
 
+	virtual void OnBeforeSerializeCallback(SerializationContext& context) const override;
+
 	REFLECT_BEGIN(GameObject);
 	REFLECT_VAR(tag);
 	REFLECT_VAR(components);

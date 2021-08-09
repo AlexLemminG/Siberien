@@ -287,6 +287,18 @@ void AssetDatabase::CreateFolders(std::string fullPath) {
 	}
 }
 
+std::string AssetDatabase::GetAssetPath(std::shared_ptr<Object> obj) {
+	//WARN slow
+	for (auto it : assets) {
+		for (auto it2 : it.second) {
+			if (it2.second == obj) {
+				return it2.first.ToFullPath();
+			}
+		}
+	}
+	return "";
+}
+
 std::string AssetDatabase::GetFileExtension(std::string path) {
 	auto name = GetFileName(path);
 	if (name == "") {
@@ -301,7 +313,7 @@ std::string AssetDatabase::GetFileExtension(std::string path) {
 	}
 }
 
-void AssetDatabase::RequestObjectPtr(void* dest, std::string objectPath) {
+void AssetDatabase::RequestObjPtr(void* dest, std::string objectPath) {
 	auto path = objectPath;
 	if (path.size() > 0 && path[0] == '$') {
 		path = currentAssetLoadingPath + path;

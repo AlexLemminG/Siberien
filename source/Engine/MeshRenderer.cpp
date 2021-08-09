@@ -72,6 +72,9 @@ void InitVertexLayouts() {
 class FullMeshAsset : public Object {
 public:
 	std::shared_ptr<const aiScene> scene;
+
+	REFLECT_BEGIN(FullMeshAsset);
+	REFLECT_END();
 };
 
 class MeshAssetImporter : public AssetImporter {
