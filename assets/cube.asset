@@ -5,13 +5,11 @@ GameObject:
   - $BoxCollider
   - $RigidBody
 MeshRenderer:
-  mesh: meshes\physCube.glb$cdt_cube
+  mesh: meshes\cube.glb$Cube.001
   material: material.asset
 Transform:
-  pos: [0, 5, 12]
-  euler: [0, 0, 0]
 BoxCollider:
-  size: [1,1,1]
+  size: [2,2,2]
 RigidBody:
   isStatic: true
   mass: 20

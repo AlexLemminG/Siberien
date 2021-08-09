@@ -1,0 +1,11 @@
+GameObject:
+  tag: BlenderSceneLoader
+  components:
+    - $BlenderSceneLoader
+BlenderSceneLoader:
+  scene: meshes\scene.glb$FullMeshAsset
+  mapping:
+  - prefab: cube.asset
+    name: Cube.001
+  - prefab: camera.asset
+    name: box  

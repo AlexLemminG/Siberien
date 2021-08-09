@@ -23,7 +23,10 @@ void RigidBody::OnEnable() {
 		return;
 	}
 
-	btTransform groundTransform = btConvert(transform->matrix);
+	auto matr = transform->matrix;
+	SetScale(matr, Vector3_one);
+	btTransform groundTransform = btConvert(matr);
+
 
 	btScalar mass = isStatic ? 0.f : Mathf::Max(0.001f, this->mass);
 
@@ -52,6 +55,9 @@ void RigidBody::OnEnable() {
 void RigidBody::Update() {
 	if (!isStatic) {
 		auto matr = btConvert(pMotionState->m_graphicsWorldTrans);
+		auto scale = GetScale(gameObject()->transform()->matrix);
+		SetScale(matr, scale);
+		//TODO not so persistent
 		gameObject()->transform()->matrix = matr;
 	}
 	else if (isKinematic) {

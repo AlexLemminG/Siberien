@@ -39,15 +39,13 @@ public:
 		return SerializationContext(yamlNode[name], *this);
 	}
 	SerializationContext Child(const std::string& name) {
-		auto child = yamlNode[name];
-		return SerializationContext(child, *this);
+		return SerializationContext(yamlNode[name], *this);
 	}
 	const SerializationContext Child(int iChild) const {
 		return SerializationContext(yamlNode[iChild], *this);
 	}
 	SerializationContext Child(int iChild) {
-		auto child = yamlNode[iChild];
-		return SerializationContext(child, *this);
+		return SerializationContext(yamlNode[iChild], *this);
 	}
 
 	//TODO only if T is Object
@@ -95,13 +93,13 @@ public:
 	virtual void Serialize(SerializationContext& context, const void* object) = 0;
 	virtual void Deserialize(const SerializationContext& context, void* object) = 0;
 	const std::string& GetName() {
-		return name;
+		return __name__;
 	}
 
 protected:
-	ReflectedTypeBase(const std::string& name) : name(name) {}
+	ReflectedTypeBase(const std::string& name) : __name__(name) {}
 private:
-	std::string name;
+	std::string __name__;
 };
 
 
@@ -198,11 +196,12 @@ public:
 		context.yamlNode = YAML::Node(YAML::NodeType::Sequence);
 		for (int i = 0; i < object.size(); i++) {
 			auto child = context.Child(i);
+			::Serialize(child, object[i]);
+			if (!child.IsDefined())
 			{
 				//HACK to make sure yaml doesnt convert parent node into map
 				child.yamlNode = YAML::Node();
 			}
-			::Serialize(child, object[i]);
 		}
 	}
 	void Deserialize(const SerializationContext& context, std::vector<T>& object) {
@@ -291,7 +290,7 @@ public:
 	}
 
 	void Serialize(SerializationContext& context, const T& object) {
-		object.OnBeforeSerializeCallback(context);
+		CallOnBeforeSerialize(context, object);
 		context.yamlNode = YAML::Node(YAML::NodeType::Map);
 		for (const auto& var : fields) {
 			var.type->Serialize(context.Child(var.name), ((char*)&object) + var.offset);
@@ -307,8 +306,33 @@ public:
 				}
 			}
 		}
+		CallOnAfterDeserialize(context, object);
+	}
+
+	template<typename T>
+	std::enable_if_t<!std::is_assignable<Object, T>::value, void>
+		CallOnAfterDeserialize(const SerializationContext& context, T& object) {
+		//object.OnAfterDeserializeCallback(context);
+	}
+
+	template<typename T>
+	std::enable_if_t<std::is_assignable<Object, T>::value, void>
+		CallOnAfterDeserialize(const SerializationContext& context, T& object) {
 		object.OnAfterDeserializeCallback(context);
 	}
+
+	template<typename T>
+	std::enable_if_t<!std::is_assignable<Object, T>::value, void>
+		CallOnBeforeSerialize(SerializationContext& context, const T& object) {
+		//object.OnBeforeSerializeCallback(context);
+	}
+
+	template<typename T>
+	std::enable_if_t<std::is_assignable<Object, T>::value, void>
+		CallOnBeforeSerialize(SerializationContext& context, const T& object) {
+		object.OnBeforeSerializeCallback(context);
+	}
+
 	std::vector<ReflectedField> fields;
 };
 

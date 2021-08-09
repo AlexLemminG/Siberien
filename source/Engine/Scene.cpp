@@ -39,6 +39,8 @@ void Scene::Init() {
 		}
 	}
 
+	ProcessAddedGameObjects();
+
 	isInited = true;
 }
 
@@ -48,6 +50,7 @@ void Scene::Update() {
 			c->Update();
 		}
 	}
+	ProcessAddedGameObjects();
 }
 
 void Scene::FixedUpdate() {
@@ -69,35 +72,39 @@ void Scene::Term() {
 }
 
 void Scene::AddGameObject(std::shared_ptr<GameObject> go) {
-	//TODO share code with Init()
+	addedGameObjects.push_back(go);
 
-	if (go == nullptr) {
-		return;
-	}
+}
 
-	gameObjects.push_back(go);
+void Scene::ProcessAddedGameObjects(){
+	for (auto go : addedGameObjects) {
+		//TODO share code with Init()
 
-	if (!isInited) {
-		return;
-	}
+		if (go == nullptr) {
+			continue;
+		}
 
-	for (int iC = go->components.size() - 1; iC >= 0; iC--) {
-		if (go->components[iC] == nullptr) {
-			go->components.erase(go->components.begin() + iC);
+		gameObjects.push_back(go);
+
+		for (int iC = go->components.size() - 1; iC >= 0; iC--) {
+			if (go->components[iC] == nullptr) {
+				go->components.erase(go->components.begin() + iC);
+			}
+		}
+		if (!go->transform()) {
+			go->components.push_back(std::make_shared<Transform>());
+		}
+
+
+		for (auto c : go->components) {
+			c->m_gameObject = go;
+		}
+
+		for (auto c : go->components) {
+			c->OnEnable();
 		}
 	}
-	if (!go->transform()) {
-		go->components.push_back(std::make_shared<Transform>());
-	}
-
-
-	for (auto c : go->components) {
-		c->m_gameObject = go;
-	}
-
-	for (auto c : go->components) {
-		c->OnEnable();
-	}
+	addedGameObjects.clear();
 }
 
 std::shared_ptr<GameObject> Scene::FindGameObjectByTag(std::string tag) {

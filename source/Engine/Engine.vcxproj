@@ -74,6 +74,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BlenderSceneLoader.cpp" />
     <ClCompile Include="BoxCollider.cpp" />
     <ClCompile Include="BulletSystem.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -101,6 +102,7 @@
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BlenderSceneLoader.h" />
     <ClInclude Include="BoxCollider.h" />
     <ClInclude Include="BulletSystem.h" />
     <ClInclude Include="Camera.h" />

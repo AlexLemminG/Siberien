@@ -25,12 +25,27 @@ std::string GetFirstSceneName() {
 
 std::shared_ptr<Scene> LoadScene(AssetDatabase& assets, std::string sceneName) {
 	auto scene = assets.LoadByPath<Scene>(sceneName);
+	{
+
+		YAML::Node node;
+		std::vector<std::shared_ptr<Object>> serializedObjects;
+		serializedObjects.push_back(scene);
+		SerializationContext context{ node, serializedObjects };
+		context.database = AssetDatabase::Get();
+		::Serialize(context, scene);
+		context.FlushRequiestedToSerialize();
+
+		std::ofstream fout("out.yaml");
+		fout << context.yamlNode;
+
+	}
+	
 	scene = Object::Instantiate(scene);
 	if (scene) {
 		scene->Init();
 		auto creep = scene->FindGameObjectByTag("Creep");
 		if (creep) {
-			static int h = 1000;
+			static int h = 1;
 			for (int i = 0; i < h; i++) {
 				auto go = Object::Instantiate(creep);
 				float r = 10.f;

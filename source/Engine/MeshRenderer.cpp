@@ -4,6 +4,7 @@
 #include <assimp/scene.h>
 #include "bgfx/bgfx.h"
 #include <windows.h>
+#include "assimp/scene.h"
 //#include "bgfx_utils.h"
 
 class VertexLayout {
@@ -69,13 +70,16 @@ void InitVertexLayouts() {
 	layout_pos.Begin().AddPosition().AddNormal().End();
 }
 
-class FullMeshAsset : public Object {
-public:
-	std::shared_ptr<const aiScene> scene;
-
-	REFLECT_BEGIN(FullMeshAsset);
-	REFLECT_END();
-};
+void PrintHierarchy(aiNode* node, int offset) {
+	std::string off = "";
+	for (int i = 0; i < offset; i++) {
+		off += " ";
+	}
+	LogError(off + node->mName.C_Str());
+	for (int i = 0; i < node->mNumChildren; i++) {
+		PrintHierarchy(node->mChildren[i], offset + 1);
+	}
+}
 
 class MeshAssetImporter : public AssetImporter {
 public:
@@ -96,6 +100,7 @@ public:
 		//TODO pass separate database handle
 		database.AddAsset(fullAsset, path, "FullMeshAsset");
 
+		PrintHierarchy(scene->mRootNode, 0);
 		int importedMeshesCount = 0;
 		for (int iMesh = 0; iMesh < scene->mNumMeshes; iMesh++) {
 			auto* aiMesh = scene->mMeshes[iMesh];

@@ -52,7 +52,9 @@ void PhysicsSystem::Update() {
 
 		//TODO update time
 		SystemsManager::Get()->FixedUpdate();
-		Scene::Get()->FixedUpdate();
+		if (Scene::Get()) {
+			Scene::Get()->FixedUpdate();
+		}
 	}
 }
 

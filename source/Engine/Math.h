@@ -31,9 +31,6 @@ inline Vector3 GetPos(const Matrix4& matrix) {
 inline Vector3 GetScale(const Matrix4& matrix) {
 	return matrix.ScaleVector3D();
 }
-inline void SetScale(Matrix4& matrix, const Vector3& scale) {
-	matrix = Matrix4::Transform(GetPos(matrix), Matrix4::ToRotationMatrix(matrix), scale);
-}
 inline Quaternion GetRot(const Matrix4& matrix) {
 	auto scale = GetScale(matrix);
 	auto rot = Matrix4::ToRotationMatrix(matrix);
@@ -41,6 +38,9 @@ inline Quaternion GetRot(const Matrix4& matrix) {
 	rot.GetColumn(1) *= 1.f / scale.y;
 	rot.GetColumn(2) *= 1.f / scale.z;
 	return Quaternion::FromMatrix(rot);
+}
+inline void SetScale(Matrix4& matrix, const Vector3& scale) {
+	matrix = Matrix4::Transform(GetPos(matrix), GetRot(matrix).ToMatrix(), scale);
 }
 inline void SetRot(Matrix4& matrix, const Quaternion& rot) {
 	matrix = Matrix4::Transform(GetPos(matrix), rot.ToMatrix(), GetScale(matrix));

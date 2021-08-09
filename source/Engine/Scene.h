@@ -25,6 +25,10 @@ private:
 	static Scene* current;
 	bool isInited = false;
 
+	std::vector<std::shared_ptr<GameObject>> addedGameObjects;
+
+	void ProcessAddedGameObjects();
+
 	REFLECT_BEGIN(Scene);
 	REFLECT_VAR(gameObjects);
 	REFLECT_END();

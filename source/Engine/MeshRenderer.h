@@ -6,8 +6,10 @@
 #include <algorithm>
 #include "Math.h"
 #include "bgfx/bgfx.h"
+#include <assimp/scene.h>
 
 class aiMesh;
+//class aiScene;
 
 class Mesh : public Object{
 public:
@@ -26,6 +28,15 @@ public:
 	bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
 	std::vector<std::shared_ptr<BinaryAsset>> buffers;
 	REFLECT_BEGIN(Shader);
+	REFLECT_END();
+};
+
+
+class FullMeshAsset : public Object {
+public:
+	std::shared_ptr<const aiScene> scene;
+
+	REFLECT_BEGIN(FullMeshAsset);
 	REFLECT_END();
 };
 
