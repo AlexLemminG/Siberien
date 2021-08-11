@@ -1,3 +1,5 @@
 Material:
   color: 0x554466ff
-  shader: SimpleSHader.asset
+  shader: shaders\main.asset
+  colorTex: textures\uv.png 
+  normalTex: textures\tempNormal.png 

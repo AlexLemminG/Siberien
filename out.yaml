@@ -8,59 +8,66 @@ Scene$0:
     - $6
     - $7
     - $8
+    - $9
 GameObject$1:
   tag: ""
   components:
-    - $9
     - $10
     - $11
+    - $12
 GameObject$2:
   tag: Player
   components:
-    - $12
     - $13
     - $14
     - $15
     - $16
-GameObject$3:
-  tag: ""
-  components:
     - $17
+GameObject$3:
+  tag: Light
+  components:
     - $18
+    - $19
 GameObject$4:
   tag: ""
   components:
-    - $19
     - $20
     - $21
-    - $22
 GameObject$5:
   tag: ""
   components:
+    - $22
     - $23
     - $24
     - $25
-    - $26
 GameObject$6:
-  tag: Floor
+  tag: ""
   components:
+    - $26
     - $27
     - $28
     - $29
-    - $30
 GameObject$7:
-  tag: Creep
+  tag: Floor
   components:
+    - $30
     - $31
     - $32
     - $33
+GameObject$8:
+  tag: Creep
+  components:
     - $34
     - $35
-GameObject$8:
+    - $36
+    - $37
+    - $38
+    - $39
+GameObject$9:
   tag: BlenderSceneLoader
   components:
-    - $36
-Camera$9:
+    - $40
+Camera$10:
   clearColor:
     r: 0.400000006
     g: 0.200000003
@@ -69,7 +76,7 @@ Camera$9:
   fov: 90
   nearPlane: 0.100000001
   farPlane: 1000
-Transform$10:
+Transform$11:
   pos:
     - 0
     - 0.999000013
@@ -82,49 +89,59 @@ Transform$10:
     - 1
     - 0.99999994
     - 0.99999994
-TopDownCameraRig$11:
+TopDownCameraRig$12:
   targetTag: Player
   lerpT: 1
   offset:
     - 0
     - 10
     - -5
-MeshRenderer$12:
+MeshRenderer$13:
   mesh: hero.glb$hero_mesh
   material: playerMaterial.asset$Material
-Transform$13:
+Transform$14:
   pos:
     - 0
     - 0.5
     - 0
   euler:
     - 0
-    - 60.0000191
+    - 60.0000038
     - 0
   scale:
-    - 0.99999994
+    - 0.699999988
+    - 0.699999988
+    - 0.699999988
+PlayerController$15:
+  speed: 4.19999981
+  jumpVelocity: 10
+  jumpPushImpulse: 500
+  jumpPushRadius: 10
+  bulletSpeed: 20
+  bulletSpawnOffset: 0.5
+  shootingLightPrefab: ShootingLight.asset$GameObject
+  shootingLightOffset:
+    - 0
     - 1
-    - 0.99999994
-PlayerController$14:
-  speed: 6.19999981
-  bulletSpeed: 10
-SphereCollider$15:
+    - 3
+SphereCollider$16:
   radius: 1
   center:
     - 0
     - 0.5
     - 0
-RigidBody$16:
-  mass: 100
-  isStatic: true
-  isKinematic: true
-  friction: 0.5
+RigidBody$17:
+  mass: 5000
+  isStatic: false
+  isKinematic: false
+  friction: 0
   restitution: 0
-Transform$17:
+  layer: player
+Transform$18:
   pos:
-    - 0
-    - 0
-    - 0
+    - 5
+    - 2
+    - 5
   euler:
     - 0
     - -0
@@ -133,20 +150,39 @@ Transform$17:
     - 1
     - 1
     - 1
-DirLight$18:
+PointLight$19:
   color:
     r: 1
     g: 1
     b: 1
     a: 1
-  dir:
+  radius: 10
+  innerRadius: 0
+Transform$20:
+  pos:
+    - -5
+    - 5
+    - -5
+  euler:
     - 0
-    - -1
+    - -0
     - 0
-MeshRenderer$19:
+  scale:
+    - 1
+    - 1
+    - 1
+PointLight$21:
+  color:
+    r: 1
+    g: 0.666666687
+    b: 0.266666681
+    a: 1
+  radius: 10
+  innerRadius: 0.5
+MeshRenderer$22:
   mesh: meshes\wall.glb$cdt_wall
   material: material.asset$Material
-Transform$20:
+Transform$23:
   pos:
     - 0
     - 0
@@ -159,7 +195,7 @@ Transform$20:
     - 1
     - 1
     - 1
-BoxCollider$21:
+BoxCollider$24:
   size:
     - 10
     - 2
@@ -168,16 +204,17 @@ BoxCollider$21:
     - 0
     - 1
     - 0
-RigidBody$22:
+RigidBody$25:
   mass: 1
   isStatic: false
   isKinematic: false
   friction: 0.5
   restitution: 0
-MeshRenderer$23:
+  layer: ""
+MeshRenderer$26:
   mesh: meshes\physCube.glb$cdt_cube
   material: material.asset$Material
-Transform$24:
+Transform$27:
   pos:
     - 0
     - 5
@@ -190,7 +227,7 @@ Transform$24:
     - 1
     - 1
     - 1
-BoxCollider$25:
+BoxCollider$28:
   size:
     - 1
     - 1
@@ -199,13 +236,14 @@ BoxCollider$25:
     - 0
     - 0
     - 0
-RigidBody$26:
+RigidBody$29:
   mass: 20
   isStatic: true
   isKinematic: false
   friction: 0.5
   restitution: 0
-BoxCollider$27:
+  layer: ""
+BoxCollider$30:
   size:
     - 100
     - 1
@@ -214,13 +252,14 @@ BoxCollider$27:
     - 0
     - -0.5
     - 0
-RigidBody$28:
+RigidBody$31:
   mass: 1
   isStatic: true
   isKinematic: false
   friction: 0.5
   restitution: 0
-Transform$29:
+  layer: ""
+Transform$32:
   pos:
     - 0
     - 0
@@ -233,43 +272,47 @@ Transform$29:
     - 1
     - 1
     - 1
-MeshRenderer$30:
+MeshRenderer$33:
   mesh: meshes\floor.glb$floor
   material: floorMaterial.asset$Material
-MeshRenderer$31:
-  mesh: meshes/enemy.glb$Suzanne
+MeshRenderer$34:
+  mesh: meshes/zombie.glb$Zombie
   material: enemyMaterial.asset$Material
-Transform$32:
+Transform$35:
   pos:
     - 5
     - 0.5
     - 0
   euler:
     - 0
-    - 60.0000191
+    - 60.0000114
     - 0
   scale:
-    - 0.99999994
-    - 1
-    - 0.99999994
-EnemyCreepController$33:
+    - 0.599999964
+    - 0.600000024
+    - 0.599999964
+EnemyCreepController$36:
   targetTag: Player
-  speed: 3
+  speed: 6
   acc: 5
-  angularAcc: 1.39999998
-SphereCollider$34:
-  radius: 0.5
+  angularAcc: 3.4000001
+  angularSpeed: 10
+SphereCollider$37:
+  radius: 0.800000012
   center:
     - 0
     - 0.150000006
     - 0
-RigidBody$35:
+RigidBody$38:
   mass: 50
   isStatic: false
   isKinematic: false
   friction: 0.300000012
   restitution: 0
-BlenderSceneLoader$36:
+  layer: enemy
+Health$39:
+  amount: 1
+BlenderSceneLoader$40:
   mapping:
     - prefab: cube.asset$GameObject
       name: Cube.001

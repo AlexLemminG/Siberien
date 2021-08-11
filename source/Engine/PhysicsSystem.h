@@ -35,12 +35,15 @@ class btCollisionDispatcher;
 class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
+class btDynamicsWorld;
 
 class PhysicsSystem : public System< PhysicsSystem> {
 public:
 	virtual bool Init() override;
 	virtual void Update() override;
 	virtual void Term() override;
+
+	Vector3 GetGravity()const;
 
 	btDefaultCollisionConfiguration* collisionConfiguration = nullptr;
 
@@ -52,6 +55,24 @@ public:
 
 	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
 
+
+	static constexpr int defaultGroup = 64;
+	static constexpr int playerGroup = 128;
+	static constexpr int enemyGroup = 256;
+	static constexpr int playerBulletGroup = 512;
+	static constexpr int enemyBulletGroup = 1024;
+
+
+	static constexpr int defaultMask = -1;
+	static constexpr int playerMask = defaultGroup | playerGroup | enemyGroup | enemyBulletGroup;
+	static constexpr int enemyMask = defaultGroup | enemyGroup | playerGroup | playerBulletGroup;
+	static constexpr int playerBulletMask = defaultGroup | enemyMask;
+	static constexpr int enemyBulletMask = defaultGroup | playerMask;
+
+	static void GetGroupAndMask(const std::string& groupName, int& group, int& mask);
+
 private:
+	static void OnPhysicsTick(btDynamicsWorld* world, btScalar timeStep);
+
 	float prevSimulationTime = 0.f;
 };

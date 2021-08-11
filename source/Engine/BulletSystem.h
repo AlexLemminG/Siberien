@@ -2,8 +2,10 @@
 
 #include "System.h"
 #include "Math.h"
+#include "MeshRenderer.h"//TODO need for serializing shared_ptr
 
 class MeshRenderer;
+class BulletSettings;
 
 class BulletSystem : public System<BulletSystem> {
 public:
@@ -26,8 +28,24 @@ private:
 		float speed = 1.f;
 		float timeLeft = 5.f;
 	};
-	float bulletImpulse = 1.f;
-	float bulletRadius = 0.04f;
+
+	std::shared_ptr<BulletSettings> bulletSettings;
+
 	std::vector<Bullet> bullets;
-	std::shared_ptr<MeshRenderer> bulletRenderer;
 };
+
+class BulletSettings : public Object{
+public:
+	std::shared_ptr<MeshRenderer> renderer;
+	float impulse = 1.f;
+	float radius = 0.04f;
+	int damage = 1;
+
+	REFLECT_BEGIN(BulletSettings);
+	REFLECT_VAR(renderer);
+	REFLECT_VAR(radius);
+	REFLECT_VAR(damage);
+	REFLECT_VAR(impulse);
+	REFLECT_END()
+};
+

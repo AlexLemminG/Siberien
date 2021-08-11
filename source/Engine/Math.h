@@ -61,6 +61,12 @@ public:
 	static float Min(float a, float b) {
 		return a < b ? a : b;
 	}
+	static float Max(int a, int b) {
+		return a > b ? a : b;
+	}
+	static float Min(int a, int b) {
+		return a < b ? a : b;
+	}
 	static float Clamp(float f, float a, float b) {
 		return f > b ? b : (f < a ? a : f);
 	}
@@ -98,6 +104,9 @@ public:
 		return deg * (pi / 180.f);
 	}
 	static Vector3 Lerp(const Vector3& a, const Vector3& b, float t) {
+		return a + (b - a) * Clamp01(t);
+	}
+	static float Lerp(const float& a, const float& b, float t) {
 		return a + (b - a) * Clamp01(t);
 	}
 	static Vector3 ClampLength(const Vector3& vec, float maxLength) {

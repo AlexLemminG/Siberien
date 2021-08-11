@@ -5,14 +5,29 @@
 #include "PhysicsSystem.h"
 #include "btBulletDynamicsCommon.h"
 #include "Time.h"
+#include "Health.h"
 
 DECLARE_TEXT_ASSET(EnemyCreepController);
 
 void EnemyCreepController::OnEnable() {
 	rb = gameObject()->GetComponent<RigidBody>();
+	health = gameObject()->GetComponent<Health>();
 }
 
+
+void EnemyCreepController::HandleDeath() {
+	rb->GetHandle()->setDamping(0.8, 0.8);
+}
+
+
 void EnemyCreepController::FixedUpdate() {
+	if (health && health->IsDead()) {
+		if (!wasDead) {
+			wasDead = true;
+			HandleDeath();
+		}
+		return;
+	}
 	if (targetTag == "") {
 		return;
 	}
@@ -35,7 +50,12 @@ void EnemyCreepController::FixedUpdate() {
 
 	Vector3 desiredLookDir = (targetPos - currentPos).Normalized();
 	Vector3 lookDir = gameObject()->transform()->GetForward();
-	Vector3 desiredAngularVelocity = Vector3::CrossProduct(lookDir, desiredLookDir);
+	Vector3 desiredAngularVelocity = Vector3::CrossProduct(lookDir, desiredLookDir) * angularSpeed;
+	if (Vector3::DotProduct(lookDir, desiredLookDir) < 0) {
+		if (desiredAngularVelocity.LengthSquared() > 0.0001f) {
+			desiredAngularVelocity = desiredAngularVelocity.Normalized() * angularSpeed;
+		}
+	}
 	Vector3 currentAngularVelocity = btConvert(handle->getAngularVelocity());
 
 	float maxAnglularSpeedDistance = 0.5f;

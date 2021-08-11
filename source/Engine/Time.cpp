@@ -21,7 +21,9 @@ void Time::Update() {
 
 	m_deltaTime = (currentTicks - m_prevTicks) / ticksPerSecond;
 
-	m_deltaTime = Mathf::Min(m_deltaTime, m_maxDeltaTime);
+	m_deltaTime = Mathf::Min(m_deltaTime, m_maxDeltaTime) * m_timeScale;
+
+	m_realTime = (currentTicks - m_startTicks) / ticksPerSecond;
 
 	m_time += m_deltaTime;
 

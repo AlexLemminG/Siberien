@@ -6,22 +6,28 @@ GameObject:
   - $EnemyCreepController
   - $SphereCollider
   - $RigidBody
+  - $Health
 MeshRenderer:
-  mesh: meshes/enemy.glb$Suzanne
+  mesh: meshes/zombie.glb$Zombie
   material: enemyMaterial.asset
 Transform:
   pos: [5,0.5,0]
   euler: [0, 60, 0]
+  scale: [0.6, 0.6, 0.6]
 EnemyCreepController:
   targetTag: Player
-  speed: 3.0
+  speed: 6.0
+  angularSpeed: 10.0
   acc: 5
-  angularAcc: 1.4
+  angularAcc: 3.4
 SphereCollider:
-  radius: 0.5
+  radius: 0.8
   center: [0, 0.15, 0]
 RigidBody:
   isStatic: false
   friction: 0.3
   restitution: 0
   mass: 50
+  layer: enemy
+Health:
+  amount: 1

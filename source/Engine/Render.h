@@ -18,6 +18,7 @@ public:
 	static SDL_Window* window;
 private:
 	void DrawMesh(MeshRenderer* renderer);
+	void UpdateLights(Vector3 poi);
 	
 
 	//The surface contained by the window
@@ -25,9 +26,17 @@ private:
 
 	bgfx::UniformHandle u_time;
 	bgfx::UniformHandle u_color;
+	bgfx::UniformHandle s_texColor;
+	bgfx::UniformHandle s_texNormal;
 	
+	static constexpr int maxLightsCount = 8;
+	bgfx::UniformHandle u_lightPosRadius;
+	bgfx::UniformHandle u_lightRgbInnerR;
+
 	int prevWidth;
 	int prevHeight;
 
+	std::shared_ptr<Texture> whiteTexture;
+	std::shared_ptr<Texture> defaultNormalTexture;
 
 };

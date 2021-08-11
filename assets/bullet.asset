@@ -1,3 +1,6 @@
+BulletSettings:
+  renderer: $MeshRenderer
+  impulse: 100
 MeshRenderer:
   mesh: meshes\bullet.glb$bullet_mesh
   material: bulletMaterial.asset

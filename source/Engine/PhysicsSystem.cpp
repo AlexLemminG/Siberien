@@ -25,10 +25,12 @@ bool PhysicsSystem::Init() {
 	///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
 	solver = new btSequentialImpulseConstraintSolver();
 
-	
+
 	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
 
-	dynamicsWorld->setGravity(btVector3(0, -10, 0));
+	dynamicsWorld->setGravity(btConvert(GetGravity()));
+
+	dynamicsWorld->setInternalTickCallback(OnPhysicsTick);
 
 	///-----initialization_end-----
 
@@ -39,23 +41,14 @@ bool PhysicsSystem::Init() {
 	prevSimulationTime = Time::time();
 
 
+	
+
+
 	return true;
 }
 
 void PhysicsSystem::Update() {
-	while (prevSimulationTime < Time::time()) {
-		float currentSimulationTime = prevSimulationTime + Time::fixedDeltaTime();
-
-		dynamicsWorld->stepSimulation(Time::fixedDeltaTime(), 0, Time::fixedDeltaTime());
-
-		prevSimulationTime = currentSimulationTime;
-
-		//TODO update time
-		SystemsManager::Get()->FixedUpdate();
-		if (Scene::Get()) {
-			Scene::Get()->FixedUpdate();
-		}
-	}
+	dynamicsWorld->stepSimulation(Time::deltaTime(), 2, Time::fixedDeltaTime());
 }
 
 void PhysicsSystem::Term() {
@@ -73,4 +66,44 @@ void PhysicsSystem::Term() {
 	delete dispatcher;
 
 	delete collisionConfiguration;
+}
+
+Vector3 PhysicsSystem::GetGravity() const {
+	return Vector3(0, -10, 0);
+}
+
+void PhysicsSystem::GetGroupAndMask(const std::string& groupName, int& group, int& mask) {
+	if (groupName.empty() || groupName == "default") {
+		group = defaultGroup;
+		mask = defaultMask;
+	}else if (groupName == "player"){
+		group = playerGroup;
+		mask = playerMask;
+	}
+	else  if (groupName == "playerBullet"){
+		group = playerBulletGroup;
+		mask = playerBulletMask;
+	}
+	else  if (groupName == "enemy") {
+		group = enemyGroup;
+		mask = enemyMask;
+	}
+	else  if (groupName == "enemyBullet") {
+		group = enemyBulletGroup;
+		mask = enemyBulletMask;
+	}
+	else {
+		LogError("Unknown group name %s", groupName.c_str());
+		group = defaultGroup;
+		mask = defaultMask;
+	}
+
+}
+
+void PhysicsSystem::OnPhysicsTick(btDynamicsWorld* world, btScalar timeStep) {
+	//TODO update time
+	SystemsManager::Get()->FixedUpdate();
+	if (Scene::Get()) {
+		Scene::Get()->FixedUpdate();
+	}
 }

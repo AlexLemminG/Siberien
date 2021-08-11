@@ -1,3 +1,5 @@
+#include "bx/allocator.h"
+
 #include "MeshRenderer.h"
 #include "assimp/Importer.hpp"
 #include <assimp/postprocess.h>
@@ -5,6 +7,8 @@
 #include "bgfx/bgfx.h"
 #include <windows.h>
 #include "assimp/scene.h"
+#include "bimg/bimg.h"
+#include "bimg/decode.h"
 //#include "bgfx_utils.h"
 
 class VertexLayout {
@@ -25,6 +29,18 @@ public:
 	VertexLayout& AddNormal() {
 		bgfxLayout.add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float);
 		attributes.push_back(bgfx::Attrib::Normal);
+		return *this;
+	}
+
+	VertexLayout& AddTexCoord() {
+		bgfxLayout.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float);
+		attributes.push_back(bgfx::Attrib::TexCoord0);
+		return *this;
+	}
+
+	VertexLayout& AddTangent() {
+		bgfxLayout.add(bgfx::Attrib::Tangent, 3, bgfx::AttribType::Float);
+		attributes.push_back(bgfx::Attrib::Tangent);
 		return *this;
 	}
 
@@ -60,6 +76,24 @@ public:
 					dstBuffer += stride;
 				}
 			}
+			else if (attribute == bgfx::Attrib::TexCoord0) {
+				aiVector3D* srcBuffer = mesh->mTextureCoords[0];
+				uint8_t* dstBuffer = &buffer[offset];
+				for (int iVertex = 0; iVertex < numVerts; iVertex++) {
+					memcpy(dstBuffer, srcBuffer, sizeof(float) * 2);
+					srcBuffer += 1;
+					dstBuffer += stride;
+				}
+			}
+			else if (attribute == bgfx::Attrib::Tangent) {
+				aiVector3D* srcBuffer = mesh->mTangents;
+				uint8_t* dstBuffer = &buffer[offset];
+				for (int iVertex = 0; iVertex < numVerts; iVertex++) {
+					memcpy(dstBuffer, srcBuffer, sizeof(float) * 3);
+					srcBuffer += 1;
+					dstBuffer += stride;
+				}
+			}
 		}
 		return std::move(buffer);
 	}
@@ -67,7 +101,7 @@ public:
 
 static VertexLayout layout_pos;
 void InitVertexLayouts() {
-	layout_pos.Begin().AddPosition().AddNormal().End();
+	layout_pos.Begin().AddPosition().AddNormal().AddTangent().AddTexCoord().End();
 }
 
 void PrintHierarchy(aiNode* node, int offset) {
@@ -89,7 +123,7 @@ public:
 		Assimp::Importer importer{};
 		//TODO return void for all importers
 		auto fullPath = AssetDatabase::assetsFolderPrefix + path; //TODO pass full path or file as argument
-		auto* scene = importer.ReadFile(fullPath, aiProcess_ValidateDataStructure);
+		auto* scene = importer.ReadFile(fullPath, aiProcess_ValidateDataStructure | aiProcess_CalcTangentSpace);
 		if (!scene) {
 			LogError("failed to import '%s': failed to open mesh", path.c_str());
 			return nullptr;
@@ -159,7 +193,7 @@ class ShaderAssetImporter : public TextAssetImporter {
 			return nullptr;
 		}
 		auto fs = bgfx::createShader(bgfx::makeRef(&fsBin->buffer[0], fsBin->buffer.size()));
-		if (fs.idx == bgfx::kInvalidHandle){
+		if (fs.idx == bgfx::kInvalidHandle) {
 			return nullptr;
 		}
 		auto program = bgfx::createProgram(vs, fs, false);
@@ -302,13 +336,196 @@ class ShaderAssetImporter : public TextAssetImporter {
 		}
 
 	}
+};
+
+
+class TextureImporter : public AssetImporter {
+public:
+	virtual std::shared_ptr<Object> Import(AssetDatabase& database, const std::string& path) override
+	{
+		int importerVersion = 5;
+
+		std::string metaPath = path + ".meta";
+		auto meta = database.LoadTextAsset(metaPath);
+		YAML::Node metaYaml;
+		if (!meta || !meta->GetYamlNode()) {
+			metaYaml = YAML::Node();
+		}
+		else {
+			metaYaml = meta->GetYamlNode();
+
+		}
+		bool hasMips = metaYaml["mips"].IsDefined() ? metaYaml["mips"].as<bool>() : false;
+		auto formatStr = metaYaml["format"].IsDefined() ? metaYaml["format"].as<std::string>() : "BC1";
+
+		//TODO return default invalid shader
+		auto txBin = LoadTexture(importerVersion, database, path, hasMips, formatStr);
+		if (!txBin) {
+			return nullptr;
+		}
+
+		auto allocator = bx::DefaultAllocator();
+		auto pImageContainer = bimg::imageParse(&allocator, &txBin->buffer[0], txBin->buffer.size());
+		//TODO delete
+
+		//bimg::ImageContainer* imageContainer = bimg::imageParse(entry::getAllocator(), data, size);
+		if (!pImageContainer) {
+			return nullptr;
+		}
+
+		const bgfx::Memory* mem = bgfx::makeRef(
+			pImageContainer->m_data
+			, pImageContainer->m_size
+		);
+		//TODO delete
+		auto imageContainer = *pImageContainer;
+		//const bgfx::Memory* memory = bgfx::makeRef(&txBin->buffer[0] + imageContainer.m_offset, txBin->buffer.size() - imageContainer.m_offset);
+		auto tx = bgfx::createTexture2D(
+			imageContainer.m_width,
+			imageContainer.m_height,
+			imageContainer.m_numMips > 1,
+			imageContainer.m_numLayers,
+			bgfx::TextureFormat::Enum(imageContainer.m_format),
+			BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE,
+			mem);
+		if (!bgfx::isValid(tx)) {
+			return nullptr;
+		}
+
+		auto texture = std::make_shared<Texture>();
+		texture->handle = tx;
+		texture->bin = txBin;
+
+		bgfx::setName(tx, path.c_str());
+		//TODO keep memeory buffer ?
+
+		database.AddAsset(texture, path, "");
+
+		return texture;
+	}
+
+	std::shared_ptr<BinaryAsset> LoadTexture(int importerVersion, AssetDatabase& database, std::string path, bool mips, std::string format) {
+		std::string assetPath = path;
+		std::string metaAssetPath = path + ".meta";
+		std::string convertedAssetPath = path;
+
+		convertedAssetPath += ".bin";
+
+		std::string metaPath = convertedAssetPath + ".meta";
+
+		bool needRebuild = false;
+		auto meta = database.LoadTextAssetFromLibrary(metaPath);
+		long lastChangeMeta = database.GetLastModificationTime(metaAssetPath);
+		long lastChange = database.GetLastModificationTime(assetPath);
+		if (meta == nullptr) {
+			needRebuild = true;
+		}
+		else {
+			long lastChangeRecorded = meta->GetYamlNode()["lastChange"].as<long>();
+			long lastMetaChangeRecorded = meta->GetYamlNode()["lastMetaChange"].as<long>();
+			long importerVersionRecorded = meta->GetYamlNode()["importerVersion"].IsDefined() ? meta->GetYamlNode()["importerVersion"].as<long>() : -1;
+			if (lastChange != lastChangeRecorded || lastMetaChangeRecorded != lastChangeMeta || importerVersionRecorded != importerVersion) {
+				needRebuild = true;
+			}
+		}
+
+		std::shared_ptr<BinaryAsset> binaryAsset;
+		if (!needRebuild) {
+			binaryAsset = database.LoadBinaryAssetFromLibrary(convertedAssetPath);
+		}
+
+		if (binaryAsset) {
+			return binaryAsset;
+		}
+
+		std::string params = "";
+		params += " -f " + database.GetAssetPath(assetPath);
+		params += " -o " + database.GetLibraryPath(convertedAssetPath);
+		params += " --mips ";
+		params += (mips ? "true" : "false");
+		params += " -t ";
+		params += format;
+		params += " --as ";
+		params += "dds";
+
+		STARTUPINFOA si;
+		memset(&si, 0, sizeof(STARTUPINFOA));
+		si.cb = sizeof(STARTUPINFOA);
+
+		PROCESS_INFORMATION pi;
+		memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+
+		std::vector<char> buffer(params.begin(), params.end());
+		buffer.push_back(0);
+		LPSTR ccc = &buffer[0];
+
+		std::string binAssetFolder = database.GetLibraryPath(path) + "\\";
+
+		database.CreateFolders(binAssetFolder);
+
+		auto result = CreateProcessA(
+			database.GetToolsPath("texturec.exe").c_str()
+			, &buffer[0]
+			, NULL
+			, NULL
+			, false
+			, 0
+			, NULL
+			, NULL
+			, &si
+			, &pi);
+		//TODO error checks
+
+		if (!result)
+		{
+			LogError("Failed to compile texure '%s'", path.c_str());
+			return nullptr;
+		}
+		else
+		{
+			// Successfully created the process.  Wait for it to finish.
+			WaitForSingleObject(pi.hProcess, INFINITE);
+
+			// Close the handles.
+			CloseHandle(pi.hProcess);
+			CloseHandle(pi.hThread);
+		}
+
+		auto metaNode = YAML::Node();
+		metaNode["lastChange"] = lastChange;
+		metaNode["lastMetaChange"] = lastChangeMeta;
+		metaNode["importerVersion"] = importerVersion;
+
+		std::ofstream fout(database.GetLibraryPath(metaPath));
+		fout << metaNode;
+
+		binaryAsset = database.LoadBinaryAssetFromLibrary(convertedAssetPath);
+		if (binaryAsset) {
+			return binaryAsset;
+		}
+		else {
+			return nullptr;
+		}
+
+	}
 
 };
 
 DECLARE_BINARY_ASSET(Mesh, MeshAssetImporter);
 DECLARE_TEXT_ASSET(Material);
 DECLARE_CUSTOM_TEXT_ASSET(Shader, ShaderAssetImporter);
+DECLARE_BINARY_ASSET(Texture, TextureImporter);
 DECLARE_TEXT_ASSET(MeshRenderer);
 DECLARE_TEXT_ASSET(DirLight);
+DECLARE_TEXT_ASSET(PointLight);
 
 std::vector<MeshRenderer*> MeshRenderer::enabledMeshRenderers;
+
+void PointLight::OnEnable() {
+	pointLights.push_back(this);
+}
+
+void PointLight::OnDisable() {
+	pointLights.erase(std::find(pointLights.begin(), pointLights.end(), this), pointLights.end());
+}
+std::vector<PointLight*> PointLight::pointLights;

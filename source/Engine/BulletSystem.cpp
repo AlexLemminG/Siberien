@@ -6,35 +6,56 @@
 #include "PhysicsSystem.h"
 #include "btBulletDynamicsCommon.h"
 #include "Dbg.h"
+#include "GameObject.h"
+#include "Health.h"
 
 REGISTER_SYSTEM(BulletSystem);
+DECLARE_TEXT_ASSET(BulletSettings);
 
 bool BulletSystem::Init() {
-	bulletRenderer = AssetDatabase::Get()->LoadByPath<MeshRenderer>("bullet.asset");
+	bulletSettings = AssetDatabase::Get()->LoadByPath<BulletSettings>("bullet.asset");
 	return true;
 }
 
 void BulletSystem::Update() {
 	float dt = Time::deltaTime();
 	auto* physics = PhysicsSystem::Get()->dynamicsWorld;
+
+	btSphereShape sphereShape{ bulletSettings->radius };
+	btTransform from;
+	from.setIdentity();
+	btTransform to;
+	to.setIdentity();
 	for (auto& bullet : bullets) {
 		Vector3 bulletPrevPos = bullet.pos;
 		bullet.pos += bullet.dir * (dt * bullet.speed);
 		bullet.timeLeft -= dt;
 		//TODO bullet.dir is not normalized, but maybe for better
 
-		btVector3 castFrom = btConvert(bulletPrevPos - bullet.dir * bulletRadius);
-		btVector3 castTo = btConvert(bullet.pos + bullet.dir * bulletRadius);
-		btCollisionWorld::ClosestRayResultCallback cb(castFrom, castTo);
-		physics->rayTest(castFrom, castTo, cb);
+		btVector3 castFrom = btConvert(bulletPrevPos - bullet.dir * bulletSettings->radius);
+		btVector3 castTo = btConvert(bullet.pos + bullet.dir * bulletSettings->radius);
+		from.setOrigin(castFrom);
+		to.setOrigin(castTo);
+		btCollisionWorld::ClosestConvexResultCallback cb(from.getOrigin(), to.getOrigin());
+		cb.m_collisionFilterMask = PhysicsSystem::playerBulletMask;
+		cb.m_collisionFilterGroup = PhysicsSystem::playerBulletGroup;
+		physics->convexSweepTest(&sphereShape, from, to, cb);
 		if (cb.hasHit()) {
 			bullet.timeLeft = 0.f;
-			auto obj = dynamic_cast<const btRigidBody*>(cb.m_collisionObject);
+			auto obj = dynamic_cast<const btRigidBody*>(cb.m_hitCollisionObject);
 			if (obj) {
 				auto nonConst = const_cast<btRigidBody*>(obj);
 				auto localPos = nonConst->getCenterOfMassTransform().inverse() * btConvert(bullet.pos);
 				nonConst->activate(true);
-   				nonConst->applyImpulse(btConvert(bullet.dir * bulletImpulse), localPos);
+   				nonConst->applyImpulse(btConvert(bullet.dir * bulletSettings->impulse), localPos);
+
+				auto gameObject = (GameObject*)nonConst->getUserPointer();
+				if (gameObject) {
+					auto health = gameObject->GetComponent<Health>();
+					if (health) {
+						health->DoDamage(bulletSettings->damage);
+					}
+				}
 			}
 		}
 
@@ -52,7 +73,7 @@ void BulletSystem::Update() {
 }
 
 void BulletSystem::Draw() {
-	if (!bulletRenderer) {
+	if (!bulletSettings->renderer) {
 		return;
 	}
 
@@ -105,8 +126,8 @@ void BulletSystem::Draw() {
 	}
 
 
-	bgfx::setVertexBuffer(0, bulletRenderer->mesh->vertexBuffer);
-	bgfx::setIndexBuffer(bulletRenderer->mesh->indexBuffer);
+	bgfx::setVertexBuffer(0, bulletSettings->renderer->mesh->vertexBuffer);
+	bgfx::setIndexBuffer(bulletSettings->renderer->mesh->indexBuffer);
 
 	// Set instance data buffer.
 	bgfx::setInstanceDataBuffer(&idb);
@@ -115,7 +136,7 @@ void BulletSystem::Draw() {
 	bgfx::setState(BGFX_STATE_DEFAULT);
 
 	// Submit primitive for rendering to view 0.
-	bgfx::submit(0, bulletRenderer->material->shader->program);
+	bgfx::submit(0, bulletSettings->renderer->material->shader->program);
 }
 
 void BulletSystem::Term() {}

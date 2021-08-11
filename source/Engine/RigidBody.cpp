@@ -42,14 +42,18 @@ void RigidBody::OnEnable() {
 	rbInfo.m_friction = friction;
 	rbInfo.m_restitution = restitution;
 	pBody = new btRigidBody(rbInfo);
-
 	if (isKinematic) {
 		pBody->forceActivationState(DISABLE_DEACTIVATION);
 		pBody->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
 	}
 
+	pBody->setUserPointer(gameObject().get());
+
 	//add the body to the dynamics world
-	PhysicsSystem::Get()->dynamicsWorld->addRigidBody(pBody);
+	int group;
+	int mask;
+	PhysicsSystem::GetGroupAndMask(layer, group, mask);
+	PhysicsSystem::Get()->dynamicsWorld->addRigidBody(pBody, group, mask);
 }
 
 void RigidBody::Update() {

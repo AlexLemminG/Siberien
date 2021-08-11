@@ -1,3 +1,4 @@
 Material:
-  color: 0xff2233ff
-  shader: SimpleSHader.asset
+  color: 0xf32233ff
+  shader: shaders\main.asset
+  colorTex: textures\uv.png 

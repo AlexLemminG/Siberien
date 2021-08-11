@@ -39,13 +39,24 @@ public:
 	REFLECT_BEGIN(FullMeshAsset);
 	REFLECT_END();
 };
+class Texture : public Object {
+public:
+	bgfx::TextureHandle handle;
+	REFLECT_BEGIN(Texture);
+	REFLECT_END();
 
+	std::shared_ptr<BinaryAsset> bin;
+};
 class Material : public Object {
 public:
 	Color color = Colors::white;
 	std::shared_ptr<Shader> shader;
+	std::shared_ptr<Texture> colorTex;
+	std::shared_ptr<Texture> normalTex;
 
 	REFLECT_BEGIN(Material);
+	REFLECT_VAR(colorTex);
+	REFLECT_VAR(normalTex);
 	REFLECT_VAR(color);
 	REFLECT_VAR(shader);
 	REFLECT_END();
@@ -97,5 +108,23 @@ public:
 	REFLECT_BEGIN(DirLight);
 	REFLECT_VAR(color);
 	REFLECT_VAR(dir);
+	REFLECT_END();
+};
+
+class PointLight : public Component {
+public:
+	void OnEnable();
+	void OnDisable();
+
+	static std::vector<PointLight*> pointLights;
+
+	Color color = Colors::white;
+	float radius = 5.f;
+	float innerRadius = 4.f;
+
+	REFLECT_BEGIN(PointLight);
+	REFLECT_VAR(color);
+	REFLECT_VAR(radius);
+	REFLECT_VAR(innerRadius);
 	REFLECT_END();
 };

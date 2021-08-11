@@ -8,6 +8,8 @@ $input v_pos, v_view, v_normal, v_color0
 
 #include "../common/common.sh"
 
+SAMPLER2D(s_texMain,  0);
+
 uniform vec4 u_time;
 uniform vec4 u_lightDir;
 uniform vec4 u_lightColor;
@@ -43,10 +45,13 @@ void main()
 	vec4 lc = lit(bln.x, bln.y, 1.0);
 	float fres = fresnel(bln.x, 0.2, 5.0);
 
-	vec3 color = u_color.xyz;
+	vec3 color = u_color.xyz * toLinear(texture2D(s_texMain, normal.xy )).xyz;
 
 	gl_FragColor.xyz = pow(vec3(0.07, 0.06, 0.08) + color*lc.y + fres*pow(lc.z, 128.0), vec3_splat(1.0/2.2) );
 	gl_FragColor.w = 1.0;
 	
 	gl_FragColor.xyz = color * (bln.x);
+	
+	//color = toLinear(texture2D(s_texMain, normal.xy )).xyz;
+	//gl_FragColor.xyz = color;
 }

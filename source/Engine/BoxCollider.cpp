@@ -43,7 +43,7 @@ btCollisionShape* SphereCollider::CreateShape() {
 	transform.setOrigin(btConvert(realCenter));
 
 	//TODO move random somewhere else
-	sphereShape.reset(new btSphereShape(realRadius + Random::Range(-0.5f, 0.2f) * realRadius));
+	sphereShape.reset(new btSphereShape(realRadius));
 	compound->addChildShape(transform, sphereShape.get());
 	return compound;
 }

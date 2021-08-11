@@ -12,12 +12,26 @@ MeshRenderer:
 Transform:
   pos: [0,0.5,0]
   euler: [0, 60, 0]
+  scale: [0.7, 0.7, 0.7]
 PlayerController:
-  speed: 6.2
+  speed: 4.2
+  jumpPushImpulse: 500
+  jumpPushRadius: 10
+  bulletSpawnOffset: 0.5
+  shootingLightPrefab: ShootingLight.asset
+  shootingLightOffset: [0, 1, 3]
+  bulletSpeed: 20
 SphereCollider:
   radius: 1
   center: [0, 0.5, 0]
 RigidBody:
-  isStatic: true
-  isKinematic: true
-  mass: 100
+  isStatic: false
+  isKinematic: false
+  restitution: 0.0
+  friction: 0.0
+  mass: 5000
+  layer: player
+PointLight:
+  color: 0xffffffff
+  radius: 10
+  innerRadius: 0.0

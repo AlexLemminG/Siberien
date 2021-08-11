@@ -28,7 +28,7 @@ void Input::Update() {
 		}
 
 		if (e.type == SDL_KEYUP) {
-			pressed.erase(std::find(pressed.begin(), pressed.end(), e.key.keysym.scancode));
+			pressed.erase(std::find(pressed.begin(), pressed.end(), e.key.keysym.scancode), pressed.end());
 			justReleased.push_back(e.key.keysym.scancode);
 		}
 	}

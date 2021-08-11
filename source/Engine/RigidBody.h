@@ -20,6 +20,7 @@ private:
 	bool isKinematic = false;
 	float mass = 1.f;
 	float friction = 0.5f;
+	std::string layer;
 	float restitution = 0.f;
 	REFLECT_BEGIN(RigidBody);
 	REFLECT_VAR(mass);
@@ -27,5 +28,6 @@ private:
 	REFLECT_VAR(isKinematic);
 	REFLECT_VAR(friction);
 	REFLECT_VAR(restitution);
+	REFLECT_VAR(layer);
 	REFLECT_END();
 };
