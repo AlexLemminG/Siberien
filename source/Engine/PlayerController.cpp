@@ -80,7 +80,7 @@ void PlayerController::UpdateMovement() {
 }
 
 void PlayerController::UpdateShooting() {
-	if (!Input::GetKey(SDL_SCANCODE_Z)) {//TODO
+	if (!Input::GetKey(SDL_SCANCODE_Z) && !Input::GetMouseButton(0)) {//TODO
 		DisableShootingLight();
 		return;
 	}

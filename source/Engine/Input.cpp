@@ -1,13 +1,16 @@
 #include "Input.h"
 #include <SDL.h>
 
-std::vector<SDL_Scancode> Input::justPressed;
-std::vector<SDL_Scancode> Input::pressed;
-std::vector<SDL_Scancode> Input::justReleased;
+std::vector<bool> Input::justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+std::vector<bool> Input::pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+std::vector<bool> Input::justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 bool Input::quitPressed = false;
+Uint32 Input::mouseState = 0;
+Uint32 Input::prevMouseState = 0;
 Vector2 Input::mousePos = Vector2{ 0,0 };
 
 void Input::Update() {
+
 	quitPressed = false;
 	justPressed.clear();
 	justReleased.clear();
@@ -18,24 +21,54 @@ void Input::Update() {
 		{
 			quitPressed = true;
 		}
+	}
 
-		if (e.type == SDL_KEYDOWN) {
-			if (GetKey(e.key.keysym.scancode)) {
-				continue;
+	auto keyboardState = SDL_GetKeyboardState(NULL);
+	for (int iKey = 0; iKey < SDL_Scancode::SDL_NUM_SCANCODES; iKey++) {
+		justPressed[iKey] = false;
+		justReleased[iKey] = false;
+		if (keyboardState[iKey]) {
+			if (!pressed[iKey]) {
+				justPressed[iKey] = true;
 			}
-			justPressed.push_back(e.key.keysym.scancode);
-			pressed.push_back(e.key.keysym.scancode);
+			pressed[iKey] = true;
 		}
-
-		if (e.type == SDL_KEYUP) {
-			pressed.erase(std::find(pressed.begin(), pressed.end(), e.key.keysym.scancode), pressed.end());
-			justReleased.push_back(e.key.keysym.scancode);
+		else {
+			if (pressed[iKey]) {
+				justReleased[iKey] = true;
+			}
+			pressed[iKey] = false;
 		}
 	}
 
 	int mouseX;
 	int mouseY;
-	SDL_GetMouseState(&mouseX, &mouseY);
+	prevMouseState = mouseState;
+	mouseState = SDL_GetMouseState(&mouseX, &mouseY);
 	mousePos.x = mouseX;
 	mousePos.y = mouseY;
+}
+
+bool Input::GetMouseButton(int button) {
+	switch (button)
+	{
+	case 0:
+		return mouseState & SDL_BUTTON_LMASK;
+	case 1:
+		return mouseState & SDL_BUTTON_RIGHT;
+	default:
+		return false;
+	}
+}
+
+bool Input::GetMouseButtonDown(int button) {
+	switch (button)
+	{
+	case 0:
+		return GetMouseButton(button) && !(prevMouseState & SDL_BUTTON_LMASK);
+	case 1:
+		return GetMouseButton(button) && !(prevMouseState & SDL_BUTTON_RIGHT);
+	default:
+		return false;
+	}
 }

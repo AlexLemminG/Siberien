@@ -1,0 +1,14 @@
+GameObject:
+  tag: "Creep"
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $Animator
+MeshRenderer:
+  mesh: meshes/zombie.glb$Zombie
+  material: enemyMaterial.asset
+Transform:
+  pos: [3,1.5,7]
+  euler: [0,-90,0]
+Animator:
+  defaultAnimation: meshes/zombie.glb$Walk

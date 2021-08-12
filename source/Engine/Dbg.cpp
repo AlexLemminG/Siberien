@@ -3,26 +3,33 @@
 #include "debugdraw/debugdraw.h"
 
 
-std::vector<Ray> Dbg::rays;
+std::vector<Dbg::Ray> Dbg::rays;
 std::vector<Dbg::Point> Dbg::points;
+std::vector<Dbg::Axes> Dbg::axes;
 std::vector<std::string> Dbg::texts;
 
-void Dbg::Draw(Ray ray) {
-	rays.push_back(ray);
+void Dbg::Draw(::Ray ray, float length, Color color) {
+	rays.push_back(Ray{ ray, length, color });
 }
 
 void Dbg::Draw(Vector3 point, float radius) {
 	points.push_back(Point{ point, radius });
+}
+void Dbg::Draw(Matrix4 matr, float length) {
+	Draw(::Ray(GetPos(matr), GetRot(matr) * Vector3_up), length, Colors::green);
+	Draw(::Ray(GetPos(matr), GetRot(matr) * Vector3_right), length, Colors::red);
+	Draw(::Ray(GetPos(matr), GetRot(matr) * Vector3_forward), length, Colors::blue);
 }
 
 void Dbg::Init() {
 	bgfx_examples::ddInit();
 }
 
-void Dbg::ClearAll(){
+void Dbg::ClearAll() {
 	rays.clear();
 	points.clear();
 	texts.clear();
+	axes.clear();
 }
 void Dbg::Term() {
 	ClearAll();
@@ -33,13 +40,16 @@ void Dbg::Term() {
 void Dbg::DrawAll() {
 	bgfx_examples::DebugDrawEncoder dde;
 	dde.begin(0);
+
 	for (const auto& ray : rays) {
-		dde.moveTo(ray.origin.x, ray.origin.y, ray.origin.z);
-		auto nextPos = ray.GetPoint(100);
+		dde.setColor(ray.color.ToIntARGB());
+		dde.moveTo(ray.ray.origin.x, ray.ray.origin.y, ray.ray.origin.z);
+		auto nextPos = ray.ray.GetPoint(ray.length);
 		dde.lineTo(bx::Vec3(nextPos.x, nextPos.y, nextPos.z));
 	}
+	dde.setColor(Colors::white.ToIntARGB());
 
-	for (const auto& point: points) {
+	for (const auto& point : points) {
 		dde.drawOrb(point.pos.x, point.pos.y, point.pos.z, point.radius);
 	}
 

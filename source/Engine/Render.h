@@ -28,6 +28,7 @@ private:
 	bgfx::UniformHandle u_color;
 	bgfx::UniformHandle s_texColor;
 	bgfx::UniformHandle s_texNormal;
+	bgfx::UniformHandle u_sphericalHarmonics;
 	
 	static constexpr int maxLightsCount = 8;
 	bgfx::UniformHandle u_lightPosRadius;

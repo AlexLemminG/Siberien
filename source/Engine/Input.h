@@ -24,14 +24,17 @@ public:
 
 
 	static bool GetKeyDown(SDL_Scancode code) {
-		return std::find(justPressed.begin(), justPressed.end(), code) != justPressed.end();
+		return justPressed[code];
 	}
 	static bool GetKey(SDL_Scancode code) {
-		return (std::find(pressed.begin(), pressed.end(), code) != pressed.end()) || GetKeyDown(code);
+		return pressed[code];
 	}
 	static bool GetKeyUp(SDL_Scancode code) {
-		return std::find(justReleased.begin(), justReleased.end(), code) != justReleased.end();
+		return justReleased[code];
 	}
+
+	static bool GetMouseButton(int button);
+	static bool GetMouseButtonDown(int button);
 
 	static Vector2 GetMousePosition() {
 		return mousePos;
@@ -43,9 +46,11 @@ public:
 
 private:
 	//TODO hashmap
-	static std::vector<SDL_Scancode> justPressed;
-	static std::vector<SDL_Scancode> pressed;
-	static std::vector<SDL_Scancode> justReleased;
+	static std::vector<bool> justPressed;
+	static std::vector<bool> pressed;
+	static std::vector<bool> justReleased;
 	static bool quitPressed;
 	static Vector2 mousePos;
+	static Uint32 mouseState;
+	static Uint32 prevMouseState;
 };

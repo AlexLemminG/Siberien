@@ -2,6 +2,7 @@
 
 #include "Serialization.h"
 #include "GameObject.h"
+#include "Render.h"
 
 class GameObject;
 
@@ -21,15 +22,16 @@ public:
 	static Scene* Get() { return current; }//TODO remove singletons
 	virtual void OnBeforeSerializeCallback(SerializationContext& context) const override;
 
+	std::shared_ptr<SphericalHarmonics> sphericalHarmonics; //TODO not here
 private:
 	static Scene* current;
 	bool isInited = false;
 
 	std::vector<std::shared_ptr<GameObject>> addedGameObjects;
-
 	void ProcessAddedGameObjects();
 
 	REFLECT_BEGIN(Scene);
+	REFLECT_VAR(sphericalHarmonics);
 	REFLECT_VAR(gameObjects);
 	REFLECT_END();
 };

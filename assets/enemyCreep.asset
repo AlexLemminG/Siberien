@@ -7,6 +7,7 @@ GameObject:
   - $SphereCollider
   - $RigidBody
   - $Health
+  - $Animator
 MeshRenderer:
   mesh: meshes/zombie.glb$Zombie
   material: enemyMaterial.asset
@@ -20,6 +21,9 @@ EnemyCreepController:
   angularSpeed: 10.0
   acc: 5
   angularAcc: 3.4
+  velocityToAnimatorSpeed: 3.0
+  walkAnimation: meshes/zombie.glb$Walk
+  rollAnimation: meshes/zombie.glb$Roll
 SphereCollider:
   radius: 0.8
   center: [0, 0.15, 0]
@@ -31,3 +35,7 @@ RigidBody:
   layer: enemy
 Health:
   amount: 1
+Animator:
+  speed: 10
+  defaultAnimation: meshes/zombie.glb$Walk
+  

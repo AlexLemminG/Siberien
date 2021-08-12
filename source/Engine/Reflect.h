@@ -115,7 +115,9 @@ public:
 	}
 	virtual void Deserialize(const SerializationContext& context, void* object) override
 	{
-		(*(T*)object) = context.yamlNode.as<T>();
+		if (context.yamlNode.IsDefined()) {
+			(*(T*)object) = context.yamlNode.as<T>();
+		}
 	}
 };
 

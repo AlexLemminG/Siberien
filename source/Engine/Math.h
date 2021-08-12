@@ -70,6 +70,9 @@ public:
 	static float Clamp(float f, float a, float b) {
 		return f > b ? b : (f < a ? a : f);
 	}
+	static float Repeat(float t, float period) {
+		return t - ((int)(t / period)) * period;
+	}
 	static int Clamp(int i, int a, int b) {
 		return i > b ? b : (i < a ? a : i);
 	}
@@ -105,6 +108,9 @@ public:
 	}
 	static Vector3 Lerp(const Vector3& a, const Vector3& b, float t) {
 		return a + (b - a) * Clamp01(t);
+	}
+	static Quaternion Lerp(const Quaternion& a, const Quaternion& b, float t) {
+		return Quaternion::Slerp(a, b, Clamp01(t));
 	}
 	static float Lerp(const float& a, const float& b, float t) {
 		return a + (b - a) * Clamp01(t);
@@ -158,6 +164,12 @@ public:
 			Mathf::NormalizedFloatToByte(g) << 16 |
 			Mathf::NormalizedFloatToByte(b) << 8 |
 			Mathf::NormalizedFloatToByte(a) << 0;
+	}
+	int ToIntARGB() const {
+		return Mathf::NormalizedFloatToByte(r) << 16 |
+			Mathf::NormalizedFloatToByte(g) << 8 |
+			Mathf::NormalizedFloatToByte(b) << 0 |
+			Mathf::NormalizedFloatToByte(a) << 24;
 	}
 
 	static void Deserialize(const SerializationContext& serializedObject, Color& color);

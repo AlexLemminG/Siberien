@@ -18,7 +18,27 @@ public:
 	bgfx::IndexBufferHandle indexBuffer{};
 	std::vector<uint8_t> buffer;
 	std::vector<uint16_t> indices;
+
+	static constexpr int bonesPerVertex = 4;
+	Matrix4 globalInverseTransform;
+	//std::vector<uint8_t> boneIndices;
+	//std::vector<float> boneWeights;
+
+	class BoneInfo {
+	public:
+		std::string name;
+		int idx = 0;
+		int parentBoneIdx = -1;
+		Matrix4 offset;
+		Matrix4 initialLocal;
+	};
+
+	std::vector<BoneInfo> bones;
+
+	void Init();
 private:
+	void FillBoneParentInfo();
+
 	REFLECT_BEGIN(Mesh);
 	REFLECT_END();
 };
@@ -75,7 +95,13 @@ public:
 	void OnEnable() override {
 		this->worldMatrix = Matrix4::Identity();
 		enabledMeshRenderers.push_back(this);
+		if (mesh && mesh->originalMeshPtr && mesh->originalMeshPtr->HasBones()) {
+			bonesWorldMatrices.resize(mesh->originalMeshPtr->mNumBones);
+			bonesLocalMatrices.resize(mesh->originalMeshPtr->mNumBones);
+			bonesFinalMatrices.resize(mesh->originalMeshPtr->mNumBones);
+		}
 	}
+
 	void OnDisable() override {
 		enabledMeshRenderers.erase(std::find(enabledMeshRenderers.begin(), enabledMeshRenderers.end(), this), enabledMeshRenderers.end());
 	}
@@ -84,6 +110,52 @@ public:
 	REFLECT_VAR(mesh);
 	REFLECT_VAR(material);
 	REFLECT_END();
+
+	std::vector<Matrix4> bonesFinalMatrices;
+	std::vector<Matrix4> bonesWorldMatrices;
+	std::vector<Matrix4> bonesLocalMatrices;
+};
+
+
+class AnimationTransform {
+public:
+	Vector3 position = Vector3_zero;
+	Quaternion rotation = Quaternion::identity;
+	Vector3 scale = Vector3_one;
+
+	static AnimationTransform Lerp(const AnimationTransform& a, const AnimationTransform& b, float t);
+
+	void ToMatrix(Matrix4& matrix);
+};
+class MeshAnimation : public Object {
+public:
+	aiAnimation* assimAnimation = nullptr;
+	AnimationTransform GetTransform(const std::string& bone, float t);
+
+	REFLECT_BEGIN(MeshAnimation);
+	REFLECT_END();
+};
+
+class Animator : public Component {
+public:
+	void Update() override;
+
+	std::shared_ptr<MeshAnimation> currentAnimation;
+	std::shared_ptr<MeshAnimation> defaultAnimation;
+	float currentTime;
+	float speed = 1.f;
+
+	void OnEnable() override;
+
+	void SetAnimation(std::shared_ptr<MeshAnimation> animation) { currentAnimation = animation; }
+
+	REFLECT_BEGIN(Animator);
+	REFLECT_VAR(speed);
+	REFLECT_VAR(defaultAnimation);
+	REFLECT_END();
+
+private:
+	void UpdateWorldMatrices();
 };
 
 class DirLight : public Component {
@@ -126,5 +198,13 @@ public:
 	REFLECT_VAR(color);
 	REFLECT_VAR(radius);
 	REFLECT_VAR(innerRadius);
+	REFLECT_END();
+};
+
+class SphericalHarmonics : public Object {
+public:
+	std::vector<Color> coeffs;
+	REFLECT_BEGIN(SphericalHarmonics);
+	REFLECT_VAR(coeffs);
 	REFLECT_END();
 };

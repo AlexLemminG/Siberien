@@ -4,11 +4,13 @@
 #include "Math.h"
 #include <vector>
 #include <string>
+#include "Math.h"
 
 class Dbg {
 public:
-	static void Draw(Ray ray);
+	static void Draw(Ray ray, float length = 1.f, Color color = Colors::white);
 	static void Draw(Vector3 point, float radius = 0.1f);
+	static void Draw(Matrix4 axes, float length = 1.0f);
 	static void Text(std::string text);
 
 	template<typename ... Args>
@@ -30,10 +32,22 @@ private:
 		Vector3 pos;
 		float radius;
 	};
+	class Axes {
+	public:
+		Matrix4 matr;
+		float length;
+	};
+	class Ray{
+	public:
+		::Ray ray;
+		float length;
+		Color color;
+	};
 
 	static void ClearAll();
 
 	static std::vector<std::string> texts;
 	static std::vector<Ray> rays;
 	static std::vector<Point> points;
+	static std::vector<Axes> axes;
 };

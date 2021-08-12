@@ -12,6 +12,31 @@ SAMPLER2D(s_texNormal, 1);
 uniform vec4 u_lightPosRadius[8];
 uniform vec4 u_lightRgbInnerR[8];
 
+
+uniform vec4 u_sphericalHarmonics[9];
+
+vec3 SampleSH(vec3 normal, vec4 sph[9]) {
+  float x = normal.x;
+  float y = normal.y;
+  float z = normal.z;
+
+  vec4 result = (
+    sph[0] +
+
+    sph[1] * x +
+    sph[2] * y +
+    sph[3] * z +
+
+    sph[4] * z * x +
+    sph[5] * y * z +
+    sph[6] * y * x +
+    sph[7] * (3.0 * z * z - 1.0) +
+    sph[8] * (x*x - y*y)
+  );
+
+  return max(result.xyz, vec3(0.0, 0.0, 0.0));
+}
+
 vec2 blinn(vec3 _lightDir, vec3 _normal, vec3 _viewDir)
 {
 	float ndotl = dot(_normal, _lightDir);
@@ -66,6 +91,7 @@ void main()
 	for(int i = 0; i < 8; i++){
 		lightColor +=  calcLight(i, tbn, v_wpos, normal, view);
 	}
+	lightColor += SampleSH(mul(tbn, normal), u_sphericalHarmonics);
 
 	vec4 color = toLinear(texture2D(s_texColor, v_texcoord0) );
 

@@ -6,17 +6,20 @@
 #include "btBulletDynamicsCommon.h"
 #include "Time.h"
 #include "Health.h"
+#include "MeshRenderer.h"
 
 DECLARE_TEXT_ASSET(EnemyCreepController);
 
 void EnemyCreepController::OnEnable() {
 	rb = gameObject()->GetComponent<RigidBody>();
+	animator = gameObject()->GetComponent<Animator>();
 	health = gameObject()->GetComponent<Health>();
 }
 
 
 void EnemyCreepController::HandleDeath() {
 	rb->GetHandle()->setDamping(0.8, 0.8);
+	animator->SetAnimation(rollAnimation);
 }
 
 
@@ -58,6 +61,17 @@ void EnemyCreepController::FixedUpdate() {
 	}
 	Vector3 currentAngularVelocity = btConvert(handle->getAngularVelocity());
 
+	if (Vector3::DotProduct(gameObject()->transform()->GetUp(), Vector3_up) < 0.1f) {
+		animator->SetAnimation(rollAnimation);
+		lastRollTime = Time::time();
+	}
+	else {
+		if (Time::time() - lastRollTime > 1.f) {
+			animator->SetAnimation(walkAnimation);
+		}
+	}
+
+
 	float maxAnglularSpeedDistance = 0.5f;
 	Vector3 angularVelocity = currentAngularVelocity + Mathf::ClampLength(desiredAngularVelocity - currentAngularVelocity, maxAnglularSpeedDistance) / maxAnglularSpeedDistance * angularAcc * dt;
 	handle->setAngularVelocity(btConvert(angularVelocity));
@@ -74,6 +88,7 @@ void EnemyCreepController::FixedUpdate() {
 	Vector3 currentVelocity = btConvert(handle->getLinearVelocity());
 
 	Vector3 velocity = currentVelocity + Mathf::ClampLength(desiredVelocity - currentVelocity, maxSpeedDistance) / maxSpeedDistance * acc * dt * speedFactorFromAngle;
+	animator->speed = Mathf::Max(1.f, currentVelocity.Length() * velocityToAnimatorSpeed);
 
 	handle->setLinearVelocity(btConvert(velocity));
 	//Vector3 dir = target

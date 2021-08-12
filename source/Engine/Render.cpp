@@ -18,6 +18,7 @@
 #include "Dbg.h"
 #include "System.h"
 #include "Time.h"
+#include "Scene.h"
 
 SDL_Window* Render::window = nullptr;
 
@@ -75,6 +76,8 @@ bool Render::Init()
 
 	u_lightPosRadius = bgfx::createUniform("u_lightPosRadius", bgfx::UniformType::Vec4, maxLightsCount);
 	u_lightRgbInnerR = bgfx::createUniform("u_lightRgbInnerR", bgfx::UniformType::Vec4, maxLightsCount);
+
+	u_sphericalHarmonics = bgfx::createUniform("u_sphericalHarmonics", bgfx::UniformType::Vec4, 9);
 
 	whiteTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\white.png");
 	defaultNormalTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultNormal.png");
@@ -171,7 +174,7 @@ void Render::Term()
 	bgfx::destroy(s_texNormal);
 	bgfx::destroy(u_lightPosRadius);
 	bgfx::destroy(u_lightRgbInnerR);
-
+	bgfx::destroy(u_sphericalHarmonics);
 	bgfx::shutdown();
 
 	if (window != nullptr) {
@@ -200,7 +203,7 @@ void Render::UpdateLights(Vector3 poi) {
 
 	Vector4 posRadius[maxLightsCount];
 	Vector4 colorInnerRadius[maxLightsCount];
-	
+
 	for (int i = 0; i < maxLightsCount; i++) {
 		if (lights.size() == 0) {
 			for (int j = i; j < maxLightsCount; j++) {
@@ -232,6 +235,12 @@ void Render::UpdateLights(Vector3 poi) {
 	}
 	bgfx::setUniform(u_lightPosRadius, &posRadius, maxLightsCount);
 	bgfx::setUniform(u_lightRgbInnerR, &colorInnerRadius, maxLightsCount);
+
+	if (Scene::Get()) {
+		if (Scene::Get()->sphericalHarmonics) {
+			bgfx::setUniform(u_sphericalHarmonics, &Scene::Get()->sphericalHarmonics->coeffs[0], 9);
+		}
+	}
 }
 
 void Render::DrawMesh(MeshRenderer* renderer) {
@@ -251,7 +260,12 @@ void Render::DrawMesh(MeshRenderer* renderer) {
 		;
 
 	float f = renderer->worldMatrix(0, 0);
-	bgfx::setTransform(&(renderer->gameObject()->transform()->matrix));
+	if (renderer->bonesFinalMatrices.size() != 0) {
+		bgfx::setTransform(&renderer->bonesFinalMatrices[0], renderer->bonesFinalMatrices.size());
+	}
+	else {
+		bgfx::setTransform(&(renderer->gameObject()->transform()->matrix));
+	}
 	bgfx::setUniform(u_color, &renderer->material->color);
 
 

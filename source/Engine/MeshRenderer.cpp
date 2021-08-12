@@ -9,6 +9,9 @@
 #include "assimp/scene.h"
 #include "bimg/bimg.h"
 #include "bimg/decode.h"
+#include "Time.h"
+#include "GameObject.h"
+#include "Dbg.h"
 //#include "bgfx_utils.h"
 
 class VertexLayout {
@@ -44,17 +47,60 @@ public:
 		return *this;
 	}
 
+	VertexLayout& AddIndices() {
+		bgfxLayout.add(bgfx::Attrib::Indices, 4, bgfx::AttribType::Uint8);
+		attributes.push_back(bgfx::Attrib::Indices);
+		return *this;
+	}
+
+	VertexLayout& AddWeights() {
+		bgfxLayout.add(bgfx::Attrib::Weight, 4, bgfx::AttribType::Float);
+		attributes.push_back(bgfx::Attrib::Weight);
+		return *this;
+	}
+
 	VertexLayout& End() {
 		bgfxLayout.end();
 		return *this;
 	}
 	std::vector<bgfx::Attrib::Enum> attributes;
 
-	std::vector<uint8_t> CreateBuffer(aiMesh* mesh) {
+	std::vector<uint8_t> CreateBuffer(std::shared_ptr<Mesh> gameMesh) {
+		auto* mesh = gameMesh->originalMeshPtr;
 		int numVerts = mesh->mNumVertices;
 		int stride = bgfxLayout.m_stride;
 		std::vector<uint8_t> buffer;
 		buffer.resize(bgfxLayout.getSize(numVerts));
+
+		std::vector<float> weights;
+		weights.resize(numVerts * Mesh::bonesPerVertex, 0.f);
+
+		std::vector<uint8_t> indices;
+		indices.resize(numVerts * Mesh::bonesPerVertex, 0);
+
+		for (int iBone = 0; iBone < mesh->mNumBones; iBone++) {
+			for (int j = 0; j < mesh->mBones[iBone]->mNumWeights; j++) {
+				int vertexID = mesh->mBones[iBone]->mWeights[j].mVertexId;
+				float weight = mesh->mBones[iBone]->mWeights[j].mWeight;
+
+				for (int i = 0; i < Mesh::bonesPerVertex; i++) {
+					if (weights[vertexID * Mesh::bonesPerVertex + i] == 0.f) {
+						weights[vertexID * Mesh::bonesPerVertex + i] = weight;
+						indices[vertexID * Mesh::bonesPerVertex + i] = iBone;
+						break;
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i < numVerts; i++) {
+			float w = 0.f;
+			for (int j = 0; j < Mesh::bonesPerVertex; j++) {
+				w += weights[i * Mesh::bonesPerVertex + j];
+			}
+			weights[i * Mesh::bonesPerVertex] += 1.f - w;
+		}
+
 		for (int i = 0; i < attributes.size(); i++) {
 			auto attribute = attributes[i];
 			int offset = bgfxLayout.getOffset(attribute);
@@ -94,6 +140,24 @@ public:
 					dstBuffer += stride;
 				}
 			}
+			else if (attribute == bgfx::Attrib::Indices) {
+				uint8_t* srcBuffer = &indices[0];
+				uint8_t* dstBuffer = &buffer[offset];
+				for (int iVertex = 0; iVertex < numVerts; iVertex++) {
+					memcpy(dstBuffer, srcBuffer, sizeof(uint8_t) * Mesh::bonesPerVertex);
+					srcBuffer += Mesh::bonesPerVertex;
+					dstBuffer += stride;
+				}
+			}
+			else if (attribute == bgfx::Attrib::Weight) {
+				float* srcBuffer = &weights[0];
+				uint8_t* dstBuffer = &buffer[offset];
+				for (int iVertex = 0; iVertex < numVerts; iVertex++) {
+					memcpy(dstBuffer, srcBuffer, sizeof(float) * Mesh::bonesPerVertex);
+					srcBuffer += Mesh::bonesPerVertex;
+					dstBuffer += stride;
+				}
+			}
 		}
 		return std::move(buffer);
 	}
@@ -101,7 +165,7 @@ public:
 
 static VertexLayout layout_pos;
 void InitVertexLayouts() {
-	layout_pos.Begin().AddPosition().AddNormal().AddTangent().AddTexCoord().End();
+	layout_pos.Begin().AddPosition().AddNormal().AddTangent().AddTexCoord().AddIndices().AddWeights().End();
 }
 
 void PrintHierarchy(aiNode* node, int offset) {
@@ -123,7 +187,7 @@ public:
 		Assimp::Importer importer{};
 		//TODO return void for all importers
 		auto fullPath = AssetDatabase::assetsFolderPrefix + path; //TODO pass full path or file as argument
-		auto* scene = importer.ReadFile(fullPath, aiProcess_ValidateDataStructure | aiProcess_CalcTangentSpace);
+		auto* scene = importer.ReadFile(fullPath, aiProcess_ValidateDataStructure | aiProcess_CalcTangentSpace | aiProcess_PopulateArmatureData);
 		if (!scene) {
 			LogError("failed to import '%s': failed to open mesh", path.c_str());
 			return nullptr;
@@ -143,16 +207,25 @@ public:
 			database.AddAsset(mesh, path, aiMesh->mName.C_Str());
 
 			//TODO should keep buffer ?
-			mesh->buffer = layout_pos.CreateBuffer(aiMesh);
+			mesh->buffer = layout_pos.CreateBuffer(mesh);
 			mesh->vertexBuffer = bgfx::createVertexBuffer(bgfx::makeRef(&mesh->buffer[0], mesh->buffer.size()), layout_pos.bgfxLayout);
 			bgfx::setName(mesh->vertexBuffer, mesh->originalMeshPtr->mName.C_Str());
 			mesh->indices = CreateIndices(aiMesh);
 			mesh->indexBuffer = bgfx::createIndexBuffer(bgfx::makeRef(&mesh->indices[0], mesh->indices.size() * sizeof(uint16_t)));
 			bgfx::setName(mesh->indexBuffer, mesh->originalMeshPtr->mName.C_Str());
+			mesh->Init();
 
 			importedMeshesCount++;
 			//bgfx::createVertexBuffer(bgfx::makeRef(aiMesh->mVertices, aiMesh->mNumVertices), VertexLayouts::);
 		}
+
+		for (int iAnim = 0; iAnim < scene->mNumAnimations; iAnim++) {
+			auto anim = scene->mAnimations[iAnim];
+			auto animation = std::make_shared<MeshAnimation>();
+			animation->assimAnimation = anim;
+			database.AddAsset(animation, path, anim->mName.C_Str());
+		}
+
 		if (importedMeshesCount == 0) {
 			LogError("failed to import '%s': no meshes", path.c_str());
 		}
@@ -529,3 +602,148 @@ void PointLight::OnDisable() {
 	pointLights.erase(std::find(pointLights.begin(), pointLights.end(), this), pointLights.end());
 }
 std::vector<PointLight*> PointLight::pointLights;
+
+Vector3 aiConvert(const aiVector3D& v) {
+	return Vector3(v.x, v.y, v.z);
+}
+Quaternion aiConvert(const aiQuaternion& v) {
+	return Quaternion(v.x, v.y, v.z, v.w);
+}
+
+template<typename OUT_T, typename IN_T>
+static bool GetAnimValue(OUT_T& out, IN_T* keys, int numKeys, float t) {
+	if (numKeys <= 0) {
+		return false;
+	}
+	float tPos = Mathf::Repeat(t * 1000.f, keys[numKeys - 1].mTime);
+
+	for (int iPos = 0; iPos < numKeys; iPos++) {
+		if (iPos == numKeys - 1 || keys[iPos + 1].mTime >= tPos) {
+			auto thisKey = keys[iPos];
+			auto nextKey = iPos == numKeys - 1 ? thisKey : keys[iPos + 1];
+			tPos = (tPos - thisKey.mTime) / Mathf::Max(nextKey.mTime - thisKey.mTime, 0.001f);
+
+			out = Mathf::Lerp(aiConvert(thisKey.mValue), aiConvert(nextKey.mValue), tPos);
+			return true;
+		}
+	}
+	return false;
+}
+void AnimationTransform::ToMatrix(Matrix4& matrix) {
+	matrix = Matrix4::Transform(position, rotation.ToMatrix(), scale);
+}
+
+AnimationTransform MeshAnimation::GetTransform(const std::string& bone, float t) {
+	for (int iNode = 0; iNode < assimAnimation->mNumChannels; iNode++) {
+		auto* channel = assimAnimation->mChannels[iNode];
+		if (bone != channel->mNodeName.C_Str()) {
+			continue;
+		}
+
+		AnimationTransform transform;
+		GetAnimValue(transform.position, channel->mPositionKeys, channel->mNumPositionKeys, t);
+		GetAnimValue(transform.rotation, channel->mRotationKeys, channel->mNumRotationKeys, t);
+		GetAnimValue(transform.scale, channel->mScalingKeys, channel->mNumScalingKeys, t);
+
+		return transform;
+	}
+	ASSERT(false);
+	return AnimationTransform();
+}
+
+AnimationTransform AnimationTransform::Lerp(const AnimationTransform& a, const AnimationTransform& b, float t) {
+	AnimationTransform l;
+	l.position = Mathf::Lerp(a.position, b.position, t);
+	l.rotation = Mathf::Lerp(a.rotation, b.rotation, t);
+	l.scale = Mathf::Lerp(a.scale, b.scale, t);
+	return l;
+}
+
+void Animator::Update() {
+	auto meshRenderer = gameObject()->GetComponent<MeshRenderer>();
+
+	auto mesh = meshRenderer->mesh;
+
+	if (currentAnimation != nullptr) {
+		currentTime += Time::deltaTime() * speed;
+		for (auto& bone : mesh->bones) {
+			auto transform = currentAnimation->GetTransform(bone.name, currentTime);
+			transform.ToMatrix(meshRenderer->bonesLocalMatrices[bone.idx]);
+			SetRot(meshRenderer->bonesLocalMatrices[bone.idx], GetRot(bone.initialLocal));//TODO f this shit
+		}
+	}
+	UpdateWorldMatrices();
+
+
+	for (auto bone : meshRenderer->bonesWorldMatrices) {
+		//Dbg::Draw(bone, 5);
+	}
+}
+
+void Animator::OnEnable() {
+	auto meshRenderer = gameObject()->GetComponent<MeshRenderer>();
+
+	auto mesh = meshRenderer->mesh;
+
+	for (auto& bone : mesh->bones) {
+		meshRenderer->bonesLocalMatrices[bone.idx] = bone.initialLocal;
+	}
+	UpdateWorldMatrices();
+
+	currentAnimation = defaultAnimation;
+}
+
+void Animator::UpdateWorldMatrices() {
+	auto meshRenderer = gameObject()->GetComponent<MeshRenderer>();
+
+	auto mesh = meshRenderer->mesh;
+
+	for (auto& bone : mesh->bones) {
+		if (bone.parentBoneIdx != -1) {
+			auto& parentBoneMatrix = meshRenderer->bonesWorldMatrices[bone.parentBoneIdx];
+			meshRenderer->bonesWorldMatrices[bone.idx] = parentBoneMatrix * meshRenderer->bonesLocalMatrices[bone.idx];
+		}
+		else {
+			auto& parentBoneMatrix = gameObject()->transform()->matrix;
+			meshRenderer->bonesWorldMatrices[bone.idx] = parentBoneMatrix * meshRenderer->bonesLocalMatrices[bone.idx];
+		}
+		auto rot = Quaternion::FromAngleAxis(Mathf::pi, Vector3_forward).ToMatrix4();
+		//meshRenderer->bonesWorldMatrices[bone.idx] = meshRenderer->bonesWorldMatrices[bone.idx] * rot;
+		//meshRenderer->bonesWorldMatrices[bone.idx] = meshRenderer->bonesWorldMatrices[bone.idx];
+		meshRenderer->bonesFinalMatrices[bone.idx] = meshRenderer->bonesWorldMatrices[bone.idx] * bone.offset;
+	}
+}
+
+void Mesh::Init() {
+	if (!originalMeshPtr) {
+		return;
+	}
+	bones.resize(originalMeshPtr->mNumBones);
+	std::unordered_map<std::string, int> boneMapping;
+	for (int iBone = 0; iBone < originalMeshPtr->mNumBones; iBone++) {
+		bones[iBone].idx = iBone;
+		bones[iBone].name = originalMeshPtr->mBones[iBone]->mName.C_Str();
+
+		bones[iBone].offset = *(Matrix4*)(void*)(&(originalMeshPtr->mBones[iBone]->mOffsetMatrix.a1));
+		bones[iBone].offset = bones[iBone].offset.Transpose();
+		//bones[iBone].offset = bones[iBone].offset.Inverse();
+		boneMapping[bones[iBone].name] = iBone;
+	}
+
+	for (int iBone = 0; iBone < originalMeshPtr->mNumBones; iBone++) {
+		auto parentNode = originalMeshPtr->mBones[iBone]->mNode->mParent;
+		auto it = boneMapping.find(parentNode->mName.C_Str());
+		if (it != boneMapping.end()) {
+			bones[iBone].parentBoneIdx = it->second;
+		}
+		else {
+			bones[iBone].parentBoneIdx = -1;
+		}
+		bones[iBone].initialLocal = *(Matrix4*)(void*)(&(originalMeshPtr->mBones[iBone]->mNode->mTransformation.a1));
+		bones[iBone].initialLocal = bones[iBone].initialLocal.Transpose();
+	}
+}
+
+DECLARE_TEXT_ASSET(Animator);
+DECLARE_TEXT_ASSET(MeshAnimation);
+DECLARE_TEXT_ASSET(SphericalHarmonics);

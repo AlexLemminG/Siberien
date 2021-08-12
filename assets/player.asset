@@ -15,6 +15,7 @@ Transform:
   scale: [0.7, 0.7, 0.7]
 PlayerController:
   speed: 4.2
+  jumpVelocity: 5.0
   jumpPushImpulse: 500
   jumpPushRadius: 10
   bulletSpawnOffset: 0.5
