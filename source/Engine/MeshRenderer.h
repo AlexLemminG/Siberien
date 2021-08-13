@@ -10,6 +10,7 @@
 
 class aiMesh;
 //class aiScene;
+class MeshAnimation;
 
 class Mesh : public Object{
 public:
@@ -31,9 +32,11 @@ public:
 		int parentBoneIdx = -1;
 		Matrix4 offset;
 		Matrix4 initialLocal;
+		Quaternion inverseTPoseRotation;
 	};
 
 	std::vector<BoneInfo> bones;
+	std::shared_ptr<MeshAnimation> tPoseAnim;
 
 	void Init();
 private:

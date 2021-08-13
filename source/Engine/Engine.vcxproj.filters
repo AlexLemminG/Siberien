@@ -102,6 +102,9 @@
     <ClCompile Include="CorpseRemoveSystem.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="GameplaySceneScenario.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render.h">
@@ -195,6 +198,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="CorpseRemoveSystem.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="GameplaySceneScenario.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

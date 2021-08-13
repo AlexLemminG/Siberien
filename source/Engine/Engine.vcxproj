@@ -65,6 +65,7 @@
       <AdditionalIncludeDirectories>..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -86,6 +87,7 @@
     <ClCompile Include="EnemyCreep.cpp" />
     <ClCompile Include="FlyCameraMovement.cpp" />
     <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="GameplaySceneScenario.cpp" />
     <ClCompile Include="Gun.cpp" />
     <ClCompile Include="Health.cpp" />
     <ClCompile Include="Input.cpp" />
@@ -137,6 +139,7 @@
     <ClInclude Include="Time.h" />
     <ClInclude Include="TopDownCameraRig.h" />
     <ClInclude Include="Transform.h" />
+    <ClInclude Include="GameplaySceneScenario.h" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NAT.natvis" />

@@ -4,7 +4,7 @@ BulletSettings:
   damage: 1
   hasColision: true
   lifeTime: 5.0
-  radius: 0.15
+  radius: 0.1
 MeshRenderer:
   mesh: meshes\bullet.glb$bullet_mesh
   material: bulletMaterial.asset

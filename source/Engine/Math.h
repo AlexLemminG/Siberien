@@ -88,6 +88,9 @@ public:
 	static float Pow(float value, float power) {
 		return powf(value, power);
 	}
+	static float Sqrt(float value) {
+		return sqrtf(value);
+	}
 	static float RadToDeg(float rad) {
 		return rad * 180.f / pi;
 	}
@@ -132,6 +135,7 @@ public:
 	static constexpr float pi = 3.14f;//TODO lol
 	static constexpr float pi2 = pi * 2;
 	static constexpr float epsilon = 0.00001f;
+	static constexpr float phi = 1.61803398875; // golden ratio
 };
 
 class Random {

@@ -1,0 +1,16 @@
+GameObject:
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $MeshCollider
+  - $RigidBody
+MeshRenderer:
+  mesh: meshes\staticScene.glb$Scene
+  material: playermaterial.asset
+Transform:
+  pos: [3,0,0]
+MeshCollider:
+  mesh: meshes\staticScene.glb$Scene
+RigidBody:
+  isStatic: true
+  mass: 20

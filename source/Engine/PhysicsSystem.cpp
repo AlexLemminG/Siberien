@@ -92,6 +92,10 @@ void PhysicsSystem::GetGroupAndMask(const std::string& groupName, int& group, in
 		group = enemyBulletGroup;
 		mask = enemyBulletMask;
 	}
+	else  if (groupName == "enemyCorpse") {
+		group = enemyCorpseGroup;
+		mask = enemyCorpseMask;
+	}
 	else {
 		LogError("Unknown group name %s", groupName.c_str());
 		group = defaultGroup;

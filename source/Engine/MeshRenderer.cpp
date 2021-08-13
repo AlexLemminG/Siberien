@@ -126,8 +126,7 @@ public:
 				aiVector3D* srcBuffer = mesh->mTextureCoords[0];
 				uint8_t* dstBuffer = &buffer[offset];
 				for (int iVertex = 0; iVertex < numVerts; iVertex++) {
-					*((float*)dstBuffer) = srcBuffer->x;
-					*(((float*)dstBuffer) + 1) = -srcBuffer->y;
+					memcpy(dstBuffer, srcBuffer, sizeof(float) * 2);
 					srcBuffer += 1;
 					dstBuffer += stride;
 				}
@@ -188,7 +187,7 @@ public:
 		Assimp::Importer importer{};
 		//TODO return void for all importers
 		auto fullPath = AssetDatabase::assetsFolderPrefix + path; //TODO pass full path or file as argument
-		auto* scene = importer.ReadFile(fullPath, aiProcess_ValidateDataStructure | aiProcess_CalcTangentSpace | aiProcess_PopulateArmatureData);
+		auto* scene = importer.ReadFile(fullPath, aiProcess_ValidateDataStructure | aiProcess_CalcTangentSpace | aiProcess_PopulateArmatureData | aiProcess_Triangulate | aiProcess_ConvertToLeftHanded);
 		if (!scene) {
 			LogError("failed to import '%s': failed to open mesh", path.c_str());
 			return nullptr;
@@ -198,6 +197,20 @@ public:
 		fullAsset->scene.reset(scene);
 		//TODO pass separate database handle
 		database.AddAsset(fullAsset, path, "FullMeshAsset");
+
+		std::unordered_map < std::string, std::shared_ptr<MeshAnimation>> animations;
+		const std::string armaturePrefix = "Armature|";
+		for (int iAnim = 0; iAnim < scene->mNumAnimations; iAnim++) {
+			auto anim = scene->mAnimations[iAnim];
+			auto animation = std::make_shared<MeshAnimation>();
+			animation->assimAnimation = anim;
+			std::string animName = anim->mName.C_Str();
+			if (animName.find(armaturePrefix.c_str()) == 0) {
+				animName = animName.substr(armaturePrefix.size(), animName.size() - armaturePrefix.size());
+			}
+			database.AddAsset(animation, path, animName);
+			animations[animName] = animation;
+		}
 
 		PrintHierarchy(scene->mRootNode, 0);
 		int importedMeshesCount = 0;
@@ -214,17 +227,11 @@ public:
 			mesh->indices = CreateIndices(aiMesh);
 			mesh->indexBuffer = bgfx::createIndexBuffer(bgfx::makeRef(&mesh->indices[0], mesh->indices.size() * sizeof(uint16_t)));
 			bgfx::setName(mesh->indexBuffer, mesh->originalMeshPtr->mName.C_Str());
+			mesh->tPoseAnim = animations["TPose"];
 			mesh->Init();
 
 			importedMeshesCount++;
 			//bgfx::createVertexBuffer(bgfx::makeRef(aiMesh->mVertices, aiMesh->mNumVertices), VertexLayouts::);
-		}
-
-		for (int iAnim = 0; iAnim < scene->mNumAnimations; iAnim++) {
-			auto anim = scene->mAnimations[iAnim];
-			auto animation = std::make_shared<MeshAnimation>();
-			animation->assimAnimation = anim;
-			database.AddAsset(animation, path, anim->mName.C_Str());
 		}
 
 		if (importedMeshesCount == 0) {
@@ -674,8 +681,10 @@ void Animator::Update() {
 		currentTime += Time::deltaTime() * speed;
 		for (auto& bone : mesh->bones) {
 			auto transform = currentAnimation->GetTransform(bone.name, currentTime);
+			transform.rotation = bone.inverseTPoseRotation * transform.rotation;
 			transform.ToMatrix(meshRenderer->bonesLocalMatrices[bone.idx]);
-			SetRot(meshRenderer->bonesLocalMatrices[bone.idx], GetRot(bone.initialLocal));//TODO f this shit
+
+			//SetRot(meshRenderer->bonesLocalMatrices[bone.idx], GetRot(bone.initialLocal));//TODO f this shit
 		}
 	}
 	UpdateWorldMatrices();
@@ -723,9 +732,6 @@ void Animator::UpdateWorldMatrices() {
 			auto& parentBoneMatrix = gameObject()->transform()->matrix;
 			meshRenderer->bonesWorldMatrices[bone.idx] = parentBoneMatrix * meshRenderer->bonesLocalMatrices[bone.idx];
 		}
-		auto rot = Quaternion::FromAngleAxis(Mathf::pi, Vector3_forward).ToMatrix4();
-		//meshRenderer->bonesWorldMatrices[bone.idx] = meshRenderer->bonesWorldMatrices[bone.idx] * rot;
-		//meshRenderer->bonesWorldMatrices[bone.idx] = meshRenderer->bonesWorldMatrices[bone.idx];
 		meshRenderer->bonesFinalMatrices[bone.idx] = meshRenderer->bonesWorldMatrices[bone.idx] * bone.offset;
 	}
 }
@@ -757,6 +763,13 @@ void Mesh::Init() {
 		}
 		bones[iBone].initialLocal = *(Matrix4*)(void*)(&(originalMeshPtr->mBones[iBone]->mNode->mTransformation.a1));
 		bones[iBone].initialLocal = bones[iBone].initialLocal.Transpose();
+	}
+
+	for (int iBone = 0; iBone < originalMeshPtr->mNumBones; iBone++) {
+		if (tPoseAnim) {
+			auto transform = tPoseAnim->GetTransform(bones[iBone].name, 0.f);
+			bones[iBone].inverseTPoseRotation = GetRot(bones[iBone].initialLocal) * transform.rotation.Inverse();
+		}
 	}
 }
 

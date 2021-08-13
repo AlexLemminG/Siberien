@@ -8,6 +8,7 @@
 #include "Health.h"
 #include "MeshRenderer.h"
 #include "CorpseRemoveSystem.h"
+#include "BoxCollider.h"
 
 DECLARE_TEXT_ASSET(EnemyCreepController);
 
@@ -20,8 +21,27 @@ void EnemyCreepController::OnEnable() {
 
 void EnemyCreepController::HandleDeath() {
 	rb->GetHandle()->setDamping(0.8, 0.8);
-	animator->SetAnimation(rollAnimation);
+	animator->SetAnimation(deadAnimation);
 	CorpseRemoveSystem::Get()->Add(gameObject());
+
+	auto collider = gameObject()->GetComponent<SphereCollider>();
+	auto center = collider->center;
+	rb->OnDisable();
+	collider->OnDisable();
+
+	float radiusScale = 0.9f;
+
+	center.z = -center.y;
+	center.y = 0;
+	collider->center = center * radiusScale;
+	collider->radius *= radiusScale;
+	rb->layer = "enemyCorpse";
+	rb->friction = 0.7f;
+
+	collider->OnEnable();
+	rb->OnEnable();
+
+	rb->GetHandle()->setDamping(0.5f, 0.8f);
 }
 
 
@@ -100,7 +120,14 @@ void EnemyCreepController::FixedUpdate() {
 	handle->setAngularVelocity(btConvert(angularVelocity));
 
 	float speedFactorFromAngle = Mathf::Max(0.8f, Vector3::DotProduct(desiredLookDir, lookDir));
-	float moveForwardFactor = (1.f - speedFactorFromAngle) * 40.f;
+	float moveForwardFactor = (1.f - speedFactorFromAngle) * 40.f * (shouldRoll ? 0.1f : 1.f);
+
+	if (shouldRoll) {
+		rb->GetHandle()->setDamping(0.1f, 0.4f);
+	}
+	else {
+		rb->GetHandle()->setDamping(0.0f, 0.1f);
+	}
 
 
 	float maxSpeedDistance = 3.f;

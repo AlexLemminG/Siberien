@@ -1,0 +1,6 @@
+GameObject:
+  components:
+  - $GameplaySceneScenario
+GameplaySceneScenario:
+  slowZombiePrefab: slowZombie.asset
+  fastZombiePrefab: enemyCreep.asset

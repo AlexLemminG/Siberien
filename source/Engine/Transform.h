@@ -11,6 +11,9 @@ public:
 	void SetPosition(const Vector3& pos) {
 		SetPos(matrix, pos);
 	}
+	void SetRotation(const Quaternion& rotation) {
+		SetRot(matrix, rotation);
+	}
 	Vector3 GetPosition() const {
 		return GetPos(matrix);
 	}

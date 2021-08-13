@@ -6,12 +6,13 @@ GameObject:
 Camera:
   clearColor: 0x663355ff
   fov: 90.0
-  nearPlane: 0.1
+  nearPlane: 0.001
   farPlane: 1000
 Transform:
   pos: [0, 0.999, -5]
-  euler: [60, 0, 0]
+  euler: [65, 0, 0]
 TopDownCameraRig:
   targetTag: "Player"
   offset: [0, 10, -5]
   lerpT: 1
+  collisionLerpT: 10

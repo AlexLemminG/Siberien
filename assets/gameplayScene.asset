@@ -3,10 +3,6 @@ Scene:
   gameObjects:
     - camera.asset
     - player.asset
-    - Light.asset
-    - Light2.asset
-    - Wall.asset
-    - physCube.asset
-    - floor.asset
-    - enemyCreep.asset
-    - blenderScene.asset
+    # - slowZombie.asset
+    - gameplayScene_staticGeometry.asset
+    - gameplayScene_scenario.asset

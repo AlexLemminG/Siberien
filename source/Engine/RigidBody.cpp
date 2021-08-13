@@ -35,10 +35,12 @@ void RigidBody::OnEnable() {
 		shape->calculateLocalInertia(mass, localInertia);
 	}
 
+	auto offset = btTransform(btMatrix3x3::getIdentity(), btConvert(localOffset));
 
 	//using motionstate is optional, it provides interpolation capabilities, and only synchronizes 'active' objects
-	pMotionState = new btDefaultMotionState(groundTransform);
+	pMotionState = new btDefaultMotionState(groundTransform, offset);
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, pMotionState, shape, localInertia);
+	
 	rbInfo.m_friction = friction;
 	rbInfo.m_restitution = restitution;
 	pBody = new btRigidBody(rbInfo);

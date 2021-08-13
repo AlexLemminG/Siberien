@@ -27,6 +27,7 @@ private:
 	std::shared_ptr<Health> health;
 	std::shared_ptr<MeshAnimation> walkAnimation;
 	std::shared_ptr<MeshAnimation> rollAnimation;
+	std::shared_ptr<MeshAnimation> deadAnimation;
 	std::shared_ptr<MeshAnimation> attackAnimation;
 	float velocityToAnimatorSpeed = 1.f;
 	bool wasDead = false;
@@ -43,6 +44,7 @@ private:
 	REFLECT_VAR(walkAnimation);
 	REFLECT_VAR(attackAnimation);
 	REFLECT_VAR(rollAnimation);
+	REFLECT_VAR(deadAnimation);
 	REFLECT_VAR(velocityToAnimatorSpeed);
 	REFLECT_END();
 };

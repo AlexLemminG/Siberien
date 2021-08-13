@@ -1,0 +1,12 @@
+Scene:
+  sphericalHarmonics: harmonics.asset
+  gameObjects:
+    - camera.asset
+    - player.asset
+    - Light.asset
+    - Light2.asset
+    - Wall.asset
+    - physCube.asset
+    - floor.asset
+    - enemyCreep.asset
+    - blenderScene.asset

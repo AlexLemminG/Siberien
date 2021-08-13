@@ -15,7 +15,7 @@ Transform:
   euler: [0, 60, 0]
   scale: [0.7, 0.7, 0.7]
 PlayerController:
-  speed: 4.2
+  speed: 5
   jumpVelocity: 5.0
   jumpPushImpulse: 500
   jumpPushRadius: 10

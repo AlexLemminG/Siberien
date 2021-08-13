@@ -75,18 +75,25 @@ void BulletSystem::UpdateBullets(BulletsVector& bulletsVector) {
 				bool hitCharacter = false;
 				auto obj = dynamic_cast<const btRigidBody*>(cb.m_hitCollisionObject);
 				if (obj) {
+					bool needImpulse = true;
 					auto nonConst = const_cast<btRigidBody*>(obj);
-					auto localPos = nonConst->getCenterOfMassTransform().inverse() * btConvert(bullet.pos);
-					nonConst->activate(true);
-					nonConst->applyImpulse(btConvert(bullet.dir * bulletsVector.settings->impulse), localPos);
 
 					auto gameObject = (GameObject*)nonConst->getUserPointer();
 					if (gameObject) {
 						auto health = gameObject->GetComponent<Health>();
 						if (health) {
+							if (health->IsDead()) {
+								needImpulse = false;
+							}
 							health->DoDamage(bulletsVector.settings->damage);
 							hitCharacter = true;
 						}
+					}
+
+					if (needImpulse) {
+						auto localPos = nonConst->getCenterOfMassTransform().inverse() * btConvert(bullet.pos);
+						nonConst->activate(true);
+						nonConst->applyImpulse(btConvert(bullet.dir * bulletsVector.settings->impulse), localPos);
 					}
 				}
 				{

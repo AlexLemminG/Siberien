@@ -65,10 +65,6 @@ public:
 	virtual std::shared_ptr<Object> Import(AssetDatabase& database, const YAML::Node& node) = 0;
 };
 
-class MeshAsset : public Object {
-
-};
-
 //assets referenced by path from assets/ folder
 //ex: prefabs/hero.asset
 //    textures/floor.png
