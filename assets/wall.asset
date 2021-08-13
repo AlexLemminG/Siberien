@@ -14,4 +14,4 @@ BoxCollider:
   size: [10,2,2]
   center: [0,1,0]
 RigidBody:
-  isStatic: false
+  isStatic: true

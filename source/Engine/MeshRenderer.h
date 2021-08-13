@@ -73,12 +73,14 @@ public:
 	std::shared_ptr<Shader> shader;
 	std::shared_ptr<Texture> colorTex;
 	std::shared_ptr<Texture> normalTex;
+	std::vector<std::shared_ptr<Texture>> randomColorTextures;
 
 	REFLECT_BEGIN(Material);
 	REFLECT_VAR(colorTex);
 	REFLECT_VAR(normalTex);
 	REFLECT_VAR(color);
 	REFLECT_VAR(shader);
+	REFLECT_VAR(randomColorTextures);
 	REFLECT_END();
 };
 
@@ -92,18 +94,10 @@ public:
 	std::shared_ptr<Material> material;
 	static std::vector<MeshRenderer*> enabledMeshRenderers;
 
-	void OnEnable() override {
-		this->worldMatrix = Matrix4::Identity();
-		enabledMeshRenderers.push_back(this);
-		if (mesh && mesh->originalMeshPtr && mesh->originalMeshPtr->HasBones()) {
-			bonesWorldMatrices.resize(mesh->originalMeshPtr->mNumBones);
-			bonesLocalMatrices.resize(mesh->originalMeshPtr->mNumBones);
-			bonesFinalMatrices.resize(mesh->originalMeshPtr->mNumBones);
-		}
-	}
+	void OnEnable() override;
 
 	void OnDisable() override {
-		enabledMeshRenderers.erase(std::find(enabledMeshRenderers.begin(), enabledMeshRenderers.end(), this), enabledMeshRenderers.end());
+		enabledMeshRenderers.erase(std::find(enabledMeshRenderers.begin(), enabledMeshRenderers.end(), this));
 	}
 
 	REFLECT_BEGIN(MeshRenderer);
@@ -114,6 +108,7 @@ public:
 	std::vector<Matrix4> bonesFinalMatrices;
 	std::vector<Matrix4> bonesWorldMatrices;
 	std::vector<Matrix4> bonesLocalMatrices;
+	int randomColorTextureIdx = 0;
 };
 
 

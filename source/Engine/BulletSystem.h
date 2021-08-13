@@ -16,9 +16,12 @@ public:
 	virtual void Draw() override;
 	virtual void Term() override;
 
-	void CreateBullet(const Vector3& pos, const Vector3& dir);
+	void CreateBullet(const Vector3& pos, const Vector3& dir, const Color& color);
 
 private:
+	void CreateBullet(int idx, const Vector3& pos, const Vector3& dir, const Color& color);
+
+
 	class Bullet {
 	public:
 		Bullet() {}
@@ -30,8 +33,22 @@ private:
 	};
 
 	std::shared_ptr<BulletSettings> bulletSettings;
+	std::shared_ptr<BulletSettings> bulletDamageParticleSettings;
+	std::shared_ptr<BulletSettings> bloodParticle;
 
-	std::vector<Bullet> bullets;
+	class BulletsVector {
+	public:
+		std::shared_ptr<BulletSettings> settings;
+		std::vector<Bullet> bullets;
+	};
+
+	void UpdateBullets(BulletsVector& bulletsVector);
+	void DrawBullets(BulletsVector& bulletsVector);
+
+	std::vector<BulletsVector> bullets;
+
+	void CreateDamageParticle(const Vector3& pos, const Vector3& dir);
+	void CreateBloodParticle(const Vector3& pos, const Vector3& dir);
 };
 
 class BulletSettings : public Object{
@@ -40,12 +57,20 @@ public:
 	float impulse = 1.f;
 	float radius = 0.04f;
 	int damage = 1;
+	float lifeTime = 5.f;
+	bool hasColision = true;
+	bool lifeTimeToScale = false;
+	bool applyGravity = false;
 
 	REFLECT_BEGIN(BulletSettings);
 	REFLECT_VAR(renderer);
 	REFLECT_VAR(radius);
 	REFLECT_VAR(damage);
 	REFLECT_VAR(impulse);
+	REFLECT_VAR(hasColision);
+	REFLECT_VAR(lifeTime);
+	REFLECT_VAR(lifeTimeToScale);
+	REFLECT_VAR(applyGravity);
 	REFLECT_END()
 };
 

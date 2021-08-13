@@ -1,6 +1,10 @@
 BulletSettings:
   renderer: $MeshRenderer
   impulse: 100
+  damage: 1
+  hasColision: true
+  lifeTime: 5.0
+  radius: 0.15
 MeshRenderer:
   mesh: meshes\bullet.glb$bullet_mesh
   material: bulletMaterial.asset

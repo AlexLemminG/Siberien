@@ -39,6 +39,7 @@ void Scene::Init() {
 		}
 	}
 
+	ProcessRemovedGameObjects();
 	ProcessAddedGameObjects();
 
 	isInited = true;
@@ -50,6 +51,7 @@ void Scene::Update() {
 			c->Update();
 		}
 	}
+	ProcessRemovedGameObjects();
 	ProcessAddedGameObjects();
 }
 
@@ -59,6 +61,35 @@ void Scene::FixedUpdate() {
 			c->FixedUpdate();
 		}
 	}
+}
+
+void Scene::RemoveGameObject(std::shared_ptr<GameObject> gameObject) {
+	removedGameObjects.push_back(gameObject);
+}
+
+
+void Scene::ProcessRemovedGameObjects() {
+	for (auto gameObject : removedGameObjects) {
+		auto it = std::find(gameObjects.begin(), gameObjects.end(), gameObject);
+		if (it != gameObjects.end()) {
+			if (isInited) {
+				for (int iC = gameObject->components.size() - 1; iC >= 0; iC--) {
+					gameObject->components[iC]->OnDisable();
+				}
+			}
+			gameObjects.erase(it);
+		}
+		else {
+			it = std::find(addedGameObjects.begin(), addedGameObjects.end(), gameObject);
+			if (it != addedGameObjects.end()) {
+				addedGameObjects.erase(it);
+			}
+			else {
+				ASSERT(false);
+			}
+		}
+	}
+	removedGameObjects.clear();
 }
 
 void Scene::Term() {
@@ -76,7 +107,7 @@ void Scene::AddGameObject(std::shared_ptr<GameObject> go) {
 
 }
 
-void Scene::ProcessAddedGameObjects(){
+void Scene::ProcessAddedGameObjects() {
 	for (auto go : addedGameObjects) {
 		//TODO share code with Init()
 

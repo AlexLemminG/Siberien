@@ -20,6 +20,8 @@ private:
 	void DrawMesh(MeshRenderer* renderer);
 	void UpdateLights(Vector3 poi);
 	
+	bool IsFullScreen();
+	void SetFullScreen(bool isFullScreen);
 
 	//The surface contained by the window
 	SDL_Surface* screenSurface = nullptr;

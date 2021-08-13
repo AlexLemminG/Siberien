@@ -7,6 +7,7 @@
 #include "Time.h"
 #include "Health.h"
 #include "MeshRenderer.h"
+#include "CorpseRemoveSystem.h"
 
 DECLARE_TEXT_ASSET(EnemyCreepController);
 
@@ -20,8 +21,24 @@ void EnemyCreepController::OnEnable() {
 void EnemyCreepController::HandleDeath() {
 	rb->GetHandle()->setDamping(0.8, 0.8);
 	animator->SetAnimation(rollAnimation);
+	CorpseRemoveSystem::Get()->Add(gameObject());
 }
 
+
+void EnemyCreepController::Update() {
+	if (attackTimeLeft > 0.f) {
+		attackTimeLeft -= Time::deltaTime();
+		if (attackTimeLeft <= 0.f) {
+			auto target = Scene::FindGameObjectByTag(targetTag);
+			if (target) {
+				auto health = target->GetComponent<Health>();
+				if (health) {
+					health->DoDamage(1);
+				}
+			}
+		}
+	}
+}
 
 void EnemyCreepController::FixedUpdate() {
 	if (health && health->IsDead()) {
@@ -52,16 +69,22 @@ void EnemyCreepController::FixedUpdate() {
 	auto currentPos = gameObject()->transform()->GetPosition();
 
 	Vector3 desiredLookDir = (targetPos - currentPos).Normalized();
-	Vector3 lookDir = gameObject()->transform()->GetForward();
+	Vector3 lookDir = gameObject()->transform()->GetForward().Normalized();
 	Vector3 desiredAngularVelocity = Vector3::CrossProduct(lookDir, desiredLookDir) * angularSpeed;
 	if (Vector3::DotProduct(lookDir, desiredLookDir) < 0) {
 		if (desiredAngularVelocity.LengthSquared() > 0.0001f) {
 			desiredAngularVelocity = desiredAngularVelocity.Normalized() * angularSpeed;
 		}
 	}
+	isReadyToAttack = Vector3::DotProduct(lookDir, desiredLookDir) > 0.6f;
 	Vector3 currentAngularVelocity = btConvert(handle->getAngularVelocity());
 
-	if (Vector3::DotProduct(gameObject()->transform()->GetUp(), Vector3_up) < 0.1f) {
+	bool shouldRoll = Vector3::DotProduct(gameObject()->transform()->GetUp(), Vector3_up) < 0.1f;
+	if (attackTimeLeft > 0.f && !shouldRoll) {
+		return;
+	}
+	attackTimeLeft = 0.f;
+	if (shouldRoll) {
 		animator->SetAnimation(rollAnimation);
 		lastRollTime = Time::time();
 	}
@@ -92,4 +115,14 @@ void EnemyCreepController::FixedUpdate() {
 
 	handle->setLinearVelocity(btConvert(velocity));
 	//Vector3 dir = target
+}
+
+void EnemyCreepController::Attack() {
+	if (attackTimeLeft > 0 || Time::time() - lastRollTime < 1.f || !isReadyToAttack || wasDead) {
+		return;
+	}
+	animator->SetAnimation(attackAnimation);
+	animator->currentTime = 0.f;
+	animator->speed = 1.f;
+	attackTimeLeft = 0.7f;
 }

@@ -24,6 +24,7 @@ EnemyCreepController:
   velocityToAnimatorSpeed: 3.0
   walkAnimation: meshes/zombie.glb$Walk
   rollAnimation: meshes/zombie.glb$Roll
+  attackAnimation: meshes/zombie.glb$Attack
 SphereCollider:
   radius: 0.8
   center: [0, 0.15, 0]

@@ -16,6 +16,11 @@ float CfgGetFloat(std::string name) {
 	return config[name].as<float>();
 }
 
+bool CfgGetBool(std::string name) {
+	SDL_assert(config[name]);
+	return config[name].as<bool>();
+}
+
 std::string CfgGetString(std::string name) {
 	SDL_assert(config[name]);
 	return config[name].as<std::string>();

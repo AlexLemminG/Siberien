@@ -1,0 +1,10 @@
+Gun:
+  shootOnlyOnTrigger: true
+  shotsPerSecond: 7.0
+  reloadingTime: 0.0
+  shotsInMagazine: 1
+  bulletsInShot: 1
+  spread: 15.0
+  spreadPow: 1
+  bulletSpeed: 30.0
+  bulletColor: 0xffff00ff

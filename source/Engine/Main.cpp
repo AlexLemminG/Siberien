@@ -45,7 +45,7 @@ std::shared_ptr<Scene> LoadScene(AssetDatabase& assets, std::string sceneName) {
 		scene->Init();
 		auto creep = scene->FindGameObjectByTag("Creep");
 		if (creep) {
-			static int h = 1000;
+			static int h = 100;
 			for (int i = 0; i < h; i++) {
 				auto go = Object::Instantiate(creep);
 				float r = 10.f;

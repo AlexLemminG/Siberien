@@ -1,3 +1,10 @@
 Material:
   color: 0x33ff00ff
   shader: shaders\main.asset
+  colorTex: textures\zombie.png
+  randomColorTextures: 
+  - textures\zombie.png
+  - textures\zombie2.png
+  - textures\zombie3.png
+  - textures\zombie4.png
+  - textures\zombie5.png

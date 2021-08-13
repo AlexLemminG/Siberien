@@ -11,7 +11,9 @@ public:
 	static void Draw(Ray ray, float length = 1.f, Color color = Colors::white);
 	static void Draw(Vector3 point, float radius = 0.1f);
 	static void Draw(Matrix4 axes, float length = 1.0f);
-	static void Text(std::string text);
+	static void Text(std::string text) {
+		texts.push_back(text);
+	}
 
 	template<typename ... Args>
 	static void Text(const std::string& format, Args ... args)
@@ -37,7 +39,7 @@ private:
 		Matrix4 matr;
 		float length;
 	};
-	class Ray{
+	class Ray {
 	public:
 		::Ray ray;
 		float length;

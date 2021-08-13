@@ -85,6 +85,9 @@ public:
 	static float ByteToNormalizedFloat(int byte) {
 		return Clamp(byte, 0, 255) / 255.f;
 	}
+	static float Pow(float value, float power) {
+		return powf(value, power);
+	}
 	static float RadToDeg(float rad) {
 		return rad * 180.f / pi;
 	}
@@ -133,8 +136,23 @@ public:
 
 class Random {
 public:
-	static float Range(float min, float max) {
-		return (rand() / (float)RAND_MAX) * (max - min) + min;
+	static float Range(float minInclusive, float maxExclusive) {
+		return (rand() / (float)RAND_MAX) * (maxExclusive - minInclusive) + minInclusive;
+	}
+	static int Range(int minInclusive, int maxExclusive) {
+		return rand() % (maxExclusive - minInclusive) + minInclusive;
+	}
+	static Vector3 InsideUnitSphere() {
+		float x = 1;
+		float y = 1;
+		float z = 1;
+		while (x * x + y * y + z * z > 1.f) {
+			x = Range(-1.f, 1.f);
+			y = Range(-1.f, 1.f);
+			z = Range(-1.f, 1.f);
+		}
+		//TODO can you do better ?
+		return Vector3(x, y, z);
 	}
 };
 
@@ -174,6 +192,15 @@ public:
 
 	static void Deserialize(const SerializationContext& serializedObject, Color& color);
 	static void Serialize(SerializationContext& serializedObject, const Color& color);
+
+	static Color Lerp(const Color& a, const Color& b, float t) {
+		Color color;
+		color.r = Mathf::Lerp(a.r, b.r, t);
+		color.g = Mathf::Lerp(a.g, b.g, t);
+		color.b = Mathf::Lerp(a.b, b.b, t);
+		color.a = Mathf::Lerp(a.a, b.a, t);
+		return color;
+	}
 };
 
 namespace Colors {

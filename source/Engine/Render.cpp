@@ -22,6 +22,14 @@
 
 SDL_Window* Render::window = nullptr;
 
+
+bool Render::IsFullScreen() {
+	auto flags = SDL_GetWindowFlags(window);
+	return flags & SDL_WINDOW_FULLSCREEN;
+}
+void Render::SetFullScreen(bool isFullScreen) {
+	SDL_SetWindowFullscreen(window, isFullScreen ? SDL_WINDOW_FULLSCREEN : 0);
+}
 bool Render::Init()
 {
 	//Initialize SDL
@@ -36,12 +44,14 @@ bool Render::Init()
 	int posX = SettingsGetInt("screenPosX");
 	int posY = SettingsGetInt("screenPosY");
 	//Create window
-	window = SDL_CreateWindow("SDL Tutorial", posX, posY, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+	auto flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
+	window = SDL_CreateWindow("Siberien", posX, posY, width, height, flags);
 	if (window == NULL)
 	{
 		printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
 		return false;
 	}
+	SetFullScreen(CfgGetBool("fullscreen"));
 	SDL_SysWMinfo wmi;
 	SDL_VERSION(&wmi.version);
 	if (!SDL_GetWindowWMInfo(window, &wmi)) {
@@ -270,7 +280,12 @@ void Render::DrawMesh(MeshRenderer* renderer) {
 
 
 	if (renderer->material->colorTex) {
-		bgfx::setTexture(0, s_texColor, renderer->material->colorTex->handle);
+		if (renderer->material->randomColorTextures.size() > 0) {
+			bgfx::setTexture(0, s_texColor, renderer->material->randomColorTextures[renderer->randomColorTextureIdx]->handle);
+		}
+		else {
+			bgfx::setTexture(0, s_texColor, renderer->material->colorTex->handle);
+		}
 	}
 	else {
 		if (whiteTexture) {

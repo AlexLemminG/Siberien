@@ -126,7 +126,8 @@ public:
 				aiVector3D* srcBuffer = mesh->mTextureCoords[0];
 				uint8_t* dstBuffer = &buffer[offset];
 				for (int iVertex = 0; iVertex < numVerts; iVertex++) {
-					memcpy(dstBuffer, srcBuffer, sizeof(float) * 2);
+					*((float*)dstBuffer) = srcBuffer->x;
+					*(((float*)dstBuffer) + 1) = -srcBuffer->y;
 					srcBuffer += 1;
 					dstBuffer += stride;
 				}
@@ -599,7 +600,7 @@ void PointLight::OnEnable() {
 }
 
 void PointLight::OnDisable() {
-	pointLights.erase(std::find(pointLights.begin(), pointLights.end(), this), pointLights.end());
+	pointLights.erase(std::find(pointLights.begin(), pointLights.end(), this));
 }
 std::vector<PointLight*> PointLight::pointLights;
 
@@ -661,8 +662,13 @@ AnimationTransform AnimationTransform::Lerp(const AnimationTransform& a, const A
 
 void Animator::Update() {
 	auto meshRenderer = gameObject()->GetComponent<MeshRenderer>();
-
+	if (!meshRenderer) {
+		return;
+	}
 	auto mesh = meshRenderer->mesh;
+	if (!mesh) {
+		return;
+	}
 
 	if (currentAnimation != nullptr) {
 		currentTime += Time::deltaTime() * speed;
@@ -682,8 +688,13 @@ void Animator::Update() {
 
 void Animator::OnEnable() {
 	auto meshRenderer = gameObject()->GetComponent<MeshRenderer>();
-
+	if (!meshRenderer) {
+		return;
+	}
 	auto mesh = meshRenderer->mesh;
+	if (!mesh) {
+		return;
+	}
 
 	for (auto& bone : mesh->bones) {
 		meshRenderer->bonesLocalMatrices[bone.idx] = bone.initialLocal;
@@ -695,8 +706,13 @@ void Animator::OnEnable() {
 
 void Animator::UpdateWorldMatrices() {
 	auto meshRenderer = gameObject()->GetComponent<MeshRenderer>();
-
+	if (!meshRenderer) {
+		return;
+	}
 	auto mesh = meshRenderer->mesh;
+	if (!mesh) {
+		return;
+	}
 
 	for (auto& bone : mesh->bones) {
 		if (bone.parentBoneIdx != -1) {
@@ -747,3 +763,16 @@ void Mesh::Init() {
 DECLARE_TEXT_ASSET(Animator);
 DECLARE_TEXT_ASSET(MeshAnimation);
 DECLARE_TEXT_ASSET(SphericalHarmonics);
+
+void MeshRenderer::OnEnable() {
+	this->worldMatrix = Matrix4::Identity();
+	enabledMeshRenderers.push_back(this);
+	if (mesh && mesh->originalMeshPtr && mesh->originalMeshPtr->HasBones()) {
+		bonesWorldMatrices.resize(mesh->originalMeshPtr->mNumBones);
+		bonesLocalMatrices.resize(mesh->originalMeshPtr->mNumBones);
+		bonesFinalMatrices.resize(mesh->originalMeshPtr->mNumBones);
+	}
+	if (material->randomColorTextures.size() > 0) {
+		randomColorTextureIdx = Random::Range(0, material->randomColorTextures.size());
+	}
+}

@@ -1,0 +1,12 @@
+BulletSettings:
+  renderer: $MeshRenderer
+  impulse: 0
+  damage: 0
+  hasColision: false
+  lifeTime: 4.3
+  lifeTimeToScale: true
+  applyGravity: true
+  radius: 0.2
+MeshRenderer:
+  mesh: meshes\bullet.glb$bullet_mesh
+  material: bulletMaterial.asset

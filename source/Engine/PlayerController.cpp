@@ -12,12 +12,39 @@
 #include "RigidBody.h"
 #include "Scene.h"
 #include <BulletCollision\CollisionDispatch\btGhostObject.h>
+#include "EnemyCreep.h"
+#include "GameObject.h"
+#include "Health.h"
 
 void PlayerController::OnEnable() {
 	rigidBody = gameObject()->GetComponent<RigidBody>();
 	if (shootingLightPrefab) {
 		shootingLight = Object::Instantiate(shootingLightPrefab);
 		Scene::Get()->AddGameObject(shootingLight);
+	}
+	SetGun(startGun);
+}
+
+
+void PlayerController::SetGun(std::shared_ptr<Gun> gunTemplate) {
+	if (!gunTemplate) {
+		gun = nullptr;
+	}
+	else {
+		gun = Object::Instantiate(gunTemplate);
+	}
+}
+
+
+void PlayerController::UpdateHealth() {
+	auto health = gameObject()->GetComponent<Health>();
+	Dbg::Text("Player health: %d", health->GetAmount());
+
+	if (Time::time() - health->GetLastDamageTime() > healDelay) {
+		if (Time::time() - prevHealTime > 1.f / healPerSecond) {
+			prevHealTime = Time::time();
+			health->DoHeal(1.f);
+		}
 	}
 }
 
@@ -29,6 +56,10 @@ void PlayerController::Update() {
 			Jump();
 		}
 	}
+
+	UpdateZombiesAttacking();
+
+	UpdateHealth();
 }
 
 void PlayerController::FixedUpdate() {
@@ -80,17 +111,33 @@ void PlayerController::UpdateMovement() {
 }
 
 void PlayerController::UpdateShooting() {
-	if (!Input::GetKey(SDL_SCANCODE_Z) && !Input::GetMouseButton(0)) {//TODO
-		DisableShootingLight();
-		return;
-	}
-
 	auto pos = gameObject()->transform()->GetPosition() + Vector3(0, bulletSpawnOffset, 0);
 	auto rot = GetRot(gameObject()->transform()->matrix);
+	auto gunTransform = Matrix4::Transform(pos, rot.ToMatrix(), Vector3_one);
 
-	BulletSystem::Get()->CreateBullet(pos, rot * Vector3_forward * bulletSpeed);
+	if (!Input::GetKey(SDL_SCANCODE_Z) && !Input::GetMouseButton(0)) {//TODO
+		if (gun) {
+			gun->ReleaseTrigger();
+		}
+	}
+	else {
+		if (gun) {
+			gun->PullTrigger();
+		}
+	}
 
-	SetRandomShootingLight();
+	bool bulletShot = false;
+	if (gun) {
+		bulletShot = gun->Update(gunTransform);
+	}
+	//TODO move to gun
+	if (bulletShot) {
+		SetRandomShootingLight(); //TODO move to gun
+	}
+	else {
+		DisableShootingLight();
+	}
+
 }
 
 
@@ -221,6 +268,9 @@ void PlayerController::SetRandomShootingLight() {
 	auto lightPos = t->matrix * shootingLightOffset;
 	shootingLight->GetComponent<Transform>()->SetPosition(lightPos);
 	auto color = shootingLightPrefab->GetComponent<PointLight>()->color;
+	if (gun) {
+		color = Color::Lerp(color, gun->GetBulletColor(), 0.5f);
+	}
 	float colorM = Random::Range(0.7f, 1.3f);
 	color.r *= colorM;
 	color.g *= colorM;
@@ -240,3 +290,19 @@ void PlayerController::DisableShootingLight() {
 }
 
 DECLARE_TEXT_ASSET(PlayerController);
+
+void PlayerController::UpdateZombiesAttacking() {
+	auto nearby = GetOverlaping(gameObject()->transform()->GetPosition(), 1.5f);
+	for (auto rb : nearby) {
+		auto go = (GameObject*)rb->getUserPointer();
+		if (!go) {
+			continue;
+		}
+		auto creep = go->GetComponent<EnemyCreepController>();
+		if (!creep) {
+			continue;
+		}
+
+		creep->Attack();
+	}
+}

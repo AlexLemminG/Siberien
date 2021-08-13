@@ -12,6 +12,8 @@ class EnemyCreepController : public Component{
 public:
 	virtual void OnEnable() override;
 	virtual void FixedUpdate() override;
+	virtual void Update() override;
+	void Attack();
 private:
 	void HandleDeath();
 
@@ -25,9 +27,12 @@ private:
 	std::shared_ptr<Health> health;
 	std::shared_ptr<MeshAnimation> walkAnimation;
 	std::shared_ptr<MeshAnimation> rollAnimation;
+	std::shared_ptr<MeshAnimation> attackAnimation;
 	float velocityToAnimatorSpeed = 1.f;
 	bool wasDead = false;
 	float lastRollTime = 0.f;
+	float attackTimeLeft = 0.f;
+	bool isReadyToAttack = false;
 
 	REFLECT_BEGIN(EnemyCreepController);
 	REFLECT_VAR(targetTag);
@@ -36,6 +41,7 @@ private:
 	REFLECT_VAR(angularAcc);
 	REFLECT_VAR(angularSpeed);
 	REFLECT_VAR(walkAnimation);
+	REFLECT_VAR(attackAnimation);
 	REFLECT_VAR(rollAnimation);
 	REFLECT_VAR(velocityToAnimatorSpeed);
 	REFLECT_END();

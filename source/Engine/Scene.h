@@ -16,6 +16,7 @@ public:
 	void Term();
 
 	void AddGameObject(std::shared_ptr<GameObject> go);
+	void RemoveGameObject(std::shared_ptr<GameObject> go);
 
 	static std::shared_ptr<GameObject> FindGameObjectByTag(std::string tag);
 
@@ -28,7 +29,9 @@ private:
 	bool isInited = false;
 
 	std::vector<std::shared_ptr<GameObject>> addedGameObjects;
+	std::vector<std::shared_ptr<GameObject>> removedGameObjects;
 	void ProcessAddedGameObjects();
+	void ProcessRemovedGameObjects();
 
 	REFLECT_BEGIN(Scene);
 	REFLECT_VAR(sphericalHarmonics);
