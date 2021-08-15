@@ -17,6 +17,12 @@ public:
 	Vector3 GetPosition() const {
 		return GetPos(matrix);
 	}
+	Vector3 GetScale() const {
+		return ::GetScale(matrix);
+	}
+	void SetScale(const Vector3& scale) {
+		return ::SetScale(matrix, scale);
+	}
 
 	Vector3 GetRight() const {
 		return matrix.GetColumn(0).xyz();
@@ -47,7 +53,7 @@ public:
 	static void Ser(SerializationContext& so, const Transform& t) {
 		Vector3 pos = GetPos(t.matrix);
 		Vector3 euler = Mathf::RadToDeg(GetRot(t.matrix).ToEulerAngles());
-		Vector3 scale = GetScale(t.matrix);
+		Vector3 scale = ::GetScale(t.matrix);
 
 		Serialize(so.Child("pos"), pos);
 		Serialize(so.Child("euler"), euler);

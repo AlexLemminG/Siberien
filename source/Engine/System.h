@@ -88,6 +88,7 @@ public:
 			auto system = systems[i];
 			system->Term();
 		}
+		systems.clear();
 		manager = nullptr;
 	}
 

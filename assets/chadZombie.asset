@@ -1,0 +1,44 @@
+GameObject:
+  tag: "Creep"
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $EnemyCreepController
+  - $SphereCollider
+  - $RigidBody
+  - $Health
+  - $Animator
+MeshRenderer:
+  mesh: meshes/zombie.glb$Zombie
+  material: enemyMaterial.asset
+Transform:
+  pos: [5,0.5,0]
+  euler: [0, 60, 0]
+  scale: [1.2, 1.2, 1.2]
+EnemyCreepController:
+  targetTag: Player
+  speed: 3.0
+  angularSpeed: 4.0
+  acc: 5
+  angularAcc: 3.4
+  velocityToAnimatorSpeed: 3.0
+  walkAnimation: meshes/zombie.glb$Walk
+  rollAnimation: meshes/zombie.glb$Roll
+  attackAnimation: meshes/zombie.glb$Attack
+  deadAnimation: meshes/zombie.glb$DeadFake
+SphereCollider:
+  radius: 0.8
+  center: [0, 0.6, 0]
+RigidBody:
+  isStatic: false
+  friction: 0.15
+  restitution: 0
+  mass: 1000
+  layer: enemy
+  localOffset: [0.0, 0.2, 0.0]
+Health:
+  amount: 40
+Animator:
+  speed: 10
+  defaultAnimation: meshes/zombie.glb$Walk
+  

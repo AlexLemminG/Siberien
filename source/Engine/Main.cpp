@@ -16,6 +16,7 @@
 #include "Input.h"
 #include "Scene.h"
 #include "System.h"
+#include "SceneManager.h"
 //#include <bgfx_utils.h>
 
 std::string GetFirstSceneName() {
@@ -23,55 +24,8 @@ std::string GetFirstSceneName() {
 }
 
 
-std::shared_ptr<Scene> LoadScene(AssetDatabase& assets, std::string sceneName) {
-	auto scene = assets.LoadByPath<Scene>(sceneName);
-	{
-
-		YAML::Node node;
-		std::vector<std::shared_ptr<Object>> serializedObjects;
-		serializedObjects.push_back(scene);
-		SerializationContext context{ node, serializedObjects };
-		context.database = AssetDatabase::Get();
-		::Serialize(context, scene);
-		context.FlushRequiestedToSerialize();
-
-		std::ofstream fout("out.yaml");
-		fout << context.yamlNode;
-
-	}
-
-	scene = Object::Instantiate(scene);
-	if (scene) {
-		scene->Init();
-		auto creep = scene->FindGameObjectByTag("Creep");
-		if (creep) {
-			static int h = 0;
-			for (int i = 0; i < h; i++) {
-				auto go = Object::Instantiate(creep);
-				float r = 10.f;
-				SetPos(go->transform()->matrix, GetPos(go->transform()->matrix) + Vector3{ Random::Range(-r, r), 5.f, Random::Range(-r, r) });
-				scene->AddGameObject(go);
-			}
-		}
-
-		auto light = scene->FindGameObjectByTag("Light");
-		if (light) {
-			static int h2 = 0;
-			for (int i = 0; i < h2; i++) {
-				auto go = Object::Instantiate(light);
-				float r = 10.f;
-				SetPos(go->transform()->matrix, GetPos(go->transform()->matrix) + Vector3{ 0, 0, i * 6.f - 60.f });
-				scene->AddGameObject(go);
-			}
-		}
-	}
-	return scene;
-}
-
 
 int main(int argc, char* argv[]) {
-	bool needConstantSceneReload = false;
-
 	//TODO no sins here please
 start:
 	bool needReload = false;
@@ -91,26 +45,25 @@ start:
 		return -1;
 	}
 
-
 	SystemsManager systemsManager;
 	if (!systemsManager.Init()) {
 		return -1;
 	}
 
-	//auto camera = assets.LoadByPath<Camera>("camera.asset");
-	//Camera::SetMain(camera);
-	auto scene = LoadScene(assets, GetFirstSceneName());
-
-	//auto gameObject = assets.LoadByPath<GameObject>("gameObject.asset");
-
 	Input::Init();
 
+	SceneManager::Init();
+	SceneManager::LoadScene(GetFirstSceneName());
+
+	SceneManager::Update();
+
 	bool quit = false;
+	bool needConstantSceneReload = false;
 	while (!quit) {
 		Input::Update();
 
-		if (scene) {
-			scene->Update();
+		if (Scene::Get()) {
+			Scene::Get()->Update();
 		}
 		systemsManager.Update();
 
@@ -124,28 +77,24 @@ start:
 		if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F6)) {
 			needConstantSceneReload = !needConstantSceneReload;
 		}
-		if (needConstantSceneReload) {
-			if (scene) {
-				scene->Term();
-			}
-			assets.Term();
-			assets = AssetDatabase();
-			assets.Init();
-			scene = LoadScene(assets, GetFirstSceneName());;
-		}
-	}
 
-	//vv.Init();
+		if (needConstantSceneReload) {
+			SceneManager::LoadScene(GetFirstSceneName());
+			assets.UnloadAll();
+		}
+
+		SceneManager::Update();
+	}
 
 	Input::Term();
 
-	if (scene) {
-		scene->Term();
-	}
+	SceneManager::Term();
 
-	render.Term();
+	assets.UnloadAll();
 
 	systemsManager.Term();
+
+	render.Term();
 
 	assets.Term();
 

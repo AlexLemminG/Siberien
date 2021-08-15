@@ -213,7 +213,8 @@ void AssetDatabase::LoadAllAtYaml(const YAML::Node& node, const std::string& pat
 
 		if (asset != nullptr) {
 			AddAsset(asset, path, id);
-		} else {
+		}
+		else {
 			LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
 		}
 	}
@@ -313,6 +314,12 @@ void AssetDatabase::CreateFolders(std::string fullPath) {
 			CreateDirectoryA(subpath.c_str(), NULL);
 		}
 	}
+}
+
+void AssetDatabase::UnloadAll() {
+	assets.clear();
+	requestedAssetsToLoad.clear();
+	requestedObjectPtrs.clear();
 }
 
 std::string AssetDatabase::GetAssetPath(std::shared_ptr<Object> obj) {

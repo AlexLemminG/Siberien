@@ -1,0 +1,17 @@
+GameObject:
+  tag: door3
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $BoxCollider
+  - $RigidBody
+MeshRenderer:
+  mesh: meshes\cube.glb$Cube.001
+  material: material.asset
+Transform:
+  pos: [-4.67, 3, 122.56]
+BoxCollider:
+  size: [2,2,2]
+RigidBody:
+  isStatic: true
+  mass: 20

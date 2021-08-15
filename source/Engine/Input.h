@@ -8,16 +8,17 @@ class Input {
 public:
 
 	static bool Init() {
-		justPressed.clear();
-		pressed.clear();
-		justReleased.clear();
+		justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+		pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+		justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+
 		return true;
 	}
 
 	static void Term() {
-		justPressed.clear();
-		pressed.clear();
-		justReleased.clear();
+		justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+		pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+		justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 	}
 
 	static void Update();

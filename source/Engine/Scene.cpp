@@ -1,14 +1,12 @@
 #include "Scene.h"
 
 #include "GameObject.h"
+#include "SceneManager.h"
 
 DECLARE_TEXT_ASSET(Scene);
 
-Scene* Scene::current = nullptr;
 void Scene::Init() {
 	//TOOD remove nullptr components here ?
-	current = this;
-
 	for (int iG = gameObjects.size() - 1; iG >= 0; iG--) {
 		if (gameObjects[iG] == nullptr) {
 			gameObjects.erase(gameObjects.begin() + iG);
@@ -35,7 +33,7 @@ void Scene::Init() {
 
 	for (auto go : gameObjects) {
 		for (auto c : go->components) {
-			c->OnEnable();
+			c->SetEnabled(true);
 		}
 	}
 
@@ -48,7 +46,9 @@ void Scene::Init() {
 void Scene::Update() {
 	for (auto go : gameObjects) {
 		for (auto c : go->components) {
-			c->Update();
+			if (c->isEnabled) {
+				c->Update();
+			}
 		}
 	}
 	ProcessRemovedGameObjects();
@@ -58,7 +58,9 @@ void Scene::Update() {
 void Scene::FixedUpdate() {
 	for (auto go : gameObjects) {
 		for (auto c : go->components) {
-			c->FixedUpdate();
+			if (c->isEnabled) {
+				c->FixedUpdate();
+			}
 		}
 	}
 }
@@ -74,7 +76,7 @@ void Scene::ProcessRemovedGameObjects() {
 		if (it != gameObjects.end()) {
 			if (isInited) {
 				for (int iC = gameObject->components.size() - 1; iC >= 0; iC--) {
-					gameObject->components[iC]->OnDisable();
+					gameObject->components[iC]->SetEnabled(false);
 				}
 			}
 			gameObjects.erase(it);
@@ -95,11 +97,10 @@ void Scene::ProcessRemovedGameObjects() {
 void Scene::Term() {
 	for (auto go : gameObjects) {
 		for (int iC = go->components.size() - 1; iC >= 0; iC--) {
-			go->components[iC]->OnDisable();
+			go->components[iC]->SetEnabled(false);
 		}
 	}
 	isInited = false;
-	current = nullptr;
 }
 
 void Scene::AddGameObject(std::shared_ptr<GameObject> go) {
@@ -132,17 +133,14 @@ void Scene::ProcessAddedGameObjects() {
 		}
 
 		for (auto c : go->components) {
-			c->OnEnable();
+			c->SetEnabled(true);
 		}
 	}
 	addedGameObjects.clear();
 }
 
 std::shared_ptr<GameObject> Scene::FindGameObjectByTag(std::string tag) {
-	if (current == nullptr) {
-		return nullptr;
-	}
-	for (auto go : current->gameObjects) {
+	for (auto go : Get()->gameObjects) {
 		if (go->tag == tag) {
 			return go;
 		}
@@ -151,6 +149,8 @@ std::shared_ptr<GameObject> Scene::FindGameObjectByTag(std::string tag) {
 }
 
 //TODO remove singletons
+
+std::shared_ptr<Scene> Scene::Get() { return SceneManager::GetCurrentScene(); }
 
 void Scene::OnBeforeSerializeCallback(SerializationContext& context) const {
 	for (auto go : gameObjects) {

@@ -2,28 +2,37 @@
 
 #include "Component.h"
 #include "Gun.h"
+#include "MeshRenderer.h"
+#include "Grenade.h"
 
 class RigidBody;
+class PostProcessingEffect;
 
 class PlayerController : public Component {
 public:
 	void OnEnable()override;
 	void FixedUpdate() override;
 	void Update() override;
+	void AddGun(std::shared_ptr<Gun> gunTemplate);
+	void AddGrenades(int grenadesCount) { this->grenadesCount += grenadesCount; }
 private:
 
-	void SetGun(std::shared_ptr<Gun> gunTemplate);
 	void UpdateMovement();
 	void UpdateLook();
 	void UpdateShooting();
+	void UpdateGrenading();
 	void UpdateZombiesAttacking();
 	void Jump();
 	bool CanJump();
 	bool IsOnGround() { return true; } //TODO
+	void OnDeath();
 
 	void UpdateHealth();
 	void SetRandomShootingLight();
 	void DisableShootingLight();
+
+	std::shared_ptr<Gun> GetCurrentGun();
+
 
 	float speed = 1.f;
 	float bulletSpeed = 10.f;
@@ -51,11 +60,20 @@ private:
 	REFLECT_VAR(healPerSecond);
 	REFLECT_VAR(healDelay);
 	REFLECT_VAR(startGun);
+	REFLECT_VAR(grenadePrefab);
+	REFLECT_VAR(postprocessingEffect);
 	REFLECT_END();
 
 	std::shared_ptr<RigidBody> rigidBody = nullptr;
 	std::shared_ptr<GameObject> shootingLightPrefab = nullptr;
 	std::shared_ptr<GameObject> shootingLight = nullptr;
-	std::shared_ptr<Gun> gun;
 	std::shared_ptr<Gun> startGun;
+	std::unordered_map< std::shared_ptr<Gun>, std::shared_ptr<Gun>> gunTemplateToAvailableGun;
+	std::vector<std::shared_ptr<Gun>> guns;
+	std::shared_ptr<GameObject> grenadePrefab;
+	int grenadesCount = 0;
+	std::shared_ptr<PostProcessingEffect> postprocessingEffect;
+	bool isDead = false;
+	float defaultSpeed = 1.f;
+
 };

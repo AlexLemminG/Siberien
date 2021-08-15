@@ -1,8 +1,8 @@
 Gun:
   shootOnlyOnTrigger: false
-  shotsPerSecond: 5.0
-  reloadingTime: 0.0
-  shotsInMagazine: 1
+  shotsPerSecond: 3.0
+  reloadingTime: 2.0
+  shotsInMagazine: 10
   bulletsInShot: 1
   spread: 15.0
   spreadPow: 1

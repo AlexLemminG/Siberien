@@ -10,6 +10,7 @@ public:
 	float GetFarPlane() { return farPlane; }
 	float GetNearPlane() { return nearPlane; }
 	float GetFov() { return fov; }
+	void SetFov(float fov) { this->fov = fov; }
 	Color GetClearColor() { return clearColor; }
 
 	static Camera* GetMain() { return mainCamera; }

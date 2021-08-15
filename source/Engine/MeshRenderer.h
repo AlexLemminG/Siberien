@@ -12,18 +12,22 @@ class aiMesh;
 //class aiScene;
 class MeshAnimation;
 
+namespace bimg {
+	class ImageContainer;
+}
+
 class Mesh : public Object{
 public:
 	aiMesh* originalMeshPtr = nullptr;
-	bgfx::VertexBufferHandle vertexBuffer{};
-	bgfx::IndexBufferHandle indexBuffer{};
+	bgfx::VertexBufferHandle vertexBuffer = BGFX_INVALID_HANDLE;
+	bgfx::IndexBufferHandle indexBuffer = BGFX_INVALID_HANDLE;
 	std::vector<uint8_t> buffer;
 	std::vector<uint16_t> indices;
 
 	static constexpr int bonesPerVertex = 4;
 	Matrix4 globalInverseTransform;
-	//std::vector<uint8_t> boneIndices;
-	//std::vector<float> boneWeights;
+
+	~Mesh();
 
 	class BoneInfo {
 	public:
@@ -49,9 +53,11 @@ private:
 class Shader : public Object {
 public:
 	bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
+	~Shader();
 	std::vector<std::shared_ptr<BinaryAsset>> buffers;
 	REFLECT_BEGIN(Shader);
 	REFLECT_END();
+	std::string name;
 };
 
 
@@ -64,7 +70,9 @@ public:
 };
 class Texture : public Object {
 public:
-	bgfx::TextureHandle handle;
+	bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
+	bimg::ImageContainer* pImageContainer = nullptr;
+	~Texture();
 	REFLECT_BEGIN(Texture);
 	REFLECT_END();
 
@@ -172,8 +180,8 @@ public:
 		bgfx::destroy(colorHandle);
 	}
 
-	bgfx::UniformHandle dirHandle;
-	bgfx::UniformHandle colorHandle;
+	bgfx::UniformHandle dirHandle = BGFX_INVALID_HANDLE;
+	bgfx::UniformHandle colorHandle = BGFX_INVALID_HANDLE;
 
 	REFLECT_BEGIN(DirLight);
 	REFLECT_VAR(color);
@@ -205,4 +213,27 @@ public:
 	REFLECT_BEGIN(SphericalHarmonics);
 	REFLECT_VAR(coeffs);
 	REFLECT_END();
+};
+
+class Render;
+
+class PostProcessingEffect : public Object {
+public:
+	void Draw(Render& render);
+
+	float intensityFromLastHit;
+	float intensity;
+private:
+	std::shared_ptr<Shader> shader;
+
+	REFLECT_BEGIN(PostProcessingEffect);
+	REFLECT_VAR(shader);
+	REFLECT_END();
+
+	static std::vector<std::shared_ptr<PostProcessingEffect>> activeEffects; //TODO no static please
+	void ScreenSpaceQuad(
+		float _textureWidth,
+		float _textureHeight,
+		float _texelHalf,
+		bool _originBottomLeft);
 };

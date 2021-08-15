@@ -12,8 +12,8 @@ Vector2 Input::mousePos = Vector2{ 0,0 };
 void Input::Update() {
 
 	quitPressed = false;
-	justPressed.clear();
-	justReleased.clear();
+	justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+	justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 
 	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0) {
@@ -55,7 +55,7 @@ bool Input::GetMouseButton(int button) {
 	case 0:
 		return mouseState & SDL_BUTTON_LMASK;
 	case 1:
-		return mouseState & SDL_BUTTON_RIGHT;
+		return mouseState & SDL_BUTTON_RMASK;
 	default:
 		return false;
 	}
@@ -67,7 +67,7 @@ bool Input::GetMouseButtonDown(int button) {
 	case 0:
 		return GetMouseButton(button) && !(prevMouseState & SDL_BUTTON_LMASK);
 	case 1:
-		return GetMouseButton(button) && !(prevMouseState & SDL_BUTTON_RIGHT);
+		return GetMouseButton(button) && !(prevMouseState & SDL_BUTTON_RMASK);
 	default:
 		return false;
 	}

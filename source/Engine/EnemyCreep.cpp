@@ -9,6 +9,7 @@
 #include "MeshRenderer.h"
 #include "CorpseRemoveSystem.h"
 #include "BoxCollider.h"
+#include "GameEvents.h"
 
 DECLARE_TEXT_ASSET(EnemyCreepController);
 
@@ -16,39 +17,51 @@ void EnemyCreepController::OnEnable() {
 	rb = gameObject()->GetComponent<RigidBody>();
 	animator = gameObject()->GetComponent<Animator>();
 	health = gameObject()->GetComponent<Health>();
+
+	auto tr = gameObject()->transform();
+	tr->SetScale(tr->GetScale() * Random::Range(0.8f, 1.2f));
 }
 
 
+void EnemyCreepController::HandleSomeTimeAfterDeath() {
+	posAtDeath = gameObject()->transform()->GetPosition();
+}
 void EnemyCreepController::HandleDeath() {
-	rb->GetHandle()->setDamping(0.8, 0.8);
 	animator->SetAnimation(deadAnimation);
 	CorpseRemoveSystem::Get()->Add(gameObject());
 
 	auto collider = gameObject()->GetComponent<SphereCollider>();
 	auto center = collider->center;
-	rb->OnDisable();
-	collider->OnDisable();
+	auto angVel = rb->GetHandle()->getAngularVelocity();
+	auto linVel = rb->GetHandle()->getLinearVelocity();
+	rb->SetEnabled(false);
+	collider->SetEnabled(false);
 
 	float radiusScale = 0.9f;
 
 	center.z = -center.y;
 	center.y = 0;
+	rb->layer = "enemyCorpse";
 	collider->center = center * radiusScale;
 	collider->radius *= radiusScale;
-	rb->layer = "enemyCorpse";
 	rb->friction = 0.7f;
 
-	collider->OnEnable();
-	rb->OnEnable();
+	collider->SetEnabled(true);
+	rb->SetEnabled(true);
 
 	rb->GetHandle()->setDamping(0.5f, 0.8f);
+	rb->GetHandle()->setLinearVelocity(linVel);
+	rb->GetHandle()->setAngularVelocity(angVel);
+
+	GameEvents::Get()->creepDeath.Invoke(this);
 }
 
 
 void EnemyCreepController::Update() {
 	if (attackTimeLeft > 0.f) {
 		attackTimeLeft -= Time::deltaTime();
-		if (attackTimeLeft <= 0.f) {
+		if (attackTimeLeft <= 0.3f && !didDamageFromAttack) {
+			didDamageFromAttack = true;
 			auto target = Scene::FindGameObjectByTag(targetTag);
 			if (target) {
 				auto health = target->GetComponent<Health>();
@@ -58,14 +71,38 @@ void EnemyCreepController::Update() {
 			}
 		}
 	}
-}
-
-void EnemyCreepController::FixedUpdate() {
 	if (health && health->IsDead()) {
 		if (!wasDead) {
 			wasDead = true;
+			deadTimer = 3.f;
 			HandleDeath();
 		}
+		if (!wasSomeTimeAfterDead) {
+			deadTimer -= Time::deltaTime();
+			if (deadTimer <= 0.f) {
+				deadTimer = 6.f;
+				wasSomeTimeAfterDead = true;
+				HandleSomeTimeAfterDeath();
+			}
+		}
+		else {
+			if (deadTimer > 0.f) {
+				deadTimer -= Time::deltaTime();
+				if (deadTimer < 3.f) {
+					gameObject()->transform()->SetPosition(posAtDeath - (3.f - deadTimer) * Vector3_up / 3.f * 0.2f);
+					rb->SetEnabled(false);
+				}
+				else {
+					posAtDeath = gameObject()->transform()->GetPosition();
+				}
+			}
+		}
+		return;
+	}
+}
+
+void EnemyCreepController::FixedUpdate() {
+	if (wasDead) {
 		return;
 	}
 	if (targetTag == "") {
@@ -87,6 +124,10 @@ void EnemyCreepController::FixedUpdate() {
 	auto targetPos = target->transform()->GetPosition();
 
 	auto currentPos = gameObject()->transform()->GetPosition();
+
+	if (currentPos.y < clipPlaneY&& health) {
+		health->DoDamage(health->GetAmount());
+	}
 
 	Vector3 desiredLookDir = (targetPos - currentPos).Normalized();
 	Vector3 lookDir = gameObject()->transform()->GetForward().Normalized();
@@ -152,4 +193,5 @@ void EnemyCreepController::Attack() {
 	animator->currentTime = 0.f;
 	animator->speed = 1.f;
 	attackTimeLeft = 0.7f;
+	didDamageFromAttack = false;
 }

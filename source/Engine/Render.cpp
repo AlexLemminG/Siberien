@@ -73,14 +73,17 @@ bool Render::Init()
 	bgfx::reset(width, height, BGFX_RESET_VSYNC);
 
 	bgfx::resetView(0);
+	bgfx::resetView(1);
 	bgfx::setDebug(BGFX_DEBUG_TEXT /*| BGFX_DEBUG_STATS*/);
 
 	bgfx::setViewRect(0, 0, 0, width, height);
+	bgfx::setViewRect(1, 0, 0, width, height);
 
 	InitVertexLayouts();
 
 	u_time = bgfx::createUniform("u_time", bgfx::UniformType::Vec4);
 	u_color = bgfx::createUniform("u_color", bgfx::UniformType::Vec4);
+	u_playerHealthParams = bgfx::createUniform("u_playerHealthParams", bgfx::UniformType::Vec4);
 	s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 	s_texNormal = bgfx::createUniform("s_texNormal", bgfx::UniformType::Sampler);
 
@@ -89,11 +92,17 @@ bool Render::Init()
 
 	u_sphericalHarmonics = bgfx::createUniform("u_sphericalHarmonics", bgfx::UniformType::Vec4, 9);
 
+	u_pixelSize = bgfx::createUniform("u_pixelSize", bgfx::UniformType::Vec4);
+
 	whiteTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\white.png");
 	defaultNormalTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultNormal.png");
 
+	m_fullScreenTex.idx = bgfx::kInvalidHandle;
+	m_gbuffer.idx = bgfx::kInvalidHandle;
+
 	prevWidth = width;
 	prevHeight = height;
+	post = AssetDatabase::Get()->LoadByPath<PostProcessingEffect>("playerHealthEffect.asset");
 
 	Dbg::Init();
 
@@ -111,10 +120,43 @@ void Render::Draw(SystemsManager& systems)
 	Vector3 lightsPoi = Vector3_zero;
 	SDL_GetWindowSize(window, &width, &height);
 
-	if (height != prevHeight || width != prevWidth) {
+	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenTex)) {
+		prevWidth = width;
+		prevHeight = height;
 		bgfx::reset(width, height, BGFX_RESET_VSYNC);
+		if (bgfx::isValid(m_fullScreenTex)) {
+			bgfx::destroy(m_fullScreenTex);
+		}
+		if (bgfx::isValid(m_gbuffer)) {
+			bgfx::destroy(m_gbuffer);
+		}
+
+		const uint64_t tsFlags = 0
+			| BGFX_TEXTURE_RT
+			| BGFX_SAMPLER_U_CLAMP
+			| BGFX_SAMPLER_V_CLAMP
+			;
+
+		m_fullScreenTex = bgfx::createFrameBuffer(
+				(uint16_t)(width)
+				, (uint16_t)(height)
+				, bgfx::TextureFormat::RGBA32F
+				, tsFlags
+			);
+
+		bgfx::TextureHandle gbufferTex[] =
+		{
+			bgfx::getTexture(m_fullScreenTex),
+			bgfx::createTexture2D(uint16_t(width), uint16_t(height), false, 1, bgfx::TextureFormat::D32F, tsFlags),
+		};
+
+		m_gbuffer = bgfx::createFrameBuffer(BX_COUNTOF(gbufferTex), gbufferTex, true);
 	}
 	bgfx::setViewRect(0, 0, 0, width, height);
+	bgfx::setViewRect(1, 0, 0, width, height);
+	bgfx::setViewFrameBuffer(0, m_gbuffer);
+	bgfx::setViewFrameBuffer(1, BGFX_INVALID_HANDLE);
+
 
 	if (camera == nullptr) {
 		bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Colors::black.ToIntRGBA(), 1.0f, 0);
@@ -159,6 +201,7 @@ void Render::Draw(SystemsManager& systems)
 		float proj[16];
 		bx::mtxProj(proj, fov, float(width) / float(height), nearPlane, farPlane, bgfx::getCaps()->homogeneousDepth);
 		bgfx::setViewTransform(0, &cameraViewMatrix(0, 0), proj);
+		bgfx::setViewTransform(1, &cameraViewMatrix(0, 0), proj);
 	}
 
 	UpdateLights(lightsPoi);
@@ -169,6 +212,10 @@ void Render::Draw(SystemsManager& systems)
 
 	systems.Draw();
 
+	if (post) {
+		post->Draw(*this);
+	}
+
 	Dbg::DrawAll();
 
 	bgfx::frame();
@@ -177,14 +224,28 @@ void Render::Draw(SystemsManager& systems)
 void Render::Term()
 {
 	Dbg::Term();
+	post = nullptr;
+	whiteTexture = nullptr;
+	defaultNormalTexture = nullptr;
+
 	//TODO destroy programs, buffers and other shit
 	bgfx::destroy(u_time);
 	bgfx::destroy(u_color);
+	bgfx::destroy(u_playerHealthParams);
 	bgfx::destroy(s_texColor);
 	bgfx::destroy(s_texNormal);
 	bgfx::destroy(u_lightPosRadius);
 	bgfx::destroy(u_lightRgbInnerR);
 	bgfx::destroy(u_sphericalHarmonics);
+	bgfx::destroy(u_pixelSize);
+
+	if (bgfx::isValid(m_fullScreenTex)) {
+		bgfx::destroy(m_fullScreenTex);
+	}
+	if (bgfx::isValid(m_gbuffer)) {
+		bgfx::destroy(m_gbuffer);
+	}
+
 	bgfx::shutdown();
 
 	if (window != nullptr) {

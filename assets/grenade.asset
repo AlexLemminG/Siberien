@@ -1,0 +1,30 @@
+GameObject:
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $SphereCollider
+  - $RigidBody
+  - $Grenade
+  - $PointLight
+  - $Pickup
+MeshRenderer:
+  mesh: meshes\cube.glb$Cube.001
+  material: material.asset
+Transform:
+  scale: [0.2,0.2,0.2]
+SphereCollider:
+  radius: 1.5
+RigidBody:
+  mass: 2
+  layer: grenade
+Grenade:
+  radius: 6
+  pushImpulse: 1000
+  explodeOnCollision: false
+  explodeDelay: 3
+  startSpeed: 30
+  damage: 3
+PointLight:
+  color: 0xff0000ff
+  radius: 5
+  innerRadius: 0.0

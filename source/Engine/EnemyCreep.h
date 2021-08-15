@@ -16,6 +16,7 @@ public:
 	void Attack();
 private:
 	void HandleDeath();
+	void HandleSomeTimeAfterDeath();
 
 	std::shared_ptr<RigidBody> rb = nullptr;
 	std::shared_ptr<Animator> animator = nullptr;
@@ -31,9 +32,13 @@ private:
 	std::shared_ptr<MeshAnimation> attackAnimation;
 	float velocityToAnimatorSpeed = 1.f;
 	bool wasDead = false;
+	bool wasSomeTimeAfterDead = false;
 	float lastRollTime = 0.f;
 	float attackTimeLeft = 0.f;
 	bool isReadyToAttack = false;
+	bool didDamageFromAttack = false;
+	float deadTimer = 0.f;
+	Vector3 posAtDeath;
 
 	REFLECT_BEGIN(EnemyCreepController);
 	REFLECT_VAR(targetTag);
@@ -47,4 +52,6 @@ private:
 	REFLECT_VAR(deadAnimation);
 	REFLECT_VAR(velocityToAnimatorSpeed);
 	REFLECT_END();
+
+	float clipPlaneY = -10.f;
 };

@@ -1,0 +1,25 @@
+GameObject:
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $Pickup
+MeshRenderer:
+  mesh: hero.glb$hero_mesh
+  material: playerMaterial.asset
+Transform:
+  pos: [-27,3.0,138.0]
+  euler: [0, 60, 0]
+  scale: [0.7, 0.7, 0.7]
+Pickup:
+  gun: $Gun  
+Gun:
+  shootOnlyOnTrigger: false
+  shotsPerSecond: 60.0
+  reloadingTime: 0.0
+  shotsInMagazine: 1
+  bulletsInShot: 3
+  spread: 45.0
+  spreadPow: 1
+  bulletSpeed: 50.0
+  bulletColor: 0xff0000ff
+  ammo: 2000

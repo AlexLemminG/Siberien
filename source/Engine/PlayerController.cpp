@@ -11,10 +11,11 @@
 #include "btBulletDynamicsCommon.h"
 #include "RigidBody.h"
 #include "Scene.h"
-#include <BulletCollision\CollisionDispatch\btGhostObject.h>
 #include "EnemyCreep.h"
 #include "GameObject.h"
 #include "Health.h"
+#include "SceneManager.h"
+#include "MeshRenderer.h"
 
 void PlayerController::OnEnable() {
 	rigidBody = gameObject()->GetComponent<RigidBody>();
@@ -22,17 +23,12 @@ void PlayerController::OnEnable() {
 		shootingLight = Object::Instantiate(shootingLightPrefab);
 		Scene::Get()->AddGameObject(shootingLight);
 	}
-	SetGun(startGun);
-}
-
-
-void PlayerController::SetGun(std::shared_ptr<Gun> gunTemplate) {
-	if (!gunTemplate) {
-		gun = nullptr;
+	if (CfgGetBool("godMode")) {
+		auto health = gameObject()->GetComponent<Health>();
+		health->SetInvinsible(true);
 	}
-	else {
-		gun = Object::Instantiate(gunTemplate);
-	}
+	defaultSpeed = speed;
+	AddGun(startGun);
 }
 
 
@@ -40,31 +36,107 @@ void PlayerController::UpdateHealth() {
 	auto health = gameObject()->GetComponent<Health>();
 	Dbg::Text("Player health: %d", health->GetAmount());
 
-	if (Time::time() - health->GetLastDamageTime() > healDelay) {
+	if (Time::time() - health->GetLastDamageTime() > healDelay && !isDead) {
 		if (Time::time() - prevHealTime > 1.f / healPerSecond) {
 			prevHealTime = Time::time();
 			health->DoHeal(1.f);
 		}
 	}
+	bool wasDead = isDead;
+	isDead = health->IsDead();
+	if (!wasDead && isDead) {
+		OnDeath();
+	}
+
+	if (postprocessingEffect) {
+		if (isDead) {
+			postprocessingEffect->intensity = 1.f;
+			postprocessingEffect->intensityFromLastHit = 1.f;
+		}
+		else {
+			float healthPercent = ((float)health->GetAmount()) / health->GetMaxAmount();
+			postprocessingEffect->intensity = Mathf::Max(0.f, 1.f - healthPercent);
+
+			float timeFromLastHit = Time::time() - health->GetLastDamageTime();
+			postprocessingEffect->intensityFromLastHit = Mathf::Max(0.f, 1.f - Mathf::Clamp01(timeFromLastHit / .5f));
+		}
+	}
 }
 
 void PlayerController::Update() {
-	UpdateShooting();
+	if (!isDead) {
+		UpdateShooting();
+		UpdateGrenading();
 
-	if (CanJump()) {
-		if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_SPACE)) {
-			Jump();
+		if (CanJump()) {
+			if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_SPACE)) {
+				Jump();
+			}
+		}
+
+		if (GetCurrentGun()) {
+			auto gun = GetCurrentGun();
+			int currentAmmoInMagazine = gun->GetCurrentAmmoInMagazine();
+			int currentNotInMagazine = gun->GetCurrentAmmoNotInMagazine();
+			if (currentAmmoInMagazine == INT_MAX) {
+				Dbg::Text("Current gun: inf");
+			}
+			else if (currentNotInMagazine == INT_MAX) {
+				Dbg::Text("Current gun: %d / inf", currentAmmoInMagazine);
+			}
+			else {
+				Dbg::Text("Current gun: %d / %d", currentAmmoInMagazine, currentNotInMagazine);
+			}
+
+			if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_R)) {
+				gun->Reload();
+			}
+		}
+		if (grenadesCount > 0) {
+			Dbg::Text("Grenades: %d", grenadesCount);
+		}
+	}
+
+	if (CfgGetBool("godMode")) {
+		if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LSHIFT)) {
+			speed = defaultSpeed * 3.f;
+		}
+		else {
+			speed = defaultSpeed;
+		}
+		if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LSHIFT) && Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_K)) {
+			for (auto go : Scene::Get()->gameObjects) {
+				auto health = go->GetComponent<Health>();
+				if (health && go != gameObject()) {
+					health->DoDamage(health->GetAmount());
+				}
+			}
 		}
 	}
 
 	UpdateZombiesAttacking();
 
 	UpdateHealth();
+
+	if (isDead && Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_SPACE)) {
+		SceneManager::LoadScene(Scene::Get()->name);
+	}
+
+
+	auto ray = Camera::GetMain()->ScreenPointToRay(Input::GetMousePosition());
+	btCollisionWorld::ClosestRayResultCallback cb(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f));
+	PhysicsSystem::Get()->dynamicsWorld->rayTest(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f), cb);
+	if (cb.hasHit()) {
+		auto pos = btConvert(cb.m_hitPointWorld);
+		Dbg::Text("MousePos: %.2f, %.2f, %.2f", pos.x, pos.y, pos.z);
+	}
 }
 
 void PlayerController::FixedUpdate() {
-	UpdateMovement();
-	UpdateLook();
+	if (!isDead) {
+		UpdateMovement();
+		UpdateLook();
+	}
 
 	if (rigidBody) {
 		float gravityMultiplier = 1.f;
@@ -81,6 +153,7 @@ void PlayerController::UpdateMovement() {
 	if (!rigidBody) {
 		return;
 	}
+
 	rigidBody->GetHandle()->activate(true);
 	Matrix4 matrix = gameObject()->transform()->matrix;
 	auto rotation = GetRot(matrix);
@@ -110,25 +183,46 @@ void PlayerController::UpdateMovement() {
 	rigidBody->GetHandle()->setLinearVelocity(vel);
 }
 
+void PlayerController::UpdateGrenading() {
+	if (Input::GetKey(SDL_SCANCODE_G) || Input::GetMouseButtonDown(1)) {//TODO
+		if (grenadesCount > 0 && grenadePrefab) {
+			auto ray = Camera::GetMain()->ScreenPointToRay(Input::GetMousePosition());
+			btCollisionWorld::ClosestRayResultCallback cb(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f));
+			PhysicsSystem::Get()->dynamicsWorld->rayTest(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f), cb);
+			if (cb.hasHit()) {
+				grenadesCount--;
+				auto grenadeGO = Object::Instantiate(grenadePrefab);
+				auto pos = gameObject()->transform()->GetPosition() + Vector3(0, bulletSpawnOffset, 0);
+				grenadeGO->transform()->SetPosition(pos);
+				auto grenade = grenadeGO->GetComponent<Grenade>();
+				if (grenade) {
+					grenade->ThrowAt(btConvert(cb.m_hitPointWorld));
+				}
+				Scene::Get()->AddGameObject(grenadeGO);
+			}
+
+		}
+	}
+}
 void PlayerController::UpdateShooting() {
 	auto pos = gameObject()->transform()->GetPosition() + Vector3(0, bulletSpawnOffset, 0);
 	auto rot = GetRot(gameObject()->transform()->matrix);
 	auto gunTransform = Matrix4::Transform(pos, rot.ToMatrix(), Vector3_one);
 
 	if (!Input::GetKey(SDL_SCANCODE_Z) && !Input::GetMouseButton(0)) {//TODO
-		if (gun) {
-			gun->ReleaseTrigger();
+		if (GetCurrentGun()) {
+			GetCurrentGun()->ReleaseTrigger();
 		}
 	}
 	else {
-		if (gun) {
-			gun->PullTrigger();
+		if (GetCurrentGun()) {
+			GetCurrentGun()->PullTrigger();
 		}
 	}
 
 	bool bulletShot = false;
-	if (gun) {
-		bulletShot = gun->Update(gunTransform);
+	if (GetCurrentGun()) {
+		bulletShot = GetCurrentGun()->Update(gunTransform);
 	}
 	//TODO move to gun
 	if (bulletShot) {
@@ -159,17 +253,6 @@ void PlayerController::UpdateLook() {
 	}
 
 
-	btCollisionWorld::ClosestRayResultCallback cb(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f));
-	PhysicsSystem::Get()->dynamicsWorld->rayTest(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f), cb);
-
-	if (cb.hasHit()) {
-		Dbg::Draw(btConvert(cb.m_hitPointWorld), 1);
-	}
-	else {
-		Dbg::Draw(ray.GetPoint(dist));
-
-	}
-
 	auto deltaPos = ray.GetPoint(dist) - playerPos;
 
 	if (deltaPos.Length() < 0.1f) {
@@ -179,45 +262,6 @@ void PlayerController::UpdateLook() {
 	SetRot(matrix, Quaternion::LookAt(deltaPos, Vector3_up));
 	//gameObject()->transform()->matrix = matrix;
 	rigidBody->GetHandle()->setCenterOfMassTransform(btConvert(matrix));
-
-}
-
-class GetAllContacts_ContactResultCallback : public btCollisionWorld::ContactResultCallback {
-public:
-	// Inherited via ContactResultCallback
-	virtual btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1) override
-	{
-		objects.push_back(const_cast<btCollisionObject*>(colObj0Wrap->getCollisionObject()));
-		return btScalar();
-	}
-	std::vector<btCollisionObject*> objects;
-};
-static std::vector<btRigidBody*> GetOverlaping(Vector3 pos, float radius) {
-	std::vector<btRigidBody*> results;
-
-	btSphereShape sphere(radius);
-	btPairCachingGhostObject ghost;
-	btTransform xform;
-	xform.setOrigin(btConvert(pos));
-	ghost.setCollisionShape(&sphere);
-	ghost.setWorldTransform(xform);
-
-	GetAllContacts_ContactResultCallback cb;
-	cb.m_collisionFilterGroup = PhysicsSystem::playerBulletGroup;
-	cb.m_collisionFilterMask = PhysicsSystem::playerBulletMask;
-	PhysicsSystem::Get()->dynamicsWorld->contactTest(&ghost, cb);
-
-	//TODO may contain doubles 
-
-	for (auto o : cb.objects) {
-		auto* rb = dynamic_cast<btRigidBody*>(o);
-		if (rb) {
-			results.push_back(rb);
-		}
-	}
-	PhysicsSystem::Get()->dynamicsWorld->removeCollisionObject(&ghost);
-
-	return results;
 
 }
 
@@ -235,22 +279,12 @@ void PlayerController::Jump() {
 	vel.setY(jumpVelocity);
 	rigidBody->GetHandle()->setLinearVelocity(vel);
 
-
-	auto pos = rigidBody->GetHandle()->getWorldTransform().getOrigin();
-	auto bodies = GetOverlaping(btConvert(pos), jumpPushRadius);
-	for (auto body : bodies) {
-		if (body == rigidBody->GetHandle()) {
-			continue;
-		}
-		auto bodyPos = body->getCenterOfMassPosition();
-		auto deltaPos = bodyPos - pos;
-		float impulseMag = Mathf::Lerp(jumpPushImpulse, 0.f, deltaPos.length2() / (jumpPushRadius * jumpPushRadius));
-		auto impulse = deltaPos.normalized() * impulseMag;
-		body->applyCentralImpulse(impulse);
-	}
 }
 
 bool PlayerController::CanJump() {
+	if (!CfgGetBool("godMode")) {
+		return false;
+	}
 	if (Time::time() - lastJumpTime < jumpDelay) {
 		return false;
 	}
@@ -258,6 +292,13 @@ bool PlayerController::CanJump() {
 		return false;
 	}
 	return true;
+}
+
+void PlayerController::OnDeath() {
+	rigidBody->GetHandle()->setFriction(0.5f);
+	rigidBody->GetHandle()->setAngularFactor(btVector3(1, 1, 1));
+	rigidBody->GetHandle()->setDamping(0.6f, 0.6f);
+	DisableShootingLight();
 }
 
 void PlayerController::SetRandomShootingLight() {
@@ -268,8 +309,8 @@ void PlayerController::SetRandomShootingLight() {
 	auto lightPos = t->matrix * shootingLightOffset;
 	shootingLight->GetComponent<Transform>()->SetPosition(lightPos);
 	auto color = shootingLightPrefab->GetComponent<PointLight>()->color;
-	if (gun) {
-		color = Color::Lerp(color, gun->GetBulletColor(), 0.5f);
+	if (GetCurrentGun()) {
+		color = Color::Lerp(color, GetCurrentGun()->GetBulletColor(), 0.5f);
 	}
 	float colorM = Random::Range(0.7f, 1.3f);
 	color.r *= colorM;
@@ -289,15 +330,35 @@ void PlayerController::DisableShootingLight() {
 	shootingLight->GetComponent<PointLight>()->radius = 0.f;
 }
 
+std::shared_ptr<Gun> PlayerController::GetCurrentGun() {
+	for (int i = guns.size() - 1; i >= 0; i--) {
+		if (guns[i] && guns[i]->HasAmmo()) {
+			return guns[i];
+		}
+	}
+	return nullptr;
+}
+
+void PlayerController::AddGun(std::shared_ptr<Gun> gunTemplate) {
+	if (!gunTemplate) {
+		return;
+	}
+	auto it = gunTemplateToAvailableGun.find(gunTemplate);
+	if (it != gunTemplateToAvailableGun.end()) {
+		it->second->AddAmmo(gunTemplate->GetInitialAmmo());
+	}
+	else {
+		auto gun = Object::Instantiate(gunTemplate);
+		gunTemplateToAvailableGun[gunTemplate] = gun;
+		guns.push_back(gun);
+	}
+}
+
 DECLARE_TEXT_ASSET(PlayerController);
 
 void PlayerController::UpdateZombiesAttacking() {
-	auto nearby = GetOverlaping(gameObject()->transform()->GetPosition(), 1.5f);
-	for (auto rb : nearby) {
-		auto go = (GameObject*)rb->getUserPointer();
-		if (!go) {
-			continue;
-		}
+	auto nearby = PhysicsSystem::Get()->GetOverlaping(gameObject()->transform()->GetPosition(), 1.5f);
+	for (auto go : nearby) {
 		auto creep = go->GetComponent<EnemyCreepController>();
 		if (!creep) {
 			continue;

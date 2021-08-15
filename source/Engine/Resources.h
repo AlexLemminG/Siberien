@@ -49,6 +49,9 @@ public:
 	BinaryAsset(std::vector<char>&& buffer) :
 		buffer(buffer) {}
 
+	~BinaryAsset() {
+	}
+
 	REFLECT_BEGIN(BinaryAsset);
 	REFLECT_END();
 };
@@ -88,6 +91,7 @@ public:
 	}
 
 	void Term() {
+		UnloadAll();
 		mainDatabase = nullptr;
 	}
 
@@ -147,6 +151,7 @@ public:
 	}
 	std::string GetAssetPath(std::shared_ptr<Object> obj);
 
+	void UnloadAll();
 private:
 	class PathDescriptor {
 	public:

@@ -36,6 +36,7 @@ class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 class btDynamicsWorld;
+class GameObject;
 
 class PhysicsSystem : public System< PhysicsSystem> {
 public:
@@ -44,6 +45,7 @@ public:
 	virtual void Term() override;
 
 	Vector3 GetGravity()const;
+	std::vector<GameObject*> GetOverlaping(Vector3 pos, float radius);
 
 	btDefaultCollisionConfiguration* collisionConfiguration = nullptr;
 
@@ -62,6 +64,7 @@ public:
 	static constexpr int playerBulletGroup = 512;
 	static constexpr int enemyBulletGroup = 1024;
 	static constexpr int enemyCorpseGroup = 2048;
+	static constexpr int grenadeGroup = 4096;
 
 
 	static constexpr int defaultMask = -1;
@@ -70,6 +73,7 @@ public:
 	static constexpr int playerBulletMask = defaultGroup | enemyMask | enemyCorpseGroup;
 	static constexpr int enemyBulletMask = defaultGroup | playerMask;
 	static constexpr int enemyCorpseMask = defaultGroup | enemyGroup | playerBulletGroup | enemyCorpseGroup;
+	static constexpr int grenadeMask = -1 ^ (playerGroup | enemyGroup);
 
 	static void GetGroupAndMask(const std::string& groupName, int& group, int& mask);
 

@@ -5,6 +5,12 @@
 
 DECLARE_TEXT_ASSET(Gun);
 
+void Gun::Reload() {
+	if (currentShotsInMagazine < shotsInMagazine && GetCurrentAmmoNotInMagazine() > 0) {
+		magazineReloadingTimer = reloadingTime;
+	}
+}
+
 bool Gun::Update(const Matrix4& bulletSpawnMatrix) {
 	bool isJustPulled = !wasTriggerPulled && isTriggerPulled;
 	wasTriggerPulled = isTriggerPulled;
@@ -13,7 +19,7 @@ bool Gun::Update(const Matrix4& bulletSpawnMatrix) {
 		magazineReloadingTimer -= Time::deltaTime();
 		if (magazineReloadingTimer <= 0.f) {
 			bulletReloadingTimer = 0.f;
-			currentShotsInMagazine = shotsInMagazine;
+			currentShotsInMagazine = Mathf::Min(shotsInMagazine, currentAmmo);
 		}
 		else {
 			Dbg::Text("Reloading: %d", (int)magazineReloadingTimer);
@@ -33,6 +39,9 @@ bool Gun::Update(const Matrix4& bulletSpawnMatrix) {
 	if (!isTriggerPulled) {
 		return false;
 	}
+	if (currentAmmo <= 0) {
+		return false;
+	}
 
 	for (int i = 0; i < bulletsInShot; i++) {
 		auto pos = GetPos(bulletSpawnMatrix);
@@ -44,6 +53,9 @@ bool Gun::Update(const Matrix4& bulletSpawnMatrix) {
 
 		BulletSystem::Get()->CreateBullet(pos, dir, bulletColor);
 		bulletReloadingTimer = 1.f / Mathf::Max(shotsPerSecond, Mathf::epsilon);
+	}
+	if (currentAmmo != INT_MAX) {
+		currentAmmo--;
 	}
 	currentShotsInMagazine--;
 	if (currentShotsInMagazine <= 0) {

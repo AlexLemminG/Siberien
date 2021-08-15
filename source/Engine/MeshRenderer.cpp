@@ -12,13 +12,39 @@
 #include "Time.h"
 #include "GameObject.h"
 #include "Dbg.h"
+#include "Render.h"
 //#include "bgfx_utils.h"
+
+static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
+struct PosTexCoord0Vertex
+{
+	float m_x;
+	float m_y;
+	float m_z;
+	float m_u;
+	float m_v;
+
+	static void init()
+	{
+		ms_layout
+			.begin()
+			.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+			.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+			.end();
+	}
+
+	static bgfx::VertexLayout ms_layout;
+};
+bgfx::VertexLayout PosTexCoord0Vertex::ms_layout;
 
 class VertexLayout {
 public:
 	bgfx::VertexLayout bgfxLayout;
+	std::vector<bgfx::Attrib::Enum> attributes;
 
 	VertexLayout& Begin() {
+		attributes.clear();
+		bgfxLayout = bgfx::VertexLayout();
 		bgfxLayout.begin();
 		return *this;
 	}
@@ -63,7 +89,6 @@ public:
 		bgfxLayout.end();
 		return *this;
 	}
-	std::vector<bgfx::Attrib::Enum> attributes;
 
 	std::vector<uint8_t> CreateBuffer(std::shared_ptr<Mesh> gameMesh) {
 		auto* mesh = gameMesh->originalMeshPtr;
@@ -164,8 +189,11 @@ public:
 };
 
 static VertexLayout layout_pos;
+//static VertexLayout layout_postprocess;
 void InitVertexLayouts() {
 	layout_pos.Begin().AddPosition().AddNormal().AddTangent().AddTexCoord().AddIndices().AddWeights().End();
+	PosTexCoord0Vertex::init();
+	//layout_postprocess.Begin().AddPosition().AddTexCoord().End();
 }
 
 void PrintHierarchy(aiNode* node, int offset) {
@@ -222,10 +250,11 @@ public:
 
 			//TODO should keep buffer ?
 			mesh->buffer = layout_pos.CreateBuffer(mesh);
-			mesh->vertexBuffer = bgfx::createVertexBuffer(bgfx::makeRef(&mesh->buffer[0], mesh->buffer.size()), layout_pos.bgfxLayout);
+			mesh->vertexBuffer = bgfx::createVertexBuffer(bgfx::copy(&mesh->buffer[0], mesh->buffer.size()), layout_pos.bgfxLayout);
 			bgfx::setName(mesh->vertexBuffer, mesh->originalMeshPtr->mName.C_Str());
+			
 			mesh->indices = CreateIndices(aiMesh);
-			mesh->indexBuffer = bgfx::createIndexBuffer(bgfx::makeRef(&mesh->indices[0], mesh->indices.size() * sizeof(uint16_t)));
+			mesh->indexBuffer = bgfx::createIndexBuffer(bgfx::copy(&mesh->indices[0], mesh->indices.size() * sizeof(uint16_t)));
 			bgfx::setName(mesh->indexBuffer, mesh->originalMeshPtr->mName.C_Str());
 			mesh->tPoseAnim = animations["TPose"];
 			mesh->Init();
@@ -265,7 +294,7 @@ class ShaderAssetImporter : public TextAssetImporter {
 		if (!vsBin) {
 			return nullptr;
 		}
-		auto vs = bgfx::createShader(bgfx::makeRef(&vsBin->buffer[0], vsBin->buffer.size()));
+		auto vs = bgfx::createShader(bgfx::copy(&vsBin->buffer[0], vsBin->buffer.size()));
 		if (vs.idx == bgfx::kInvalidHandle) {
 			return nullptr;
 		}
@@ -273,7 +302,7 @@ class ShaderAssetImporter : public TextAssetImporter {
 		if (!fsBin) {
 			return nullptr;
 		}
-		auto fs = bgfx::createShader(bgfx::makeRef(&fsBin->buffer[0], fsBin->buffer.size()));
+		auto fs = bgfx::createShader(bgfx::copy(&fsBin->buffer[0], fsBin->buffer.size()));
 		if (fs.idx == bgfx::kInvalidHandle) {
 			return nullptr;
 		}
@@ -283,11 +312,12 @@ class ShaderAssetImporter : public TextAssetImporter {
 		}
 
 		auto shader = std::make_shared<Shader>();
-		shader->buffers.push_back(vsBin);
-		shader->buffers.push_back(fsBin);
+		//shader->buffers.push_back(vsBin);
+		//shader->buffers.push_back(fsBin);
 		shader->program = program;
+		shader->name = std::string(vsShaderPath.c_str()) + " " + fsShaderPath.c_str();
 		bgfx::setName(vs, vsShaderPath.c_str());
-		bgfx::setName(fs, vsShaderPath.c_str());
+		bgfx::setName(fs, fsShaderPath.c_str());
 
 		return shader;
 		//return nullptr;
@@ -445,19 +475,20 @@ public:
 			return nullptr;
 		}
 
-		auto allocator = bx::DefaultAllocator();
-		auto pImageContainer = bimg::imageParse(&allocator, &txBin->buffer[0], txBin->buffer.size());
+		auto pImageContainer = bimg::imageParse(&s_bxAllocator, &txBin->buffer[0], txBin->buffer.size());
 		//TODO delete
+
+		//TODO slow?
+		auto mem = bgfx::copy(
+			pImageContainer->m_data
+			, pImageContainer->m_size
+		);
 
 		//bimg::ImageContainer* imageContainer = bimg::imageParse(entry::getAllocator(), data, size);
 		if (!pImageContainer) {
 			return nullptr;
 		}
 
-		const bgfx::Memory* mem = bgfx::makeRef(
-			pImageContainer->m_data
-			, pImageContainer->m_size
-		);
 		//TODO delete
 		auto imageContainer = *pImageContainer;
 		//const bgfx::Memory* memory = bgfx::makeRef(&txBin->buffer[0] + imageContainer.m_offset, txBin->buffer.size() - imageContainer.m_offset);
@@ -469,13 +500,16 @@ public:
 			bgfx::TextureFormat::Enum(imageContainer.m_format),
 			BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE,
 			mem);
+
 		if (!bgfx::isValid(tx)) {
+			bimg::imageFree(pImageContainer);
 			return nullptr;
 		}
 
 		auto texture = std::make_shared<Texture>();
 		texture->handle = tx;
-		texture->bin = txBin;
+		//texture->bin = txBin;
+		texture->pImageContainer = pImageContainer;
 
 		bgfx::setName(tx, path.c_str());
 		//TODO keep memeory buffer ?
@@ -787,5 +821,154 @@ void MeshRenderer::OnEnable() {
 	}
 	if (material->randomColorTextures.size() > 0) {
 		randomColorTextureIdx = Random::Range(0, material->randomColorTextures.size());
+	}
+}
+
+
+void PostProcessingEffect::Draw(Render& render) {
+
+	if (!shader || !bgfx::isValid(shader->program)) {
+		return;
+	}
+
+	int width = render.GetWidth();
+	int height = render.GetHeight();
+
+	const bgfx::RendererType::Enum renderer = bgfx::getRendererType();
+	auto texelHalf = bgfx::RendererType::Direct3D9 == renderer ? 0.5f : 0.0f;
+
+	auto caps = bgfx::getCaps();
+
+	const float pixelSize[4] =
+	{
+		1.0f / width,
+		1.0f / height,
+		0.0f,
+		0.0f,
+	};
+	auto u_pixelSize = render.GetPixelSizeUniform();
+	bgfx::setUniform(u_pixelSize, pixelSize);
+	auto s_tex = render.GetTexColorSampler();
+	bgfx::setTexture(0, s_tex, bgfx::getTexture(render.GetFullScreenBuffer()));
+
+	bgfx::setState(0
+		| BGFX_STATE_WRITE_RGB
+		| BGFX_STATE_WRITE_A
+	);
+	Vector4 params;
+	params[0] = intensity;
+	params[1] = intensityFromLastHit;
+
+	bgfx::setUniform(render.GetPlayerHealthParamsUniform(), &params.x);
+
+	ScreenSpaceQuad((float)width, (float)height, texelHalf, caps->originBottomLeft);
+	bgfx::submit(1, shader->program);
+}
+
+std::vector<std::shared_ptr<PostProcessingEffect>> PostProcessingEffect::activeEffects; //TODO no static please
+void PostProcessingEffect::ScreenSpaceQuad(
+	float _textureWidth,
+	float _textureHeight,
+	float _texelHalf,
+	bool _originBottomLeft
+) {
+	float _width = 1.0f;
+	float _height = 1.0f;
+
+	if (4 == bgfx::getAvailTransientVertexBuffer(4, PosTexCoord0Vertex::ms_layout) && 6 == bgfx::getAvailTransientIndexBuffer(6))
+	{
+		bgfx::TransientVertexBuffer vb;
+		bgfx::allocTransientVertexBuffer(&vb, 4, PosTexCoord0Vertex::ms_layout);
+		bgfx::TransientIndexBuffer ib;
+		bgfx::allocTransientIndexBuffer(&ib, 6);
+
+		
+		PosTexCoord0Vertex* vertex = (PosTexCoord0Vertex*)vb.data;
+
+		const float minx = -_width / 2.f;
+		const float maxx = _width / 2.f;
+		const float miny = -_height / 2.f;
+		const float maxy = _height / 2.f;
+
+		const float texelHalfW = _texelHalf / _textureWidth;
+		const float texelHalfH = _texelHalf / _textureHeight;
+		const float minu = 0.0f + texelHalfW;
+		const float maxu = 1.0f + texelHalfH;
+
+		const float zz = 0.0f;
+
+		float minv = texelHalfH;
+		float maxv = 1.0f + texelHalfH;
+
+		if (_originBottomLeft)
+		{
+			float temp = minv;
+			minv = maxv;
+			maxv = temp;
+
+			minv -= 1.0f;
+			maxv -= 1.0f;
+		}
+
+		vertex[0].m_x = minx;
+		vertex[0].m_y = miny;
+		vertex[0].m_z = zz;
+		vertex[0].m_u = minu;
+		vertex[0].m_v = minv;
+
+		vertex[1].m_x = maxx;
+		vertex[1].m_y = miny;
+		vertex[1].m_z = zz;
+		vertex[1].m_u = maxu;
+		vertex[1].m_v = minv;
+
+		vertex[2].m_x = maxx;
+		vertex[2].m_y = maxy;
+		vertex[2].m_z = zz;
+		vertex[2].m_u = maxu;
+		vertex[2].m_v = maxv;
+
+		vertex[3].m_x = minx;
+		vertex[3].m_y = maxy;
+		vertex[3].m_z = zz;
+		vertex[3].m_u = minu;
+		vertex[3].m_v = maxv;
+
+		auto index = (uint16_t*)ib.data;
+		index[0] = 1;
+		index[1] = 3;
+		index[2] = 2;
+
+		index[3] = 1;
+		index[4] = 0;
+		index[5] = 3;
+
+		bgfx::setVertexBuffer(0, &vb);
+		bgfx::setIndexBuffer(&ib);
+	}
+}
+DECLARE_TEXT_ASSET(PostProcessingEffect);
+
+Texture::~Texture() {
+	if (bgfx::isValid(handle)) {
+		bgfx::destroy(handle);
+	}
+	if (pImageContainer) {
+		bimg::imageFree(pImageContainer);
+	}
+}
+
+Shader::~Shader() {
+	if (bgfx::isValid(program)) {
+		bgfx::destroy(program);
+	}
+}
+
+Mesh::~Mesh() {
+	if (bgfx::isValid(vertexBuffer)) {
+		bgfx::destroy(vertexBuffer);
+	}
+	if (bgfx::isValid(indexBuffer)) {
+		bgfx::destroy(indexBuffer);
 	}
 }

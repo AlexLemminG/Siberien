@@ -3,4 +3,15 @@ GameObject:
   - $GameplaySceneScenario
 GameplaySceneScenario:
   slowZombiePrefab: slowZombie.asset
-  fastZombiePrefab: enemyCreep.asset
+  fastZombiePrefab: fastZombie.asset
+  chadZombiePrefab: chadZombie.asset
+  randomGun: $pick
+  indoorCameraSettings: camera_indoor.asset$Camera
+  outdoorCameraSettings: camera_outdoor.asset$Camera
+  
+RandomObjectSpawner$pick:
+  availableObjects:
+  - prefab: gun_machineGun.asset
+    weight: 0.5
+  - prefab: ""
+    weight: 0.5

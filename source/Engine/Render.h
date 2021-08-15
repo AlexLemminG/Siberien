@@ -6,12 +6,20 @@
 struct SDL_Window;
 class SDL_Surface;
 class SystemsManager;
+class PostProcessingEffect;
 
 class Render {
 public:
 	bool Init();
 	void Draw(SystemsManager& systems);
 	void Term();
+
+	int GetWidth() { return prevWidth; }
+	int GetHeight() { return prevHeight; }
+	bgfx::UniformHandle GetPixelSizeUniform() { return u_pixelSize; }
+	bgfx::UniformHandle GetTexColorSampler() { return s_texColor; }
+	bgfx::UniformHandle GetPlayerHealthParamsUniform() { return u_playerHealthParams; }
+	bgfx::FrameBufferHandle GetFullScreenBuffer() { return m_fullScreenTex; }
 
 	//The window we'll be rendering to
 	//TODO make non static
@@ -31,6 +39,12 @@ private:
 	bgfx::UniformHandle s_texColor;
 	bgfx::UniformHandle s_texNormal;
 	bgfx::UniformHandle u_sphericalHarmonics;
+	bgfx::UniformHandle u_pixelSize;
+	bgfx::UniformHandle s_fullScreen;
+	bgfx::UniformHandle u_playerHealthParams;
+
+	bgfx::FrameBufferHandle m_gbuffer;
+	bgfx::FrameBufferHandle m_fullScreenTex;
 	
 	static constexpr int maxLightsCount = 8;
 	bgfx::UniformHandle u_lightPosRadius;
@@ -41,5 +55,6 @@ private:
 
 	std::shared_ptr<Texture> whiteTexture;
 	std::shared_ptr<Texture> defaultNormalTexture;
+	std::shared_ptr<PostProcessingEffect> post;
 
 };

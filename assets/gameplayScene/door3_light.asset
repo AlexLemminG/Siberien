@@ -1,0 +1,11 @@
+GameObject:
+  tag: door3_light
+  components:
+  - $Transform
+  - $PointLight
+PointLight:
+  color: 0xff0000ff
+  radius: 3
+  innerRadius: 0.3
+Transform:
+  pos: [-5.65,4.5,123.91]

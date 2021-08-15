@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include "Time.h"
 #include "Scene.h"
+#include "GameObject.h"
+#include <BulletCollision\CollisionDispatch\btGhostObject.h>
 
 REGISTER_SYSTEM(PhysicsSystem);
 
@@ -34,14 +36,14 @@ bool PhysicsSystem::Init() {
 
 	///-----initialization_end-----
 
-	
+
 	/// Do some simulation
 
 	///-----stepsimulation_start-----
 	prevSimulationTime = Time::time();
 
 
-	
+
 
 
 	return true;
@@ -76,11 +78,12 @@ void PhysicsSystem::GetGroupAndMask(const std::string& groupName, int& group, in
 	if (groupName.empty() || groupName == "default") {
 		group = defaultGroup;
 		mask = defaultMask;
-	}else if (groupName == "player"){
+	}
+	else if (groupName == "player") {
 		group = playerGroup;
 		mask = playerMask;
 	}
-	else  if (groupName == "playerBullet"){
+	else  if (groupName == "playerBullet") {
 		group = playerBulletGroup;
 		mask = playerBulletMask;
 	}
@@ -96,6 +99,10 @@ void PhysicsSystem::GetGroupAndMask(const std::string& groupName, int& group, in
 		group = enemyCorpseGroup;
 		mask = enemyCorpseMask;
 	}
+	else  if (groupName == "grenade") {
+		group = grenadeGroup;
+		mask = grenadeMask;
+	}
 	else {
 		LogError("Unknown group name %s", groupName.c_str());
 		group = defaultGroup;
@@ -110,4 +117,48 @@ void PhysicsSystem::OnPhysicsTick(btDynamicsWorld* world, btScalar timeStep) {
 	if (Scene::Get()) {
 		Scene::Get()->FixedUpdate();
 	}
+}
+
+
+class GetAllContacts_ContactResultCallback : public btCollisionWorld::ContactResultCallback {
+public:
+	// Inherited via ContactResultCallback
+	virtual btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1) override
+	{
+		objects.push_back(const_cast<btCollisionObject*>(colObj0Wrap->getCollisionObject()));
+		return btScalar();
+	}
+	std::vector<btCollisionObject*> objects;
+};
+
+std::vector<GameObject*> PhysicsSystem::GetOverlaping(Vector3 pos, float radius) {
+	std::vector<GameObject*> results;
+
+	btSphereShape sphere(radius);
+	btPairCachingGhostObject ghost;
+	btTransform xform;
+	xform.setOrigin(btConvert(pos));
+	ghost.setCollisionShape(&sphere);
+	ghost.setWorldTransform(xform);
+
+	GetAllContacts_ContactResultCallback cb;
+	cb.m_collisionFilterGroup = PhysicsSystem::playerBulletGroup;
+	cb.m_collisionFilterMask = PhysicsSystem::playerBulletMask;
+	PhysicsSystem::Get()->dynamicsWorld->contactTest(&ghost, cb);
+
+	//TODO may contain doubles 
+
+	for (auto o : cb.objects) {
+		auto* rb = dynamic_cast<btRigidBody*>(o);
+		if (rb) {
+			auto ptr = rb->getUserPointer();
+			auto go = (GameObject*)(ptr);
+			if (go) {
+				results.push_back(go);
+			}
+		}
+	}
+	PhysicsSystem::Get()->dynamicsWorld->removeCollisionObject(&ghost);
+
+	return results;
 }

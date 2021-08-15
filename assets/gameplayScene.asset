@@ -3,6 +3,16 @@ Scene:
   gameObjects:
     - camera.asset
     - player.asset
-    # - slowZombie.asset
+    - gun_machineGun.asset
+    - gun_gatling.asset
+    - grenade_Pickup.asset
     - gameplayScene_staticGeometry.asset
     - gameplayScene_scenario.asset
+    - gameplayScene\door1.asset
+    - gameplayScene\door1_light.asset
+    - gameplayScene\door2.asset
+    - gameplayScene\door2_light.asset
+    - gameplayScene\door3.asset
+    - gameplayScene\door3_light.asset
+    - gameplayScene\door4.asset
+    - gameplayScene\door4_light.asset

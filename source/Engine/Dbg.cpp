@@ -58,7 +58,7 @@ void Dbg::DrawAll() {
 		bgfx::dbgTextPrintf(1, yTextOffset + i, 0x0f, texts[i].c_str());
 	}
 
-	dde.drawGrid(bx::Vec3(0, 1, 0), bx::Vec3(0, 0, 0));
+	//dde.drawGrid(bx::Vec3(0, 1, 0), bx::Vec3(0, 0, 0));
 
 	ClearAll();
 
