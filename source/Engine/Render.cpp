@@ -20,6 +20,7 @@
 #include "Time.h"
 #include "Scene.h"
 #include "SDL_mixer.h"
+#include "Input.h"
 
 SDL_Window* Render::window = nullptr;
 
@@ -121,6 +122,11 @@ bool Render::Init()
 }
 void Render::Draw(SystemsManager& systems)
 {
+	if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_RETURN) && (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LALT) || Input::GetKey(SDL_Scancode::SDL_SCANCODE_RALT))) {
+		SetFullScreen(!IsFullScreen());
+	}
+
+
 	Matrix4 cameraViewMatrix;
 	auto camera = Camera::GetMain();
 	int width;
@@ -149,11 +155,11 @@ void Render::Draw(SystemsManager& systems)
 			;
 
 		m_fullScreenTex = bgfx::createFrameBuffer(
-				(uint16_t)(width)
-				, (uint16_t)(height)
-				, bgfx::TextureFormat::RGBA32F
-				, tsFlags
-			);
+			(uint16_t)(width)
+			, (uint16_t)(height)
+			, bgfx::TextureFormat::RGBA32F
+			, tsFlags
+		);
 
 		bgfx::TextureHandle gbufferTex[] =
 		{
