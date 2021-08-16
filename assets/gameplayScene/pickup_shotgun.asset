@@ -11,4 +11,4 @@ Transform:
   euler: [0, 60, 0]
   scale: [1,1,1]
 Pickup:
-  gun: gun_shotgun$Gun
+  gun: gun_shotgun.asset$Gun

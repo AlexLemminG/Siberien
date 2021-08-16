@@ -87,7 +87,7 @@ void GameplaySceneScenario::Update() {
 			}
 			Trigger("door2_close");
 			doors[1].SetOpened(false);
-			SpawnZombies(slowZombiePrefab, Vector3(-11.8, 3, 124.7), 75);
+			SpawnZombies(slowZombiePrefab, Vector3(-11.8, 3, 124.7), 55);
 		}
 		else {
 			return;
@@ -149,7 +149,7 @@ void GameplaySceneScenario::Update() {
 			return;
 		}
 	}
-	if (IsPlayerAtSphere(Vector3(-87.56, 7.6, 142.2), 3.8f)) {
+	if (IsPlayerAtSphere(Vector3(-88.98, 8.6, 149.7), 1.0f)) {
 		auto player = Scene::Get()->FindGameObjectByTag("Player");
 		if (player) {
 			auto controller = player->GetComponent<PlayerController>();
