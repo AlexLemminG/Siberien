@@ -9,6 +9,7 @@ $input v_wpos, v_view, v_normal, v_tangent, v_bitangent, v_texcoord0// in...
 
 SAMPLER2D(s_texColor,  0);
 SAMPLER2D(s_texNormal, 1);
+SAMPLER2D(s_texEmissive, 2);
 uniform vec4 u_lightPosRadius[8];
 uniform vec4 u_lightRgbInnerR[8];
 
@@ -94,8 +95,9 @@ void main()
 	lightColor += SampleSH(mul(tbn, normal), u_sphericalHarmonics);
 
 	vec4 color = toLinear(texture2D(s_texColor, v_texcoord0) );
+	vec4 colorEmissive = toLinear(texture2D(s_texEmissive, v_texcoord0) );
 
-	gl_FragColor.xyz = max(vec3_splat(0.05), lightColor.xyz)*color.xyz;
+	gl_FragColor.xyz = max(vec3_splat(0.05), lightColor.xyz)*color.xyz + colorEmissive;
 	gl_FragColor.w = 1.0;
 	gl_FragColor = toGamma(gl_FragColor);
 }

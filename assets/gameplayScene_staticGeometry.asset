@@ -5,11 +5,12 @@ GameObject:
   - $MeshCollider
   - $RigidBody
 MeshRenderer:
-  mesh: meshes\staticScene.glb$Scene
-  material: playermaterial.asset
+  mesh: meshes\gameplayStatic.glb$Scene_hidden
+  # material: playermaterial.asset
 Transform:
+  euler: [0,-12.61,0]
 MeshCollider:
-  mesh: meshes\staticScene.glb$Scene
+  mesh: meshes\gameplayStatic.glb$Scene_hidden
 RigidBody:
   isStatic: true
   mass: 20

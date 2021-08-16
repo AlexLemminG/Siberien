@@ -31,7 +31,7 @@ SphereCollider:
   center: [0, 0.6, 0]
 RigidBody:
   isStatic: false
-  friction: 0.15
+  friction: 0.0
   restitution: 0
   mass: 100
   layer: enemy

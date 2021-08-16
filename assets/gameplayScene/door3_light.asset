@@ -5,7 +5,7 @@ GameObject:
   - $PointLight
 PointLight:
   color: 0xff0000ff
-  radius: 3
+  radius: 9
   innerRadius: 0.3
 Transform:
-  pos: [-5.65,4.5,123.91]
+  pos: [-6.4,6.1,124]

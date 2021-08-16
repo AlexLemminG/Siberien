@@ -240,7 +240,7 @@ public:
 			animations[animName] = animation;
 		}
 
-		PrintHierarchy(scene->mRootNode, 0);
+		//PrintHierarchy(scene->mRootNode, 0);
 		int importedMeshesCount = 0;
 		for (int iMesh = 0; iMesh < scene->mNumMeshes; iMesh++) {
 			auto* aiMesh = scene->mMeshes[iMesh];
@@ -819,7 +819,7 @@ void MeshRenderer::OnEnable() {
 		bonesLocalMatrices.resize(mesh->originalMeshPtr->mNumBones);
 		bonesFinalMatrices.resize(mesh->originalMeshPtr->mNumBones);
 	}
-	if (material->randomColorTextures.size() > 0) {
+	if (material && material->randomColorTextures.size() > 0) {
 		randomColorTextureIdx = Random::Range(0, material->randomColorTextures.size());
 	}
 }
@@ -851,6 +851,12 @@ void PostProcessingEffect::Draw(Render& render) {
 	auto s_tex = render.GetTexColorSampler();
 	bgfx::setTexture(0, s_tex, bgfx::getTexture(render.GetFullScreenBuffer()));
 
+	auto win = AssetDatabase::Get()->LoadByPath<Texture>("textures\\win.png");
+	if (win && bgfx::isValid(win->handle)) {
+		auto s_tex2 = render.GetEmissiveColorSampler();
+		bgfx::setTexture(2, s_tex2, win->handle);
+	}
+
 	bgfx::setState(0
 		| BGFX_STATE_WRITE_RGB
 		| BGFX_STATE_WRITE_A
@@ -858,6 +864,7 @@ void PostProcessingEffect::Draw(Render& render) {
 	Vector4 params;
 	params[0] = intensity;
 	params[1] = intensityFromLastHit;
+	params[2] = winScreenFade;
 
 	bgfx::setUniform(render.GetPlayerHealthParamsUniform(), &params.x);
 

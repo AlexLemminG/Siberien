@@ -1,0 +1,4 @@
+Material:
+  shader: shaders\main.asset
+  colorTex: textures\scifi\Signs.png
+  emissiveTex: textures\scifi\Signs.png

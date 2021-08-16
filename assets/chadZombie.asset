@@ -26,6 +26,7 @@ EnemyCreepController:
   rollAnimation: meshes/zombie.glb$Roll
   attackAnimation: meshes/zombie.glb$Attack
   deadAnimation: meshes/zombie.glb$DeadFake
+  damage: 5
 SphereCollider:
   radius: 0.8
   center: [0, 0.6, 0]

@@ -1,0 +1,13 @@
+GameObject:
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $Pickup
+MeshRenderer:
+  mesh: meshes\grenadePickup.glb$Mesh
+  material: materials\scifi.asset
+Transform:
+  pos: [-3.666, 3 ,126.2]
+  scale: [1, 1, 1]
+Pickup:
+    grenadesCount: 2

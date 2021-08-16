@@ -11,7 +11,6 @@ DECLARE_TEXT_ASSET(TopDownCameraRig);
 
 void TopDownCameraRig::OnEnable()
 {
-
 	auto target = Scene::FindGameObjectByTag(targetTag);
 	if (target != nullptr) {
 		auto trans = gameObject()->transform();
@@ -45,8 +44,8 @@ void TopDownCameraRig::Update() {
 		from.setOrigin(castFrom);
 		to.setOrigin(castTo);
 		btCollisionWorld::ClosestConvexResultCallback cb(from.getOrigin(), to.getOrigin());
-		cb.m_collisionFilterMask = PhysicsSystem::playerBulletMask;
-		cb.m_collisionFilterGroup = PhysicsSystem::playerBulletGroup;
+		cb.m_collisionFilterMask = PhysicsSystem::playerMask;
+		cb.m_collisionFilterGroup = PhysicsSystem::playerGroup;
 		PhysicsSystem::Get()->dynamicsWorld->convexSweepTest(&sphereShape, from, to, cb);
 
 		if (cb.hasHit()) {

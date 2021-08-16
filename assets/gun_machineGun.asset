@@ -4,10 +4,10 @@ GameObject:
   - $Transform
   - $Pickup
 MeshRenderer:
-  mesh: hero.glb$hero_mesh
-  material: playerMaterial.asset
+  mesh: meshes\machineGun.glb$Mesh
+  material: materials\scifi.asset
 Transform:
-  pos: [-24,0.0,11.4]
+  pos: [-2000,0.0,11.4]
   euler: [0, 60, 0]
   scale: [0.7, 0.7, 0.7]
 Pickup:
@@ -22,4 +22,4 @@ Gun:
   spreadPow: 1
   bulletSpeed: 50.0
   bulletColor: 0xff8800ff
-  ammo: 31
+  ammo: 45

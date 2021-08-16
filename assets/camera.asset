@@ -5,9 +5,9 @@ GameObject:
     - $Transform
     - $TopDownCameraRig
 Camera:
-  clearColor: 0x663355ff
+  clearColor: 0x000000ff
   fov: 90.0
-  nearPlane: 0.001
+  nearPlane: 0.01
   farPlane: 1000
 Transform:
   pos: [0, 0.999, -5]

@@ -65,15 +65,17 @@ public:
 	static constexpr int enemyBulletGroup = 1024;
 	static constexpr int enemyCorpseGroup = 2048;
 	static constexpr int grenadeGroup = 4096;
+	static constexpr int staticGeomGroup = 8192;
 
 
-	static constexpr int defaultMask = -1;
-	static constexpr int playerMask = defaultGroup | playerGroup | enemyGroup | enemyBulletGroup;
-	static constexpr int enemyMask = defaultGroup | enemyGroup | playerGroup | playerBulletGroup | enemyCorpseGroup;
-	static constexpr int playerBulletMask = defaultGroup | enemyMask | enemyCorpseGroup;
-	static constexpr int enemyBulletMask = defaultGroup | playerMask;
+	static constexpr int defaultMask = -1 ^ (playerBulletGroup | enemyBulletGroup);
+	static constexpr int playerMask = staticGeomGroup | defaultGroup | playerGroup | enemyGroup | enemyBulletGroup;
+	static constexpr int enemyMask = staticGeomGroup | defaultGroup | enemyGroup | playerGroup | playerBulletGroup | enemyCorpseGroup;
+	static constexpr int playerBulletMask = staticGeomGroup | enemyMask | enemyCorpseGroup;
+	static constexpr int enemyBulletMask = staticGeomGroup | playerMask;
 	static constexpr int enemyCorpseMask = defaultGroup | enemyGroup | playerBulletGroup | enemyCorpseGroup;
 	static constexpr int grenadeMask = -1 ^ (playerGroup | enemyGroup);
+	static constexpr int staticGeomMask = enemyBulletMask | playerBulletMask | playerMask | enemyMask;
 
 	static void GetGroupAndMask(const std::string& groupName, int& group, int& mask);
 

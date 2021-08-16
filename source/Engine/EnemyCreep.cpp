@@ -19,7 +19,7 @@ void EnemyCreepController::OnEnable() {
 	health = gameObject()->GetComponent<Health>();
 
 	auto tr = gameObject()->transform();
-	tr->SetScale(tr->GetScale() * Random::Range(0.8f, 1.2f));
+	//tr->SetScale(tr->GetScale() * Random::Range(0.8f, 1.2f));
 }
 
 
@@ -45,6 +45,7 @@ void EnemyCreepController::HandleDeath() {
 	collider->center = center * radiusScale;
 	collider->radius *= radiusScale;
 	rb->friction = 0.7f;
+	rb->localOffset = Vector3(0, -0.4, 0);
 
 	collider->SetEnabled(true);
 	rb->SetEnabled(true);
@@ -66,7 +67,7 @@ void EnemyCreepController::Update() {
 			if (target) {
 				auto health = target->GetComponent<Health>();
 				if (health) {
-					health->DoDamage(1);
+					health->DoDamage(damage);
 				}
 			}
 		}

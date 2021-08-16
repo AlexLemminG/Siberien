@@ -8,8 +8,8 @@ GameObject:
   - $RigidBody
   - $Health
 MeshRenderer:
-  mesh: hero.glb$hero_mesh
-  material: playerMaterial.asset
+  mesh: meshes\player.glb$Mesh
+  material: materials\scifi.asset
 Transform:
   pos: [0,0.5,0]
   euler: [0, 60, 0]
@@ -27,6 +27,19 @@ PlayerController:
   startGun: gun_pistol.asset$Gun
   postprocessingEffect: playerHealthEffect.asset
   grenadePrefab: grenade.asset
+  shootingSounds:
+  - sounds\shooting (1).wav
+  - sounds\shooting (2).wav
+  - sounds\shooting (3).wav
+  footstepSounds:
+  - sounds\footstep (1).wav
+  - sounds\footstep (2).wav
+  - sounds\footstep (3).wav
+  - sounds\footstep (4).wav
+  - sounds\footstep (5).wav
+  - sounds\footstep (6).wav
+  - sounds\footstep (7).wav
+  - sounds\footstep (8).wav
 SphereCollider:
   radius: 1
   center: [0, 0.5, 0]

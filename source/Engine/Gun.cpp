@@ -48,7 +48,7 @@ bool Gun::Update(const Matrix4& bulletSpawnMatrix) {
 		float spreadPercent = Mathf::Pow(Random::Range(0.f, 1.f), spreadPow);
 		auto randomRot = Quaternion::FromAngleAxis(Random::Range(0.f, Mathf::pi2), Vector3_forward) * Quaternion::FromEulerAngles(Mathf::DegToRad(spreadPercent * spread / 2.f), 0.f, 0.f);
 		auto localDir = randomRot * Vector3_forward;
-		localDir.y /= 2.f;
+		localDir.y /= 5.f;
 		auto dir = GetRot(bulletSpawnMatrix) * localDir * bulletSpeed;
 
 		BulletSystem::Get()->CreateBullet(pos, dir, bulletColor);

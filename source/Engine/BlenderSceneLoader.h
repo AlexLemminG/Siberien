@@ -16,17 +16,25 @@ public:
 };
 
 class BlenderSceneLoader : public Component {
-	std::vector<BlenderClassLoaderAssetMapping> mapping;
+	std::shared_ptr<Material> material;
+	std::shared_ptr<Material> materialNeon;
+	std::shared_ptr<Material> materialSigns;
+	std::shared_ptr<Material> materialRoads;
+	std::shared_ptr<Material> materialPosters;
 	std::shared_ptr<FullMeshAsset> scene;
 
 	virtual void OnEnable() override;
 
 	REFLECT_BEGIN(BlenderSceneLoader);
-	REFLECT_VAR(mapping);
+	REFLECT_VAR(material);
+	REFLECT_VAR(materialNeon);
+	REFLECT_VAR(materialSigns);
+	REFLECT_VAR(materialRoads);
+	REFLECT_VAR(materialPosters);
 	REFLECT_VAR(scene);
 	REFLECT_END();
 
 private:
-	void AddToNodes(const aiScene* scene, aiNode* node, std::shared_ptr<GameObject> prefab, std::string nodeMeshName);
+	void AddToNodes(const aiScene* scene, aiNode* node, const std::string& baseAssetPath, const Matrix4& parentTransform);
 };
 

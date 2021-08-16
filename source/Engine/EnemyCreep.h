@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Component.h"
+#include "Sound.h"
+#include "Gun.h"
 
 class RigidBody;
 class Transform;
@@ -39,6 +41,8 @@ private:
 	bool didDamageFromAttack = false;
 	float deadTimer = 0.f;
 	Vector3 posAtDeath;
+	int damage = 1;
+	std::vector<std::shared_ptr<AudioClip>> randomSounds;
 
 	REFLECT_BEGIN(EnemyCreepController);
 	REFLECT_VAR(targetTag);
@@ -51,7 +55,9 @@ private:
 	REFLECT_VAR(rollAnimation);
 	REFLECT_VAR(deadAnimation);
 	REFLECT_VAR(velocityToAnimatorSpeed);
+	REFLECT_VAR(damage);
 	REFLECT_END();
 
 	float clipPlaneY = -10.f;
+
 };

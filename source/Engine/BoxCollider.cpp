@@ -65,8 +65,8 @@ btCollisionShape* MeshCollider::CreateShape() {
 	indexedMesh.m_triangleIndexBase = (const unsigned char*)&mesh->indices[0];
 	indexedMesh.m_triangleIndexStride = 3 * sizeof(uint16_t);
 	indexedMesh.m_indexType = PHY_ScalarType::PHY_SHORT;
-
 	indexVertexArray->addIndexedMesh(indexedMesh, PHY_ScalarType::PHY_SHORT);
 	auto shape = new btBvhTriangleMeshShape(indexVertexArray.get(), true);
+	shape->setLocalScaling(btConvert(gameObject()->transform()->GetScale()));
 	return shape;
 }

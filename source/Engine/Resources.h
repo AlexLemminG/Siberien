@@ -152,7 +152,6 @@ public:
 	std::string GetAssetPath(std::shared_ptr<Object> obj);
 
 	void UnloadAll();
-private:
 	class PathDescriptor {
 	public:
 		PathDescriptor(std::string path);
@@ -163,6 +162,7 @@ private:
 			return assetId.size() > 0 ? FormatString("%s$%s", assetPath.c_str(), assetId.c_str()) : assetPath;
 		}
 	};
+private:
 
 	std::string currentAssetLoadingPath;
 

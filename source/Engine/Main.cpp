@@ -17,6 +17,7 @@
 #include "Scene.h"
 #include "System.h"
 #include "SceneManager.h"
+#include "SDL_mixer.h"
 //#include <bgfx_utils.h>
 
 std::string GetFirstSceneName() {
@@ -70,12 +71,14 @@ start:
 		render.Draw(systemsManager);
 
 		quit |= Input::GetQuit();
-		if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F5)) {
-			quit = true;
-			needReload = true;
-		}
-		if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F6)) {
-			needConstantSceneReload = !needConstantSceneReload;
+		if (CfgGetBool("godMode")) {
+			if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F5)) {
+				quit = true;
+				needReload = true;
+			}
+			if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F6)) {
+				needConstantSceneReload = !needConstantSceneReload;
+			}
 		}
 
 		if (needConstantSceneReload) {

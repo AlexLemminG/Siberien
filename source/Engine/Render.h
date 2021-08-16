@@ -18,6 +18,7 @@ public:
 	int GetHeight() { return prevHeight; }
 	bgfx::UniformHandle GetPixelSizeUniform() { return u_pixelSize; }
 	bgfx::UniformHandle GetTexColorSampler() { return s_texColor; }
+	bgfx::UniformHandle GetEmissiveColorSampler() { return s_texEmissive; }
 	bgfx::UniformHandle GetPlayerHealthParamsUniform() { return u_playerHealthParams; }
 	bgfx::FrameBufferHandle GetFullScreenBuffer() { return m_fullScreenTex; }
 
@@ -38,6 +39,7 @@ private:
 	bgfx::UniformHandle u_color;
 	bgfx::UniformHandle s_texColor;
 	bgfx::UniformHandle s_texNormal;
+	bgfx::UniformHandle s_texEmissive;
 	bgfx::UniformHandle u_sphericalHarmonics;
 	bgfx::UniformHandle u_pixelSize;
 	bgfx::UniformHandle s_fullScreen;
@@ -55,6 +57,7 @@ private:
 
 	std::shared_ptr<Texture> whiteTexture;
 	std::shared_ptr<Texture> defaultNormalTexture;
+	std::shared_ptr<Texture> defaultEmissiveTexture;
 	std::shared_ptr<PostProcessingEffect> post;
 
 };

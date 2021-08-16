@@ -3,13 +3,14 @@ GameObject:
   - $MeshRenderer
   - $Transform
   - $Pickup
+  - $PointLight
 MeshRenderer:
-  mesh: hero.glb$hero_mesh
-  material: playerMaterial.asset
+  mesh: meshes\gatling.glb$Mesh
+  material: materials\scifi.asset
 Transform:
-  pos: [-27,3.0,138.0]
+  pos: [-26.6,4.5,146.0]
   euler: [0, 60, 0]
-  scale: [0.7, 0.7, 0.7]
+  scale: [1,1,1]
 Pickup:
   gun: $Gun  
 Gun:
@@ -23,3 +24,7 @@ Gun:
   bulletSpeed: 50.0
   bulletColor: 0xff0000ff
   ammo: 2000
+PointLight:
+  color: 0xff0000ff
+  radius: 4
+  innerRadius: 0.7

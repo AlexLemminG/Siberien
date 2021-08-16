@@ -8,10 +8,10 @@ GameObject:
   - $PointLight
   - $Pickup
 MeshRenderer:
-  mesh: meshes\cube.glb$Cube.001
-  material: material.asset
+  mesh: meshes\grenade.glb$Mesh
+  material: materials\scifi.asset
 Transform:
-  scale: [0.2,0.2,0.2]
+  scale: [1,1,1]
 SphereCollider:
   radius: 1.5
 RigidBody:

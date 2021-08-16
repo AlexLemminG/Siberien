@@ -1,0 +1,14 @@
+GameObject:
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $Pickup
+MeshRenderer:
+  mesh: meshes\shotgun.glb$Mesh
+  material: materials\scifi.asset
+Transform:
+  pos: [-2,4.3,128.1]
+  euler: [0, 60, 0]
+  scale: [1,1,1]
+Pickup:
+  gun: gun_shotgun$Gun

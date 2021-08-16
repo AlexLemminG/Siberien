@@ -1,0 +1,9 @@
+GameObject:
+  tag: indoorHidePlane
+  components:
+  - $MeshRenderer
+  - $Transform
+MeshRenderer:
+  mesh: meshes\gameplayStatic.glb$indoorHidePlane_hidden
+  material: materials\scifi.asset
+Transform:

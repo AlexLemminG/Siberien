@@ -10,6 +10,7 @@ $input v_texcoord0
 uniform vec4 u_playerHealthParams;
 
 SAMPLER2D(s_texColor,  0);
+SAMPLER2D(s_texEmissive,  2);
 
 void main()
 {
@@ -20,6 +21,7 @@ void main()
 	
 	float intensity = u_playerHealthParams.x;
 	float intensityFromLastHit = u_playerHealthParams.y;
+	float winCreenFade = u_playerHealthParams.z;
 	
 	intensity = min(1.0, intensity + intensityFromLastHit * 0.5);
 	
@@ -30,6 +32,7 @@ void main()
 	
 	color.rgb = lerp(color.rgb, grayscale, intensity);
 	color.rgb = lerp(color.rgb, bloodyColor, borderT * intensity);
+	color.rgb = lerp(color.rgb, texture2D(s_texEmissive, texcoord), winCreenFade);
 	
 	gl_FragColor.rgb = color.rgb;
 }

@@ -19,6 +19,7 @@
 #include "System.h"
 #include "Time.h"
 #include "Scene.h"
+#include "SDL_mixer.h"
 
 SDL_Window* Render::window = nullptr;
 
@@ -33,11 +34,19 @@ void Render::SetFullScreen(bool isFullScreen) {
 bool Render::Init()
 {
 	//Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
 	{
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 		return false;
 	}
+
+	//TODO not in render
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0 || Mix_Init(0) < 0)
+	{
+		printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError());
+		return false;
+	}
+	Mix_AllocateChannels(64);
 
 	int width = SettingsGetInt("screenWidth");
 	int height = SettingsGetInt("screenHeight");
@@ -86,6 +95,7 @@ bool Render::Init()
 	u_playerHealthParams = bgfx::createUniform("u_playerHealthParams", bgfx::UniformType::Vec4);
 	s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 	s_texNormal = bgfx::createUniform("s_texNormal", bgfx::UniformType::Sampler);
+	s_texEmissive = bgfx::createUniform("s_texEmissive", bgfx::UniformType::Sampler);
 
 	u_lightPosRadius = bgfx::createUniform("u_lightPosRadius", bgfx::UniformType::Vec4, maxLightsCount);
 	u_lightRgbInnerR = bgfx::createUniform("u_lightRgbInnerR", bgfx::UniformType::Vec4, maxLightsCount);
@@ -96,6 +106,7 @@ bool Render::Init()
 
 	whiteTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\white.png");
 	defaultNormalTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultNormal.png");
+	defaultEmissiveTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultEmissive.png");
 
 	m_fullScreenTex.idx = bgfx::kInvalidHandle;
 	m_gbuffer.idx = bgfx::kInvalidHandle;
@@ -188,13 +199,13 @@ void Render::Draw(SystemsManager& systems)
 	bgfx::touch(0);
 	bgfx::dbgTextClear();
 
-	bgfx::dbgTextPrintf(1, 2, 0x0f, "FPS: %.1f", fps);
+	//bgfx::dbgTextPrintf(1, 2, 0x0f, "FPS: %.1f", fps);
 
 	if (camera == nullptr) {
-		bgfx::dbgTextPrintf(1, 1, 0x0f, "NO CAMERA");
+		//bgfx::dbgTextPrintf(1, 1, 0x0f, "NO CAMERA");
 	}
 	else {
-		bgfx::dbgTextPrintf(1, 1, 0x0f, "YES CAMERA");
+		//bgfx::dbgTextPrintf(1, 1, 0x0f, "YES CAMERA");
 	}
 
 	{
@@ -227,6 +238,7 @@ void Render::Term()
 	post = nullptr;
 	whiteTexture = nullptr;
 	defaultNormalTexture = nullptr;
+	defaultEmissiveTexture = nullptr;
 
 	//TODO destroy programs, buffers and other shit
 	bgfx::destroy(u_time);
@@ -234,6 +246,7 @@ void Render::Term()
 	bgfx::destroy(u_playerHealthParams);
 	bgfx::destroy(s_texColor);
 	bgfx::destroy(s_texNormal);
+	bgfx::destroy(s_texEmissive);
 	bgfx::destroy(u_lightPosRadius);
 	bgfx::destroy(u_lightRgbInnerR);
 	bgfx::destroy(u_sphericalHarmonics);
@@ -266,6 +279,7 @@ void Render::Term()
 	//Destroy window
 
 	//Quit SDL subsystems
+	Mix_Quit();
 	SDL_Quit();
 }
 
@@ -290,6 +304,7 @@ void Render::UpdateLights(Vector3 poi) {
 		float closestDistance = FLT_MAX;
 		for (int lightIdx = 0; lightIdx < lights.size(); lightIdx++) {
 			float distance = Vector3::Distance(poi, lights[lightIdx]->gameObject()->transform()->GetPosition());
+			distance -= lights[lightIdx]->radius;
 			if (distance < closestDistance) {
 				closestDistance = distance;
 				closestLightIdx = lightIdx;
@@ -360,6 +375,15 @@ void Render::DrawMesh(MeshRenderer* renderer) {
 	else {
 		if (defaultNormalTexture) {
 			bgfx::setTexture(1, s_texNormal, defaultNormalTexture->handle);
+		}
+	}
+
+	if (renderer->material->emissiveTex) {
+		bgfx::setTexture(2, s_texEmissive, renderer->material->emissiveTex->handle);
+	}
+	else {
+		if (defaultEmissiveTexture) {
+			bgfx::setTexture(2, s_texEmissive, defaultEmissiveTexture->handle);
 		}
 	}
 

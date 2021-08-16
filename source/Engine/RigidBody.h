@@ -14,16 +14,16 @@ public:
 
 	std::string layer;
 	float friction = 0.5f;
+	bool isStatic = false;
+	Vector3 localOffset = Vector3_zero;
 private:
 
 	btDefaultMotionState* pMotionState = nullptr;
 	btRigidBody* pBody = nullptr;
 
-	bool isStatic = false;
 	bool isKinematic = false;
 	float mass = 1.f;
 	float restitution = 0.f;
-	Vector3 localOffset = Vector3_zero;
 	REFLECT_BEGIN(RigidBody);
 	REFLECT_VAR(mass);
 	REFLECT_VAR(isStatic);

@@ -8,4 +8,4 @@ PointLight:
   radius: 3
   innerRadius: 0.3
 Transform:
-  pos: [1.59,1.0,66.22]
+  pos: [-2.386, 4.68, 66.8]

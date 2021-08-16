@@ -1,0 +1,19 @@
+GameObject:
+  tag: door5
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $BoxCollider
+  - $RigidBody
+MeshRenderer:
+  mesh: meshes\door.glb$door
+  material: materials\scifi.asset
+Transform:
+  pos: [-68.22, 4.944, 139.8]
+  euler: [0, -102.6, 0]
+  scale: [0.63, 0.63, 0.63]
+BoxCollider:
+  size: [4,5,1]
+RigidBody:
+  isStatic: true
+  mass: 20

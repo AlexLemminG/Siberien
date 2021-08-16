@@ -16,6 +16,7 @@
 #include "Health.h"
 #include "SceneManager.h"
 #include "MeshRenderer.h"
+#include "Sound.h"
 
 void PlayerController::OnEnable() {
 	rigidBody = gameObject()->GetComponent<RigidBody>();
@@ -28,13 +29,15 @@ void PlayerController::OnEnable() {
 		health->SetInvinsible(true);
 	}
 	defaultSpeed = speed;
-	AddGun(startGun);
+	if (guns.size() == 0) {
+		AddGun(startGun);
+	}
 }
 
 
 void PlayerController::UpdateHealth() {
 	auto health = gameObject()->GetComponent<Health>();
-	Dbg::Text("Player health: %d", health->GetAmount());
+	//Dbg::Text("Player health: %d", health->GetAmount());
 
 	if (Time::time() - health->GetLastDamageTime() > healDelay && !isDead) {
 		if (Time::time() - prevHealTime > 1.f / healPerSecond) {
@@ -60,11 +63,19 @@ void PlayerController::UpdateHealth() {
 			float timeFromLastHit = Time::time() - health->GetLastDamageTime();
 			postprocessingEffect->intensityFromLastHit = Mathf::Max(0.f, 1.f - Mathf::Clamp01(timeFromLastHit / .5f));
 		}
+
+		if (won) {
+			postprocessingEffect->winScreenFade = Mathf::Clamp01(Time::time() - winTime);
+		}
+		else {
+			postprocessingEffect->winScreenFade = 0.f;
+		}
 	}
 }
 
 void PlayerController::Update() {
 	if (!isDead) {
+
 		UpdateShooting();
 		UpdateGrenading();
 
@@ -79,13 +90,13 @@ void PlayerController::Update() {
 			int currentAmmoInMagazine = gun->GetCurrentAmmoInMagazine();
 			int currentNotInMagazine = gun->GetCurrentAmmoNotInMagazine();
 			if (currentAmmoInMagazine == INT_MAX) {
-				Dbg::Text("Current gun: inf");
+				Dbg::Text("AMMO: inf");
 			}
 			else if (currentNotInMagazine == INT_MAX) {
-				Dbg::Text("Current gun: %d / inf", currentAmmoInMagazine);
+				Dbg::Text("AMMO: %d / inf", currentAmmoInMagazine);
 			}
 			else {
-				Dbg::Text("Current gun: %d / %d", currentAmmoInMagazine, currentNotInMagazine);
+				Dbg::Text("AMMO: %d / %d", currentAmmoInMagazine, currentNotInMagazine);
 			}
 
 			if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_R)) {
@@ -95,6 +106,13 @@ void PlayerController::Update() {
 		if (grenadesCount > 0) {
 			Dbg::Text("Grenades: %d", grenadesCount);
 		}
+		Dbg::Text("MOUSE LEFT - Shoot");
+		if (grenadesCount > 0) {
+			Dbg::Text("MOUSE RIGHT - Throw grenade");
+		}
+	}
+	else {
+		Dbg::Text("SPACE - Restart");
 	}
 
 	if (CfgGetBool("godMode")) {
@@ -122,13 +140,22 @@ void PlayerController::Update() {
 		SceneManager::LoadScene(Scene::Get()->name);
 	}
 
+	Vector3 currentPos = gameObject()->transform()->GetPosition();
+	if (Vector3::Distance(currentPos, prevFootstepPos) > 2.f) {
+		prevFootstepPos = currentPos;
+		if (footstepSounds.size() > 0) {
+			auto audio = footstepSounds[Random::Range(0, footstepSounds.size())];
+			AudioSystem::Get()->Play(audio);
+		}
+	}
+
 
 	auto ray = Camera::GetMain()->ScreenPointToRay(Input::GetMousePosition());
 	btCollisionWorld::ClosestRayResultCallback cb(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f));
 	PhysicsSystem::Get()->dynamicsWorld->rayTest(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f), cb);
 	if (cb.hasHit()) {
 		auto pos = btConvert(cb.m_hitPointWorld);
-		Dbg::Text("MousePos: %.2f, %.2f, %.2f", pos.x, pos.y, pos.z);
+		//Dbg::Text("MousePos: %.2f, %.2f, %.2f", pos.x, pos.y, pos.z);
 	}
 }
 
@@ -220,12 +247,17 @@ void PlayerController::UpdateShooting() {
 		}
 	}
 
+
 	bool bulletShot = false;
 	if (GetCurrentGun()) {
 		bulletShot = GetCurrentGun()->Update(gunTransform);
 	}
 	//TODO move to gun
 	if (bulletShot) {
+		if (shootingSounds.size() > 0) {
+			auto audio = shootingSounds[Random::Range(0, shootingSounds.size())];
+			AudioSystem::Get()->Play(audio);
+		}
 		SetRandomShootingLight(); //TODO move to gun
 	}
 	else {
@@ -343,6 +375,9 @@ void PlayerController::AddGun(std::shared_ptr<Gun> gunTemplate) {
 	if (!gunTemplate) {
 		return;
 	}
+	if (guns.size() == 0 && gunTemplate != startGun) {
+		AddGun(startGun);
+	}
 	auto it = gunTemplateToAvailableGun.find(gunTemplate);
 	if (it != gunTemplateToAvailableGun.end()) {
 		it->second->AddAmmo(gunTemplate->GetInitialAmmo());
@@ -351,6 +386,13 @@ void PlayerController::AddGun(std::shared_ptr<Gun> gunTemplate) {
 		auto gun = Object::Instantiate(gunTemplate);
 		gunTemplateToAvailableGun[gunTemplate] = gun;
 		guns.push_back(gun);
+	}
+}
+
+void PlayerController::SetWon() {
+	if (!won) {
+		won = true;
+		winTime = Time::time();
 	}
 }
 

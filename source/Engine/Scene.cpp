@@ -37,10 +37,10 @@ void Scene::Init() {
 		}
 	}
 
+	isInited = true;
+
 	ProcessRemovedGameObjects();
 	ProcessAddedGameObjects();
-
-	isInited = true;
 }
 
 void Scene::Update() {

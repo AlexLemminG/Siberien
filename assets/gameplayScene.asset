@@ -1,13 +1,14 @@
 Scene:
   sphericalHarmonics: harmonics.asset
   gameObjects:
+    - gameplayScene_scenario.asset
     - camera.asset
     - player.asset
-    - gun_machineGun.asset
+    - gun_shotgun.asset
     - gun_gatling.asset
-    - grenade_Pickup.asset
+    - gameplayScene\indoorHidePlane.asset
+    - gameplayScene\static.asset
     - gameplayScene_staticGeometry.asset
-    - gameplayScene_scenario.asset
     - gameplayScene\door1.asset
     - gameplayScene\door1_light.asset
     - gameplayScene\door2.asset
@@ -16,3 +17,24 @@ Scene:
     - gameplayScene\door3_light.asset
     - gameplayScene\door4.asset
     - gameplayScene\door4_light.asset
+    - gameplayScene\door5.asset
+    - gameplayScene\door5_light.asset
+    - gameplayScene\light1.asset
+    - gameplayScene\light2.asset
+    - gameplayScene\light3.asset
+    - gameplayScene\light4.asset
+    - gameplayScene\light5.asset
+    - gameplayScene\light6.asset
+    - gameplayScene\light7.asset
+    - gameplayScene\light8.asset
+    - gameplayScene\light9.asset
+    - gameplayScene\light10.asset
+    - gameplayScene\light11.asset
+    - gameplayScene\light12.asset
+    - gameplayScene\light13.asset
+    - gameplayScene\light14.asset
+    - gameplayScene\light15.asset
+    - gameplayScene\pickup_grenade.asset
+    - gameplayScene\pickup_grenade2.asset
+    - gameplayScene\pickup_grenade3.asset
+    - gameplayScene\pickup_shotgun.asset

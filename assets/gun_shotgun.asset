@@ -1,0 +1,25 @@
+GameObject:
+  components:
+  - $MeshRenderer
+  - $Transform
+  - $Pickup
+MeshRenderer:
+  mesh: meshes\shotgun.glb$Mesh
+  material: materials\scifi.asset
+Transform:
+  pos: [-24,0.0,11.4]
+  euler: [0, 60, 0]
+  scale: [1,1,1]
+Pickup:
+  gun: $Gun  
+Gun:
+  shootOnlyOnTrigger: false
+  shotsPerSecond: 4.0
+  reloadingTime: 2.0
+  shotsInMagazine: 10
+  bulletsInShot: 10
+  spread: 45.0
+  spreadPow: 1
+  bulletSpeed: 75.0
+  bulletColor: 0xff4400ff
+  ammo: 32

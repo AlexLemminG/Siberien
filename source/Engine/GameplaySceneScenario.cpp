@@ -7,27 +7,39 @@
 #include "EnemyCreep.h"
 #include "MeshRenderer.h"
 #include "Time.h"
+#include "PlayerController.h"
+#include "Gun.h"
 
 DECLARE_TEXT_ASSET(GameplaySceneScenario);
 
 
 void GameplaySceneScenario::OnEnable() {
-	SpawnZombies(slowZombiePrefab, Vector3(-6, 1.f, 26), 15);
-	creepDeathHandler = GameEvents::Get()->creepDeath.Subscribe([this](auto creep) {HandleCreepDeath(creep); });
 
 	doors.push_back(Door("door1"));
 	doors.push_back(Door("door2"));
 	doors.push_back(Door("door3"));
 	doors.push_back(Door("door4"));
+	doors.push_back(Door("door5"));
+
+	indoorHidePlane = Scene::Get()->FindGameObjectByTag("indoorHidePlane");
+	creepDeathHandler = GameEvents::Get()->creepDeath.Subscribe([this](auto creep) {HandleCreepDeath(creep); });
+
+	LoadLastCheckpoint();
+
 }
 
 void GameplaySceneScenario::Update() {
 	UpdateCamera();
 
+	if (!IsTriggered("init")) {
+		Trigger("init");
+		SpawnZombies(slowZombiePrefab, Vector3(-6, 1.f, 26), 15);
+	}
+
 	if (!IsTriggered("roof")) {
 		if (IsPlayerAtSphere(Vector3(-3.7f, 0.f, 43.5), 7.5f)) {
 			Trigger("roof");
-			SpawnZombies(fastZombiePrefab, Vector3(-11.9, 5, 41.7), 40);
+			SpawnZombies(fastZombiePrefab, Vector3(-16.34, 5, 43.97), 40);
 		}
 		else {
 			return;
@@ -38,6 +50,7 @@ void GameplaySceneScenario::Update() {
 		if (countSpawned == countDead) {
 			Trigger("door1_open");
 			doors[0].SetOpened(true);
+			SaveCheckpoint(0, Vector3(-2.75, 0, 61.54));
 		}
 		else {
 			return;
@@ -45,7 +58,7 @@ void GameplaySceneScenario::Update() {
 	}
 
 	if (!IsTriggered("door1_close")) {
-		if (IsPlayerAtSphere(Vector3(-5.1f, 0.76f, 73.2), 7.5f)) {
+		if (IsPlayerAtSphere(Vector3(-5.8f, 2, 75.6), 3.5f)) {
 			Trigger("door1_close");
 			doors[0].SetOpened(false);
 			SpawnZombies(chadZombiePrefab, Vector3(-34.3, 3, 82.9), 1);
@@ -60,6 +73,7 @@ void GameplaySceneScenario::Update() {
 		if (countSpawned == countDead) {
 			Trigger("door2_open");
 			doors[1].SetOpened(true);
+			SaveCheckpoint(1, Vector3(-22.5, 3, 126.8));
 		}
 		else {
 			return;
@@ -67,10 +81,13 @@ void GameplaySceneScenario::Update() {
 	}
 
 	if (!IsTriggered("door2_close")) {
-		if (IsPlayerAtSphere(Vector3(-17.4f, 3, 131.4), 1.8f)) {
+		if (IsPlayerAtSphere(Vector3(-17.35f, 3, 131.0), 1.67f)) {
+			if (indoorHidePlane) {
+				Scene::Get()->RemoveGameObject(indoorHidePlane);
+			}
 			Trigger("door2_close");
 			doors[1].SetOpened(false);
-			SpawnZombies(slowZombiePrefab, Vector3(-11.8, 3, 124.7), 100);
+			SpawnZombies(slowZombiePrefab, Vector3(-11.8, 3, 124.7), 75);
 		}
 		else {
 			return;
@@ -81,6 +98,7 @@ void GameplaySceneScenario::Update() {
 		if (countSpawned == countDead) {
 			Trigger("door3");
 			doors[2].SetOpened(true);
+			SaveCheckpoint(2, Vector3(-8.4, 3, 124.3));
 		}
 		else {
 			return;
@@ -91,32 +109,51 @@ void GameplaySceneScenario::Update() {
 		if (IsPlayerAtSphere(Vector3(7.38f, 3, 125.67), 1.9f)) {
 			Trigger("door3_close");
 			doors[2].SetOpened(false);
-			SpawnZombies(slowZombiePrefab, Vector3(12.39, 3, 143.4), 300);
+			SpawnZombies(mediumZombiePrefab, Vector3(20.57, 5, 161.2), 300);
 		}
 		else {
 			return;
 		}
 	}
 
-	if (!IsTriggered("door4")){
+	if (!IsTriggered("door4")) {
 		if (countSpawned == countDead) {
 			Trigger("door4");
 			doors[3].SetOpened(true);
+			SaveCheckpoint(3, Vector3(0, 3, 159.6));
 		}
 		else {
 			return;
 		}
 	}
 	if (!IsTriggered("door4_close")) {
-		if (IsPlayerAtSphere(Vector3(-27.4, 3.0, 153.7), 2.8f)) {
+		if (IsPlayerAtSphere(Vector3(-25.36, 3.0, 153.2), 3.8f)) {
 			Trigger("door4_close");
 			doors[3].SetOpened(false);
-			SpawnZombies(fastZombiePrefab, Vector3(-48, 5.6, 141.3), 100);
-			SpawnZombies(slowZombiePrefab, Vector3(-37, 3, 166), 200);
+			SpawnZombies(mediumZombiePrefab, Vector3(-48, 5.6, 141.3), 100);
+			SpawnZombies(mediumZombiePrefab, Vector3(-37, 3, 166), 200);
 			SpawnZombies(slowZombiePrefab, Vector3(-39, 3, 178), 200);
 		}
 		else {
 			return;
+		}
+	}
+
+	if (!IsTriggered("door5")) {
+		if (countSpawned == countDead) {
+			Trigger("door5");
+			doors[4].SetOpened(true);
+			//SaveCheckpoint(4);
+		}
+		else {
+			return;
+		}
+	}
+	if (IsPlayerAtSphere(Vector3(-87.56, 7.6, 142.2), 3.8f)) {
+		auto player = Scene::Get()->FindGameObjectByTag("Player");
+		if (player) {
+			auto controller = player->GetComponent<PlayerController>();
+			controller->SetWon();
 		}
 	}
 }
@@ -225,6 +262,47 @@ void GameplaySceneScenario::Door::SetOpened(bool isOpened) {
 		}
 		if (light) {
 			light->GetComponent<PointLight>()->color = Colors::red;
+		}
+	}
+}
+
+
+void GameplaySceneScenario::SaveCheckpoint(int idx, Vector3 pos) {
+	hasCheckpoint = true;
+	lastCheckpoint = Checkpoint();
+	lastCheckpoint.pos = pos;
+	lastCheckpoint.idx = idx;
+	lastCheckpoint.triggers = this->triggeredEvents;
+}
+
+bool GameplaySceneScenario::hasCheckpoint = false;
+GameplaySceneScenario::Checkpoint GameplaySceneScenario::lastCheckpoint;
+
+void GameplaySceneScenario::LoadLastCheckpoint() {
+	if (!hasCheckpoint) {
+		return;
+	}
+	if (lastCheckpoint.idx < 0 || lastCheckpoint.idx >= checkpointAmmo.size()) {
+		ASSERT(false);
+		return;
+	}
+
+	auto player = Scene::Get()->FindGameObjectByTag("Player");
+	player->transform()->SetPosition(lastCheckpoint.pos);
+
+	auto guns = checkpointAmmo[lastCheckpoint.idx].guns;
+	for (auto gun : guns) {
+		player->GetComponent<PlayerController>()->AddGun(gun);
+	}
+	player->GetComponent<PlayerController>()->grenadesCount = checkpointAmmo[lastCheckpoint.idx].grenades;
+	this->triggeredEvents = lastCheckpoint.triggers;
+
+	if (lastCheckpoint.idx < doors.size()) {
+		doors[lastCheckpoint.idx].SetOpened(true);
+	}
+	if (lastCheckpoint.idx >= 2) {
+		if (indoorHidePlane) {
+			Scene::Get()->RemoveGameObject(indoorHidePlane);
 		}
 	}
 }

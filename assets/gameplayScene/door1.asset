@@ -6,12 +6,13 @@ GameObject:
   - $BoxCollider
   - $RigidBody
 MeshRenderer:
-  mesh: meshes\cube.glb$Cube.001
-  material: material.asset
+  mesh: meshes\door.glb$door
+  material: materials\scifi.asset
 Transform:
-  pos: [-1.11, 0.0, 67.33]
+  pos: [-4.328, 0.0, 66.915]
+  euler: [0, -12.6, 0]
 BoxCollider:
-  size: [2,2,2]
+  size: [4,5,1]
 RigidBody:
   isStatic: true
   mass: 20

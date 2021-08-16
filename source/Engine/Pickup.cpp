@@ -1,6 +1,7 @@
 #include "Pickup.h"
 #include "Scene.h"
 #include "PlayerController.h"
+#include "Time.h"
 
 void Pickup::Update() {
 	if (isPicked) {
@@ -33,6 +34,9 @@ void Pickup::Update() {
 
 		Scene::Get()->RemoveGameObject(gameObject());
 	}
+
+	auto trans = gameObject()->transform();
+	trans->SetRotation(Quaternion::FromAngleAxis(Time::time() / Mathf::pi2 * 15.f, Vector3_up));
 }
 
 DECLARE_TEXT_ASSET(Pickup);

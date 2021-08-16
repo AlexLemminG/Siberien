@@ -103,6 +103,10 @@ void PhysicsSystem::GetGroupAndMask(const std::string& groupName, int& group, in
 		group = grenadeGroup;
 		mask = grenadeMask;
 	}
+	else  if (groupName == "staticGeom") {
+		group = staticGeomGroup;
+		mask = staticGeomMask;
+	}
 	else {
 		LogError("Unknown group name %s", groupName.c_str());
 		group = defaultGroup;

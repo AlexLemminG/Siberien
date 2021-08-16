@@ -253,6 +253,16 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 			ASSERT(false);
 		}
 	}
+	else if (ext == "wav") {
+		std::string type = "AudioClip";
+		auto& importer = GetAssetImporters()[type];
+		if (importer) {
+			importer->Import(*this, path);
+		}
+		else {
+			ASSERT(false);
+		}
+	}
 	else {
 		LogError("unknown extension '%s' at file '%s'", ext.c_str(), currentAssetLoadingPath.c_str());
 	}

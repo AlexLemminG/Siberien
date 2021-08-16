@@ -1,0 +1,28 @@
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LIBFLAC-8.DLL
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\libFLAC-8.dll C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LIBMODPLUG-1.DLL
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\libmodplug-1.dll C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LIBOGG-0.DLL
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\libogg-0.dll C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LIBOPUS-0.DLL
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\libopus-0.dll C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LIBOPUSFILE-0.DLL
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\libopusfile-0.dll C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LIBVORBIS-0.DLL
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\libvorbis-0.dll C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LIBVORBISFILE-3.DLL
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\libvorbisfile-3.dll C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LICENSE.FLAC.TXT
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\LICENSE.FLAC.txt C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LICENSE.MODPLUG.TXT
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\LICENSE.modplug.txt C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LICENSE.OGG-VORBIS.TXT
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\LICENSE.ogg-vorbis.txt C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LICENSE.OPUS.TXT
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\LICENSE.opus.txt C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LICENSE.OPUSFILE.TXT
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\LICENSE.opusfile.txt C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LIBMPG123-0.DLL
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\libmpg123-0.dll C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\
+^C:\USERS\ALEXL\DOWNLOADS\SDL2_MIXER-2.0.4\VISUALC\EXTERNAL\LIB\X86\LICENSE.MPG123.TXT
+copy C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\external\lib\x86\LICENSE.mpg123.txt C:\Users\alexl\Downloads\SDL2_mixer-2.0.4\VisualC\\Win32\Debug\

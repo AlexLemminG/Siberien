@@ -3,8 +3,20 @@
 #include "Component.h"
 #include "Pickup.h"
 #include "Camera.h"
+#include "Gun.h"
 
 class EnemyCreepController;
+
+class CheckpointAmmo {
+public:
+	std::vector<std::shared_ptr<Gun>> guns;
+	int grenades = 0;
+	REFLECT_BEGIN(CheckpointAmmo);
+	REFLECT_VAR(guns);
+	REFLECT_VAR(grenades);
+	REFLECT_END();
+};
+
 class GameplaySceneScenario : public Component {
 	void OnEnable();
 	void Update();
@@ -19,15 +31,19 @@ class GameplaySceneScenario : public Component {
 
 	std::shared_ptr<GameObject> slowZombiePrefab;
 	std::shared_ptr<GameObject> fastZombiePrefab;
+	std::shared_ptr<GameObject> mediumZombiePrefab;
 	std::shared_ptr<GameObject> chadZombiePrefab;
+	std::shared_ptr<GameObject> indoorHidePlane;
 
 	REFLECT_BEGIN(GameplaySceneScenario);
 	REFLECT_VAR(randomGun);
 	REFLECT_VAR(chadZombiePrefab);
 	REFLECT_VAR(slowZombiePrefab);
+	REFLECT_VAR(mediumZombiePrefab);
 	REFLECT_VAR(fastZombiePrefab);
 	REFLECT_VAR(indoorCameraSettings);
 	REFLECT_VAR(outdoorCameraSettings);
+	REFLECT_VAR(checkpointAmmo);
 	REFLECT_END();
 
 	std::shared_ptr<RandomObjectSpawner> randomGun;
@@ -57,4 +73,19 @@ private:
 	int creepDeathHandler;
 	int countDead = 0;
 	int countSpawned = 0;
+
+	std::vector<CheckpointAmmo> checkpointAmmo;
+
+	class Checkpoint {
+	public:
+		int idx;
+		Vector3 pos;
+		std::vector<std::string> triggers;
+	};
+
+	static bool hasCheckpoint;
+	static Checkpoint lastCheckpoint;
+
+	void SaveCheckpoint(int idx, Vector3 pos);
+	void LoadLastCheckpoint();
 };

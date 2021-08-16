@@ -1,0 +1,4 @@
+Material:
+  shader: shaders\main.asset
+  colorTex: textures\scifi\PolygonSciFi_Road_01.png
+  normalTex: textures\scifi\PolygonSciFi_Road_Normal.png

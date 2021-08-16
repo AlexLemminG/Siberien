@@ -4,14 +4,34 @@ GameObject:
 GameplaySceneScenario:
   slowZombiePrefab: slowZombie.asset
   fastZombiePrefab: fastZombie.asset
+  mediumZombiePrefab: mediumZombie.asset
   chadZombiePrefab: chadZombie.asset
   randomGun: $pick
   indoorCameraSettings: camera_indoor.asset$Camera
   outdoorCameraSettings: camera_outdoor.asset$Camera
-  
+  checkpointAmmo:
+  - guns:
+    - gun_machineGun.asset$Gun
+    - gun_machineGun.asset$Gun
+  - guns:
+    - gun_machineGun.asset$Gun
+    - gun_machineGun.asset$Gun
+    - gun_machineGun.asset$Gun
+    - gun_machineGun.asset$Gun
+  - guns:
+    - gun_machineGun.asset$Gun
+    - gun_machineGun.asset$Gun
+    - gun_machineGun.asset$Gun
+    - gun_machineGun.asset$Gun
+  - guns:
+    - gun_machineGun.asset$Gun
+    - gun_machineGun.asset$Gun
+    - gun_machineGun.asset$Gun
+    - gun_machineGun.asset$Gun
+    - gun_machineGun.asset$Gun
 RandomObjectSpawner$pick:
   availableObjects:
   - prefab: gun_machineGun.asset
-    weight: 0.5
+    weight: 0.1
   - prefab: ""
-    weight: 0.5
+    weight: 0.9

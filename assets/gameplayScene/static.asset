@@ -1,0 +1,11 @@
+GameObject:
+  tag: BlenderSceneLoader
+  components:
+    - $BlenderSceneLoader
+BlenderSceneLoader:
+  scene: meshes\gameplayStatic.glb$FullMeshAsset
+  material: materials\scifi.asset
+  materialNeon: materials\scifi_neon.asset
+  materialSigns: materials\scifi_signs.asset
+  materialRoads: materials\scifi_roads.asset
+  materialPosters: materials\scifi_posters.asset
