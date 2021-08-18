@@ -53,7 +53,6 @@ btCollisionShape* MeshCollider::CreateShape() {
 	if (!mesh) {
 		return nullptr;
 	}
-
 	indexVertexArray = std::make_shared<btTriangleIndexVertexArray>();
 	auto indexedMesh = btIndexedMesh();
 	indexedMesh.m_numVertices = mesh->originalMeshPtr->mNumVertices;
@@ -66,7 +65,7 @@ btCollisionShape* MeshCollider::CreateShape() {
 	indexedMesh.m_triangleIndexStride = 3 * sizeof(uint16_t);
 	indexedMesh.m_indexType = PHY_ScalarType::PHY_SHORT;
 	indexVertexArray->addIndexedMesh(indexedMesh, PHY_ScalarType::PHY_SHORT);
+	indexVertexArray->setScaling(btConvert(gameObject()->transform()->GetScale()));
 	auto shape = new btBvhTriangleMeshShape(indexVertexArray.get(), true);
-	shape->setLocalScaling(btConvert(gameObject()->transform()->GetScale()));
 	return shape;
 }

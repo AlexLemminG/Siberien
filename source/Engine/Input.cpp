@@ -1,3 +1,4 @@
+#include "Common.h"
 #include "Input.h"
 #include <SDL.h>
 
@@ -10,7 +11,7 @@ Uint32 Input::prevMouseState = 0;
 Vector2 Input::mousePos = Vector2{ 0,0 };
 
 void Input::Update() {
-
+	OPTICK_EVENT();
 	quitPressed = false;
 	justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 	justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);

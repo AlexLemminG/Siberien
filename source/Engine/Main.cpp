@@ -61,6 +61,8 @@ start:
 	bool quit = false;
 	bool needConstantSceneReload = false;
 	while (!quit) {
+		OPTICK_FRAME("MainThread");
+
 		Input::Update();
 
 		if (Scene::Get()) {

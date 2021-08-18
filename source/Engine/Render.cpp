@@ -122,6 +122,8 @@ bool Render::Init()
 }
 void Render::Draw(SystemsManager& systems)
 {
+	OPTICK_EVENT();
+
 	if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_RETURN) && (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LALT) || Input::GetKey(SDL_Scancode::SDL_SCANCODE_RALT))) {
 		SetFullScreen(!IsFullScreen());
 	}
@@ -205,7 +207,7 @@ void Render::Draw(SystemsManager& systems)
 	bgfx::touch(0);
 	bgfx::dbgTextClear();
 
-	//bgfx::dbgTextPrintf(1, 2, 0x0f, "FPS: %.1f", fps);
+	bgfx::dbgTextPrintf(1, 2, 0x0f, "FPS: %.1f", fps);
 
 	if (camera == nullptr) {
 		//bgfx::dbgTextPrintf(1, 1, 0x0f, "NO CAMERA");

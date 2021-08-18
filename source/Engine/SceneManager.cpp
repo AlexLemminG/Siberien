@@ -10,6 +10,7 @@ void SceneManager::LoadScene(std::string sceneName) {
 }
 
 void SceneManager::Update() {
+	OPTICK_EVENT();
 	if (lastLoadRequest.size() == 0) {
 		return;
 	}
@@ -29,8 +30,8 @@ void SceneManager::Update() {
 		ASSERT(false);
 		return;
 	}
-	if(CfgGetBool("debugSceneLoading")){
 
+	if (CfgGetBool("debugSceneLoading")) {
 		YAML::Node node;
 		std::vector<std::shared_ptr<Object>> serializedObjects;
 		serializedObjects.push_back(scene);
@@ -42,10 +43,12 @@ void SceneManager::Update() {
 		std::ofstream fout("out.yaml");
 		fout << context.yamlNode;
 	}
-
-	currentScene = Object::Instantiate(scene);
-	if (currentScene) {
-		currentScene->name = sceneName;
-		currentScene->Init();
+	{
+		OPTICK_EVENT("Instantiate Scene")
+		currentScene = Object::Instantiate(scene);
+		if (currentScene) {
+			currentScene->name = sceneName;
+			currentScene->Init();
+		}
 	}
 }

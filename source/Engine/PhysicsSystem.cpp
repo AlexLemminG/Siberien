@@ -50,6 +50,7 @@ bool PhysicsSystem::Init() {
 }
 
 void PhysicsSystem::Update() {
+	OPTICK_EVENT();	
 	dynamicsWorld->stepSimulation(Time::deltaTime(), 2, Time::fixedDeltaTime());
 }
 

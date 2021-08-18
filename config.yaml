@@ -1,7 +1,7 @@
 scene: gameplayScene
 maximumDeltaTime: 0.1
 fixedDeltaTime: 0.016666666666
-fullscreen: true
+fullscreen: false
 debugSceneLoading: false
-godMode: true
+godMode: false
 soundEnabled: false

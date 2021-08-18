@@ -12,7 +12,7 @@ public:
 	virtual void Update() {}
 	virtual void FixedUpdate() {}
 	virtual void Draw() {}
-	virtual void Term() {  }
+	virtual void Term() {}
 };
 
 template<typename T>
@@ -49,48 +49,15 @@ public:
 
 	SystemsManager() {}
 
-	bool Init() {
-		manager = this;
-		for (auto registrator : GetRegistrators()) {
-			systems.push_back(registrator->CreateSystem());
-		}
+	bool Init();
 
-		for (auto system : systems) {
-			if (!system->Init()) {
-				return false;
-			}
-		}
+	void Update();
 
-		return true;
-	}
+	void FixedUpdate();
 
-	void Update() {
-		for (auto system : systems) {
-			system->Update();
-		}
-	}
+	void Draw();
 
-	void FixedUpdate() {
-		for (auto system : systems) {
-			system->FixedUpdate();
-		}
-	}
-
-	void Draw() {
-		for (auto system : systems) {
-			system->Draw();
-		}
-	}
-
-	void Term() {
-		//TODO term only inited
-		for (int i = systems.size() - 1; i >= 0;i--){
-			auto system = systems[i];
-			system->Term();
-		}
-		systems.clear();
-		manager = nullptr;
-	}
+	void Term();
 
 private:
 	static std::vector<SystemRegistratorBase*>& GetRegistrators() {

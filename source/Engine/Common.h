@@ -4,6 +4,7 @@
 #include <iostream>
 #include "Config.h"
 #include "SDL_assert.h"
+#include "optick.h"
 
 #define ASSERT(cond) SDL_assert(cond)
 

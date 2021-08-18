@@ -82,9 +82,116 @@ public:
 //TODO
 //does this make bone asset ?
 //maybe yes and we need to rename it to Object
+
+class AssetDatabase2 {
+	bool Init() {
+	}
+
+	void Term() {
+	}
+
+	template<typename T>
+	std::shared_ptr<T> Load(const std::string& path) {
+
+	}
+
+	std::vector<std::shared_ptr<Object>> LoadAll(const std::string& path);
+
+	class ImporterHandle {
+	public:
+		void AddAssetToLoaded(std::string id, std::shared_ptr<Object> object);
+
+		bool ReadAssetAsBinary(std::vector<char>& buffer);
+		bool ReadMeta(YAML::Node& node);
+
+		void WriteToLibraryFile(const std::string& id, const YAML::Node& node); 
+		void WriteToLibraryFile(const std::string& id, std::vector<char>& buffer);
+		bool ReadFromLibraryFile(const std::string& id, YAML::Node& node);
+		bool ReadFromLibraryFile(const std::string& id, std::vector<char>& buffer);
+	private:
+		bool ReadBinary(const std::string& fullPath, std::vector<char>& buffer);
+		bool ReadYAML(const std::string& fullPath, YAML::Node& node);
+		std::string GetLibraryPath(const std::string id);
+		std::string assetPath;
+		AssetDatabase2* database = nullptr;
+	};
+
+private:
+	class Asset {
+	public:
+		void Add(const std::string& id, std::shared_ptr<Object> object) {
+			objects.push_back(SingleObject{ object, id });
+		}
+		std::shared_ptr<Object> GetMain() {
+			return objects.size() > 0 ? objects[0].obj : std::shared_ptr<Object>();
+		}
+		std::shared_ptr<Object> Get(const std::string& id) {
+			for (const auto& so : objects) {
+				if (so.id == id) {
+					return so.obj;
+				}
+			}
+			return nullptr;
+		}
+		std::shared_ptr<Object> Get(const ReflectedTypeBase* type) {
+			for (const auto& so : objects) {
+				if (so.obj->GetType() == type) {
+					return so.obj;
+				}
+			}
+			return nullptr;
+		}
+		std::shared_ptr<Object> Get(const ReflectedTypeBase* type, const std::string& id) {
+			for (const auto& so : objects) {
+				if (so.obj->GetType() == type && so.id == id) {
+					return so.obj;
+				}
+			}
+			return nullptr;
+		}
+	private:
+		class SingleObject {
+		public:
+			std::shared_ptr<Object> obj;
+			std::string id;
+		};
+
+		std::vector<SingleObject> objects;
+	};
+	class PathDescriptor {
+	public:
+		PathDescriptor(std::string path) {
+			auto lastIdChar = path.find_last_of('$');
+			if (lastIdChar == -1) {
+				this->assetId = "";
+				this->assetPath = path;
+			}
+			else {
+				this->assetId = path.substr(lastIdChar + 1, path.length() - lastIdChar - 1);
+				this->assetPath = path.substr(0, lastIdChar);
+			}
+		}
+		std::string assetPath;
+		std::string assetId;
+
+		std::string ToFullPath() {
+			return assetId.size() > 0 ? FormatString("%s$%s", assetPath.c_str(), assetId.c_str()) : assetPath;
+		}
+	};
+
+	std::shared_ptr<Object> Load(const PathDescriptor& path, ReflectedTypeBase* type);
+
+	std::unordered_map<std::string, Asset> assets;
+
+	std::string assetsRootFolder;
+	std::string libraryRootFolder;
+};
+
 class AssetDatabase {
 	friend AssetImporter;
 public:
+
+
 	bool Init() {
 		mainDatabase = this;
 		return true;

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="samples">
+      <UniqueIdentifier>{5AFF6082-C6DE-DF1D-CFF6-6AF43B55467F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="samples\Common">
+      <UniqueIdentifier>{5203E27E-3ED1-D584-2765-46AB13D2B1E9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="samples\Common\TestEngine">
+      <UniqueIdentifier>{D7722E26-4335-62B0-8CE5-F03CF8E63A8E}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\samples\Common\TestEngine\TestEngine.h">
+      <Filter>samples\Common\TestEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\samples\Common\TestEngine\TestImage.h">
+      <Filter>samples\Common\TestEngine</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\samples\Common\TestEngine\TestEngine.cpp">
+      <Filter>samples\Common\TestEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\samples\ConsoleAppMT\main.cpp" />
+  </ItemGroup>
+</Project>

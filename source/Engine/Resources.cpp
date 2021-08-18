@@ -382,3 +382,95 @@ AssetDatabase::PathDescriptor::PathDescriptor(std::string path) {
 		this->assetPath = path.substr(0, lastIdChar);
 	}
 }
+
+void AssetDatabase2::ImporterHandle::AddAssetToLoaded(std::string id, std::shared_ptr<Object> object)
+{
+	auto& asset = database->assets[assetPath];
+	asset.Add(id, object);
+}
+
+bool AssetDatabase2::ImporterHandle::ReadAssetAsBinary(std::vector<char>& buffer)
+{
+	const auto fullPath = database->assetsRootFolder + assetPath;
+	return ReadBinary(fullPath, buffer);
+}
+
+bool AssetDatabase2::ImporterHandle::ReadMeta(YAML::Node& node) {
+	const auto fullPath = database->assetsRootFolder + assetPath + ".meta";
+	return ReadYAML(fullPath, node);
+}
+
+bool AssetDatabase2::ImporterHandle::ReadFromLibraryFile(const std::string& id, YAML::Node& node)
+{
+	const auto fullPath = database->assetsRootFolder + assetPath;
+
+	std::ifstream input(fullPath);
+	if (!input) {
+		LogError("Failed to load '%s': file not found", assetPath.c_str());
+		node = YAML::Node();
+		return false;
+	}
+	node = YAML::Load(input);
+	if (!node.IsDefined()) {
+		node = YAML::Node();
+		return false;
+	}
+	else {
+		return true;
+	}
+
+}
+
+bool AssetDatabase2::ImporterHandle::ReadFromLibraryFile(const std::string& id, std::vector<char>& buffer)
+{
+	return ReadBinary(GetLibraryPath(id), buffer);
+}
+
+std::string AssetDatabase2::ImporterHandle::GetLibraryPath(const std::string id) {
+	return database->libraryRootFolder + assetPath + "\\" + id;
+}
+
+bool AssetDatabase2::ImporterHandle::ReadBinary(const std::string& fullPath, std::vector<char>& buffer)
+{
+	std::ifstream file(fullPath, std::ios::binary | std::ios::ate);
+
+	if (!file) {
+		//TODO different message and Log level
+		LogError("Failed to load binary asset '%s': file not found", fullPath.c_str());
+		return false;
+	}
+	std::streamsize size = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	buffer.resize(size);
+	if (file.read(buffer.data(), size))
+	{
+		return true;
+	}
+	else {
+		buffer.clear();
+		//TODO different message and Log level
+		LogError("Failed to load binary asset '%s': failed to read file", fullPath.c_str());
+		ASSERT(false);
+		return false;
+	}
+}
+
+
+bool AssetDatabase2::ImporterHandle::ReadYAML(const std::string& fullPath, YAML::Node& node)
+{
+	std::ifstream input(fullPath);
+	if (!input) {
+		LogError("Failed to load '%s': file not found", assetPath.c_str());
+		node = YAML::Node();
+		return false;
+	}
+	node = YAML::Load(input);
+	if (!node.IsDefined()) {
+		node = YAML::Node();
+		return false;
+	}
+	else {
+		return true;
+	}
+}
