@@ -25,6 +25,14 @@ public:
 	}
 };
 
+template <typename ImporterType>
+class BinaryAssetImporterRegistrator2 {
+public:
+	BinaryAssetImporterRegistrator2(std::string typeName) {
+		AssetDatabase2::RegisterBinaryAssetImporter(std::make_unique<ImporterType>());
+	}
+};
+
 template <typename Type>
 class SerializedObjectImporter : public TextAssetImporter {
 	std::shared_ptr<Object> Import(AssetDatabase& database, const YAML::Node& node) override {
@@ -37,6 +45,9 @@ class SerializedObjectImporter : public TextAssetImporter {
 
 #define DECLARE_BINARY_ASSET(className, importerClassName) \
 static BinaryAssetImporterRegistrator<##importerClassName> AssetImporterRegistrator_##className{#className};
+
+#define DECLARE_BINARY_ASSET2(className, importerClassName) \
+static BinaryAssetImporterRegistrator2<##importerClassName> AssetImporterRegistrator2_##className{#className};
 
 #define DECLARE_TEXT_ASSET(className) \
 static TextAssetImporterRegistrator<SerializedObjectImporter<##className>> AssetImporterRegistrator_##className{#className};

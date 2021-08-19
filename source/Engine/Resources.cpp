@@ -4,6 +4,16 @@
 #include <memory>
 #include <windows.h>
 
+
+void AssetDatabase2::RegisterBinaryAssetImporter(std::unique_ptr<AssetImporter2>&& importer) {
+	GetAssetImporters()["Texture"] = std::move(importer);
+}
+
+std::unordered_map<std::string, std::unique_ptr<AssetImporter2>>& AssetDatabase2::GetAssetImporters() {
+	static std::unordered_map<std::string, std::unique_ptr<AssetImporter2>> assetImporters{};
+	return assetImporters;
+}
+
 std::unordered_map<std::string, std::unique_ptr<AssetImporter>>& AssetDatabase::GetAssetImporters() {
 	static std::unordered_map<std::string, std::unique_ptr<AssetImporter>> assetImporters{};
 	return assetImporters;
@@ -18,6 +28,62 @@ AssetDatabase* AssetDatabase::Get() {
 	return AssetDatabase::mainDatabase;
 }
 
+
+void AssetDatabase2::LoadAsset(const std::string& path) {
+	auto extention = GetFileExtension(path);
+	auto& importer = GetAssetImporters()["Texture"];
+	if (importer) {
+		importer->ImportAll(ImporterHandle(this, path));
+	}
+}
+
+void AssetDatabase2::ImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) {
+
+	struct stat result;
+	auto fullPathAsset = this->assetPath;
+
+	if (stat(fullPathAsset.c_str(), &result) == 0)
+	{
+		assetModificationTime = result.st_mtime;
+	}
+	else {
+		assetModificationTime = 0;
+	}
+
+	auto fullPathMeta = this->assetPath + ".meta";
+
+	if (stat(fullPathMeta.c_str(), &result) == 0)
+	{
+		metaModificationTime = result.st_mtime;
+	}
+	else {
+		metaModificationTime = 0;
+	}
+}
+
+
+std::string AssetDatabase2::GetFileName(std::string path) {
+	auto lastSlash = path.find_last_of('\\');
+	if (lastSlash == -1) {
+		return path;
+	}
+	else {
+		return path.substr(lastSlash + 1, path.length() - lastSlash - 1);
+	}
+}
+std::string AssetDatabase2::GetFileExtension(std::string path) {
+	auto name = GetFileName(path);
+	if (name == "") {
+		return "";
+	}
+	auto lastDot = path.find_last_of('.');
+	if (lastDot == -1) {
+		return "";
+	}
+	else {
+		return path.substr(lastDot + 1, path.length() - lastDot - 1);
+	}
+}
 //TODO templated
 std::shared_ptr<Object> AssetDatabase::GetLoaded(std::string path) {
 	PathDescriptor descriptor{ path };
@@ -39,6 +105,7 @@ std::shared_ptr<Object> AssetDatabase::GetLoaded(std::string path) {
 	}
 	else {
 		//LogError("Asset with path '%s' not loaded", path.c_str());
+		return database2.Load<Object>(path);
 		return nullptr;
 	}
 }
@@ -244,14 +311,7 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 		}
 	}
 	else if (ext == "png") {
-		std::string type = "Texture";
-		auto& importer = GetAssetImporters()[type];
-		if (importer) {
-			importer->Import(*this, path);
-		}
-		else {
-			ASSERT(false);
-		}
+		database2.Load<Object>(path);
 	}
 	else if (ext == "wav") {
 		std::string type = "AudioClip";
@@ -330,6 +390,7 @@ void AssetDatabase::UnloadAll() {
 	assets.clear();
 	requestedAssetsToLoad.clear();
 	requestedObjectPtrs.clear();
+	database2.UnloadAll();
 }
 
 std::string AssetDatabase::GetAssetPath(std::shared_ptr<Object> obj) {
@@ -400,34 +461,60 @@ bool AssetDatabase2::ImporterHandle::ReadMeta(YAML::Node& node) {
 	return ReadYAML(fullPath, node);
 }
 
+void AssetDatabase2::ImporterHandle::EnsureForderForLibraryFileExists(std::string id) {
+	auto fullPath = GetLibraryPathFromId(id);
+	auto firstFolder = fullPath.find_first_of("\\");
+	for (int i = 0; i < fullPath.size(); i++) {
+		if (fullPath[i] == '\\') {
+			auto subpath = fullPath.substr(0, i);
+			CreateDirectoryA(subpath.c_str(), NULL);
+		}
+	}
+}
+
+std::string AssetDatabase2::ImporterHandle::GetLibraryPathFromId(const std::string& id) {
+	return database->libraryRootFolder + assetPath + "\\" + id;
+}
+
+void AssetDatabase2::ImporterHandle::WriteToLibraryFile(const std::string& id, const YAML::Node& node) {
+	//TODO checks and make sure folder exists
+	const auto fullPath = GetLibraryPathFromId(id);
+	std::ofstream fout(fullPath);
+	fout << node;
+}
+
+void AssetDatabase2::ImporterHandle::WriteToLibraryFile(const std::string& id, std::vector<char>& buffer) {
+	//TODO checks and make sure folder exists
+	const auto fullPath = GetLibraryPathFromId(id);
+	std::ofstream fout(fullPath);
+	if (buffer.size() > 0) {
+		fout.write(&buffer[0], buffer.size());
+	}
+}
+
 bool AssetDatabase2::ImporterHandle::ReadFromLibraryFile(const std::string& id, YAML::Node& node)
 {
-	const auto fullPath = database->assetsRootFolder + assetPath;
+	const auto fullPath = database->assetsRootFolder + assetPath + "\\";
 
 	std::ifstream input(fullPath);
 	if (!input) {
 		LogError("Failed to load '%s': file not found", assetPath.c_str());
-		node = YAML::Node();
+		node = YAML::Node(YAML::NodeType::Undefined);
 		return false;
 	}
 	node = YAML::Load(input);
 	if (!node.IsDefined()) {
-		node = YAML::Node();
+		node = YAML::Node(YAML::NodeType::Undefined);
 		return false;
 	}
 	else {
 		return true;
 	}
-
 }
 
 bool AssetDatabase2::ImporterHandle::ReadFromLibraryFile(const std::string& id, std::vector<char>& buffer)
 {
-	return ReadBinary(GetLibraryPath(id), buffer);
-}
-
-std::string AssetDatabase2::ImporterHandle::GetLibraryPath(const std::string id) {
-	return database->libraryRootFolder + assetPath + "\\" + id;
+	return ReadBinary(GetLibraryPathFromId(id), buffer);
 }
 
 bool AssetDatabase2::ImporterHandle::ReadBinary(const std::string& fullPath, std::vector<char>& buffer)

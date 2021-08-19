@@ -450,32 +450,26 @@ class ShaderAssetImporter : public TextAssetImporter {
 };
 
 
-class TextureImporter : public AssetImporter {
+class TextureImporter : public AssetImporter2{
 public:
-	virtual std::shared_ptr<Object> Import(AssetDatabase& database, const std::string& path) override
+	// Inherited via AssetImporter2
+	virtual bool ImportAll(AssetDatabase2::ImporterHandle& databaseHandle) override
 	{
 		int importerVersion = 5;
-
-		std::string metaPath = path + ".meta";
-		auto meta = database.LoadTextAsset(metaPath);
 		YAML::Node metaYaml;
-		if (!meta || !meta->GetYamlNode()) {
+		if (!databaseHandle.ReadMeta(metaYaml)) {
 			metaYaml = YAML::Node();
-		}
-		else {
-			metaYaml = meta->GetYamlNode();
-
 		}
 		bool hasMips = metaYaml["mips"].IsDefined() ? metaYaml["mips"].as<bool>() : false;
 		auto formatStr = metaYaml["format"].IsDefined() ? metaYaml["format"].as<std::string>() : "BC1";
 
 		//TODO return default invalid shader
-		auto txBin = LoadTexture(importerVersion, database, path, hasMips, formatStr);
-		if (!txBin) {
-			return nullptr;
+		auto txBin = LoadTexture(importerVersion, databaseHandle, hasMips, formatStr);
+		if (txBin.size() == 0) {
+			return false;
 		}
 
-		auto pImageContainer = bimg::imageParse(&s_bxAllocator, &txBin->buffer[0], txBin->buffer.size());
+		auto pImageContainer = bimg::imageParse(&s_bxAllocator, &txBin[0], txBin.size());
 		//TODO delete
 
 		//TODO slow?
@@ -486,7 +480,7 @@ public:
 
 		//bimg::ImageContainer* imageContainer = bimg::imageParse(entry::getAllocator(), data, size);
 		if (!pImageContainer) {
-			return nullptr;
+			return false;
 		}
 
 		//TODO delete
@@ -503,7 +497,7 @@ public:
 
 		if (!bgfx::isValid(tx)) {
 			bimg::imageFree(pImageContainer);
-			return nullptr;
+			return false;
 		}
 
 		auto texture = std::make_shared<Texture>();
@@ -511,51 +505,55 @@ public:
 		//texture->bin = txBin;
 		texture->pImageContainer = pImageContainer;
 
-		bgfx::setName(tx, path.c_str());
+		bgfx::setName(tx, databaseHandle.GetAssetPath().c_str());
 		//TODO keep memeory buffer ?
 
-		database.AddAsset(texture, path, "");
+		databaseHandle.AddAssetToLoaded("texture", texture);
 
-		return texture;
+		return true;
 	}
 
-	std::shared_ptr<BinaryAsset> LoadTexture(int importerVersion, AssetDatabase& database, std::string path, bool mips, std::string format) {
-		std::string assetPath = path;
-		std::string metaAssetPath = path + ".meta";
-		std::string convertedAssetPath = path;
+	std::vector<char> LoadTexture(int importerVersion, AssetDatabase2::ImporterHandle& databaseHandle, bool mips, std::string format) {
+		//std::string assetPath = databaseHandle.;
+		//std::string metaAssetPath = databaseHandle.GetLibraryPathFromId("meta");
+		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("texture");
+		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");
 
-		convertedAssetPath += ".bin";
-
-		std::string metaPath = convertedAssetPath + ".meta";
 
 		bool needRebuild = false;
-		auto meta = database.LoadTextAssetFromLibrary(metaPath);
-		long lastChangeMeta = database.GetLastModificationTime(metaAssetPath);
-		long lastChange = database.GetLastModificationTime(assetPath);
-		if (meta == nullptr) {
+		YAML::Node libraryMeta;
+		databaseHandle.ReadFromLibraryFile("meta", libraryMeta);
+		long lastChangeMeta;
+		long lastChange;
+		databaseHandle.GetLastModificationTime(lastChange, lastChangeMeta);
+		if (!libraryMeta.IsDefined()) {
 			needRebuild = true;
 		}
 		else {
-			long lastChangeRecorded = meta->GetYamlNode()["lastChange"].as<long>();
-			long lastMetaChangeRecorded = meta->GetYamlNode()["lastMetaChange"].as<long>();
-			long importerVersionRecorded = meta->GetYamlNode()["importerVersion"].IsDefined() ? meta->GetYamlNode()["importerVersion"].as<long>() : -1;
+			long lastChangeRecorded = libraryMeta["lastChange"].as<long>();
+			long lastMetaChangeRecorded = libraryMeta["lastMetaChange"].as<long>();
+			long importerVersionRecorded = libraryMeta["importerVersion"].IsDefined() ? libraryMeta["importerVersion"].as<long>() : -1;
 			if (lastChange != lastChangeRecorded || lastMetaChangeRecorded != lastChangeMeta || importerVersionRecorded != importerVersion) {
 				needRebuild = true;
 			}
 		}
 
 		std::shared_ptr<BinaryAsset> binaryAsset;
+		std::vector<char> buffer;
+		bool bufferLoaded = false;
 		if (!needRebuild) {
-			binaryAsset = database.LoadBinaryAssetFromLibrary(convertedAssetPath);
+			bufferLoaded = databaseHandle.ReadAssetAsBinary(buffer);
 		}
 
-		if (binaryAsset) {
-			return binaryAsset;
+		if (bufferLoaded) {
+			return std::move(buffer);
 		}
+
+		databaseHandle.EnsureForderForLibraryFileExists("texture");
 
 		std::string params = "";
-		params += " -f " + database.GetAssetPath(assetPath);
-		params += " -o " + database.GetLibraryPath(convertedAssetPath);
+		params += " -f " + databaseHandle.GetAssetPath();
+		params += " -o " + convertedAssetPath;
 		params += " --mips ";
 		params += (mips ? "true" : "false");
 		params += " -t ";
@@ -570,17 +568,13 @@ public:
 		PROCESS_INFORMATION pi;
 		memset(&pi, 0, sizeof(PROCESS_INFORMATION));
 
-		std::vector<char> buffer(params.begin(), params.end());
-		buffer.push_back(0);
-		LPSTR ccc = &buffer[0];
-
-		std::string binAssetFolder = database.GetLibraryPath(path) + "\\";
-
-		database.CreateFolders(binAssetFolder);
+		std::vector<char> paramsBuffer(params.begin(), params.end());
+		paramsBuffer.push_back(0);
+		LPSTR ccc = &paramsBuffer[0];
 
 		auto result = CreateProcessA(
-			database.GetToolsPath("texturec.exe").c_str()
-			, &buffer[0]
+			databaseHandle.GetToolPath("texturec.exe").c_str()
+			, &paramsBuffer[0]
 			, NULL
 			, NULL
 			, false
@@ -593,8 +587,8 @@ public:
 
 		if (!result)
 		{
-			LogError("Failed to compile texure '%s'", path.c_str());
-			return nullptr;
+			LogError("Failed to compile texure '%s'", databaseHandle.GetAssetPath().c_str());
+			return buffer;
 		}
 		else
 		{
@@ -611,17 +605,9 @@ public:
 		metaNode["lastMetaChange"] = lastChangeMeta;
 		metaNode["importerVersion"] = importerVersion;
 
-		std::ofstream fout(database.GetLibraryPath(metaPath));
-		fout << metaNode;
-
-		binaryAsset = database.LoadBinaryAssetFromLibrary(convertedAssetPath);
-		if (binaryAsset) {
-			return binaryAsset;
-		}
-		else {
-			return nullptr;
-		}
-
+		databaseHandle.WriteToLibraryFile("meta", metaNode);
+		databaseHandle.ReadFromLibraryFile("texture", buffer);
+		return buffer;
 	}
 
 };
@@ -629,7 +615,7 @@ public:
 DECLARE_BINARY_ASSET(Mesh, MeshAssetImporter);
 DECLARE_TEXT_ASSET(Material);
 DECLARE_CUSTOM_TEXT_ASSET(Shader, ShaderAssetImporter);
-DECLARE_BINARY_ASSET(Texture, TextureImporter);
+DECLARE_BINARY_ASSET2(Texture, TextureImporter);
 DECLARE_TEXT_ASSET(MeshRenderer);
 DECLARE_TEXT_ASSET(DirLight);
 DECLARE_TEXT_ASSET(PointLight);
