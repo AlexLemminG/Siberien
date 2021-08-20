@@ -3,5 +3,5 @@ maximumDeltaTime: 0.1
 fixedDeltaTime: 0.016666666666
 fullscreen: false
 debugSceneLoading: false
-godMode: false
+godMode: true
 soundEnabled: false

@@ -17,6 +17,7 @@
 #include "SceneManager.h"
 #include "MeshRenderer.h"
 #include "Sound.h"
+#include "PostProcessingEffect.h"
 
 void PlayerController::OnEnable() {
 	rigidBody = gameObject()->GetComponent<RigidBody>();

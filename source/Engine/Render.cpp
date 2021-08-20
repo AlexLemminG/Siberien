@@ -19,8 +19,13 @@
 #include "System.h"
 #include "Time.h"
 #include "Scene.h"
-#include "SDL_mixer.h"
 #include "Input.h"
+#include "PostProcessingEffect.h"
+#include "Material.h"
+#include "Texture.h"
+#include "SphericalHarmonics.h"
+#include "Shader.h"
+#include "Mesh.h"
 
 SDL_Window* Render::window = nullptr;
 
@@ -40,14 +45,6 @@ bool Render::Init()
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 		return false;
 	}
-
-	//TODO not in render
-	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0 || Mix_Init(0) < 0)
-	{
-		printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError());
-		return false;
-	}
-	Mix_AllocateChannels(64);
 
 	int width = SettingsGetInt("screenWidth");
 	int height = SettingsGetInt("screenHeight");
@@ -88,8 +85,6 @@ bool Render::Init()
 
 	bgfx::setViewRect(0, 0, 0, width, height);
 	bgfx::setViewRect(1, 0, 0, width, height);
-
-	InitVertexLayouts();
 
 	u_time = bgfx::createUniform("u_time", bgfx::UniformType::Vec4);
 	u_color = bgfx::createUniform("u_color", bgfx::UniformType::Vec4);
@@ -287,7 +282,6 @@ void Render::Term()
 	//Destroy window
 
 	//Quit SDL subsystems
-	Mix_Quit();
 	SDL_Quit();
 }
 

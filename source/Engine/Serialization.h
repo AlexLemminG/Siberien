@@ -29,7 +29,7 @@ template <typename ImporterType>
 class BinaryAssetImporterRegistrator2 {
 public:
 	BinaryAssetImporterRegistrator2(std::string typeName) {
-		AssetDatabase2::RegisterBinaryAssetImporter(std::make_unique<ImporterType>());
+		AssetDatabase2::RegisterBinaryAssetImporter(typeName, std::make_unique<ImporterType>());
 	}
 };
 

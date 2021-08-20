@@ -7,6 +7,7 @@ struct SDL_Window;
 class SDL_Surface;
 class SystemsManager;
 class PostProcessingEffect;
+class Texture;
 
 class Render {
 public:

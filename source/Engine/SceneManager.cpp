@@ -25,10 +25,14 @@ void SceneManager::Update() {
 
 	auto assets = AssetDatabase::Get();
 
-	auto scene = assets->LoadByPath<Scene>(sceneName);
-	if (!scene) {
-		ASSERT(false);
-		return;
+	std::shared_ptr<Scene> scene;
+	{
+		OPTICK_EVENT("Load scene");
+		scene = assets->LoadByPath<Scene>(sceneName);
+		if (!scene) {
+			ASSERT(false);
+			return;
+		}
 	}
 
 	if (CfgGetBool("debugSceneLoading")) {
@@ -44,7 +48,7 @@ void SceneManager::Update() {
 		fout << context.yamlNode;
 	}
 	{
-		OPTICK_EVENT("Instantiate Scene")
+		OPTICK_EVENT("Instantiate Scene");
 		currentScene = Object::Instantiate(scene);
 		if (currentScene) {
 			currentScene->name = sceneName;

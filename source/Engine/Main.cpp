@@ -17,7 +17,6 @@
 #include "Scene.h"
 #include "System.h"
 #include "SceneManager.h"
-#include "SDL_mixer.h"
 //#include <bgfx_utils.h>
 
 std::string GetFirstSceneName() {
@@ -84,6 +83,7 @@ start:
 		}
 
 		if (needConstantSceneReload) {
+			needConstantSceneReload = false;
 			SceneManager::LoadScene(GetFirstSceneName());
 			assets.UnloadAll();
 		}

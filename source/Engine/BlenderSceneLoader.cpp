@@ -5,6 +5,8 @@
 #include "BoxCollider.h"
 #include "RigidBody.h"
 #include "assimp/mesh.h"
+#include "Mesh.h"
+#include "MeshCollider.h"
 
 
 void BlenderSceneLoader::AddToNodes(const aiScene* scene, aiNode* node, const std::string& baseAssetPath, const Matrix4& parentTransform) {

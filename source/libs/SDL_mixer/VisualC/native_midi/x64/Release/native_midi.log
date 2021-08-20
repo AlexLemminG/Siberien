@@ -1,6 +1,0 @@
-﻿cl : command line warning D9002: ignoring unknown option '/arch:SSE'
-  native_midi_common.c
-C:\Projects\Siberien\source\libs\SDL_mixer\native_midi\native_midi_common.h(25,10): fatal error C1083: Cannot open include file: 'SDL.h': No such file or directory
-  native_midi_win32.c
-C:\Projects\Siberien\source\libs\SDL_mixer\native_midi\native_midi_win32.c(21,10): fatal error C1083: Cannot open include file: 'SDL_config.h': No such file or directory
-  Generating Code...

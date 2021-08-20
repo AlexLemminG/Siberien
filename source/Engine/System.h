@@ -13,6 +13,13 @@ public:
 	virtual void FixedUpdate() {}
 	virtual void Draw() {}
 	virtual void Term() {}
+
+	struct PriorityInfo {
+		int order = 0;
+	};
+	virtual PriorityInfo GetPriorityInfo() const {
+		return PriorityInfo ();
+	}
 };
 
 template<typename T>

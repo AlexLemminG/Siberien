@@ -11,93 +11,12 @@
 class aiMesh;
 //class aiScene;
 class MeshAnimation;
+class Material;
+class Mesh;
 
 namespace bimg {
 	class ImageContainer;
 }
-
-class Mesh : public Object{
-public:
-	aiMesh* originalMeshPtr = nullptr;
-	bgfx::VertexBufferHandle vertexBuffer = BGFX_INVALID_HANDLE;
-	bgfx::IndexBufferHandle indexBuffer = BGFX_INVALID_HANDLE;
-	std::vector<uint8_t> buffer;
-	std::vector<uint16_t> indices;
-
-	static constexpr int bonesPerVertex = 4;
-	Matrix4 globalInverseTransform;
-
-	~Mesh();
-
-	class BoneInfo {
-	public:
-		std::string name;
-		int idx = 0;
-		int parentBoneIdx = -1;
-		Matrix4 offset;
-		Matrix4 initialLocal;
-		Quaternion inverseTPoseRotation;
-	};
-
-	std::vector<BoneInfo> bones;
-	std::shared_ptr<MeshAnimation> tPoseAnim;
-
-	void Init();
-private:
-	void FillBoneParentInfo();
-
-	REFLECT_BEGIN(Mesh);
-	REFLECT_END();
-};
-
-class Shader : public Object {
-public:
-	bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
-	~Shader();
-	std::vector<std::shared_ptr<BinaryAsset>> buffers;
-	REFLECT_BEGIN(Shader);
-	REFLECT_END();
-	std::string name;
-};
-
-
-class FullMeshAsset : public Object {
-public:
-	std::shared_ptr<const aiScene> scene;
-
-	REFLECT_BEGIN(FullMeshAsset);
-	REFLECT_END();
-};
-class Texture : public Object {
-public:
-	bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
-	bimg::ImageContainer* pImageContainer = nullptr;
-	~Texture();
-	REFLECT_BEGIN(Texture);
-	REFLECT_END();
-
-	std::shared_ptr<BinaryAsset> bin;
-};
-class Material : public Object {
-public:
-	Color color = Colors::white;
-	std::shared_ptr<Shader> shader;
-	std::shared_ptr<Texture> colorTex;
-	std::shared_ptr<Texture> normalTex;
-	std::shared_ptr<Texture> emissiveTex;
-	std::vector<std::shared_ptr<Texture>> randomColorTextures;
-
-	REFLECT_BEGIN(Material);
-	REFLECT_VAR(colorTex);
-	REFLECT_VAR(normalTex);
-	REFLECT_VAR(emissiveTex);
-	REFLECT_VAR(color);
-	REFLECT_VAR(shader);
-	REFLECT_VAR(randomColorTextures);
-	REFLECT_END();
-};
-
-void InitVertexLayouts();
 
 class MeshRenderer : public Component {
 public:
@@ -207,36 +126,4 @@ public:
 	REFLECT_VAR(radius);
 	REFLECT_VAR(innerRadius);
 	REFLECT_END();
-};
-
-class SphericalHarmonics : public Object {
-public:
-	std::vector<Color> coeffs;
-	REFLECT_BEGIN(SphericalHarmonics);
-	REFLECT_VAR(coeffs);
-	REFLECT_END();
-};
-
-class Render;
-
-class PostProcessingEffect : public Object {
-public:
-	void Draw(Render& render);
-
-	float winScreenFade = 0.f;
-	float intensityFromLastHit;
-	float intensity;
-private:
-	std::shared_ptr<Shader> shader;
-
-	REFLECT_BEGIN(PostProcessingEffect);
-	REFLECT_VAR(shader);
-	REFLECT_END();
-
-	static std::vector<std::shared_ptr<PostProcessingEffect>> activeEffects; //TODO no static please
-	void ScreenSpaceQuad(
-		float _textureWidth,
-		float _textureHeight,
-		float _texelHalf,
-		bool _originBottomLeft);
 };

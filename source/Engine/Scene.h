@@ -6,6 +6,8 @@
 
 class GameObject;
 
+class SphericalHarmonics;
+
 class Scene : public Object {
 public:
 	std::vector<std::shared_ptr<GameObject>> gameObjects;

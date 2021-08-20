@@ -1,5 +1,6 @@
 #include "Common.h"
 #include "System.h"
+#include "Math.h"
 
 SystemsManager* SystemsManager::manager;
 
@@ -8,6 +9,12 @@ bool SystemsManager::Init() {
 	for (auto registrator : GetRegistrators()) {
 		systems.push_back(registrator->CreateSystem());
 	}
+
+	std::sort(systems.begin(), systems.end(),
+		[](const auto& x, const auto& y) {
+			return x->GetPriorityInfo().order < y->GetPriorityInfo().order;
+		}
+	);
 
 	for (auto system : systems) {
 		if (!system->Init()) {

@@ -56,7 +56,7 @@ public:
 
 	template<typename T>
 	void RequestSerialization(std::shared_ptr<T>& ptr) const {
-		auto casted = std::dynamic_pointer_cast<Object>(ptr);
+		auto casted = std::reinterpret_pointer_cast<Object>(ptr);
 		if (std::find(rootObjectsRequestedToSerialize->begin(), rootObjectsRequestedToSerialize->end(), casted) == rootObjectsRequestedToSerialize->end()) {
 			rootObjectsRequestedToSerialize->push_back(casted);
 		}
@@ -177,7 +177,7 @@ public:
 template<typename T>
 std::enable_if_t<is_shared_ptr<T>::value, ReflectedTypeBase*>
 inline GetReflectedType() {
-	static ReflectedTypeSharedPtr<T::element_type> type(std::string("shared_ptr<") + GetReflectedType<T::element_type>()->GetName() + ">");
+	static ReflectedTypeSharedPtr<T::element_type> type(std::string("shared_ptr<"));//TODOTODO +GetReflectedType<T::element_type>()->GetName() + ">");
 	return &type;
 }
 

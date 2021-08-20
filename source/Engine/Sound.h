@@ -5,15 +5,10 @@
 #include "System.h"
 
 
-class Mix_Chunk;
-
-
 class AudioClip : public Object {
 public:
 	AudioClip();
 	~AudioClip();
-
-	Mix_Chunk* wav = nullptr;
 
 	REFLECT_BEGIN(AudioClip);
 	REFLECT_END()

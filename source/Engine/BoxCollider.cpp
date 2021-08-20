@@ -4,13 +4,14 @@
 #include "Math.h"
 #include "Transform.h"
 #include "GameObject.h"
+#include "Mesh.h"
+#include "assimp/mesh.h"
 
 DECLARE_TEXT_ASSET(BoxCollider);
 DECLARE_TEXT_ASSET(SphereCollider);
-DECLARE_TEXT_ASSET(MeshCollider);
 
-btCollisionShape* BoxCollider::CreateShape() {
-	auto* compound = new btCompoundShape();
+std::shared_ptr<btCollisionShape> BoxCollider::CreateShape() {
+	auto compound = std::make_shared<btCompoundShape>();
 
 	auto trans = gameObject()->transform();
 	Vector3 scale = GetScale(trans->matrix);
@@ -29,8 +30,8 @@ btCollisionShape* BoxCollider::CreateShape() {
 }
 
 
-btCollisionShape* SphereCollider::CreateShape() {
-	auto* compound = new btCompoundShape();
+std::shared_ptr<btCollisionShape> SphereCollider::CreateShape() {
+	auto compound = std::make_shared<btCompoundShape>();
 
 	auto trans = gameObject()->transform();
 	Vector3 scale = GetScale(trans->matrix);
@@ -47,25 +48,4 @@ btCollisionShape* SphereCollider::CreateShape() {
 	sphereShape.reset(new btSphereShape(realRadius));
 	compound->addChildShape(transform, sphereShape.get());
 	return compound;
-}
-
-btCollisionShape* MeshCollider::CreateShape() {
-	if (!mesh) {
-		return nullptr;
-	}
-	indexVertexArray = std::make_shared<btTriangleIndexVertexArray>();
-	auto indexedMesh = btIndexedMesh();
-	indexedMesh.m_numVertices = mesh->originalMeshPtr->mNumVertices;
-	indexedMesh.m_vertexBase = (const unsigned char*)&(mesh->originalMeshPtr->mVertices[0].x);
-	indexedMesh.m_vertexStride = sizeof(float) * 3;
-	indexedMesh.m_vertexType = PHY_FLOAT;
-
-	indexedMesh.m_numTriangles = mesh->originalMeshPtr->mNumFaces;
-	indexedMesh.m_triangleIndexBase = (const unsigned char*)&mesh->indices[0];
-	indexedMesh.m_triangleIndexStride = 3 * sizeof(uint16_t);
-	indexedMesh.m_indexType = PHY_ScalarType::PHY_SHORT;
-	indexVertexArray->addIndexedMesh(indexedMesh, PHY_ScalarType::PHY_SHORT);
-	indexVertexArray->setScaling(btConvert(gameObject()->transform()->GetScale()));
-	auto shape = new btBvhTriangleMeshShape(indexVertexArray.get(), true);
-	return shape;
 }

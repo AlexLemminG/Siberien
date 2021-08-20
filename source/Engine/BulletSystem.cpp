@@ -8,6 +8,9 @@
 #include "Dbg.h"
 #include "GameObject.h"
 #include "Health.h"
+#include "Material.h"
+#include "Shader.h"
+#include "Mesh.h"
 
 REGISTER_SYSTEM(BulletSystem);
 DECLARE_TEXT_ASSET(BulletSettings);

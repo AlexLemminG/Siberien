@@ -5,8 +5,19 @@
 #include <windows.h>
 
 
-void AssetDatabase2::RegisterBinaryAssetImporter(std::unique_ptr<AssetImporter2>&& importer) {
-	GetAssetImporters()["Texture"] = std::move(importer);
+std::string AssetDatabase2::GetAssetPath(std::shared_ptr<Object> obj) {
+	auto it = objectPaths.find(obj);
+	if (it != objectPaths.end()) {
+		return it->second;
+	}
+	else {
+		return "";
+	}
+}
+
+void AssetDatabase2::RegisterBinaryAssetImporter(std::string typeName, std::unique_ptr<AssetImporter2>&& importer) {
+	//TODO get typeName from importer itself
+	GetAssetImporters()[typeName] = std::move(importer);
 }
 
 std::unordered_map<std::string, std::unique_ptr<AssetImporter2>>& AssetDatabase2::GetAssetImporters() {
@@ -29,15 +40,44 @@ AssetDatabase* AssetDatabase::Get() {
 }
 
 
-void AssetDatabase2::LoadAsset(const std::string& path) {
-	auto extention = GetFileExtension(path);
-	auto& importer = GetAssetImporters()["Texture"];
-	if (importer) {
-		importer->ImportAll(ImporterHandle(this, path));
+std::shared_ptr<Object> AssetDatabase2::GetLoaded(const PathDescriptor& descriptor, ReflectedTypeBase* type) {
+	if (assets.find(descriptor.assetPath) != assets.end()) {
+		//TODO
+		//return assets[descriptor.assetPath].Get(GetReflectedType<T>(), descriptor.assetPath);
+		return assets[descriptor.assetPath].Get(descriptor.assetId);
+	}
+	else {
+		return nullptr;
 	}
 }
 
-void AssetDatabase2::ImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) {
+void AssetDatabase2::LoadAsset(const std::string& path) {
+	if (assets.find(path) != assets.end()) {
+		return;//TODO dont call LoadAsset in the first place
+	}
+	auto extention = GetFileExtension(path);
+	//TODO get extensions list from asset importer
+	if (extention == "png") {
+		auto& importer = GetAssetImporters()["Texture"];
+		if (importer) {
+			importer->ImportAll(BinaryImporterHandle(this, path));
+		}
+	}
+	else if (extention == "fbx" || extention == "glb" || extention == "blend") {
+		auto& importer = GetAssetImporters()["Mesh"];
+		if (importer) {
+			importer->ImportAll(BinaryImporterHandle(this, path));
+		}
+	}
+	else if (extention == "asset") {
+		
+	}
+	else {
+		return;
+	}
+}
+
+void AssetDatabase2::BinaryImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) {
 
 	struct stat result;
 	auto fullPathAsset = this->assetPath;
@@ -301,14 +341,7 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 		LoadAllAtYaml(textAsset->GetYamlNode(), path);
 	}
 	else if (ext == "fbx" || ext == "glb" || ext == "blend") {
-		std::string type = "Mesh";
-		auto& importer = GetAssetImporters()[type];
-		if (importer) {
-			importer->Import(*this, path);
-		}
-		else {
-			ASSERT(false);
-		}
+		database2.Load<Object>(path);
 	}
 	else if (ext == "png") {
 		database2.Load<Object>(path);
@@ -391,6 +424,7 @@ void AssetDatabase::UnloadAll() {
 	requestedAssetsToLoad.clear();
 	requestedObjectPtrs.clear();
 	database2.UnloadAll();
+	onUnloaded.Invoke();
 }
 
 std::string AssetDatabase::GetAssetPath(std::shared_ptr<Object> obj) {
@@ -402,7 +436,7 @@ std::string AssetDatabase::GetAssetPath(std::shared_ptr<Object> obj) {
 			}
 		}
 	}
-	return "";
+	return database2.GetAssetPath(obj);
 }
 
 std::string AssetDatabase::GetFileExtension(std::string path) {
@@ -444,24 +478,24 @@ AssetDatabase::PathDescriptor::PathDescriptor(std::string path) {
 	}
 }
 
-void AssetDatabase2::ImporterHandle::AddAssetToLoaded(std::string id, std::shared_ptr<Object> object)
+void AssetDatabase2::BinaryImporterHandle::AddAssetToLoaded(std::string id, std::shared_ptr<Object> object)
 {
 	auto& asset = database->assets[assetPath];
 	asset.Add(id, object);
+	database->objectPaths[object] = PathDescriptor(assetPath, id).ToFullPath();
 }
 
-bool AssetDatabase2::ImporterHandle::ReadAssetAsBinary(std::vector<char>& buffer)
+bool AssetDatabase2::BinaryImporterHandle::ReadAssetAsBinary(std::vector<uint8_t>& buffer)
 {
-	const auto fullPath = database->assetsRootFolder + assetPath;
-	return ReadBinary(fullPath, buffer);
+	return ReadBinary(GetAssetPath(), buffer);
 }
 
-bool AssetDatabase2::ImporterHandle::ReadMeta(YAML::Node& node) {
+bool AssetDatabase2::BinaryImporterHandle::ReadMeta(YAML::Node& node) {
 	const auto fullPath = database->assetsRootFolder + assetPath + ".meta";
 	return ReadYAML(fullPath, node);
 }
 
-void AssetDatabase2::ImporterHandle::EnsureForderForLibraryFileExists(std::string id) {
+void AssetDatabase2::BinaryImporterHandle::EnsureForderForLibraryFileExists(std::string id) {
 	auto fullPath = GetLibraryPathFromId(id);
 	auto firstFolder = fullPath.find_first_of("\\");
 	for (int i = 0; i < fullPath.size(); i++) {
@@ -472,29 +506,29 @@ void AssetDatabase2::ImporterHandle::EnsureForderForLibraryFileExists(std::strin
 	}
 }
 
-std::string AssetDatabase2::ImporterHandle::GetLibraryPathFromId(const std::string& id) {
+std::string AssetDatabase2::BinaryImporterHandle::GetLibraryPathFromId(const std::string& id) {
 	return database->libraryRootFolder + assetPath + "\\" + id;
 }
 
-void AssetDatabase2::ImporterHandle::WriteToLibraryFile(const std::string& id, const YAML::Node& node) {
+void AssetDatabase2::BinaryImporterHandle::WriteToLibraryFile(const std::string& id, const YAML::Node& node) {
 	//TODO checks and make sure folder exists
 	const auto fullPath = GetLibraryPathFromId(id);
 	std::ofstream fout(fullPath);
 	fout << node;
 }
 
-void AssetDatabase2::ImporterHandle::WriteToLibraryFile(const std::string& id, std::vector<char>& buffer) {
+void AssetDatabase2::BinaryImporterHandle::WriteToLibraryFile(const std::string& id, std::vector<uint8_t>& buffer) {
 	//TODO checks and make sure folder exists
 	const auto fullPath = GetLibraryPathFromId(id);
 	std::ofstream fout(fullPath);
 	if (buffer.size() > 0) {
-		fout.write(&buffer[0], buffer.size());
+		fout.write((char*)&buffer[0], buffer.size());
 	}
 }
 
-bool AssetDatabase2::ImporterHandle::ReadFromLibraryFile(const std::string& id, YAML::Node& node)
+bool AssetDatabase2::BinaryImporterHandle::ReadFromLibraryFile(const std::string& id, YAML::Node& node)
 {
-	const auto fullPath = database->assetsRootFolder + assetPath + "\\";
+	const auto fullPath = GetLibraryPathFromId(id);
 
 	std::ifstream input(fullPath);
 	if (!input) {
@@ -512,12 +546,12 @@ bool AssetDatabase2::ImporterHandle::ReadFromLibraryFile(const std::string& id, 
 	}
 }
 
-bool AssetDatabase2::ImporterHandle::ReadFromLibraryFile(const std::string& id, std::vector<char>& buffer)
+bool AssetDatabase2::BinaryImporterHandle::ReadFromLibraryFile(const std::string& id, std::vector<uint8_t>& buffer)
 {
 	return ReadBinary(GetLibraryPathFromId(id), buffer);
 }
 
-bool AssetDatabase2::ImporterHandle::ReadBinary(const std::string& fullPath, std::vector<char>& buffer)
+bool AssetDatabase2::BinaryImporterHandle::ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer)
 {
 	std::ifstream file(fullPath, std::ios::binary | std::ios::ate);
 
@@ -530,7 +564,7 @@ bool AssetDatabase2::ImporterHandle::ReadBinary(const std::string& fullPath, std
 	file.seekg(0, std::ios::beg);
 
 	buffer.resize(size);
-	if (file.read(buffer.data(), size))
+	if (file.read((char*)buffer.data(), size))
 	{
 		return true;
 	}
@@ -544,7 +578,7 @@ bool AssetDatabase2::ImporterHandle::ReadBinary(const std::string& fullPath, std
 }
 
 
-bool AssetDatabase2::ImporterHandle::ReadYAML(const std::string& fullPath, YAML::Node& node)
+bool AssetDatabase2::BinaryImporterHandle::ReadYAML(const std::string& fullPath, YAML::Node& node)
 {
 	std::ifstream input(fullPath);
 	if (!input) {

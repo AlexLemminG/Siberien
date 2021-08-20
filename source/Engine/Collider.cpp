@@ -8,5 +8,5 @@ void Collider::OnEnable() {
 }
 
 void Collider::OnDisable() {
-	SAFE_DELETE(shape);
+
 }

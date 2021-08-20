@@ -2,7 +2,11 @@
 
 #include "Component.h"
 #include "GameObject.h"
-#include "MeshRenderer.h"
+
+class FullMeshAsset;
+class Material;
+class aiScene;
+class aiNode;
 
 class BlenderClassLoaderAssetMapping {
 public:
