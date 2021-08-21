@@ -400,6 +400,7 @@ void PlayerController::SetWon() {
 DECLARE_TEXT_ASSET(PlayerController);
 
 void PlayerController::UpdateZombiesAttacking() {
+	return;
 	auto nearby = PhysicsSystem::Get()->GetOverlaping(gameObject()->transform()->GetPosition(), 1.5f);
 	for (auto go : nearby) {
 		auto creep = go->GetComponent<EnemyCreepController>();

@@ -9,6 +9,7 @@
 #include "MeshRenderer.h"
 #include "CorpseRemoveSystem.h"
 #include "BoxCollider.h"
+#include "Animation.h"
 #include "GameEvents.h"
 
 DECLARE_TEXT_ASSET(EnemyCreepController);

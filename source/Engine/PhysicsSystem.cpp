@@ -8,6 +8,9 @@
 #include "MeshCollider.h"//TODO move meshPhysicsData to separate class
 #include <BulletCollision\CollisionDispatch\btGhostObject.h>
 #include "Bullet3Serialize/Bullet2FileLoader/b3BulletFile.h"
+#include "BulletDynamics/Dynamics/btDiscreteDynamicsWorldMt.h"
+#include "BulletCollision/CollisionDispatch/btCollisionDispatcherMt.h"
+#include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolverMt.h"
 
 REGISTER_SYSTEM(PhysicsSystem);
 
@@ -17,21 +20,29 @@ bool PhysicsSystem::Init() {
 
 	int i;
 	///-----initialization_start-----
+	
+	taskScheduler = btCreateDefaultTaskScheduler();
+	//taskScheduler->setNumThreads(taskScheduler->getMaxNumThreads());
+	btSetTaskScheduler(taskScheduler);
 
+	btDefaultCollisionConstructionInfo cci;
+	cci.m_defaultMaxPersistentManifoldPoolSize = 80000;
+	cci.m_defaultMaxCollisionAlgorithmPoolSize = 80000;
 	///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
-	collisionConfiguration = new btDefaultCollisionConfiguration();
+	collisionConfiguration = new btDefaultCollisionConfiguration(cci);
 
 	///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
-	dispatcher = new btCollisionDispatcher(collisionConfiguration);
+	dispatcher = new btCollisionDispatcherMt(collisionConfiguration);
 
 	///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
 	overlappingPairCache = new btDbvtBroadphase();
 
 	///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
-	solver = new btSequentialImpulseConstraintSolver();
+	solver = new btSequentialImpulseConstraintSolverMt();
 
+	solverPool = new btConstraintSolverPoolMt(4);
 
-	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
+	dynamicsWorld = new btDiscreteDynamicsWorldMt(dispatcher, overlappingPairCache, solverPool, solver, collisionConfiguration);
 
 	dynamicsWorld->setGravity(btConvert(GetGravity()));
 
@@ -61,6 +72,8 @@ void PhysicsSystem::Term() {
 	//delete solver
 	delete solver;
 
+	delete solverPool;
+
 	//delete broadphase
 	delete overlappingPairCache;
 
@@ -68,6 +81,9 @@ void PhysicsSystem::Term() {
 	delete dispatcher;
 
 	delete collisionConfiguration;
+
+	btSetTaskScheduler(nullptr);
+	delete taskScheduler;
 }
 
 Vector3 PhysicsSystem::GetGravity() const {

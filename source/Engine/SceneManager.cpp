@@ -30,7 +30,9 @@ void SceneManager::Update() {
 		OPTICK_EVENT("Load scene");
 		scene = assets->LoadByPath<Scene>(sceneName);
 		if (!scene) {
-			ASSERT(false);
+			if (sceneName != "-") { //TODO tidy
+				ASSERT(false);
+			}
 			return;
 		}
 	}
@@ -55,4 +57,10 @@ void SceneManager::Update() {
 			currentScene->Init();
 		}
 	}
+}
+
+void SceneManager::Term() {
+	OPTICK_EVENT();
+	LoadScene("-");
+	Update();
 }

@@ -10,10 +10,7 @@ public:
 
 	static bool Init() { return true; }
 	static void Update();
-	static void Term() {
-		LoadScene("-");
-		Update();
-	}
+	static void Term();
 
 	static std::shared_ptr<Scene> GetCurrentScene() { return currentScene; }
 

@@ -122,6 +122,9 @@ public:
 	static float Lerp(const float& a, const float& b, float t) {
 		return a + (b - a) * Clamp01(t);
 	}
+	static float InverseLerp(const float& a, const float& b, float t) {
+		return (t - a) / (b - a); //TODO if b-a > 0
+	}
 	static Vector3 ClampLength(const Vector3& vec, float maxLength) {
 		float length = vec.Length();
 		if (length > maxLength) {

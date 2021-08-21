@@ -197,10 +197,11 @@ Vector2 GameplaySceneScenario::SunflowerPattern(int n, float seedRadius) {
 	return Vector2(Mathf::Sin(angle), Mathf::Cos(angle)) * radius;
 }
 void GameplaySceneScenario::SpawnZombies(std::shared_ptr<GameObject> prefab, Vector3 centerPos, int amount) {
+	auto serialized = Object::Serialize(prefab);
 	for (int i = 0; i < amount; i++) {
 		auto sun = SunflowerPattern(i, 0.5f);
 		auto pos = centerPos + Vector3(sun.x, 0.f, sun.y);
-		auto go = Object::Instantiate(prefab);
+		auto go = std::dynamic_pointer_cast<GameObject>(Object::Instantiate(serialized));
 		go->transform()->SetPosition(pos);
 		auto rot = Quaternion::FromAngleAxis(Random::Range(0.f, Mathf::pi * 2), Vector3_up);
 		go->transform()->SetRotation(rot);

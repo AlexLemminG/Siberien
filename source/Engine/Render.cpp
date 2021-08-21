@@ -25,6 +25,8 @@
 #include "Texture.h"
 #include "SphericalHarmonics.h"
 #include "Shader.h"
+#include "MeshRenderer.h"
+#include "Material.h"
 #include "Mesh.h"
 
 SDL_Window* Render::window = nullptr;
@@ -39,8 +41,9 @@ void Render::SetFullScreen(bool isFullScreen) {
 }
 bool Render::Init()
 {
+	OPTICK_EVENT();
 	//Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 		return false;
@@ -199,7 +202,10 @@ void Render::Draw(SystemsManager& systems)
 		prevFramesCount = Time::frameCount();
 	}
 
-	bgfx::touch(0);
+	{
+		OPTICK_EVENT("bgfx::touch");
+		bgfx::touch(0);
+	}
 	bgfx::dbgTextClear();
 
 	bgfx::dbgTextPrintf(1, 2, 0x0f, "FPS: %.1f", fps);
@@ -219,9 +225,41 @@ void Render::Draw(SystemsManager& systems)
 	}
 
 	UpdateLights(lightsPoi);
+	dbgMeshesDrawn = 0;
 
-	for (auto mesh : MeshRenderer::enabledMeshRenderers) {
-		DrawMesh(mesh);
+	auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
+		if (r1->mesh.get() < r2->mesh.get()) {
+			return true;
+		}
+		else if (r1->mesh.get() > r2->mesh.get()) {
+			return false;
+		}
+		if (r1->material.get() < r2->material.get()) {
+			return true;
+		}
+		else if (r1->material.get() > r2->material.get()) {
+			return false;
+		}
+		return r1->randomColorTextureIdx < r2->randomColorTextureIdx;
+	};
+	{
+		OPTICK_EVENT("SortRenderers");
+		auto& renderers = MeshRenderer::enabledMeshRenderers;
+		std::sort(renderers.begin(), renderers.end(), renderersSort);
+	}
+	{
+		OPTICK_EVENT("DrawRenderers");
+		bool prevEq = false;
+		for (int i = 0; i < MeshRenderer::enabledMeshRenderers.size() - 1; i++) {
+			const auto& mesh = MeshRenderer::enabledMeshRenderers[i];
+			const auto& meshNext = MeshRenderer::enabledMeshRenderers[i + 1];
+			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
+			DrawMesh(mesh, !nextEq, !prevEq);
+			prevEq = nextEq;
+		}
+		if (MeshRenderer::enabledMeshRenderers.size() > 0) {
+			DrawMesh(MeshRenderer::enabledMeshRenderers[MeshRenderer::enabledMeshRenderers.size() - 1], true, !prevEq);
+		}
 	}
 
 	systems.Draw();
@@ -231,12 +269,15 @@ void Render::Draw(SystemsManager& systems)
 	}
 
 	Dbg::DrawAll();
-
-	bgfx::frame();
+	{
+		OPTICK_EVENT("bgfx::frame");
+		bgfx::frame();
+	}
 }
 
 void Render::Term()
 {
+	OPTICK_EVENT();
 	Dbg::Term();
 	post = nullptr;
 	whiteTexture = nullptr;
@@ -331,68 +372,66 @@ void Render::UpdateLights(Vector3 poi) {
 	}
 }
 
-void Render::DrawMesh(MeshRenderer* renderer) {
-	if (!renderer->mesh || !renderer->material || !renderer->material->shader) {
-		return;
-	}
-	//TODO wtf is this
-	uint64_t state = 0
-		| BGFX_STATE_WRITE_R
-		| BGFX_STATE_WRITE_G
-		| BGFX_STATE_WRITE_B
-		| BGFX_STATE_WRITE_A
-		| BGFX_STATE_WRITE_Z
-		| BGFX_STATE_DEPTH_TEST_LESS
-		| BGFX_STATE_CULL_CCW
-		| BGFX_STATE_MSAA
-		;
+void Render::DrawMesh(const MeshRenderer* renderer, bool clearState, bool updateState) {
 
-	float f = renderer->worldMatrix(0, 0);
+	dbgMeshesDrawn++;
+
 	if (renderer->bonesFinalMatrices.size() != 0) {
 		bgfx::setTransform(&renderer->bonesFinalMatrices[0], renderer->bonesFinalMatrices.size());
 	}
 	else {
-		bgfx::setTransform(&(renderer->gameObject()->transform()->matrix));
+		bgfx::setTransform(&(renderer->m_transform->matrix));
 	}
-	bgfx::setUniform(u_color, &renderer->material->color);
+	if (updateState) {
 
-
-	if (renderer->material->colorTex) {
-		if (renderer->material->randomColorTextures.size() > 0) {
-			bgfx::setTexture(0, s_texColor, renderer->material->randomColorTextures[renderer->randomColorTextureIdx]->handle);
+		bgfx::setUniform(u_color, &renderer->material->color);
+		if (renderer->material->colorTex) {
+			if (renderer->material->randomColorTextures.size() > 0) {
+				bgfx::setTexture(0, s_texColor, renderer->material->randomColorTextures[renderer->randomColorTextureIdx]->handle);
+			}
+			else {
+				bgfx::setTexture(0, s_texColor, renderer->material->colorTex->handle);
+			}
 		}
 		else {
-			bgfx::setTexture(0, s_texColor, renderer->material->colorTex->handle);
+			if (whiteTexture) {
+				bgfx::setTexture(0, s_texColor, whiteTexture->handle);
+			}
 		}
-	}
-	else {
-		if (whiteTexture) {
-			bgfx::setTexture(0, s_texColor, whiteTexture->handle);
+
+		if (renderer->material->normalTex) {
+			bgfx::setTexture(1, s_texNormal, renderer->material->normalTex->handle);
 		}
-	}
-
-	if (renderer->material->normalTex) {
-		bgfx::setTexture(1, s_texNormal, renderer->material->normalTex->handle);
-	}
-	else {
-		if (defaultNormalTexture) {
-			bgfx::setTexture(1, s_texNormal, defaultNormalTexture->handle);
+		else {
+			if (defaultNormalTexture) {
+				bgfx::setTexture(1, s_texNormal, defaultNormalTexture->handle);
+			}
 		}
-	}
 
-	if (renderer->material->emissiveTex) {
-		bgfx::setTexture(2, s_texEmissive, renderer->material->emissiveTex->handle);
-	}
-	else {
-		if (defaultEmissiveTexture) {
-			bgfx::setTexture(2, s_texEmissive, defaultEmissiveTexture->handle);
+		if (renderer->material->emissiveTex) {
+			bgfx::setTexture(2, s_texEmissive, renderer->material->emissiveTex->handle);
 		}
+		else {
+			if (defaultEmissiveTexture) {
+				bgfx::setTexture(2, s_texEmissive, defaultEmissiveTexture->handle);
+			}
+		}
+
+		//TODO wtf is this
+		uint64_t state = 0
+			| BGFX_STATE_WRITE_R
+			| BGFX_STATE_WRITE_G
+			| BGFX_STATE_WRITE_B
+			| BGFX_STATE_WRITE_A
+			| BGFX_STATE_WRITE_Z
+			| BGFX_STATE_DEPTH_TEST_LESS
+			| BGFX_STATE_CULL_CCW
+			;
+		bgfx::setState(state);
+		bgfx::setVertexBuffer(0, renderer->mesh->vertexBuffer);
+		bgfx::setIndexBuffer(renderer->mesh->indexBuffer);
 	}
 
-	bgfx::setVertexBuffer(0, renderer->mesh->vertexBuffer);
-	bgfx::setIndexBuffer(renderer->mesh->indexBuffer);
-
-	bgfx::setState(state);
-
-	bgfx::submit(0, renderer->material->shader->program);
+	auto discardFlags = clearState ? BGFX_DISCARD_ALL : BGFX_DISCARD_NONE;
+	bgfx::submit(0, renderer->material->shader->program, 0u, discardFlags);
 }

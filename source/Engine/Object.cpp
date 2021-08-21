@@ -19,7 +19,11 @@ ReflectedTypeBase* Object::GetType() const {
 	return TypeOf();
 }
 
-std::shared_ptr<Object> Object::Instantiate(std::shared_ptr<Object> original) {
+std::shared_ptr<Object> Object::Instantiate(SerializationContext& serializedOriginal) {
+	return AssetDatabase::Get()->LoadFromYaml<Object>(serializedOriginal.yamlNode);
+}
+
+SerializationContext Object::Serialize(std::shared_ptr<Object> original) {
 	YAML::Node node;
 	std::vector<std::shared_ptr<Object>> serializedObjects;
 	serializedObjects.push_back(original);
@@ -28,5 +32,9 @@ std::shared_ptr<Object> Object::Instantiate(std::shared_ptr<Object> original) {
 	::Serialize(context, original);
 	context.FlushRequiestedToSerialize();
 
-	return AssetDatabase::Get()->LoadFromYaml<Object>(context.yamlNode);
+	return context;
+}
+
+std::shared_ptr<Object> Object::Instantiate(std::shared_ptr<Object> original) {
+	return Instantiate(Serialize(original));
 }

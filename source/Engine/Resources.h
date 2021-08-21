@@ -80,14 +80,17 @@ public:
 class AssetDatabase2 {
 public:
 	bool Init() {
+		OPTICK_EVENT();
 		return true;
 	}
 
 	void Term() {
+		OPTICK_EVENT();
 		UnloadAll();
 	}
 
 	void UnloadAll() {
+		OPTICK_EVENT();
 		assets.clear();
 		objectPaths.clear();
 	}
@@ -232,12 +235,14 @@ public:
 
 	AssetDatabase2 database2;
 	bool Init() {
+		OPTICK_EVENT();
 		mainDatabase = this;
 		database2.Init();
 		return true;
 	}
 
 	void Term() {
+		OPTICK_EVENT();
 		UnloadAll();
 		mainDatabase = nullptr;
 		database2.Term();

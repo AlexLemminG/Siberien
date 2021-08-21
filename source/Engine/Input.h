@@ -8,6 +8,7 @@ class Input {
 public:
 
 	static bool Init() {
+		OPTICK_EVENT();
 		justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 		pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 		justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
@@ -16,6 +17,7 @@ public:
 	}
 
 	static void Term() {
+		OPTICK_EVENT();
 		justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 		pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 		justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);

@@ -33,6 +33,8 @@ inline Matrix4 btConvert(btTransform transformMatrix) {
 class btBvhTriangleMeshShape;
 class btTriangleIndexVertexArray;
 class Mesh;
+class btConstraintSolverPoolMt;
+class btITaskScheduler;
 
 class MeshPhysicsData {
 public:
@@ -67,7 +69,10 @@ public:
 
 	btSequentialImpulseConstraintSolver* solver = nullptr;
 
+	btConstraintSolverPoolMt* solverPool = nullptr;
+
 	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
+	btITaskScheduler* taskScheduler = nullptr;
 
 
 	static constexpr int defaultGroup = 64;

@@ -17,20 +17,16 @@ class Mesh;
 namespace bimg {
 	class ImageContainer;
 }
-
+class Transform;
 class MeshRenderer : public Component {
 public:
-	//bx::
-	Matrix4 worldMatrix;
 	std::shared_ptr<Mesh> mesh;
 	std::shared_ptr<Material> material;
 	static std::vector<MeshRenderer*> enabledMeshRenderers;
 
 	void OnEnable() override;
 
-	void OnDisable() override {
-		enabledMeshRenderers.erase(std::find(enabledMeshRenderers.begin(), enabledMeshRenderers.end(), this));
-	}
+	void OnDisable() override;
 
 	REFLECT_BEGIN(MeshRenderer);
 	REFLECT_VAR(mesh);
@@ -40,51 +36,13 @@ public:
 	std::vector<Matrix4> bonesFinalMatrices;
 	std::vector<Matrix4> bonesWorldMatrices;
 	std::vector<Matrix4> bonesLocalMatrices;
+	Transform* m_transform = nullptr;
 	int randomColorTextureIdx = 0;
-};
-
-
-class AnimationTransform {
-public:
-	Vector3 position = Vector3_zero;
-	Quaternion rotation = Quaternion::identity;
-	Vector3 scale = Vector3_one;
-
-	static AnimationTransform Lerp(const AnimationTransform& a, const AnimationTransform& b, float t);
-
-	void ToMatrix(Matrix4& matrix);
-};
-class MeshAnimation : public Object {
-public:
-	std::string name;
-	aiAnimation* assimAnimation = nullptr;
-	AnimationTransform GetTransform(const std::string& bone, float t);
-
-	REFLECT_BEGIN(MeshAnimation);
-	REFLECT_END();
-};
-
-class Animator : public Component {
-public:
-	void Update() override;
-
-	std::shared_ptr<MeshAnimation> currentAnimation;
-	std::shared_ptr<MeshAnimation> defaultAnimation;
-	float currentTime;
-	float speed = 1.f;
-
-	void OnEnable() override;
-
-	void SetAnimation(std::shared_ptr<MeshAnimation> animation) { currentAnimation = animation; }
-
-	REFLECT_BEGIN(Animator);
-	REFLECT_VAR(speed);
-	REFLECT_VAR(defaultAnimation);
-	REFLECT_END();
 
 private:
-	void UpdateWorldMatrices();
+	bool addedToRenderers = false;
 };
+
 
 class DirLight : public Component {
 public:

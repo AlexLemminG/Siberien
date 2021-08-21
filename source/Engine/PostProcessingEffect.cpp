@@ -4,6 +4,8 @@
 #include "Texture.h"
 #include "System.h"
 #include "Shader.h"
+#include "Resources.h"
+#include "Serialization.h"
 
 
 struct PosTexCoord0Vertex
@@ -36,6 +38,7 @@ class PostProcessingSystem : public System< PostProcessingSystem> {
 REGISTER_SYSTEM(PostProcessingSystem);
 
 void PostProcessingEffect::Draw(Render& render) {
+	OPTICK_EVENT();
 
 	if (!shader || !bgfx::isValid(shader->program)) {
 		return;

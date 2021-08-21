@@ -425,6 +425,7 @@ void AssetDatabase::CreateFolders(std::string fullPath) {
 }
 
 void AssetDatabase::UnloadAll() {
+	OPTICK_EVENT();
 	assets.clear();
 	requestedAssetsToLoad.clear();
 	requestedObjectPtrs.clear();

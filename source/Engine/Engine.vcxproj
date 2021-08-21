@@ -67,6 +67,10 @@
       <LanguageStandard>stdcpp14</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
       <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -77,6 +81,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="BlenderSceneLoader.cpp" />
     <ClCompile Include="BoxCollider.cpp" />
     <ClCompile Include="BulletSystem.cpp" />
@@ -121,6 +126,7 @@
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animation.h" />
     <ClInclude Include="BlenderSceneLoader.h" />
     <ClInclude Include="BoxCollider.h" />
     <ClInclude Include="BulletSystem.h" />

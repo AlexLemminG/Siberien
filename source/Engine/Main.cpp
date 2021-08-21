@@ -31,31 +31,35 @@ start:
 	bool needReload = false;
 
 	Config config;
-	if (!config.Init()) {
-		return -1;
-	}
-
 	AssetDatabase assets;
-	if (!assets.Init()) {
-		return -1;
-	}
-
 	Render render;
-	if (!render.Init()) {
-		return -1;
-	}
-
 	SystemsManager systemsManager;
-	if (!systemsManager.Init()) {
-		return -1;
+
+	{
+		OPTICK_EVENT("Init");
+		if (!config.Init()) {
+			return -1;
+		}
+
+		if (!assets.Init()) {
+			return -1;
+		}
+
+		if (!render.Init()) {
+			return -1;
+		}
+
+		if (!systemsManager.Init()) {
+			return -1;
+		}
+
+		Input::Init();
+
+		SceneManager::Init();
+		SceneManager::LoadScene(GetFirstSceneName());
+
+		SceneManager::Update();
 	}
-
-	Input::Init();
-
-	SceneManager::Init();
-	SceneManager::LoadScene(GetFirstSceneName());
-
-	SceneManager::Update();
 
 	bool quit = false;
 	bool needConstantSceneReload = false;
@@ -90,20 +94,22 @@ start:
 		SceneManager::Update();
 	}
 
-	Input::Term();
+	{
+		OPTICK_EVENT("Term");
+		Input::Term();
 
-	SceneManager::Term();
+		SceneManager::Term();
 
-	assets.UnloadAll();
+		assets.UnloadAll();
 
-	systemsManager.Term();
+		systemsManager.Term();
 
-	render.Term();
+		render.Term();
 
-	assets.Term();
+		assets.Term();
 
-	config.Term();
-
+		config.Term();
+	}
 	if (needReload) {
 		goto start;
 	}

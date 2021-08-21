@@ -5,6 +5,7 @@
 SystemsManager* SystemsManager::manager;
 
 bool SystemsManager::Init() {
+	OPTICK_EVENT();
 	manager = this;
 	for (auto registrator : GetRegistrators()) {
 		systems.push_back(registrator->CreateSystem());
@@ -47,6 +48,7 @@ void SystemsManager::Draw() {
 }
 
 void SystemsManager::Term() {
+	OPTICK_EVENT();
 	//TODO term only inited
 	for (int i = systems.size() - 1; i >= 0; i--) {
 		auto system = systems[i];

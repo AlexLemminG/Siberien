@@ -1,13 +1,16 @@
 #pragma once
 
 #include "Math.h"
-#include "MeshRenderer.h"
+#include "bgfx/bgfx.h"
 
 struct SDL_Window;
 class SDL_Surface;
 class SystemsManager;
 class PostProcessingEffect;
 class Texture;
+class Material;
+class MeshRenderer;
+class Mesh;
 
 class Render {
 public:
@@ -27,7 +30,7 @@ public:
 	//TODO make non static
 	static SDL_Window* window;
 private:
-	void DrawMesh(MeshRenderer* renderer);
+	void DrawMesh(const MeshRenderer* renderer, bool clearState, bool updateState);
 	void UpdateLights(Vector3 poi);
 	
 	bool IsFullScreen();
@@ -61,4 +64,5 @@ private:
 	std::shared_ptr<Texture> defaultEmissiveTexture;
 	std::shared_ptr<PostProcessingEffect> post;
 
+	int dbgMeshesDrawn = 0;
 };

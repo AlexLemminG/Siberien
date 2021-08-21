@@ -22,4 +22,8 @@ public:
 	}
 
 	static std::shared_ptr<Object> Instantiate(std::shared_ptr<Object> original);
+	
+	// todo move to different file
+	static std::shared_ptr<Object> Instantiate(SerializationContext& serializedOriginal);
+	static SerializationContext Serialize(std::shared_ptr<Object> original);
 };

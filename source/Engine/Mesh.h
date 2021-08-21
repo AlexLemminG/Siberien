@@ -45,7 +45,7 @@ class Mesh : public Object {
 public:
 	class BoneInfo {
 	public:
-		std::string name;
+		std::string name = "";
 		int idx = 0;
 		int parentBoneIdx = -1;
 		Matrix4 offset;

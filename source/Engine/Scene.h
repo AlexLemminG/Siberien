@@ -2,7 +2,6 @@
 
 #include "Serialization.h"
 #include "GameObject.h"
-#include "Render.h"
 
 class GameObject;
 

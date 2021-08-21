@@ -37,12 +37,14 @@ void SettingsSetInt(std::string name, int i) {
 }
 
 bool Config::Init() {
+	OPTICK_EVENT();
 	config = YAML::LoadFile("config.yaml");
 	settings = YAML::LoadFile("settings.yaml");
 	return true;
 }
 
 void Config::Term() {
+	OPTICK_EVENT();
 	std::ofstream fout("settings.yaml");
 	fout << settings;
 }

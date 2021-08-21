@@ -5,7 +5,7 @@
 #include "Resources.h"
 #include "Serialization.h"
 #include "System.h"
-#include "MeshRenderer.h" //TODO just animator
+#include "Animation.h"
 #include "PhysicsSystem.h"//TODO looks weird
 
 
@@ -348,13 +348,40 @@ public:
 			int numBones;
 			buffer.Read(numBones);
 			mesh->bones.resize(numBones);
-			if (numBones) {
-				buffer.Read((uint8_t*)&mesh->bones[0], numBones * sizeof(decltype(mesh->bones[0])));
+			for (int i = 0; i < numBones; i++) {
+				buffer.Read(mesh->bones[i].name);
+				buffer.Read(mesh->bones[i].idx);
+				buffer.Read(mesh->bones[i].parentBoneIdx);
+				buffer.Read(mesh->bones[i].offset);
+				buffer.Read(mesh->bones[i].initialLocal);
+				buffer.Read(mesh->bones[i].inverseTPoseRotation);
 			}
 
 			buffer.Read(mesh->aabb);
 		}
 		PhysicsSystem::Get()->DeserializeMeshPhysicsDataFromBuffer(fullMeshAsset->meshes, buffer);
+
+		int numAnimations;
+		buffer.Read(numAnimations);
+		for (int i = 0; i < numAnimations; i++) {
+			auto animation = std::make_shared<MeshAnimation>();
+			fullMeshAsset->animations.push_back(animation);
+			buffer.Read(animation->name);
+
+			int numBones;
+			buffer.Read(numBones);
+			for (int i = 0; i < numBones; i++) {
+				std::string boneName;
+				buffer.Read(boneName);
+				int numKeyframes;
+				buffer.Read(numKeyframes);
+				auto& keyframes = animation->boneNameToKeyframesMapping[boneName];
+				if (numKeyframes) {
+					keyframes.resize(numKeyframes);
+					buffer.Read((uint8_t*)&keyframes[0], sizeof(decltype(keyframes[0])) * numKeyframes);
+				}
+			}
+		}
 
 		DeserializeFromBuffer(buffer, fullMeshAsset, fullMeshAsset->rootNode);
 
@@ -392,7 +419,7 @@ public:
 
 			int numIndices = mesh->rawIndices.size();
 			buffer.Write(numIndices);
-			if(numIndices){
+			if (numIndices) {
 				buffer.Write((uint8_t*)&mesh->rawIndices[0], numIndices * sizeof(decltype(mesh->rawIndices[0])));
 			}
 
@@ -404,15 +431,38 @@ public:
 
 			int numBones = mesh->bones.size();
 			buffer.Write(numBones);
-			if (numBones) {
-				buffer.Write((uint8_t*)&mesh->bones[0], numBones * sizeof(decltype(mesh->bones[0])));
+			for (int i = 0; i < numBones; i++) {
+				buffer.Write(mesh->bones[i].name);
+				buffer.Write(mesh->bones[i].idx);
+				buffer.Write(mesh->bones[i].parentBoneIdx);
+				buffer.Write(mesh->bones[i].offset);
+				buffer.Write(mesh->bones[i].initialLocal);
+				buffer.Write(mesh->bones[i].inverseTPoseRotation);
 			}
 
 			buffer.Write(mesh->aabb);
 		}
 		PhysicsSystem::Get()->SerializeMeshPhysicsDataToBuffer(meshAsset->meshes, buffer);
 
-		//TODO animations
+		int numAnimations = meshAsset->animations.size();
+		buffer.Write(numAnimations);
+		for (const auto& animation : meshAsset->animations) {
+			std::string name = animation->name;
+			buffer.Write(name);
+
+			int numBones = animation->boneNameToKeyframesMapping.size();
+			buffer.Write(numBones);
+			for (const auto& it : animation->boneNameToKeyframesMapping) {
+				const std::string& boneName = it.first;
+				buffer.Write(boneName);
+				const auto& keyframes = it.second;
+				int numKeyframes = keyframes.size();
+				buffer.Write(numKeyframes);
+				if (numKeyframes) {
+					buffer.Write((uint8_t*)&keyframes[0], sizeof(decltype(keyframes[0])) * numKeyframes);
+				}
+			}
+		}
 
 		SerializeToBuffer(buffer, meshAsset, meshAsset->rootNode);
 
@@ -457,19 +507,14 @@ public:
 		auto fullAsset = std::make_shared<FullMeshAsset>();
 		//TODO animation and mesh names may not be unique
 
-		std::unordered_map < std::string, std::shared_ptr<MeshAnimation>> animations;
+		std::unordered_map<std::string, std::shared_ptr<MeshAnimation>> animations;
 		const std::string armaturePrefix = "Armature|";
 		for (int iAnim = 0; iAnim < scene->mNumAnimations; iAnim++) {
 			auto anim = scene->mAnimations[iAnim];
 			auto animation = std::make_shared<MeshAnimation>();
-			animation->assimAnimation = anim;
-			std::string animName = anim->mName.C_Str();
-			if (animName.find(armaturePrefix.c_str()) == 0) {
-				animName = animName.substr(armaturePrefix.size(), animName.size() - armaturePrefix.size());
-			}
-			animation->name = animName;
+			animation->DeserializeFromAssimp(anim);
 			fullAsset->animations.push_back(animation);
-			animations[animName] = animation;
+			animations[animation->name] = animation;//TODO remove
 		}
 
 		int importedMeshesCount = 0;
@@ -524,7 +569,6 @@ public:
 		}
 
 		CopyNodesHierarchy(scene, scene->mRootNode, fullAsset, fullAsset->rootNode);
-		//TODO free scene
 		if (importedMeshesCount == 0) {
 			//TODO send error to handler
 			LogError("failed to import: no meshes");
