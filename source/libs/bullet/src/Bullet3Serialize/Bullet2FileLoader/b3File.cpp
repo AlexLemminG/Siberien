@@ -188,7 +188,9 @@ void bFile::parseInternal(int verboseMode, char *memDna, int memDnaLength)
 	dna.oldPtr = 0;
 
 	char *tempBuffer = blenderData;
-	for (int i = 0; i < mFileLen; i++)
+	int hackApproxDNAPos = mFileLen - 13809;
+	tempBuffer += hackApproxDNAPos;
+	for (int i = hackApproxDNAPos; i < mFileLen; i++)
 	{
 		// looking for the data's starting position
 		// and the start of SDNA decls

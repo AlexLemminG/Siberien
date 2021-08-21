@@ -4,7 +4,10 @@
 #include "Time.h"
 #include "Scene.h"
 #include "GameObject.h"
+#include "Mesh.h"
+#include "MeshCollider.h"//TODO move meshPhysicsData to separate class
 #include <BulletCollision\CollisionDispatch\btGhostObject.h>
+#include "Bullet3Serialize/Bullet2FileLoader/b3BulletFile.h"
 
 REGISTER_SYSTEM(PhysicsSystem);
 
@@ -42,15 +45,11 @@ bool PhysicsSystem::Init() {
 	///-----stepsimulation_start-----
 	prevSimulationTime = Time::time();
 
-
-
-
-
 	return true;
 }
 
 void PhysicsSystem::Update() {
-	OPTICK_EVENT();	
+	OPTICK_EVENT();
 	dynamicsWorld->stepSimulation(Time::deltaTime(), 2, Time::fixedDeltaTime());
 }
 
@@ -114,6 +113,67 @@ void PhysicsSystem::GetGroupAndMask(const std::string& groupName, int& group, in
 		mask = defaultMask;
 	}
 
+}
+
+void PhysicsSystem::SerializeMeshPhysicsDataToBuffer(std::vector<std::shared_ptr<Mesh>>& meshes, BinaryBuffer& buffer) {
+	std::vector<uint8_t> tempBuffer; //TODO need for aligning only (and not realy correct)
+	for (const auto& mesh : meshes) {
+		bool hasData = mesh->physicsData != nullptr;
+		buffer.Write(hasData);
+		if (!hasData) {
+			continue;
+		}
+		bool hasShape = mesh->physicsData->triangleShape != nullptr;
+		buffer.Write(hasShape);
+		if (!hasShape) {
+			continue;
+		}
+		auto bvh = mesh->physicsData->triangleShape->getOptimizedBvh();
+		int size = bvh->calculateSerializeBufferSize();
+		tempBuffer.resize(size);
+		buffer.Write(size);
+		if (size) {
+			bvh->serialize(&tempBuffer[0], tempBuffer.size(), false);
+		}
+		buffer.Write(&tempBuffer[0], tempBuffer.size());
+	}
+}
+
+void PhysicsSystem::DeserializeMeshPhysicsDataFromBuffer(std::vector<std::shared_ptr<Mesh>>& meshes, BinaryBuffer& buffer) {
+	for (int i = 0; i < meshes.size(); i++) {
+		auto& mesh = meshes[i];
+		bool hasData;
+		buffer.Read(hasData);
+		if (!hasData) {
+			continue;
+		}
+		mesh->physicsData = std::make_unique<MeshPhysicsData>();
+		bool hasShape;
+		buffer.Read(hasShape);
+		if (!hasShape) {
+			continue;
+		}
+		int size;
+		buffer.Read(size);
+		if (size) {
+			mesh->physicsData->triangleShapeBuffer.resize(size);//TODO dich
+			buffer.Read(&mesh->physicsData->triangleShapeBuffer[0], size);
+
+			btOptimizedBvh* bvh = btOptimizedBvh::deSerializeInPlace(&mesh->physicsData->triangleShapeBuffer[0], size, false);
+			
+			auto nonBuildShape = MeshColliderStorageSystem::Get()->Create(mesh, false);
+			mesh->physicsData->triangleShape = nonBuildShape.shape;
+			mesh->physicsData->triangles = nonBuildShape.triangles;
+			mesh->physicsData->triangleShape->setOptimizedBvh(bvh);
+		}
+	}
+}
+
+void PhysicsSystem::CalcMeshPhysicsDataFromBuffer(std::shared_ptr<Mesh> mesh) {
+	auto meshShape = MeshColliderStorageSystem::Get()->Create(mesh, true);//TODO renames
+	mesh->physicsData = std::make_unique<MeshPhysicsData>();
+	mesh->physicsData->triangleShape = meshShape.shape;
+	mesh->physicsData->triangles = meshShape.triangles;
 }
 
 void PhysicsSystem::OnPhysicsTick(btDynamicsWorld* world, btScalar timeStep) {

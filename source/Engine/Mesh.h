@@ -8,28 +8,41 @@
 class aiMesh;
 class aiScene;
 class MeshAnimation;
+class Mesh;
 
 //TODO rename ?
+struct FullMeshAsset_Node {
+	std::shared_ptr<Mesh> mesh;
+	Matrix4 localTransformMatrix;
+	std::vector<FullMeshAsset_Node> childNodes;
+};
 class FullMeshAsset : public Object {
 public:
-	std::shared_ptr<const aiScene> scene;
+
+	FullMeshAsset_Node rootNode;
+
+	std::vector<std::shared_ptr<Mesh>> meshes;
+	std::vector<std::shared_ptr<MeshAnimation>> animations;
 
 	REFLECT_BEGIN(FullMeshAsset);
 	REFLECT_END();
 };
 
+struct RawVertexData {
+	static constexpr int bonesPerVertex = 4;
+
+	Vector3 pos;
+	Vector3 normal;
+	Vector3 tangent;
+	Vector2 uv;
+	float boneWeights[bonesPerVertex];
+	uint16_t boneIndices[bonesPerVertex];
+};
+
+class MeshPhysicsData;
+
 class Mesh : public Object {
 public:
-	std::string name;
-	aiMesh* originalMeshPtr = nullptr;
-	bgfx::VertexBufferHandle vertexBuffer = BGFX_INVALID_HANDLE;
-	bgfx::IndexBufferHandle indexBuffer = BGFX_INVALID_HANDLE;
-
-	static constexpr int bonesPerVertex = 4;
-	Matrix4 globalInverseTransform;
-
-	~Mesh();
-
 	class BoneInfo {
 	public:
 		std::string name;
@@ -40,8 +53,22 @@ public:
 		Quaternion inverseTPoseRotation;
 	};
 
+	bgfx::VertexBufferHandle vertexBuffer = BGFX_INVALID_HANDLE;
+	bgfx::IndexBufferHandle indexBuffer = BGFX_INVALID_HANDLE;
+
+	std::string name;
+
+	std::vector<RawVertexData> rawVertices;
+	std::vector<uint16_t> rawIndices;
+
 	std::vector<BoneInfo> bones;
-	std::shared_ptr<MeshAnimation> tPoseAnim;
+
+	std::unique_ptr<MeshPhysicsData> physicsData;
+
+	AABB aabb;
+
+	~Mesh();
+
 
 	void Init();
 private:
@@ -72,7 +99,5 @@ public:
 
 	MeshVertexLayout& End();
 
-	std::vector<uint8_t> CreateBuffer(aiMesh* mesh) const;
-
-	static std::vector<uint16_t> CreateIndices(aiMesh* mesh);
+	std::vector<uint8_t> CreateBuffer(const std::vector<RawVertexData>& rawVertices) const;
 };

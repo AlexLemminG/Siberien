@@ -30,6 +30,17 @@ inline Matrix4 btConvert(btTransform transformMatrix) {
 	return mat;
 }
 
+class btBvhTriangleMeshShape;
+class btTriangleIndexVertexArray;
+class Mesh;
+
+class MeshPhysicsData {
+public:
+	std::shared_ptr<btBvhTriangleMeshShape> triangleShape;
+	std::shared_ptr<btTriangleIndexVertexArray> triangles;
+	std::vector<uint8_t> triangleShapeBuffer;
+};
+
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
@@ -37,6 +48,7 @@ class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 class btDynamicsWorld;
 class GameObject;
+class BinaryBuffer;
 
 class PhysicsSystem : public System< PhysicsSystem> {
 public:
@@ -78,6 +90,10 @@ public:
 	static constexpr int staticGeomMask = enemyBulletMask | playerBulletMask | playerMask | enemyMask | enemyCorpseGroup;
 
 	static void GetGroupAndMask(const std::string& groupName, int& group, int& mask);
+
+	void SerializeMeshPhysicsDataToBuffer(std::vector<std::shared_ptr<Mesh>>& meshes, BinaryBuffer& buffer);
+	void DeserializeMeshPhysicsDataFromBuffer(std::vector<std::shared_ptr<Mesh>>& meshes, BinaryBuffer& buffer);
+	void CalcMeshPhysicsDataFromBuffer(std::shared_ptr<Mesh> mesh);
 
 private:
 	static void OnPhysicsTick(btDynamicsWorld* world, btScalar timeStep);

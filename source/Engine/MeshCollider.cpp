@@ -9,91 +9,79 @@
 #include "Resources.h"
 
 
-class MeshColliderStorageSystem : public System<MeshColliderStorageSystem> {
-public:
-	int totalGets = 0;
-	int totalNew = 0;
-	std::shared_ptr<btBvhTriangleMeshShape> GetStored(std::shared_ptr<Mesh> mesh, Vector3 scale) {
-		totalGets++;
-		auto it = meshes.find(mesh);
-		if (it == meshes.end()) {
-			return AddNew(mesh, scale);
-		}
-		else {
-			for (const auto& sm : it->second) {
-				if (Vector3::DistanceSquared(sm.scale, scale) < 0.001) {
-					return sm.shape;
-				}
-			}
-			return AddNew(mesh, scale);
-		}
+std::shared_ptr<btBvhTriangleMeshShape> MeshColliderStorageSystem::GetStored(std::shared_ptr<Mesh> mesh) {
+	totalGets++;
+	auto it = meshes.find(mesh);
+	if (it == meshes.end()) {
+		return AddNew(mesh);
+	}
+	else {
+		return it->second.shape;
+	}
+}
+
+bool MeshColliderStorageSystem::Init() {
+	unloadHandle = AssetDatabase::Get()->onUnloaded.Subscribe([this]() {OnUnloaded(); });
+	return true;
+}
+
+void MeshColliderStorageSystem::Term() {
+	AssetDatabase::Get()->onUnloaded.Unsubscribe(unloadHandle);
+	meshes.clear();
+}
+
+void MeshColliderStorageSystem::OnUnloaded() {
+	meshes.clear();
+}
+std::shared_ptr<btBvhTriangleMeshShape> MeshColliderStorageSystem::AddNew(std::shared_ptr<Mesh> mesh) {
+	if (mesh && mesh->physicsData && mesh->physicsData->triangleShape) {
+		auto shape = StoredMesh{ mesh->physicsData->triangleShape, mesh->physicsData->triangles };
+		meshes[mesh] = shape;
+		return shape.shape;
+	}
+	else {
+		auto shape = Create(mesh, true);
+		meshes[mesh] = shape;
+		return shape.shape;
 	}
 
-	bool Init() override {
-		unloadHandle = AssetDatabase::Get()->onUnloaded.Subscribe([this]() {OnUnloaded(); });
-		return true;
+}
+
+MeshColliderStorageSystem::StoredMesh MeshColliderStorageSystem::Create(std::shared_ptr<Mesh> mesh, bool buildBvh) {
+	if (!mesh) {
+		return StoredMesh{};
 	}
+	totalNew++;
+	auto triangles = std::make_shared<btTriangleIndexVertexArray>();
+	auto indexedMesh = btIndexedMesh();
+	//TODO preload or use non assimp buffers;
+	indexedMesh.m_numVertices = mesh->rawVertices.size();
+	indexedMesh.m_vertexBase = (const unsigned char*)&(mesh->rawVertices[0].pos.x);
+	indexedMesh.m_vertexStride = sizeof(RawVertexData);
+	indexedMesh.m_vertexType = PHY_FLOAT;
 
-	void Term() override {
-		AssetDatabase::Get()->onUnloaded.Unsubscribe(unloadHandle);
-		meshes.clear();
-		meshIndices.clear();
-	}
+	auto& indices = mesh->rawIndices;
+	indexedMesh.m_numTriangles = mesh->rawIndices.size() / 3;
+	indexedMesh.m_triangleIndexBase = (const uint8_t*)&indices[0];
+	indexedMesh.m_triangleIndexStride = 3 * sizeof(uint16_t);
+	indexedMesh.m_indexType = PHY_ScalarType::PHY_SHORT;
+	triangles->addIndexedMesh(indexedMesh, PHY_ScalarType::PHY_SHORT);
+	triangles->setPremadeAabb(btConvert(mesh->aabb.min), btConvert(mesh->aabb.max));
 
-	void OnUnloaded() {
-		meshes.clear();
-		meshIndices.clear();
-	}
-	int unloadHandle;
-private:
-	std::shared_ptr<btBvhTriangleMeshShape> AddNew(std::shared_ptr<Mesh> mesh, Vector3 scale) {
-		if (!mesh) {
-			return nullptr;
-		}
-		totalNew++;
-		auto triangles = std::make_shared<btTriangleIndexVertexArray>();
-		auto indexedMesh = btIndexedMesh();
-		//TODO preload or use non assimp buffers;
-		indexedMesh.m_numVertices = mesh->originalMeshPtr->mNumVertices;
-		indexedMesh.m_vertexBase = (const unsigned char*)&(mesh->originalMeshPtr->mVertices[0].x);
-		indexedMesh.m_vertexStride = sizeof(float) * 3;
-		indexedMesh.m_vertexType = PHY_FLOAT;
+	auto shape = std::make_shared<btBvhTriangleMeshShape>(triangles.get(), true, buildBvh);
 
-		auto itIndices = meshIndices.find(mesh);
-		if (itIndices == meshIndices.end()) {
-			meshIndices[mesh] = std::move(MeshVertexLayout::CreateIndices(mesh->originalMeshPtr));
-		}
-		auto& indices = meshIndices[mesh];
-		indexedMesh.m_numTriangles = mesh->originalMeshPtr->mNumFaces;
-		indexedMesh.m_triangleIndexBase = (const uint8_t*)&indices[0];
-		indexedMesh.m_triangleIndexStride = 3 * sizeof(uint16_t);
-		indexedMesh.m_indexType = PHY_ScalarType::PHY_SHORT;
-		triangles->addIndexedMesh(indexedMesh, PHY_ScalarType::PHY_SHORT);
-		triangles->setScaling(btConvert(scale));
-		auto shape = std::make_shared<btBvhTriangleMeshShape>(triangles.get(), true);
-
-		meshes[mesh].push_back(StoredMesh{ scale, shape, triangles });
-
-		return shape;
-	}
-	struct StoredMesh {
-		Vector3 scale;
-		std::shared_ptr<btBvhTriangleMeshShape> shape;
-		std::shared_ptr<btTriangleIndexVertexArray> triangles;
-	};
-
-	std::unordered_map<std::shared_ptr<Mesh>, std::vector<StoredMesh>> meshes;
-	std::unordered_map<std::shared_ptr<Mesh>, std::vector<uint16_t>> meshIndices;
-};
+	return StoredMesh{ shape, triangles };
+}
 REGISTER_SYSTEM(MeshColliderStorageSystem);
 
 std::shared_ptr<btCollisionShape> MeshCollider::CreateShape() {
 	if (!mesh) {
 		return nullptr;
 	}
+	auto nonScaledShape = MeshColliderStorageSystem::Get()->GetStored(mesh);
 	auto scale = gameObject()->transform()->GetScale();
-	auto shape = MeshColliderStorageSystem::Get()->GetStored(mesh, scale);
-	return shape;
+	auto scaledShape = std::make_shared<btScaledBvhTriangleMeshShape>(nonScaledShape.get(), btConvert(scale));
+	return scaledShape;
 }
 
 DECLARE_TEXT_ASSET(MeshCollider);

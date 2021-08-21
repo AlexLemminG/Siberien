@@ -83,7 +83,6 @@ start:
 		}
 
 		if (needConstantSceneReload) {
-			needConstantSceneReload = false;
 			SceneManager::LoadScene(GetFirstSceneName());
 			assets.UnloadAll();
 		}

@@ -9,14 +9,12 @@
 #include "MeshCollider.h"
 
 
-void BlenderSceneLoader::AddToNodes(const aiScene* scene, aiNode* node, const std::string& baseAssetPath, const Matrix4& parentTransform) {
+void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::string& baseAssetPath, const Matrix4& parentTransform) {
 
-	Matrix4 matrix = *(Matrix4*)(void*)(&(node->mTransformation.a1));
-	matrix = matrix.Transpose();
-	matrix = parentTransform * matrix;
+	Matrix4 matrix = parentTransform * node.localTransformMatrix;
 	
-	if (node->mNumMeshes >= 1) {
-		auto meshName = std::string(scene->mMeshes[node->mMeshes[0]]->mName.C_Str());
+	if (node.mesh) {
+		auto meshName = node.mesh->name;
 		auto assetPath = baseAssetPath + "$" + meshName;
 		bool isHidden = assetPath.find("hidden") != -1;
 
@@ -63,19 +61,19 @@ void BlenderSceneLoader::AddToNodes(const aiScene* scene, aiNode* node, const st
 		}
 	}
 
-	for (int i = 0; i < node->mNumChildren; i++) {
-		AddToNodes(scene, node->mChildren[i], baseAssetPath, matrix);
+	for (const auto& childNode : node.childNodes) {
+		AddToNodes(childNode, baseAssetPath, matrix);
 	}
 }
 
 
 void BlenderSceneLoader::OnEnable() {
-	if (scene == nullptr || scene->scene == nullptr) {
+	if (scene == nullptr) {
 		return;
 	}
 	auto path = AssetDatabase::PathDescriptor(AssetDatabase::Get()->GetAssetPath(scene)).assetPath;
 	
-	AddToNodes(scene->scene.get(), scene->scene->mRootNode, path, Matrix4::Identity());
+	AddToNodes(scene->rootNode, path, Matrix4::Identity());
 }
 
 DECLARE_TEXT_ASSET(BlenderSceneLoader);

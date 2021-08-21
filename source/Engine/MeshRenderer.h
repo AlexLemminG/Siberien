@@ -56,6 +56,7 @@ public:
 };
 class MeshAnimation : public Object {
 public:
+	std::string name;
 	aiAnimation* assimAnimation = nullptr;
 	AnimationTransform GetTransform(const std::string& bone, float t);
 

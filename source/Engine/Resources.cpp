@@ -329,6 +329,9 @@ void AssetDatabase::LoadAllAtYaml(const YAML::Node& node, const std::string& pat
 
 void AssetDatabase::LoadAllAtPath(std::string path)
 {
+	if (path.empty()) {
+		return;
+	}
 	currentAssetLoadingPath = path;
 	std::string ext = GetFileExtension(path);
 	if (ext == "asset") {
@@ -374,7 +377,9 @@ void AssetDatabase::LoadNextWhileNotEmpty() {
 	for (auto it : requestedObjectPtrs) {
 		auto object = GetLoaded(it.second);
 		if (!object) {
-			LogError("Asset not found '%s'", it.second.c_str());
+			if (!it.second.empty()) {
+				LogError("Asset not found '%s'", it.second.c_str());
+			}
 			*(std::shared_ptr<Object>*)(it.first) = nullptr;
 		}
 		else {
@@ -520,7 +525,7 @@ void AssetDatabase2::BinaryImporterHandle::WriteToLibraryFile(const std::string&
 void AssetDatabase2::BinaryImporterHandle::WriteToLibraryFile(const std::string& id, std::vector<uint8_t>& buffer) {
 	//TODO checks and make sure folder exists
 	const auto fullPath = GetLibraryPathFromId(id);
-	std::ofstream fout(fullPath);
+	std::ofstream fout(fullPath, std::ios::binary);
 	if (buffer.size() > 0) {
 		fout.write((char*)&buffer[0], buffer.size());
 	}
@@ -582,7 +587,8 @@ bool AssetDatabase2::BinaryImporterHandle::ReadYAML(const std::string& fullPath,
 {
 	std::ifstream input(fullPath);
 	if (!input) {
-		LogError("Failed to load '%s': file not found", assetPath.c_str());
+		//TODO
+		//LogError("Failed to load '%s': file not found", fullPath.c_str());
 		node = YAML::Node();
 		return false;
 	}

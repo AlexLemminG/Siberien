@@ -7,6 +7,7 @@ class FullMeshAsset;
 class Material;
 class aiScene;
 class aiNode;
+class FullMeshAsset_Node;
 
 class BlenderClassLoaderAssetMapping {
 public:
@@ -39,6 +40,6 @@ class BlenderSceneLoader : public Component {
 	REFLECT_END();
 
 private:
-	void AddToNodes(const aiScene* scene, aiNode* node, const std::string& baseAssetPath, const Matrix4& parentTransform);
+	void AddToNodes(const FullMeshAsset_Node& node, const std::string& baseAssetPath, const Matrix4& parentTransform);
 };
 

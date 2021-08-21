@@ -18,6 +18,7 @@ extern const Vector3 Vector3_one;
 extern const Vector3 Vector3_forward;
 extern const Vector3 Vector3_up;
 extern const Vector3 Vector3_right;
+extern const Vector3 Vector3_max;
 
 class SerializedObject;
 
@@ -216,6 +217,21 @@ namespace Colors {
 	constexpr Color clear{ 0.f,0.f,0.f,0.f };
 };
 
+class AABB {
+public:
+	Vector3 min = Vector3_max;
+	Vector3 max = -Vector3_max;
+
+	void Expand(Vector3 pos) {
+		min.x = Mathf::Min(min.x, pos.x);
+		min.y = Mathf::Min(min.y, pos.y);
+		min.z = Mathf::Min(min.z, pos.z);
+
+		max.x = Mathf::Max(max.x, pos.x);
+		max.y = Mathf::Max(max.y, pos.y);
+		max.z = Mathf::Max(max.z, pos.z);
+	}
+};
 
 class Ray {
 public:

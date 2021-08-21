@@ -6,6 +6,7 @@
 #include "Serialization.h"
 #include "System.h"
 #include "MeshRenderer.h" //TODO just animator
+#include "PhysicsSystem.h"//TODO looks weird
 
 
 
@@ -57,103 +58,8 @@ MeshVertexLayout& MeshVertexLayout::End() {
 	return *this;
 }
 
-std::vector<uint8_t> MeshVertexLayout::CreateBuffer(aiMesh* mesh) const {
-	int numVerts = mesh->mNumVertices;
-	int stride = bgfxLayout.m_stride;
-	std::vector<uint8_t> buffer;
-	buffer.resize(bgfxLayout.getSize(numVerts));
 
-	std::vector<float> weights;
-	weights.resize(numVerts * Mesh::bonesPerVertex, 0.f);
-
-	std::vector<uint8_t> indices;
-	indices.resize(numVerts * Mesh::bonesPerVertex, 0);
-
-	for (int iBone = 0; iBone < mesh->mNumBones; iBone++) {
-		for (int j = 0; j < mesh->mBones[iBone]->mNumWeights; j++) {
-			int vertexID = mesh->mBones[iBone]->mWeights[j].mVertexId;
-			float weight = mesh->mBones[iBone]->mWeights[j].mWeight;
-
-			for (int i = 0; i < Mesh::bonesPerVertex; i++) {
-				if (weights[vertexID * Mesh::bonesPerVertex + i] == 0.f) {
-					weights[vertexID * Mesh::bonesPerVertex + i] = weight;
-					indices[vertexID * Mesh::bonesPerVertex + i] = iBone;
-					break;
-				}
-			}
-		}
-	}
-
-	for (int i = 0; i < numVerts; i++) {
-		float w = 0.f;
-		for (int j = 0; j < Mesh::bonesPerVertex; j++) {
-			w += weights[i * Mesh::bonesPerVertex + j];
-		}
-		weights[i * Mesh::bonesPerVertex] += 1.f - w;
-	}
-
-	for (int i = 0; i < attributes.size(); i++) {
-		auto attribute = attributes[i];
-		int offset = bgfxLayout.getOffset(attribute);
-		if (attribute == bgfx::Attrib::Position) {
-			aiVector3D* srcBuffer = mesh->mVertices;
-			uint8_t* dstBuffer = &buffer[offset];
-			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
-				memcpy(dstBuffer, srcBuffer, sizeof(float) * 3);
-				srcBuffer += 1;
-				dstBuffer += stride;
-			}
-		}
-		else if (attribute == bgfx::Attrib::Normal) {
-			aiVector3D* srcBuffer = mesh->mNormals;
-			uint8_t* dstBuffer = &buffer[offset];
-			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
-				memcpy(dstBuffer, srcBuffer, sizeof(float) * 3);
-				srcBuffer += 1;
-				dstBuffer += stride;
-			}
-		}
-		else if (attribute == bgfx::Attrib::TexCoord0) {
-			aiVector3D* srcBuffer = mesh->mTextureCoords[0];
-			uint8_t* dstBuffer = &buffer[offset];
-			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
-				memcpy(dstBuffer, srcBuffer, sizeof(float) * 2);
-				srcBuffer += 1;
-				dstBuffer += stride;
-			}
-		}
-		else if (attribute == bgfx::Attrib::Tangent) {
-			aiVector3D* srcBuffer = mesh->mTangents;
-			uint8_t* dstBuffer = &buffer[offset];
-			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
-				memcpy(dstBuffer, srcBuffer, sizeof(float) * 3);
-				srcBuffer += 1;
-				dstBuffer += stride;
-			}
-		}
-		else if (attribute == bgfx::Attrib::Indices) {
-			uint8_t* srcBuffer = &indices[0];
-			uint8_t* dstBuffer = &buffer[offset];
-			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
-				memcpy(dstBuffer, srcBuffer, sizeof(uint8_t) * Mesh::bonesPerVertex);
-				srcBuffer += Mesh::bonesPerVertex;
-				dstBuffer += stride;
-			}
-		}
-		else if (attribute == bgfx::Attrib::Weight) {
-			float* srcBuffer = &weights[0];
-			uint8_t* dstBuffer = &buffer[offset];
-			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
-				memcpy(dstBuffer, srcBuffer, sizeof(float) * Mesh::bonesPerVertex);
-				srcBuffer += Mesh::bonesPerVertex;
-				dstBuffer += stride;
-			}
-		}
-	}
-	return std::move(buffer);
-}
-
-std::vector<uint16_t> MeshVertexLayout::CreateIndices(aiMesh* mesh) {
+static std::vector<uint16_t> CalcIndicesFromAiMesh(aiMesh* mesh) {
 	std::vector<uint16_t> indices;
 	for (int i = 0; i < mesh->mNumFaces; i++) {
 		ASSERT(mesh->mFaces[i].mNumIndices == 3);
@@ -162,6 +68,138 @@ std::vector<uint16_t> MeshVertexLayout::CreateIndices(aiMesh* mesh) {
 		indices.push_back(mesh->mFaces[i].mIndices[2]);
 	}
 	return std::move(indices);
+}
+
+static std::vector<RawVertexData> CalcVerticesFromAiMesh(aiMesh* mesh) {
+	std::vector<RawVertexData> result;
+	if (!mesh) {
+		return result;
+	}
+	int numVerts = mesh->mNumVertices;
+	result.resize(numVerts);
+
+	memset(result.data(), 0, result.size() * sizeof(RawVertexData));
+
+	for (int iBone = 0; iBone < mesh->mNumBones; iBone++) {
+		for (int j = 0; j < mesh->mBones[iBone]->mNumWeights; j++) {
+			int vertexID = mesh->mBones[iBone]->mWeights[j].mVertexId;
+			float weight = mesh->mBones[iBone]->mWeights[j].mWeight;
+			auto& vertex = result[vertexID];
+
+			for (int i = 0; i < RawVertexData::bonesPerVertex; i++) {
+				if (vertex.boneWeights[i] == 0.f) {
+					vertex.boneWeights[i] = weight;
+					vertex.boneIndices[i] = iBone;
+					break;
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < numVerts; i++) {
+		float w = 0.f;
+		auto& vertex = result[i];
+		for (int j = 0; j < RawVertexData::bonesPerVertex; j++) {
+			w += vertex.boneWeights[j];
+		}
+		vertex.boneWeights[0] += 1.f - w;
+	}
+
+	for (int i = 0; i < numVerts; i++) {
+		auto& vertex = result[i];
+		{
+			const auto& aiPos = mesh->mVertices[i];
+			vertex.pos.x = aiPos.x;
+			vertex.pos.y = aiPos.y;
+			vertex.pos.z = aiPos.z;
+		}
+		{
+			const auto& aiNormal = mesh->mNormals[i];
+			vertex.normal.x = aiNormal.x;
+			vertex.normal.y = aiNormal.y;
+			vertex.normal.z = aiNormal.z;
+		}
+		{
+			const auto& aiTexCoord = mesh->mTextureCoords[0][i];
+			vertex.uv.x = aiTexCoord.x;
+			vertex.uv.y = aiTexCoord.y;
+		}
+		{
+			const auto& aiTangent = mesh->mTangents[i];
+			vertex.tangent.x = aiTangent.x;
+			vertex.tangent.y = aiTangent.y;
+			vertex.tangent.z = aiTangent.z;
+		}
+	}
+	return std::move(result);
+}
+
+std::vector<uint8_t> MeshVertexLayout::CreateBuffer(const std::vector<RawVertexData>& rawVertices) const {
+	int numVerts = rawVertices.size();
+	int strideSrc = sizeof(RawVertexData);
+	int strideDst = bgfxLayout.m_stride;
+	std::vector<uint8_t> buffer;
+	buffer.resize(bgfxLayout.getSize(numVerts));
+
+	for (int i = 0; i < attributes.size(); i++) {
+		auto attribute = attributes[i];
+		int offset = bgfxLayout.getOffset(attribute);
+		if (attribute == bgfx::Attrib::Position) {
+			const uint8_t* srcBuffer = (uint8_t*)&(rawVertices[0].pos);
+			uint8_t* dstBuffer = &buffer[offset];
+			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
+				memcpy(dstBuffer, srcBuffer, sizeof(float) * 3);
+				srcBuffer += strideSrc;
+				dstBuffer += strideDst;
+			}
+		}
+		else if (attribute == bgfx::Attrib::Normal) {
+			const uint8_t* srcBuffer = (uint8_t*)&(rawVertices[0].normal);
+			uint8_t* dstBuffer = &buffer[offset];
+			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
+				memcpy(dstBuffer, srcBuffer, sizeof(float) * 3);
+				srcBuffer += strideSrc;
+				dstBuffer += strideDst;
+			}
+		}
+		else if (attribute == bgfx::Attrib::TexCoord0) {
+			const uint8_t* srcBuffer = (uint8_t*)&(rawVertices[0].uv);
+			uint8_t* dstBuffer = &buffer[offset];
+			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
+				memcpy(dstBuffer, srcBuffer, sizeof(float) * 2);
+				srcBuffer += strideSrc;
+				dstBuffer += strideDst;
+			}
+		}
+		else if (attribute == bgfx::Attrib::Tangent) {
+			const uint8_t* srcBuffer = (uint8_t*)&(rawVertices[0].tangent);
+			uint8_t* dstBuffer = &buffer[offset];
+			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
+				memcpy(dstBuffer, srcBuffer, sizeof(float) * 3);
+				srcBuffer += strideSrc;
+				dstBuffer += strideDst;
+			}
+		}
+		else if (attribute == bgfx::Attrib::Indices) {
+			const uint8_t* srcBuffer = (uint8_t*)&(rawVertices[0].boneIndices[0]);
+			uint8_t* dstBuffer = &buffer[offset];
+			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
+				memcpy(dstBuffer, srcBuffer, sizeof(uint8_t) * RawVertexData::bonesPerVertex);
+				srcBuffer += strideSrc;
+				dstBuffer += strideDst;
+			}
+		}
+		else if (attribute == bgfx::Attrib::Weight) {
+			const uint8_t* srcBuffer = (uint8_t*)&(rawVertices[0].boneWeights[0]);
+			uint8_t* dstBuffer = &buffer[offset];
+			for (int iVertex = 0; iVertex < numVerts; iVertex++) {
+				memcpy(dstBuffer, srcBuffer, sizeof(float) * RawVertexData::bonesPerVertex);
+				srcBuffer += strideSrc;
+				dstBuffer += strideDst;
+			}
+		}
+	}
+	return std::move(buffer);
 }
 
 
@@ -181,6 +219,219 @@ REGISTER_SYSTEM(VertexLayoutSystem);
 class MeshAssetImporter : public AssetImporter2 {
 public:
 	virtual bool ImportAll(AssetDatabase2::BinaryImporterHandle& databaseHandle) override {
+		auto meshAsset = Import(databaseHandle);
+
+		if (!meshAsset) {
+			return false;
+		}
+		databaseHandle.AddAssetToLoaded("FullMeshAsset", meshAsset);
+		for (auto& mesh : meshAsset->meshes) {
+			auto vertices = VertexLayoutSystem::Get()->layout_pos.CreateBuffer(mesh->rawVertices);
+			mesh->vertexBuffer = bgfx::createVertexBuffer(bgfx::copy(&vertices[0], vertices.size()), VertexLayoutSystem::Get()->layout_pos.bgfxLayout);
+			bgfx::setName(mesh->vertexBuffer, mesh->name.c_str());
+			auto& indices = mesh->rawIndices;
+			//TODO makeRef + release func instead of copy 
+			mesh->indexBuffer = bgfx::createIndexBuffer(bgfx::copy(&indices[0], indices.size() * sizeof(uint16_t)));
+			bgfx::setName(mesh->indexBuffer, mesh->name.c_str());
+
+			databaseHandle.AddAssetToLoaded(mesh->name.c_str(), mesh);
+		}
+		for (auto& animation : meshAsset->animations) {
+			databaseHandle.AddAssetToLoaded(animation->name.c_str(), animation);
+		}
+
+		return true;
+	}
+
+	std::shared_ptr<FullMeshAsset> Import(AssetDatabase2::BinaryImporterHandle& databaseHandle) {
+		int importerVersion = 0;//TODO move somewhere
+		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("MeshAsset");
+		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");
+
+
+		bool needRebuild = false;
+		YAML::Node libraryMeta;
+		databaseHandle.ReadFromLibraryFile("meta", libraryMeta);
+		long lastChangeMeta;
+		long lastChange;
+		databaseHandle.GetLastModificationTime(lastChange, lastChangeMeta);
+		if (!libraryMeta.IsDefined()) {
+			needRebuild = true;
+		}
+		else {
+			long lastChangeRecorded = libraryMeta["lastChange"].as<long>();
+			long lastMetaChangeRecorded = libraryMeta["lastMetaChange"].as<long>();
+			long importerVersionRecorded = libraryMeta["importerVersion"].IsDefined() ? libraryMeta["importerVersion"].as<long>() : -1;
+			if (lastChange != lastChangeRecorded || lastMetaChangeRecorded != lastChangeMeta || importerVersionRecorded != importerVersion) {
+				needRebuild = true;
+			}
+		}
+
+		std::vector<uint8_t> buffer;
+		bool bufferLoaded = false;
+		if (!needRebuild) {
+			bufferLoaded = databaseHandle.ReadFromLibraryFile("MeshAsset", buffer);
+		}
+		if (bufferLoaded) {
+			auto meshAsset = DeserializeFromBuffer(buffer);
+			return meshAsset;
+		}
+		auto meshAsset = ImportUsingAssimp(databaseHandle.GetAssetPath());
+		if (!meshAsset) {
+			return false;
+		}
+
+		buffer = SerializeToBuffer(meshAsset);
+
+		auto metaNode = YAML::Node();
+		metaNode["lastChange"] = lastChange;
+		metaNode["lastMetaChange"] = lastChangeMeta;
+		metaNode["importerVersion"] = importerVersion;
+
+		databaseHandle.EnsureForderForLibraryFileExists("meta");
+		databaseHandle.EnsureForderForLibraryFileExists("MeshAsset");
+
+		databaseHandle.WriteToLibraryFile("meta", metaNode);
+		databaseHandle.WriteToLibraryFile("MeshAsset", buffer);
+		return meshAsset;
+	}
+
+
+	void DeserializeFromBuffer(BinaryBuffer& buffer, const std::shared_ptr<FullMeshAsset>& meshAsset, FullMeshAsset_Node& node) {
+		int meshIdx = -1;
+		buffer.Read(meshIdx);
+		if (meshIdx != -1) {
+			if (meshIdx < meshAsset->meshes.size()) {
+				node.mesh = meshAsset->meshes[meshIdx];
+			}
+			else {
+				ASSERT(false);
+			}
+		}
+
+		buffer.Read((uint8_t*)&node.localTransformMatrix, sizeof(Matrix4));
+
+		int numChildren;
+		buffer.Read(numChildren);
+		node.childNodes.resize(numChildren);
+		for (int i = 0; i < numChildren; i++) {
+			DeserializeFromBuffer(buffer, meshAsset, node.childNodes[i]);
+		}
+	}
+
+	//TODO typedef buffer
+	std::shared_ptr<FullMeshAsset> DeserializeFromBuffer(std::vector<uint8_t>& rawBuffer) {
+		BinaryBuffer buffer{ std::move(rawBuffer) };//WARN dangaros
+		auto fullMeshAsset = std::make_shared<FullMeshAsset>();
+
+		int numMeshes;
+		buffer.Read(numMeshes);
+		for (int i = 0; i < numMeshes; i++) {
+			std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+			fullMeshAsset->meshes.push_back(mesh);
+			buffer.Read(mesh->name);
+
+			int numIndices;
+			buffer.Read(numIndices);
+			mesh->rawIndices.resize(numIndices);
+			if (numIndices) {
+				buffer.Read((uint8_t*)&mesh->rawIndices[0], numIndices * sizeof(decltype(mesh->rawIndices[0])));
+			}
+
+			int numVertices;
+			buffer.Read(numVertices);
+			mesh->rawVertices.resize(numVertices);
+			if (numVertices) {
+				buffer.Read((uint8_t*)&mesh->rawVertices[0], numVertices * sizeof(decltype(mesh->rawVertices[0])));
+			}
+
+			int numBones;
+			buffer.Read(numBones);
+			mesh->bones.resize(numBones);
+			if (numBones) {
+				buffer.Read((uint8_t*)&mesh->bones[0], numBones * sizeof(decltype(mesh->bones[0])));
+			}
+
+			buffer.Read(mesh->aabb);
+		}
+		PhysicsSystem::Get()->DeserializeMeshPhysicsDataFromBuffer(fullMeshAsset->meshes, buffer);
+
+		DeserializeFromBuffer(buffer, fullMeshAsset, fullMeshAsset->rootNode);
+
+		return fullMeshAsset;
+	}
+
+	void SerializeToBuffer(BinaryBuffer& buffer, const std::shared_ptr<FullMeshAsset>& meshAsset, const FullMeshAsset_Node& node) {
+		int meshIdx = -1;
+		if (node.mesh) {
+			auto it = std::find(meshAsset->meshes.begin(), meshAsset->meshes.end(), node.mesh);
+			if (it != meshAsset->meshes.end()) {
+				meshIdx = it - meshAsset->meshes.begin();
+			}
+			else {
+				ASSERT(false);
+			}
+		}
+		buffer.Write(meshIdx);
+		buffer.Write((uint8_t*)&node.localTransformMatrix, sizeof(Matrix4));
+		int numChildren = node.childNodes.size();
+		buffer.Write(numChildren);
+		for (int i = 0; i < numChildren; i++) {
+			SerializeToBuffer(buffer, meshAsset, node.childNodes[i]);
+		}
+	}
+
+	std::vector<uint8_t> SerializeToBuffer(const std::shared_ptr<FullMeshAsset>& meshAsset) {
+		BinaryBuffer buffer;
+		int numMeshes = meshAsset->meshes.size();
+		buffer.Write(numMeshes);
+
+		for (int i = 0; i < numMeshes; i++) {
+			auto mesh = meshAsset->meshes[i];
+			buffer.Write(mesh->name);
+
+			int numIndices = mesh->rawIndices.size();
+			buffer.Write(numIndices);
+			if(numIndices){
+				buffer.Write((uint8_t*)&mesh->rawIndices[0], numIndices * sizeof(decltype(mesh->rawIndices[0])));
+			}
+
+			int numVertices = mesh->rawVertices.size();
+			buffer.Write(numVertices);
+			if (numVertices) {
+				buffer.Write((uint8_t*)&mesh->rawVertices[0], numVertices * sizeof(decltype(mesh->rawVertices[0])));
+			}
+
+			int numBones = mesh->bones.size();
+			buffer.Write(numBones);
+			if (numBones) {
+				buffer.Write((uint8_t*)&mesh->bones[0], numBones * sizeof(decltype(mesh->bones[0])));
+			}
+
+			buffer.Write(mesh->aabb);
+		}
+		PhysicsSystem::Get()->SerializeMeshPhysicsDataToBuffer(meshAsset->meshes, buffer);
+
+		//TODO animations
+
+		SerializeToBuffer(buffer, meshAsset, meshAsset->rootNode);
+
+		return std::move(buffer.ReleaseData());
+	}
+	AABB CalcAABB(std::vector<RawVertexData>& vertices) {
+		if (vertices.size() == 0) {
+			return AABB{ Vector3_zero, Vector3_zero };
+		}
+		AABB aabb;
+		aabb.min = vertices[0].pos;
+		aabb.max = vertices[0].pos;
+
+		for (auto& v : vertices) {
+			aabb.Expand(v.pos);
+		}
+		return aabb;
+	}
+	std::shared_ptr<FullMeshAsset> ImportUsingAssimp(std::string assetPath) {
 		//TODO importer could be heavy
 		Assimp::Importer importer{};
 		auto importFlags =
@@ -190,7 +441,7 @@ public:
 			aiProcess_Triangulate |
 			aiProcess_ConvertToLeftHanded;
 
-		auto* scene = importer.ReadFile(databaseHandle.GetAssetPath().c_str(), importFlags);
+		auto* scene = importer.ReadFile(assetPath.c_str(), importFlags);
 		//load from memory does not work with glb + blender for some reason
 
 		//std::vector<uint8_t> buffer;
@@ -201,13 +452,10 @@ public:
 
 		if (!scene) {
 			//TODO error
-			return false;
+			return nullptr;
 		}
-		scene = importer.GetOrphanedScene();
 		auto fullAsset = std::make_shared<FullMeshAsset>();
-		fullAsset->scene.reset(scene);
-		//TODO pass separate database handle
-		databaseHandle.AddAssetToLoaded("FullMeshAsset", fullAsset);
+		//TODO animation and mesh names may not be unique
 
 		std::unordered_map < std::string, std::shared_ptr<MeshAnimation>> animations;
 		const std::string armaturePrefix = "Armature|";
@@ -219,7 +467,8 @@ public:
 			if (animName.find(armaturePrefix.c_str()) == 0) {
 				animName = animName.substr(armaturePrefix.size(), animName.size() - armaturePrefix.size());
 			}
-			databaseHandle.AddAssetToLoaded(animName, animation);
+			animation->name = animName;
+			fullAsset->animations.push_back(animation);
 			animations[animName] = animation;
 		}
 
@@ -228,69 +477,82 @@ public:
 			auto* aiMesh = scene->mMeshes[iMesh];
 			auto mesh = std::make_shared<Mesh>();
 			mesh->name = aiMesh->mName.C_Str();
-			mesh->originalMeshPtr = aiMesh;
-			databaseHandle.AddAssetToLoaded(mesh->name.c_str(), mesh);
 
-			auto vertices = VertexLayoutSystem::Get()->layout_pos.CreateBuffer(aiMesh);
-			mesh->vertexBuffer = bgfx::createVertexBuffer(bgfx::copy(&vertices[0], vertices.size()), VertexLayoutSystem::Get()->layout_pos.bgfxLayout);
-			bgfx::setName(mesh->vertexBuffer, mesh->name.c_str());
+			mesh->rawVertices = CalcVerticesFromAiMesh(aiMesh);
+			mesh->rawIndices = CalcIndicesFromAiMesh(aiMesh);
 
-			auto indices = VertexLayoutSystem::Get()->layout_pos.CreateIndices(aiMesh);
-			mesh->indexBuffer = bgfx::createIndexBuffer(bgfx::copy(&indices[0], indices.size() * sizeof(uint16_t)));
-			bgfx::setName(mesh->indexBuffer, mesh->name.c_str());
-			mesh->tPoseAnim = animations["TPose"];
-			mesh->Init();
+			mesh->aabb = CalcAABB(mesh->rawVertices);
+
+			mesh->bones.resize(aiMesh->mNumBones);
+			std::unordered_map<std::string, int> boneMapping;
+			for (int iBone = 0; iBone < aiMesh->mNumBones; iBone++) {
+				mesh->bones[iBone].idx = iBone;
+				mesh->bones[iBone].name = aiMesh->mBones[iBone]->mName.C_Str();
+
+				mesh->bones[iBone].offset = *(Matrix4*)(void*)(&(aiMesh->mBones[iBone]->mOffsetMatrix.a1));
+				mesh->bones[iBone].offset = mesh->bones[iBone].offset.Transpose();
+				boneMapping[mesh->bones[iBone].name] = iBone;
+			}
+
+			for (int iBone = 0; iBone < aiMesh->mNumBones; iBone++) {
+				auto parentNode = aiMesh->mBones[iBone]->mNode->mParent;
+				auto it = boneMapping.find(parentNode->mName.C_Str());
+				if (it != boneMapping.end()) {
+					mesh->bones[iBone].parentBoneIdx = it->second;
+				}
+				else {
+					mesh->bones[iBone].parentBoneIdx = -1;
+				}
+				mesh->bones[iBone].initialLocal = *(Matrix4*)(void*)(&(aiMesh->mBones[iBone]->mNode->mTransformation.a1));
+				mesh->bones[iBone].initialLocal = mesh->bones[iBone].initialLocal.Transpose();
+			}
+
+			auto tPoseAnim = animations["TPose"];
+			for (int iBone = 0; iBone < aiMesh->mNumBones; iBone++) {
+				if (tPoseAnim) {
+					auto transform = tPoseAnim->GetTransform(mesh->bones[iBone].name, 0.f);
+					mesh->bones[iBone].inverseTPoseRotation = GetRot(mesh->bones[iBone].initialLocal) * transform.rotation.Inverse();
+				}
+			}
+
+			PhysicsSystem::Get()->CalcMeshPhysicsDataFromBuffer(mesh);
+
+
+			fullAsset->meshes.push_back(mesh);
 
 			importedMeshesCount++;
-			//bgfx::createVertexBuffer(bgfx::makeRef(aiMesh->mVertices, aiMesh->mNumVertices), VertexLayouts::);
 		}
 
+		CopyNodesHierarchy(scene, scene->mRootNode, fullAsset, fullAsset->rootNode);
+		//TODO free scene
 		if (importedMeshesCount == 0) {
 			//TODO send error to handler
 			LogError("failed to import: no meshes");
 		}
 
-		return true;
+		return fullAsset;
+	}
+
+	void CopyNodesHierarchy(const aiScene* srcScene, aiNode* srcNode, const std::shared_ptr<FullMeshAsset>& dstScene, FullMeshAsset_Node& dstNode) {
+		if (srcNode == nullptr) {
+			return;
+		}
+		if (srcNode->mNumMeshes > 0) {
+			//TODO multiple meshes
+			dstNode.mesh = dstScene->meshes[srcNode->mMeshes[0]];
+		}
+		dstNode.localTransformMatrix = *(Matrix4*)&(srcNode->mTransformation);
+		dstNode.localTransformMatrix = dstNode.localTransformMatrix.Transpose();
+		dstNode.childNodes.resize(srcNode->mNumChildren);
+		for (int iChild = 0; iChild < srcNode->mNumChildren; iChild++) {
+			CopyNodesHierarchy(srcScene, srcNode->mChildren[iChild], dstScene, dstNode.childNodes[iChild]);
+		}
 	}
 };
 
 
 
 void Mesh::Init() {
-	if (!originalMeshPtr) {
-		return;
-	}
-	bones.resize(originalMeshPtr->mNumBones);
-	std::unordered_map<std::string, int> boneMapping;
-	for (int iBone = 0; iBone < originalMeshPtr->mNumBones; iBone++) {
-		bones[iBone].idx = iBone;
-		bones[iBone].name = originalMeshPtr->mBones[iBone]->mName.C_Str();
-
-		bones[iBone].offset = *(Matrix4*)(void*)(&(originalMeshPtr->mBones[iBone]->mOffsetMatrix.a1));
-		bones[iBone].offset = bones[iBone].offset.Transpose();
-		//bones[iBone].offset = bones[iBone].offset.Inverse();
-		boneMapping[bones[iBone].name] = iBone;
-	}
-
-	for (int iBone = 0; iBone < originalMeshPtr->mNumBones; iBone++) {
-		auto parentNode = originalMeshPtr->mBones[iBone]->mNode->mParent;
-		auto it = boneMapping.find(parentNode->mName.C_Str());
-		if (it != boneMapping.end()) {
-			bones[iBone].parentBoneIdx = it->second;
-		}
-		else {
-			bones[iBone].parentBoneIdx = -1;
-		}
-		bones[iBone].initialLocal = *(Matrix4*)(void*)(&(originalMeshPtr->mBones[iBone]->mNode->mTransformation.a1));
-		bones[iBone].initialLocal = bones[iBone].initialLocal.Transpose();
-	}
-
-	for (int iBone = 0; iBone < originalMeshPtr->mNumBones; iBone++) {
-		if (tPoseAnim) {
-			auto transform = tPoseAnim->GetTransform(bones[iBone].name, 0.f);
-			bones[iBone].inverseTPoseRotation = GetRot(bones[iBone].initialLocal) * transform.rotation.Inverse();
-		}
-	}
 }
 
 
