@@ -3,7 +3,7 @@
 #include "Object.h"
 #include "bgfx/bgfx.h"//TODO forward declare
 #include <vector>
-#include "Math.h"
+#include "SMath.h"
 
 class aiMesh;
 class aiScene;

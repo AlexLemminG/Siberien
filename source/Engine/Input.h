@@ -2,50 +2,28 @@
 
 #include <vector>
 #include "SDL_scancode.h"
-#include "Math.h"
+#include "SMath.h"
 
 class Input {
 public:
 
-	static bool Init() {
-		OPTICK_EVENT();
-		justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-		pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-		justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+	static bool Init();
 
-		return true;
-	}
-
-	static void Term() {
-		OPTICK_EVENT();
-		justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-		pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-		justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-	}
+	static void Term();
 
 	static void Update();
 
 
-	static bool GetKeyDown(SDL_Scancode code) {
-		return justPressed[code];
-	}
-	static bool GetKey(SDL_Scancode code) {
-		return pressed[code];
-	}
-	static bool GetKeyUp(SDL_Scancode code) {
-		return justReleased[code];
-	}
+	static bool GetKeyDown(SDL_Scancode code);
+	static bool GetKey(SDL_Scancode code);
+	static bool GetKeyUp(SDL_Scancode code);
 
 	static bool GetMouseButton(int button);
 	static bool GetMouseButtonDown(int button);
 
-	static Vector2 GetMousePosition() {
-		return mousePos;
-	}
+	static Vector2 GetMousePosition();
 
-	static bool GetQuit() {
-		return quitPressed;
-	}
+	static bool GetQuit();
 
 private:
 	//TODO hashmap

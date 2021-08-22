@@ -1,7 +1,7 @@
 #pragma once
 
 #include "System.h"
-#include "Math.h"
+#include "SMath.h"
 #include "LinearMath/btVector3.h"
 #include "LinearMath/btMatrix3x3.h"
 #include "LinearMath/btTransform.h"
@@ -9,9 +9,19 @@
 inline Vector3 btConvert(btVector3 vec) {
 	return Vector3(vec.x(), vec.y(), vec.z());
 }
+
 inline btVector3 btConvert(Vector3 vec) {
 	return btVector3(vec.x, vec.y, vec.z);
 }
+
+inline btQuaternion btConvert(Quaternion vec) {
+	return btQuaternion(vec[1], vec[2], vec[3], vec[0]);
+}
+
+inline Quaternion btConvert(btQuaternion vec) {
+	return Quaternion(vec.getW(), vec.getX(), vec.getY(), vec.getZ());
+}
+
 inline Matrix3 btConvert(btMatrix3x3 rot) {
 	Matrix3 r;
 	r.data_[0] = btConvert(rot[0]);
@@ -19,11 +29,13 @@ inline Matrix3 btConvert(btMatrix3x3 rot) {
 	r.data_[2] = btConvert(rot[2]);
 	return r;
 }
+
 inline btTransform btConvert(Matrix4 transformMatrix) {
 	btTransform transform;
 	transform.setFromOpenGLMatrix(&transformMatrix(0, 0));
 	return transform;
 }
+
 inline Matrix4 btConvert(btTransform transformMatrix) {
 	Matrix4 mat;
 	transformMatrix.getOpenGLMatrix(&mat(0, 0));

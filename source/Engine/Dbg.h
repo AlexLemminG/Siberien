@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Common.h"
-#include "Math.h"
+#include "SMath.h"
 #include <vector>
 #include <string>
-#include "Math.h"
+#include "SMath.h"
 
 class Dbg {
 public:

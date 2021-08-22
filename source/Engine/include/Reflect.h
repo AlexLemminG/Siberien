@@ -2,7 +2,7 @@
 
 #include <string>
 #include <unordered_map>
-#include "yaml-cpp/yaml.h"
+#include "yaml-cpp/yaml.h" //TODO this is not the way
 #include "Object.h"
 
 template<class T>
@@ -295,7 +295,8 @@ public:
 		CallOnBeforeSerialize(context, object);
 		context.yamlNode = YAML::Node(YAML::NodeType::Map);
 		for (const auto& var : fields) {
-			var.type->Serialize(context.Child(var.name), ((char*)&object) + var.offset);
+			auto childContext = context.Child(var.name);
+			var.type->Serialize(childContext, ((char*)&object) + var.offset);
 		}
 	}
 	void Deserialize(const SerializationContext& context, T& object) {
@@ -391,58 +392,3 @@ template<typename T>
 void Serialize(SerializationContext& context, const T& t) {
 	GetReflectedType(&t)->Serialize(context, &t);
 }
-
-//class TestMiniClass3 {
-//	int varName;
-//
-//public:
-//	class Type : public ReflectedType<TestMiniClass3> {
-//	using PARENT_TYPE = TestMiniClass3; public:
-//		Type() : ReflectedType<TestMiniClass3>("TestMiniClass3") {
-//			fields.push_back(ReflectedField(GetReflectedType<decltype(varName)>(), "varName", offsetOf(&PARENT_TYPE::varName)));
-//		}
-//	};
-//	static Type* GetType() {
-//		static Type t;
-//		return &t;
-//	}
-//};
-//class TestMiniClass4 {
-//	int c = 0;
-//
-//	REFLECT_BEGIN(TestMiniClass4);
-//	REFLECT_VAR(c);
-//	REFLECT_END();
-//};
-//class TestMiniClass5 {
-//	TestMiniClass4 a;
-//	float b = 3.4;
-//	bool c = false;
-//	int d = 666;
-//	std::string e = "hello there";
-//	REFLECT_BEGIN(TestMiniClass5);
-//	REFLECT_VAR(a);
-//	REFLECT_VAR(b);
-//	REFLECT_VAR(c);
-//	REFLECT_VAR(d);
-//	REFLECT_VAR(e);
-//	REFLECT_END();
-//};
-//class TestMiniClass2 {
-//public:
-//	float f;
-//	bool b;
-//	REFLECT_BEGIN(TestMiniClass2);
-//	REFLECT_VAR(f);
-//	REFLECT_VAR(b);
-//	REFLECT_END();
-//};
-//class TestSerializationClass2 {
-//	int i;
-//	TestMiniClass2 c;
-//
-//	REFLECT_BEGIN(TestSerializationClass2);
-//	REFLECT_VAR(i);
-//	//REFLECT_VAR_WITH_DEFAULT(c, TestMiniClass{ 0.1, true });
-//	REFLECT_END();
-//};

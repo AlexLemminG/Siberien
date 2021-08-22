@@ -1,5 +1,5 @@
 #include "Health.h"
-#include "Time.h"
+#include "STime.h"
 
 DECLARE_TEXT_ASSET(Health);
 

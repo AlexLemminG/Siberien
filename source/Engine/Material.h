@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Object.h"
-#include "Math.h"//TODO move color to Color
+#include "SMath.h"//TODO move color to Color
 
 class Shader;
 class Texture;

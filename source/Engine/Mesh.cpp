@@ -218,7 +218,7 @@ REGISTER_SYSTEM(VertexLayoutSystem);
 
 class MeshAssetImporter : public AssetImporter2 {
 public:
-	virtual bool ImportAll(AssetDatabase2::BinaryImporterHandle& databaseHandle) override {
+	virtual bool ImportAll(AssetDatabase2_BinaryImporterHandle& databaseHandle) override {
 		auto meshAsset = Import(databaseHandle);
 
 		if (!meshAsset) {
@@ -243,7 +243,7 @@ public:
 		return true;
 	}
 
-	std::shared_ptr<FullMeshAsset> Import(AssetDatabase2::BinaryImporterHandle& databaseHandle) {
+	std::shared_ptr<FullMeshAsset> Import(AssetDatabase2_BinaryImporterHandle& databaseHandle) {
 		int importerVersion = 0;//TODO move somewhere
 		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("MeshAsset");
 		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");

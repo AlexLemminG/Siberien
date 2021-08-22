@@ -10,6 +10,7 @@
 #include "Reflect.h"
 #include "Object.h"
 #include "GameEvents.h"
+#include "Serialization.h"
 
 class AssetLoadingContext {
 public:
@@ -50,17 +51,6 @@ public:
 	REFLECT_END();
 };
 
-class AssetDatabase;
-
-class AssetImporter {
-public:
-	virtual std::shared_ptr<Object> Import(AssetDatabase& database, const std::string& path) = 0;
-};
-class AssetImporter2;
-class TextAssetImporter {
-public:
-	virtual std::shared_ptr<Object> Import(AssetDatabase& database, const YAML::Node& node) = 0;
-};
 
 //assets referenced by path from assets/ folder
 //ex: prefabs/hero.asset
@@ -77,7 +67,37 @@ public:
 //does this make bone asset ?
 //maybe yes and we need to rename it to Object
 
+
+class AssetDatabase2_BinaryImporterHandle {
+	friend class AssetDatabase2;
+	AssetDatabase2_BinaryImporterHandle(AssetDatabase2* database, std::string assetPath) :database(database), assetPath(assetPath) {}
+public:
+	void AddAssetToLoaded(std::string id, std::shared_ptr<Object> object);
+
+	bool ReadAssetAsBinary(std::vector<uint8_t>& buffer);
+	bool ReadMeta(YAML::Node& node);
+
+	void WriteToLibraryFile(const std::string& id, const YAML::Node& node);
+	void WriteToLibraryFile(const std::string& id, std::vector<uint8_t>& buffer);
+	bool ReadFromLibraryFile(const std::string& id, YAML::Node& node);
+	bool ReadFromLibraryFile(const std::string& id, std::vector<uint8_t>& buffer);
+	std::string GetToolPath(std::string toolName);
+
+	void GetLastModificationTime(long& assetModificationTime, long& metaModificationTime);
+
+	std::string GetAssetPath();
+	void EnsureForderForLibraryFileExists(std::string id);
+
+	std::string GetLibraryPathFromId(const std::string& id);
+private:
+	bool ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer);
+	bool ReadYAML(const std::string& fullPath, YAML::Node& node);
+	std::string assetPath;
+	AssetDatabase2* database = nullptr;
+};
+
 class AssetDatabase2 {
+	friend AssetDatabase2_BinaryImporterHandle;
 public:
 	bool Init() {
 		OPTICK_EVENT();
@@ -109,35 +129,8 @@ public:
 
 	std::string GetAssetPath(std::shared_ptr<Object> obj);
 
-	static void RegisterBinaryAssetImporter(std::string typeName, std::unique_ptr<AssetImporter2>&& importer);
+	std::shared_ptr<AssetImporter2>& GetAssetImporter(const std::string& type);
 
-	class BinaryImporterHandle {
-		friend class AssetDatabase2;
-		BinaryImporterHandle(AssetDatabase2* database, std::string assetPath) :database(database), assetPath(assetPath) {}
-	public:
-		void AddAssetToLoaded(std::string id, std::shared_ptr<Object> object);
-
-		bool ReadAssetAsBinary(std::vector<uint8_t>& buffer);
-		bool ReadMeta(YAML::Node& node);
-
-		void WriteToLibraryFile(const std::string& id, const YAML::Node& node);
-		void WriteToLibraryFile(const std::string& id, std::vector<uint8_t>& buffer);
-		bool ReadFromLibraryFile(const std::string& id, YAML::Node& node);
-		bool ReadFromLibraryFile(const std::string& id, std::vector<uint8_t>& buffer);
-		std::string GetToolPath(std::string toolName) { return "tools\\" + toolName; }
-
-		void GetLastModificationTime(long& assetModificationTime, long& metaModificationTime);
-
-		std::string GetAssetPath() { return database->assetsRootFolder + assetPath; }
-		void EnsureForderForLibraryFileExists(std::string id);
-
-		std::string GetLibraryPathFromId(const std::string& id);
-	private:
-		bool ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer);
-		bool ReadYAML(const std::string& fullPath, YAML::Node& node);
-		std::string assetPath;
-		AssetDatabase2* database = nullptr;
-	};
 private:
 	class Asset {
 	public:
@@ -208,8 +201,6 @@ private:
 		}
 	};
 
-	static std::unordered_map<std::string, std::unique_ptr<AssetImporter2>>& GetAssetImporters(); //mapping from asset type (for example "Texture") to importer
-
 	std::shared_ptr<Object> GetLoaded(const PathDescriptor& path, ReflectedTypeBase* type);
 	void LoadAsset(const std::string& path);
 	std::string GetFileExtension(std::string path);
@@ -220,10 +211,6 @@ private:
 
 	std::string assetsRootFolder = "assets\\";
 	std::string libraryRootFolder = "library\\assets\\";
-};
-class AssetImporter2 {
-public:
-	virtual bool ImportAll(AssetDatabase2::BinaryImporterHandle& databaseHandle) = 0; // return false on error and true otherwise (even if no assets are imported)
 };
 
 
@@ -333,8 +320,8 @@ private:
 	//TODO typeinfo for safety
 	std::unordered_map<void*, std::string> requestedObjectPtrs;
 
-	static std::unordered_map<std::string, std::unique_ptr<AssetImporter>>& GetAssetImporters();
-	static std::unordered_map<std::string, std::unique_ptr<TextAssetImporter>>& GetTextAssetImporters();
+	std::shared_ptr<AssetImporter>& GetAssetImporter(const std::string& type);
+	std::shared_ptr<TextAssetImporter>& GetTextAssetImporter(const std::string& type);
 
 	static AssetDatabase* mainDatabase;
 

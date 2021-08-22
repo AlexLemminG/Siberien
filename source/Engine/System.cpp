@@ -1,6 +1,6 @@
 #include "Common.h"
 #include "System.h"
-#include "Math.h"
+#include "SMath.h"
 
 SystemsManager* SystemsManager::manager;
 

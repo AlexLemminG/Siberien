@@ -13,7 +13,7 @@ typedef mathfu::Matrix<float, 4, 4> Matrix4;
 typedef mathfu::Matrix<float, 3, 3> Matrix3;
 typedef mathfu::Quaternion<float> Quaternion;
 
-extern const Vector3 Vector3_zero;
+extern SE_CPP_API const Vector3 Vector3_zero;
 extern const Vector3 Vector3_one;
 extern const Vector3 Vector3_forward;
 extern const Vector3 Vector3_up;
@@ -62,10 +62,10 @@ public:
 	static float Min(float a, float b) {
 		return a < b ? a : b;
 	}
-	static float Max(int a, int b) {
+	static int Max(int a, int b) {
 		return a > b ? a : b;
 	}
-	static float Min(int a, int b) {
+	static int Min(int a, int b) {
 		return a < b ? a : b;
 	}
 	static float Clamp(float f, float a, float b) {
@@ -87,10 +87,10 @@ public:
 		return Clamp(byte, 0, 255) / 255.f;
 	}
 	static float Pow(float value, float power) {
-		return powf(value, power);
+		return std::pow(value, power);
 	}
 	static float Sqrt(float value) {
-		return sqrtf(value);
+		return std::sqrt(value);
 	}
 	static float RadToDeg(float rad) {
 		return rad * 180.f / pi;
@@ -99,13 +99,13 @@ public:
 		return deg * pi / 180.f;
 	}
 	static float Sin(float f) {
-		return sinf(f);
+		return std::sin(f);
 	}
 	static float Cos(float f) {
-		return cosf(f);
+		return std::cos(f);
 	}
 	static float Tan(float f) {
-		return tanf(f);
+		return std::tan(f);
 	}
 	static Vector3 RadToDeg(Vector3 rad) {
 		return rad * (180.f / pi);
@@ -137,9 +137,9 @@ public:
 	}
 
 	static constexpr float pi = 3.14f;//TODO lol
-	static constexpr float pi2 = pi * 2;
+	static constexpr float pi2 = pi * 2.f;
 	static constexpr float epsilon = 0.00001f;
-	static constexpr float phi = 1.61803398875; // golden ratio
+	static constexpr float phi = 1.61803398875f; // golden ratio
 };
 
 class Random {
@@ -250,7 +250,7 @@ public:
 	const Vector3 origin;
 	const Vector3 dir;
 
-	Vector3 GetPoint(float distance) const{
+	Vector3 GetPoint(float distance) const {
 		return origin + distance * dir;
 	}
 };

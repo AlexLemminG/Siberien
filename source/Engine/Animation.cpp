@@ -2,8 +2,9 @@
 #include "assimp/anim.h"
 #include "GameObject.h"
 #include "MeshRenderer.h"
-#include "Time.h"
+#include "STime.h"
 #include "Mesh.h"
+#include "Common.h"
 
 
 Vector3 aiConvert(const aiVector3D& v) {

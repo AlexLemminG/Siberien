@@ -10,6 +10,22 @@ Uint32 Input::mouseState = 0;
 Uint32 Input::prevMouseState = 0;
 Vector2 Input::mousePos = Vector2{ 0,0 };
 
+bool Input::Init() {
+	OPTICK_EVENT();
+	justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+	pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+	justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+
+	return true;
+}
+
+void Input::Term() {
+	OPTICK_EVENT();
+	justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+	pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+	justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+}
+
 void Input::Update() {
 	OPTICK_EVENT();
 	quitPressed = false;
@@ -50,6 +66,18 @@ void Input::Update() {
 	mousePos.y = mouseY;
 }
 
+bool Input::GetKeyDown(SDL_Scancode code) {
+	return justPressed[code];
+}
+
+bool Input::GetKey(SDL_Scancode code) {
+	return pressed[code];
+}
+
+bool Input::GetKeyUp(SDL_Scancode code) {
+	return justReleased[code];
+}
+
 bool Input::GetMouseButton(int button) {
 	switch (button)
 	{
@@ -72,4 +100,12 @@ bool Input::GetMouseButtonDown(int button) {
 	default:
 		return false;
 	}
+}
+
+Vector2 Input::GetMousePosition() {
+	return mousePos;
+}
+
+bool Input::GetQuit() {
+	return quitPressed;
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Object.h"
-#include "Math.h"//TODO move color to Color.h ?
+#include "SMath.h"//TODO move color to Color.h ?
 
 class SphericalHarmonics : public Object {
 public:

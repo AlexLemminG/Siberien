@@ -3,7 +3,7 @@
 #include "GameObject.h"
 #include "Transform.h"
 #include "Input.h"
-#include "Time.h"
+#include "STime.h"
 #include "Camera.h"
 #include "Dbg.h"
 #include "BulletSystem.h"
@@ -149,15 +149,6 @@ void PlayerController::Update() {
 			AudioSystem::Get()->Play(audio);
 		}
 	}
-
-
-	auto ray = Camera::GetMain()->ScreenPointToRay(Input::GetMousePosition());
-	btCollisionWorld::ClosestRayResultCallback cb(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f));
-	PhysicsSystem::Get()->dynamicsWorld->rayTest(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f), cb);
-	if (cb.hasHit()) {
-		auto pos = btConvert(cb.m_hitPointWorld);
-		//Dbg::Text("MousePos: %.2f, %.2f, %.2f", pos.x, pos.y, pos.z);
-	}
 }
 
 void PlayerController::FixedUpdate() {
@@ -168,21 +159,20 @@ void PlayerController::FixedUpdate() {
 
 	if (rigidBody) {
 		float gravityMultiplier = 1.f;
-		float upVel = rigidBody->GetHandle()->getLinearVelocity().getY();
+		float upVel = rigidBody->GetLinearVelocity().y;
 		if (upVel < 0.f) {
 			gravityMultiplier = Mathf::Lerp(1.f, 2.f, -upVel / 1.f);
 		}
-		rigidBody->GetHandle()->setGravity(btConvert(PhysicsSystem::Get()->GetGravity() * gravityMultiplier));
+		rigidBody->OverrideWorldGravity(PhysicsSystem::Get()->GetGravity() * gravityMultiplier);
 	}
-	rigidBody->GetHandle()->setAngularFactor(btVector3(0, 1, 0));
+	rigidBody->SetAngularFactor(Vector3(0, 1, 0));
 }
 
 void PlayerController::UpdateMovement() {
 	if (!rigidBody) {
 		return;
 	}
-
-	rigidBody->GetHandle()->activate(true);
+	rigidBody->Activate();
 	Matrix4 matrix = gameObject()->transform()->matrix;
 	auto rotation = GetRot(matrix);
 
@@ -204,11 +194,11 @@ void PlayerController::UpdateMovement() {
 	deltaPos *= speed;
 	//*Time::deltaTime();
 
-	auto vel = rigidBody->GetHandle()->getLinearVelocity();
-	vel.setX(deltaPos.x);
-	vel.setZ(deltaPos.z);
+	auto vel = rigidBody->GetLinearVelocity();
+	vel.x = deltaPos.x;
+	vel.z = deltaPos.z;
 
-	rigidBody->GetHandle()->setLinearVelocity(vel);
+	rigidBody->SetLinearVelocity(vel);
 }
 
 void PlayerController::UpdateGrenading() {
@@ -269,7 +259,7 @@ void PlayerController::UpdateShooting() {
 
 
 void PlayerController::UpdateLook() {
-	Matrix4 matrix = btConvert(rigidBody->GetHandle()->getCenterOfMassTransform());
+	Matrix4 matrix = rigidBody->GetTransform();
 
 	Vector3 playerPos = GetPos(matrix);
 
@@ -294,7 +284,7 @@ void PlayerController::UpdateLook() {
 
 	SetRot(matrix, Quaternion::LookAt(deltaPos, Vector3_up));
 	//gameObject()->transform()->matrix = matrix;
-	rigidBody->GetHandle()->setCenterOfMassTransform(btConvert(matrix));
+	rigidBody->SetTransform(matrix);
 
 }
 
@@ -308,9 +298,9 @@ void PlayerController::Jump() {
 
 	lastJumpTime = Time::time();
 
-	auto vel = rigidBody->GetHandle()->getLinearVelocity();
-	vel.setY(jumpVelocity);
-	rigidBody->GetHandle()->setLinearVelocity(vel);
+	auto vel = rigidBody->GetLinearVelocity();
+	vel.y = jumpVelocity;
+	rigidBody->SetLinearVelocity(vel);
 
 }
 
@@ -328,9 +318,10 @@ bool PlayerController::CanJump() {
 }
 
 void PlayerController::OnDeath() {
-	rigidBody->GetHandle()->setFriction(0.5f);
-	rigidBody->GetHandle()->setAngularFactor(btVector3(1, 1, 1));
-	rigidBody->GetHandle()->setDamping(0.6f, 0.6f);
+	rigidBody->SetFriction(0.5f);
+	rigidBody->SetAngularFactor(Vector3(1, 1, 1));
+	rigidBody->SetAngularDamping(0.6f);
+	rigidBody->SetLinearDamping(0.6f);
 	DisableShootingLight();
 }
 

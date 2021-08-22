@@ -17,7 +17,7 @@
 #include "Transform.h"
 #include "Dbg.h"
 #include "System.h"
-#include "Time.h"
+#include "STime.h"
 #include "Scene.h"
 #include "Input.h"
 #include "PostProcessingEffect.h"

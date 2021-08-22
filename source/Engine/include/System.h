@@ -18,7 +18,7 @@ public:
 		int order = 0;
 	};
 	virtual PriorityInfo GetPriorityInfo() const {
-		return PriorityInfo ();
+		return PriorityInfo();
 	}
 };
 

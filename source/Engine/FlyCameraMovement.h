@@ -4,7 +4,7 @@
 #include "GameObject.h"
 #include "Transform.h"
 #include "Input.h"
-#include "Time.h"
+#include "STime.h"
 
 class FlyCameraMovement : public Component {
 	float speed = 5.f;

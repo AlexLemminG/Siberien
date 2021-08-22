@@ -4,7 +4,7 @@
 #include <memory>
 #include "Transform.h"
 
-class GameObject : public Object {
+class SE_CPP_API GameObject : public Object {
 public:
 	std::string tag;
 	std::vector<std::shared_ptr<Component>> components;
@@ -25,6 +25,8 @@ public:
 	}
 
 	virtual void OnBeforeSerializeCallback(SerializationContext& context) const override;
+
+	static std::shared_ptr<GameObject> FindWithTag(const std::string& tag);
 
 	REFLECT_BEGIN(GameObject);
 	REFLECT_VAR(tag);

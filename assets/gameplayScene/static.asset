@@ -2,6 +2,7 @@ GameObject:
   tag: BlenderSceneLoader
   components:
     - $BlenderSceneLoader
+    - $SayHello
 BlenderSceneLoader:
   scene: meshes\gameplayStatic.glb$FullMeshAsset
   material: materials\scifi.asset
@@ -9,3 +10,5 @@ BlenderSceneLoader:
   materialSigns: materials\scifi_signs.asset
   materialRoads: materials\scifi_roads.asset
   materialPosters: materials\scifi_posters.asset
+SayHello:
+  name: "little friend"

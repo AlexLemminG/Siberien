@@ -36,7 +36,7 @@ RigidBody:
   restitution: 0
   mass: 1000
   layer: enemy
-  localOffset: [0.0, 0.2, 0.0]
+  centerOfMass: [0.0, -0.2, 0.0]
 Health:
   amount: 40
 Animator:

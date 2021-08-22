@@ -2,6 +2,7 @@
 
 #include "GameObject.h"
 #include "SceneManager.h"
+#include "Common.h"
 
 DECLARE_TEXT_ASSET(Scene);
 

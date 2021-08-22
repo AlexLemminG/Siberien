@@ -1,5 +1,5 @@
 #pragma once
-#include "Math.h"
+#include "SMath.h"
 #include "Component.h"
 
 class aiAnimation;

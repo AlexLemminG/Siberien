@@ -1,7 +1,7 @@
 #pragma once
 
 #include "System.h"
-#include "Math.h"
+#include "SMath.h"
 #include "MeshRenderer.h"//TODO need for serializing shared_ptr
 
 class MeshRenderer;

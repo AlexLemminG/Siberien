@@ -12,7 +12,7 @@ static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
 class TextureImporter : public AssetImporter2 {
 public:
 	// Inherited via AssetImporter2
-	virtual bool ImportAll(AssetDatabase2::BinaryImporterHandle& databaseHandle) override
+	virtual bool ImportAll(AssetDatabase2_BinaryImporterHandle& databaseHandle) override
 	{
 		int importerVersion = 5;
 		YAML::Node metaYaml;
@@ -71,7 +71,7 @@ public:
 		return true;
 	}
 
-	std::vector<uint8_t> LoadTexture(int importerVersion, AssetDatabase2::BinaryImporterHandle& databaseHandle, bool mips, std::string format) {
+	std::vector<uint8_t> LoadTexture(int importerVersion, AssetDatabase2_BinaryImporterHandle& databaseHandle, bool mips, std::string format) {
 		//std::string assetPath = databaseHandle.;
 		//std::string metaAssetPath = databaseHandle.GetLibraryPathFromId("meta");
 		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("texture");

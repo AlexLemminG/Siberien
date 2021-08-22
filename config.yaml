@@ -6,3 +6,5 @@ debugSceneLoading: false
 vsync: true
 godMode: true
 soundEnabled: false
+libraries:
+  - Game.dll

@@ -6,7 +6,7 @@
 #include "GameEvents.h"
 #include "EnemyCreep.h"
 #include "MeshRenderer.h"
-#include "Time.h"
+#include "STime.h"
 #include "PlayerController.h"
 #include "Gun.h"
 

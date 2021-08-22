@@ -8,6 +8,7 @@
 #include "Mesh.h"
 #include "MeshCollider.h"
 #include "MeshRenderer.h"
+#include "Resources.h"
 
 void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::string& baseAssetPath, const Matrix4& parentTransform) {
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Math.h"
+#include "SMath.h"
 #include "Serialization.h"
 #include "Resources.h"
 #include "Component.h"

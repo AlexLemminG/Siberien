@@ -2,7 +2,7 @@
 #include "bgfx/bgfx.h"
 #include "Resources.h"
 #include "MeshRenderer.h"
-#include "Time.h"
+#include "STime.h"
 #include "PhysicsSystem.h"
 #include "btBulletDynamicsCommon.h"
 #include "Dbg.h"

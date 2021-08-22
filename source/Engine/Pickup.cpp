@@ -1,7 +1,7 @@
 #include "Pickup.h"
 #include "Scene.h"
 #include "PlayerController.h"
-#include "Time.h"
+#include "STime.h"
 
 void Pickup::Update() {
 	if (isPicked) {

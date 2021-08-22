@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Object.h"
-#include "Math.h"
+#include "SMath.h"
 
 
 

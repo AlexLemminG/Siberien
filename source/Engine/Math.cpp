@@ -1,4 +1,4 @@
-#include "Math.h"
+#include "SMath.h"
 #include "Serialization.h"
 
 void Color::Deserialize(const SerializationContext& context, Color& color) {

@@ -33,7 +33,7 @@ std::string FormatString(const std::string & format, Args ... args)
 
 template<typename ... Args>
 void LogError(const std::string& format, Args ... args) {
-    //std::cout << FormatString(format, args...) << std::endl;
+    std::cout << FormatString(format, args...) << std::endl;
 }
 
 

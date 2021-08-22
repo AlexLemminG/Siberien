@@ -21,6 +21,11 @@ bool CfgGetBool(std::string name) {
 	return config[name].as<bool>();
 }
 
+YAML::Node CfgGetNode(std::string name) {
+	SDL_assert(config[name]);
+	return config[name];
+}
+
 std::string CfgGetString(std::string name) {
 	SDL_assert(config[name]);
 	return config[name].as<std::string>();

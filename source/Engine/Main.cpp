@@ -17,12 +17,13 @@
 #include "Scene.h"
 #include "System.h"
 #include "SceneManager.h"
-//#include <bgfx_utils.h>
+#include "Engine.h"
+
+DECLARE_SERIALATION_INFO_STORAGE();
 
 std::string GetFirstSceneName() {
 	return CfgGetString("scene") + ".asset";
 }
-
 
 
 int main(int argc, char* argv[]) {
@@ -34,6 +35,7 @@ start:
 	AssetDatabase assets;
 	Render render;
 	SystemsManager systemsManager;
+	Engine engine;
 
 	{
 		OPTICK_EVENT("Init");
@@ -53,9 +55,11 @@ start:
 			return -1;
 		}
 
+
 		Input::Init();
 
 		SceneManager::Init();
+		
 		SceneManager::LoadScene(GetFirstSceneName());
 
 		SceneManager::Update();

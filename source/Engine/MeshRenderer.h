@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
-#include "Math.h"
+#include "SMath.h"
 #include "bgfx/bgfx.h"
 #include <assimp/scene.h>
 

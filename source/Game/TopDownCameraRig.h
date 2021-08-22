@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Component.h"
-#include "GameObject.h"
+#include "SMath.h"
 
 class TopDownCameraRig : public Component {
 public:

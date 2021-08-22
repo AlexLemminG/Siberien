@@ -1,5 +1,5 @@
-#include "Math.h"
-#include "Time.h"
+#include "SMath.h"
+#include "STime.h"
 #include "SDL.h"
 #include "Config.h"
 

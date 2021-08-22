@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Component.h"
-#include "Math.h"
+#include "SMath.h"
 
 class Health : public Component {
 public:

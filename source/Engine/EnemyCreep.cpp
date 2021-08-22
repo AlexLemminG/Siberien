@@ -3,8 +3,7 @@
 #include "GameObject.h"
 #include "RigidBody.h"
 #include "PhysicsSystem.h"
-#include "btBulletDynamicsCommon.h"
-#include "Time.h"
+#include "STime.h"
 #include "Health.h"
 #include "MeshRenderer.h"
 #include "CorpseRemoveSystem.h"
@@ -35,8 +34,8 @@ void EnemyCreepController::HandleDeath() {
 
 	auto collider = gameObject()->GetComponent<SphereCollider>();
 	auto center = collider->center;
-	auto angVel = rb->GetHandle()->getAngularVelocity();
-	auto linVel = rb->GetHandle()->getLinearVelocity();
+	auto angVel = rb->GetAngularVelocity();
+	auto linVel = rb->GetLinearVelocity();
 	rb->SetEnabled(false);
 	collider->SetEnabled(false);
 
@@ -48,14 +47,16 @@ void EnemyCreepController::HandleDeath() {
 	collider->center = center * radiusScale;
 	collider->radius *= radiusScale;
 	rb->friction = 0.7f;
-	rb->localOffset = Vector3(0, -0.4, 0);
+
+	rb->SetCenterOfMass(Vector3(0, 0.4, 0));
 
 	collider->SetEnabled(true);
 	rb->SetEnabled(true);
-
-	rb->GetHandle()->setDamping(0.5f, 0.8f);
-	rb->GetHandle()->setLinearVelocity(linVel);
-	rb->GetHandle()->setAngularVelocity(angVel);
+	
+	rb->SetLinearDamping(0.5f);
+	rb->SetAngularDamping(0.8f);
+	rb->SetLinearVelocity(linVel);
+	rb->SetAngularVelocity(angVel);
 
 	GameEvents::Get()->creepDeath.Invoke(this);
 }
@@ -118,9 +119,7 @@ void EnemyCreepController::FixedUpdate() {
 		return;
 	}
 
-	auto handle = rb->GetHandle();
-
-	handle->activate(true);
+	rb->Activate();
 
 	auto targetPos = targetTransform->GetPosition();
 
@@ -139,7 +138,7 @@ void EnemyCreepController::FixedUpdate() {
 		}
 	}
 	isReadyToAttack = Vector3::DotProduct(lookDir, desiredLookDir) > 0.6f;
-	Vector3 currentAngularVelocity = btConvert(handle->getAngularVelocity());
+	Vector3 currentAngularVelocity = rb->GetAngularVelocity();
 
 	bool shouldRoll = Vector3::DotProduct(transform->GetUp(), Vector3_up) < 0.1f;
 	if (attackTimeLeft > 0.f && !shouldRoll) {
@@ -159,16 +158,18 @@ void EnemyCreepController::FixedUpdate() {
 
 	float maxAnglularSpeedDistance = 0.5f;
 	Vector3 angularVelocity = currentAngularVelocity + Mathf::ClampLength(desiredAngularVelocity - currentAngularVelocity, maxAnglularSpeedDistance) / maxAnglularSpeedDistance * angularAcc * dt;
-	handle->setAngularVelocity(btConvert(angularVelocity));
+	rb->SetAngularVelocity(angularVelocity);
 
 	float speedFactorFromAngle = Mathf::Max(0.8f, Vector3::DotProduct(desiredLookDir, lookDir));
 	float moveForwardFactor = (1.f - speedFactorFromAngle) * 40.f * (shouldRoll ? 0.1f : 1.f);
 
 	if (shouldRoll) {
-		rb->GetHandle()->setDamping(0.1f, 0.4f);
+		rb->SetLinearDamping(0.1f);
+		rb->SetAngularDamping(0.4f);
 	}
 	else {
-		rb->GetHandle()->setDamping(0.0f, 0.1f);
+		rb->SetLinearDamping(0.0f);
+		rb->SetAngularDamping(0.1f);
 	}
 
 
@@ -177,13 +178,12 @@ void EnemyCreepController::FixedUpdate() {
 	desiredVelocity += moveForwardFactor * lookDir;
 	desiredVelocity = Mathf::ClampLength(desiredVelocity, speed);
 
-	Vector3 currentVelocity = btConvert(handle->getLinearVelocity());
+	Vector3 currentVelocity = rb->GetLinearVelocity();
 
 	Vector3 velocity = currentVelocity + Mathf::ClampLength(desiredVelocity - currentVelocity, maxSpeedDistance) / maxSpeedDistance * acc * dt * speedFactorFromAngle;
 	animator->speed = Mathf::Max(1.f, currentVelocity.Length() * velocityToAnimatorSpeed);
 
-	handle->setLinearVelocity(btConvert(velocity));
-	//Vector3 dir = target
+	rb->SetLinearVelocity(velocity);
 }
 
 void EnemyCreepController::Attack() {

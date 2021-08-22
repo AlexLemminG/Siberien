@@ -3,6 +3,7 @@
 #include "Resources.h"
 #include <memory>
 #include <windows.h>
+#include "Serialization.h"
 
 
 std::string AssetDatabase2::GetAssetPath(std::shared_ptr<Object> obj) {
@@ -15,25 +16,19 @@ std::string AssetDatabase2::GetAssetPath(std::shared_ptr<Object> obj) {
 	}
 }
 
-void AssetDatabase2::RegisterBinaryAssetImporter(std::string typeName, std::unique_ptr<AssetImporter2>&& importer) {
-	//TODO get typeName from importer itself
-	GetAssetImporters()[typeName] = std::move(importer);
+
+std::shared_ptr<AssetImporter2>& AssetDatabase2::GetAssetImporter(const std::string& type) {
+	return GetSerialiationInfoStorage().GetBinaryImporter2(type);
 }
 
-std::unordered_map<std::string, std::unique_ptr<AssetImporter2>>& AssetDatabase2::GetAssetImporters() {
-	static std::unordered_map<std::string, std::unique_ptr<AssetImporter2>> assetImporters{};
-	return assetImporters;
+std::shared_ptr<AssetImporter>& AssetDatabase::GetAssetImporter(const std::string& type) {
+	return GetSerialiationInfoStorage().GetBinaryImporter(type);
 }
 
-std::unordered_map<std::string, std::unique_ptr<AssetImporter>>& AssetDatabase::GetAssetImporters() {
-	static std::unordered_map<std::string, std::unique_ptr<AssetImporter>> assetImporters{};
-	return assetImporters;
+std::shared_ptr<TextAssetImporter>& AssetDatabase::GetTextAssetImporter(const std::string& type) {
+	return GetSerialiationInfoStorage().GetTextImporter(type);
 }
 
-std::unordered_map<std::string, std::unique_ptr<TextAssetImporter>>& AssetDatabase::GetTextAssetImporters() {
-	static std::unordered_map<std::string, std::unique_ptr<TextAssetImporter>> textAssetImporters{};
-	return textAssetImporters;
-}
 AssetDatabase* AssetDatabase::mainDatabase = nullptr;
 AssetDatabase* AssetDatabase::Get() {
 	return AssetDatabase::mainDatabase;
@@ -58,15 +53,15 @@ void AssetDatabase2::LoadAsset(const std::string& path) {
 	auto extention = GetFileExtension(path);
 	//TODO get extensions list from asset importer
 	if (extention == "png") {
-		auto& importer = GetAssetImporters()["Texture"];
+		auto& importer = GetAssetImporter("Texture");
 		if (importer) {
-			importer->ImportAll(BinaryImporterHandle(this, path));
+			importer->ImportAll(AssetDatabase2_BinaryImporterHandle(this, path));
 		}
 	}
 	else if (extention == "fbx" || extention == "glb" || extention == "blend") {
-		auto& importer = GetAssetImporters()["Mesh"];
+		auto& importer = GetAssetImporter("Mesh");
 		if (importer) {
-			importer->ImportAll(BinaryImporterHandle(this, path));
+			importer->ImportAll(AssetDatabase2_BinaryImporterHandle(this, path));
 		}
 	}
 	else if (extention == "asset") {
@@ -77,7 +72,7 @@ void AssetDatabase2::LoadAsset(const std::string& path) {
 	}
 }
 
-void AssetDatabase2::BinaryImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) {
+void AssetDatabase2_BinaryImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) {
 
 	struct stat result;
 	auto fullPathAsset = this->assetPath;
@@ -289,14 +284,6 @@ std::shared_ptr<Object> AssetDatabase::LoadFromYaml(const YAML::Node& node) {
 	return asset;
 }
 
-void AssetDatabase::RegisterBinaryAssetImporter(std::string assetType, std::unique_ptr<AssetImporter>&& importer) {
-	GetAssetImporters()[assetType] = std::move(importer);
-}
-
-void AssetDatabase::RegisterTextAssetImporter(std::string assetType, std::unique_ptr<TextAssetImporter>&& importer) {
-	GetTextAssetImporters()[assetType] = std::move(importer);
-}
-
 void AssetDatabase::LoadAllAtYaml(const YAML::Node& node, const std::string& path) {
 	//TODO return invalid asset ?
 	if (!node.IsDefined()) {
@@ -310,7 +297,7 @@ void AssetDatabase::LoadAllAtYaml(const YAML::Node& node, const std::string& pat
 
 		auto node = kv.second;
 
-		auto& importer = GetTextAssetImporters()[type];
+		auto& importer = GetTextAssetImporter(type);
 		if (!importer) {
 			LogError("Unknown asset type '%s' in '%s'", type.c_str(), currentAssetLoadingPath.c_str());
 			continue;
@@ -351,7 +338,7 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 	}
 	else if (ext == "wav") {
 		std::string type = "AudioClip";
-		auto& importer = GetAssetImporters()[type];
+		auto& importer = GetAssetImporter(type);
 		if (importer) {
 			importer->Import(*this, path);
 		}
@@ -484,24 +471,26 @@ AssetDatabase::PathDescriptor::PathDescriptor(std::string path) {
 	}
 }
 
-void AssetDatabase2::BinaryImporterHandle::AddAssetToLoaded(std::string id, std::shared_ptr<Object> object)
+void AssetDatabase2_BinaryImporterHandle::AddAssetToLoaded(std::string id, std::shared_ptr<Object> object)
 {
 	auto& asset = database->assets[assetPath];
 	asset.Add(id, object);
-	database->objectPaths[object] = PathDescriptor(assetPath, id).ToFullPath();
+	database->objectPaths[object] = AssetDatabase2::PathDescriptor(assetPath, id).ToFullPath();
 }
 
-bool AssetDatabase2::BinaryImporterHandle::ReadAssetAsBinary(std::vector<uint8_t>& buffer)
+bool AssetDatabase2_BinaryImporterHandle::ReadAssetAsBinary(std::vector<uint8_t>& buffer)
 {
 	return ReadBinary(GetAssetPath(), buffer);
 }
 
-bool AssetDatabase2::BinaryImporterHandle::ReadMeta(YAML::Node& node) {
+bool AssetDatabase2_BinaryImporterHandle::ReadMeta(YAML::Node& node) {
 	const auto fullPath = database->assetsRootFolder + assetPath + ".meta";
 	return ReadYAML(fullPath, node);
 }
 
-void AssetDatabase2::BinaryImporterHandle::EnsureForderForLibraryFileExists(std::string id) {
+std::string AssetDatabase2_BinaryImporterHandle::GetAssetPath() { return database->assetsRootFolder + assetPath; }
+
+void AssetDatabase2_BinaryImporterHandle::EnsureForderForLibraryFileExists(std::string id) {
 	auto fullPath = GetLibraryPathFromId(id);
 	auto firstFolder = fullPath.find_first_of("\\");
 	for (int i = 0; i < fullPath.size(); i++) {
@@ -512,18 +501,18 @@ void AssetDatabase2::BinaryImporterHandle::EnsureForderForLibraryFileExists(std:
 	}
 }
 
-std::string AssetDatabase2::BinaryImporterHandle::GetLibraryPathFromId(const std::string& id) {
+std::string AssetDatabase2_BinaryImporterHandle::GetLibraryPathFromId(const std::string& id) {
 	return database->libraryRootFolder + assetPath + "\\" + id;
 }
 
-void AssetDatabase2::BinaryImporterHandle::WriteToLibraryFile(const std::string& id, const YAML::Node& node) {
+void AssetDatabase2_BinaryImporterHandle::WriteToLibraryFile(const std::string& id, const YAML::Node& node) {
 	//TODO checks and make sure folder exists
 	const auto fullPath = GetLibraryPathFromId(id);
 	std::ofstream fout(fullPath);
 	fout << node;
 }
 
-void AssetDatabase2::BinaryImporterHandle::WriteToLibraryFile(const std::string& id, std::vector<uint8_t>& buffer) {
+void AssetDatabase2_BinaryImporterHandle::WriteToLibraryFile(const std::string& id, std::vector<uint8_t>& buffer) {
 	//TODO checks and make sure folder exists
 	const auto fullPath = GetLibraryPathFromId(id);
 	std::ofstream fout(fullPath, std::ios::binary);
@@ -532,7 +521,7 @@ void AssetDatabase2::BinaryImporterHandle::WriteToLibraryFile(const std::string&
 	}
 }
 
-bool AssetDatabase2::BinaryImporterHandle::ReadFromLibraryFile(const std::string& id, YAML::Node& node)
+bool AssetDatabase2_BinaryImporterHandle::ReadFromLibraryFile(const std::string& id, YAML::Node& node)
 {
 	const auto fullPath = GetLibraryPathFromId(id);
 
@@ -552,12 +541,14 @@ bool AssetDatabase2::BinaryImporterHandle::ReadFromLibraryFile(const std::string
 	}
 }
 
-bool AssetDatabase2::BinaryImporterHandle::ReadFromLibraryFile(const std::string& id, std::vector<uint8_t>& buffer)
+bool AssetDatabase2_BinaryImporterHandle::ReadFromLibraryFile(const std::string& id, std::vector<uint8_t>& buffer)
 {
 	return ReadBinary(GetLibraryPathFromId(id), buffer);
 }
 
-bool AssetDatabase2::BinaryImporterHandle::ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer)
+std::string AssetDatabase2_BinaryImporterHandle::GetToolPath(std::string toolName) { return "tools\\" + toolName; }
+
+bool AssetDatabase2_BinaryImporterHandle::ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer)
 {
 	std::ifstream file(fullPath, std::ios::binary | std::ios::ate);
 
@@ -584,7 +575,7 @@ bool AssetDatabase2::BinaryImporterHandle::ReadBinary(const std::string& fullPat
 }
 
 
-bool AssetDatabase2::BinaryImporterHandle::ReadYAML(const std::string& fullPath, YAML::Node& node)
+bool AssetDatabase2_BinaryImporterHandle::ReadYAML(const std::string& fullPath, YAML::Node& node)
 {
 	std::ifstream input(fullPath);
 	if (!input) {

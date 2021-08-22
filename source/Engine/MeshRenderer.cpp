@@ -5,7 +5,7 @@
 #include <windows.h>
 #include "bimg/bimg.h"
 #include "bimg/decode.h"
-#include "Time.h"
+#include "STime.h"
 #include "GameObject.h"
 #include "Dbg.h"
 #include "Render.h"

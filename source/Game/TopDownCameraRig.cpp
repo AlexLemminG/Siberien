@@ -1,17 +1,16 @@
 #include "TopDownCameraRig.h"
 #include "Transform.h"
 #include "GameObject.h"
-#include "Scene.h"
-#include "Time.h"
+#include "STime.h"
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
-#include "PhysicsSystem.h"
+#include "Physics.h"
 
 DECLARE_TEXT_ASSET(TopDownCameraRig);
 
 void TopDownCameraRig::OnEnable()
 {
-	auto target = Scene::FindGameObjectByTag(targetTag);
+	auto target = GameObject::FindWithTag(targetTag);
 	if (target != nullptr) {
 		auto trans = gameObject()->transform();
 		auto targetPos = target->transform()->GetPosition() + offset;
@@ -22,7 +21,7 @@ void TopDownCameraRig::OnEnable()
 }
 
 void TopDownCameraRig::Update() {
-	auto target = Scene::FindGameObjectByTag(targetTag);
+	auto target = GameObject::FindWithTag(targetTag);
 	if (target != nullptr) {
 		auto trans = gameObject()->transform();
 
@@ -32,25 +31,12 @@ void TopDownCameraRig::Update() {
 		auto safePos = currentPosWithoutCollision;
 		safePos.z = target->transform()->GetPosition().z;
 
+		Ray ray{ safePos, currentPosWithoutCollision - safePos };
+		Physics::RaycastHit hit;
+
 		float radius = 0.5f;
-		btSphereShape sphereShape{ radius };
-		btTransform from;
-		from.setIdentity();
-		btTransform to;
-		to.setIdentity();
-
-		btVector3 castFrom = btConvert(safePos);
-		btVector3 castTo = btConvert(currentPosWithoutCollision);
-		from.setOrigin(castFrom);
-		to.setOrigin(castTo);
-		btCollisionWorld::ClosestConvexResultCallback cb(from.getOrigin(), to.getOrigin());
-		cb.m_collisionFilterMask = PhysicsSystem::playerMask;
-		cb.m_collisionFilterGroup = PhysicsSystem::playerGroup;
-		PhysicsSystem::Get()->dynamicsWorld->convexSweepTest(&sphereShape, from, to, cb);
-
-		if (cb.hasHit()) {
-			targetPos = btConvert(cb.m_hitPointWorld + cb.m_hitNormalWorld * radius);
-
+		if (Physics::SphereCast(hit, ray, radius, (currentPosWithoutCollision - safePos).Length())) {
+			targetPos = hit.GetPoint() + hit.GetNormal() * radius;
 			trans->SetPosition(Mathf::Lerp(trans->GetPosition(), targetPos, Time::deltaTime() * collisionLerpT));
 		}
 		else {

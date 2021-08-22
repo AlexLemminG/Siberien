@@ -1,6 +1,6 @@
 #include "Reflect.h"
 #include <fstream>
-#include "Math.h"
+#include "SMath.h"
 #include "Resources.h"
 
 void SerializationContext::FlushRequiestedToSerialize() {

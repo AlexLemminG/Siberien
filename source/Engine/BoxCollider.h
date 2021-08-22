@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Collider.h"
+#include "SMath.h"
 
 class btCollisionShape;
 class btBoxShape;

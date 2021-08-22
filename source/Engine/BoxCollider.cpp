@@ -1,7 +1,7 @@
 #include "BoxCollider.h"
 #include "btBulletCollisionCommon.h"
 #include "PhysicsSystem.h"
-#include "Math.h"
+#include "SMath.h"
 #include "Transform.h"
 #include "GameObject.h"
 #include "Mesh.h"
