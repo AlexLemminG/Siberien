@@ -28,6 +28,7 @@
 #include "MeshRenderer.h"
 #include "Material.h"
 #include "Mesh.h"
+#include "bounds.h"
 
 SDL_Window* Render::window = nullptr;
 
@@ -77,10 +78,11 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = true;
-	initInfo.type = bgfx::RendererType::Direct3D11;
+	initInfo.debug = false;
+	initInfo.profile = false;
+	initInfo.type = bgfx::RendererType::Vulkan;
 	bgfx::init(initInfo);
-	bgfx::reset(width, height, BGFX_RESET_VSYNC);
+	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
 
 	bgfx::resetView(0);
 	bgfx::resetView(1);
@@ -118,6 +120,19 @@ bool Render::Init()
 
 	return true;
 }
+
+static bool SphereInFrustum(const Sphere& sphere, Vector4 frustum_planes[6])
+{
+	bool res = true;
+	for (int i = 0; i < 6; i++)
+	{
+		if (frustum_planes[i].x * sphere.pos.x + frustum_planes[i].y * sphere.pos.y +
+			frustum_planes[i].z * sphere.pos.z + frustum_planes[i].w <= -sphere.radius)
+			res = false;
+	}
+	return res;
+}
+
 void Render::Draw(SystemsManager& systems)
 {
 	OPTICK_EVENT();
@@ -140,7 +155,7 @@ void Render::Draw(SystemsManager& systems)
 	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenTex)) {
 		prevWidth = width;
 		prevHeight = height;
-		bgfx::reset(width, height, BGFX_RESET_VSYNC);
+		bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
 		if (bgfx::isValid(m_fullScreenTex)) {
 			bgfx::destroy(m_fullScreenTex);
 		}
@@ -173,7 +188,6 @@ void Render::Draw(SystemsManager& systems)
 	bgfx::setViewRect(1, 0, 0, width, height);
 	bgfx::setViewFrameBuffer(0, m_gbuffer);
 	bgfx::setViewFrameBuffer(1, BGFX_INVALID_HANDLE);
-
 
 	if (camera == nullptr) {
 		bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Colors::black.ToIntRGBA(), 1.0f, 0);
@@ -222,10 +236,18 @@ void Render::Draw(SystemsManager& systems)
 		bx::mtxProj(proj, fov, float(width) / float(height), nearPlane, farPlane, bgfx::getCaps()->homogeneousDepth);
 		bgfx::setViewTransform(0, &cameraViewMatrix(0, 0), proj);
 		bgfx::setViewTransform(1, &cameraViewMatrix(0, 0), proj);
+
+		Matrix4 projMatr = Matrix4(proj);
+		auto viewProj = projMatr * cameraViewMatrix;
+
+		bgfx_examples::buildFrustumPlanes((bx::Plane*)frustumPlanes, &viewProj(0,0));
 	}
 
 	UpdateLights(lightsPoi);
+	
+
 	dbgMeshesDrawn = 0;
+	dbgMeshesCulled = 0;
 
 	auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
 		if (r1->mesh.get() < r2->mesh.get()) {
@@ -254,8 +276,8 @@ void Render::Draw(SystemsManager& systems)
 			const auto& mesh = MeshRenderer::enabledMeshRenderers[i];
 			const auto& meshNext = MeshRenderer::enabledMeshRenderers[i + 1];
 			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
-			DrawMesh(mesh, !nextEq, !prevEq);
-			prevEq = nextEq;
+			bool drawn = DrawMesh(mesh, !nextEq, !prevEq);
+			prevEq = nextEq && drawn;
 		}
 		if (MeshRenderer::enabledMeshRenderers.size() > 0) {
 			DrawMesh(MeshRenderer::enabledMeshRenderers[MeshRenderer::enabledMeshRenderers.size() - 1], true, !prevEq);
@@ -372,15 +394,28 @@ void Render::UpdateLights(Vector3 poi) {
 	}
 }
 
-void Render::DrawMesh(const MeshRenderer* renderer, bool clearState, bool updateState) {
+bool Render::DrawMesh(const MeshRenderer* renderer, bool clearState, bool updateState) {
+	const auto& matrix = renderer->m_transform->matrix;
+	{
+		auto sphere = renderer->mesh->boundingSphere;
+		auto scale = GetScale(matrix);
+		float maxScale = Mathf::Max(Mathf::Max(scale.x, scale.y), scale.z);
+		sphere.radius *= maxScale;
+		sphere.pos = matrix * sphere.pos;
 
+		bool isVisible = SphereInFrustum(sphere, frustumPlanes);
+		if (!isVisible) {
+			dbgMeshesCulled++;
+			return false;
+		}
+	}
 	dbgMeshesDrawn++;
 
 	if (renderer->bonesFinalMatrices.size() != 0) {
 		bgfx::setTransform(&renderer->bonesFinalMatrices[0], renderer->bonesFinalMatrices.size());
 	}
 	else {
-		bgfx::setTransform(&(renderer->m_transform->matrix));
+		bgfx::setTransform(&matrix);
 	}
 	if (updateState) {
 
@@ -434,4 +469,5 @@ void Render::DrawMesh(const MeshRenderer* renderer, bool clearState, bool update
 
 	auto discardFlags = clearState ? BGFX_DISCARD_ALL : BGFX_DISCARD_NONE;
 	bgfx::submit(0, renderer->material->shader->program, 0u, discardFlags);
+	return true;
 }

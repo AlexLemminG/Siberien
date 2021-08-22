@@ -30,7 +30,7 @@ public:
 	//TODO make non static
 	static SDL_Window* window;
 private:
-	void DrawMesh(const MeshRenderer* renderer, bool clearState, bool updateState);
+	bool DrawMesh(const MeshRenderer* renderer, bool clearState, bool updateState); //returns true if was not culled
 	void UpdateLights(Vector3 poi);
 	
 	bool IsFullScreen();
@@ -65,4 +65,7 @@ private:
 	std::shared_ptr<PostProcessingEffect> post;
 
 	int dbgMeshesDrawn = 0;
+	int dbgMeshesCulled = 0;
+
+	Vector4 frustumPlanes[6];
 };

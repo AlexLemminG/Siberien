@@ -59,5 +59,7 @@ private:
 	REFLECT_END();
 
 	float clipPlaneY = -10.f;
-
+	std::shared_ptr<Transform> transform = nullptr;
+	std::shared_ptr<GameObject> target = nullptr;
+	std::shared_ptr<Transform> targetTransform = nullptr;
 };

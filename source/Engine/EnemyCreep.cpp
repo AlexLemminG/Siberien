@@ -18,14 +18,16 @@ void EnemyCreepController::OnEnable() {
 	rb = gameObject()->GetComponent<RigidBody>();
 	animator = gameObject()->GetComponent<Animator>();
 	health = gameObject()->GetComponent<Health>();
-
-	auto tr = gameObject()->transform();
-	//tr->SetScale(tr->GetScale() * Random::Range(0.8f, 1.2f));
+	transform = gameObject()->transform();
+	target = Scene::FindGameObjectByTag(targetTag);
+	if (target) {
+		targetTransform = target->transform();
+	}
 }
 
 
 void EnemyCreepController::HandleSomeTimeAfterDeath() {
-	posAtDeath = gameObject()->transform()->GetPosition();
+	posAtDeath = transform->GetPosition();
 }
 void EnemyCreepController::HandleDeath() {
 	animator->SetAnimation(deadAnimation);
@@ -64,7 +66,6 @@ void EnemyCreepController::Update() {
 		attackTimeLeft -= Time::deltaTime();
 		if (attackTimeLeft <= 0.3f && !didDamageFromAttack) {
 			didDamageFromAttack = true;
-			auto target = Scene::FindGameObjectByTag(targetTag);
 			if (target) {
 				auto health = target->GetComponent<Health>();
 				if (health) {
@@ -91,11 +92,11 @@ void EnemyCreepController::Update() {
 			if (deadTimer > 0.f) {
 				deadTimer -= Time::deltaTime();
 				if (deadTimer < 3.f) {
-					gameObject()->transform()->SetPosition(posAtDeath - (3.f - deadTimer) * Vector3_up / 3.f * 0.2f);
+					transform->SetPosition(posAtDeath - (3.f - deadTimer) * Vector3_up / 3.f * 0.2f);
 					rb->SetEnabled(false);
 				}
 				else {
-					posAtDeath = gameObject()->transform()->GetPosition();
+					posAtDeath = transform->GetPosition();
 				}
 			}
 		}
@@ -110,8 +111,6 @@ void EnemyCreepController::FixedUpdate() {
 	if (targetTag == "") {
 		return;
 	}
-	//TODO not so fast
-	auto target = Scene::FindGameObjectByTag(targetTag);
 	float dt = Time::fixedDeltaTime(); //TODO make just delta Time later
 	//TODO why strange beh on freezes
 
@@ -123,16 +122,16 @@ void EnemyCreepController::FixedUpdate() {
 
 	handle->activate(true);
 
-	auto targetPos = target->transform()->GetPosition();
+	auto targetPos = targetTransform->GetPosition();
 
-	auto currentPos = gameObject()->transform()->GetPosition();
+	auto currentPos = transform->GetPosition();
 
 	if (currentPos.y < clipPlaneY&& health) {
 		health->DoDamage(health->GetAmount());
 	}
 
 	Vector3 desiredLookDir = (targetPos - currentPos).Normalized();
-	Vector3 lookDir = gameObject()->transform()->GetForward().Normalized();
+	Vector3 lookDir = transform->GetForward().Normalized();
 	Vector3 desiredAngularVelocity = Vector3::CrossProduct(lookDir, desiredLookDir) * angularSpeed;
 	if (Vector3::DotProduct(lookDir, desiredLookDir) < 0) {
 		if (desiredAngularVelocity.LengthSquared() > 0.0001f) {
@@ -142,7 +141,7 @@ void EnemyCreepController::FixedUpdate() {
 	isReadyToAttack = Vector3::DotProduct(lookDir, desiredLookDir) > 0.6f;
 	Vector3 currentAngularVelocity = btConvert(handle->getAngularVelocity());
 
-	bool shouldRoll = Vector3::DotProduct(gameObject()->transform()->GetUp(), Vector3_up) < 0.1f;
+	bool shouldRoll = Vector3::DotProduct(transform->GetUp(), Vector3_up) < 0.1f;
 	if (attackTimeLeft > 0.f && !shouldRoll) {
 		return;
 	}

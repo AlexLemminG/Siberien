@@ -126,17 +126,26 @@ void GameplaySceneScenario::Update() {
 			return;
 		}
 	}
-	if (!IsTriggered("door4_close")) {
+	if (!IsTriggered("door4_close_1")) {
 		if (IsPlayerAtSphere(Vector3(-25.36, 3.0, 153.2), 3.8f)) {
-			Trigger("door4_close");
+			Trigger("door4_close_1");
 			doors[3].SetOpened(false);
 			SpawnZombies(mediumZombiePrefab, Vector3(-48, 5.6, 141.3), 100);
-			SpawnZombies(mediumZombiePrefab, Vector3(-37, 3, 166), 200);
-			SpawnZombies(slowZombiePrefab, Vector3(-39, 3, 178), 200);
+			return;
 		}
 		else {
 			return;
 		}
+	}
+	if (!IsTriggered("door4_close_2")) {
+		Trigger("door4_close_2");
+		SpawnZombies(mediumZombiePrefab, Vector3(-37, 3, 166), 200);
+		return;
+	}
+	if (!IsTriggered("door4_close_3")) {
+		Trigger("door4_close_3");
+		SpawnZombies(slowZombiePrefab, Vector3(-39, 3, 178), 200);
+		return;
 	}
 
 	if (!IsTriggered("door5")) {

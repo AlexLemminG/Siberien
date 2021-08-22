@@ -358,6 +358,7 @@ public:
 			}
 
 			buffer.Read(mesh->aabb);
+			buffer.Read(mesh->boundingSphere);
 		}
 		PhysicsSystem::Get()->DeserializeMeshPhysicsDataFromBuffer(fullMeshAsset->meshes, buffer);
 
@@ -441,6 +442,7 @@ public:
 			}
 
 			buffer.Write(mesh->aabb);
+			buffer.Write(mesh->boundingSphere);
 		}
 		PhysicsSystem::Get()->SerializeMeshPhysicsDataToBuffer(meshAsset->meshes, buffer);
 
@@ -527,6 +529,8 @@ public:
 			mesh->rawIndices = CalcIndicesFromAiMesh(aiMesh);
 
 			mesh->aabb = CalcAABB(mesh->rawVertices);
+			mesh->boundingSphere.pos = mesh->aabb.GetCenter();
+			mesh->boundingSphere.radius = mesh->aabb.GetSize().Length() / 2.f;
 
 			mesh->bones.resize(aiMesh->mNumBones);
 			std::unordered_map<std::string, int> boneMapping;

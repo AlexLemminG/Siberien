@@ -71,6 +71,9 @@ vec4 powRgba(vec4 _rgba, float _pow)
 vec3 calcLight(int _idx, mat3 _tbn, vec3 _wpos, vec3 _normal, vec3 _view)
 {
 	vec3 lp = u_lightPosRadius[_idx].xyz - _wpos;
+	if(dot(lp,lp) > u_lightPosRadius[_idx].w * u_lightPosRadius[_idx].w){
+		return vec3(0.0,0.0,0.0);
+	}
 	float attn = 1.0 - smoothstep(u_lightRgbInnerR[_idx].w, 1.0, length(lp) / u_lightPosRadius[_idx].w);
 	vec3 lightDir = mul( normalize(lp), _tbn );
 	vec2 bln = blinn(lightDir, _normal, _view);
@@ -81,6 +84,7 @@ vec3 calcLight(int _idx, mat3 _tbn, vec3 _wpos, vec3 _normal, vec3 _view)
 
 void main()
 {
+	
 	mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
 
 	vec3 normal;
@@ -89,9 +93,11 @@ void main()
 	vec3 view = normalize(v_view);
 
 	vec3 lightColor = vec3(0.0,0.0,0.0);
+	
 	for(int i = 0; i < 8; i++){
 		lightColor +=  calcLight(i, tbn, v_wpos, normal, view);
 	}
+	
 	lightColor += SampleSH(mul(tbn, normal), u_sphericalHarmonics);
 
 	vec4 color = toLinear(texture2D(s_texColor, v_texcoord0) );

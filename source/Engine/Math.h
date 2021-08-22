@@ -234,6 +234,14 @@ public:
 		max.y = Mathf::Max(max.y, pos.y);
 		max.z = Mathf::Max(max.z, pos.z);
 	}
+
+	Vector3 GetSize() const {
+		return max - min;
+	}
+
+	Vector3 GetCenter() const {
+		return (max + min) * 0.5f;
+	}
 };
 
 class Ray {

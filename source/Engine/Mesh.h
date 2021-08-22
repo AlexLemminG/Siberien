@@ -41,6 +41,12 @@ struct RawVertexData {
 
 class MeshPhysicsData;
 
+class Sphere {
+public:
+	Vector3 pos;
+	float radius;
+};
+
 class Mesh : public Object {
 public:
 	class BoneInfo {
@@ -66,6 +72,7 @@ public:
 	std::unique_ptr<MeshPhysicsData> physicsData;
 
 	AABB aabb;
+	Sphere boundingSphere;
 
 	~Mesh();
 

@@ -50,20 +50,20 @@ class ShaderAssetImporter : public TextAssetImporter {
 		binAssetPath += "\\";
 
 		const char* shaderPath = "???";
-
+		std::string compilerProfile = "";
 		switch (bgfx::getRendererType())
 		{
 		case bgfx::RendererType::Noop:
-		case bgfx::RendererType::Direct3D9:  shaderPath = "dx9";   break;
+		case bgfx::RendererType::Direct3D9:  shaderPath = "dx9";   compilerProfile = ""; break;
 		case bgfx::RendererType::Direct3D11:
-		case bgfx::RendererType::Direct3D12: shaderPath = "dx11";  break;
+		case bgfx::RendererType::Direct3D12: shaderPath = "dx11";  compilerProfile = std::string(isVertex ? "v" : "p") + "s_5_0";  break;
 		case bgfx::RendererType::Gnm:        shaderPath = "pssl";  break;
 		case bgfx::RendererType::Metal:      shaderPath = "metal"; break;
 		case bgfx::RendererType::Nvn:        shaderPath = "nvn";   break;
 		case bgfx::RendererType::OpenGL:     shaderPath = "glsl";  break;
 		case bgfx::RendererType::OpenGLES:   shaderPath = "essl";  break;
-		case bgfx::RendererType::Vulkan:     shaderPath = "spirv"; break;
-		case bgfx::RendererType::WebGPU:     shaderPath = "spirv"; break;
+		case bgfx::RendererType::Vulkan:     shaderPath = "spirv"; compilerProfile = "spirv15-12"; break;
+		case bgfx::RendererType::WebGPU:     shaderPath = "spirv"; compilerProfile = "spirv15-12"; break;
 
 		case bgfx::RendererType::Count:
 			ASSERT(false);//TODO "You should not be here!"
@@ -106,8 +106,7 @@ class ShaderAssetImporter : public TextAssetImporter {
 		params += "windows";
 		params += " -i assets\\shaders\\include";
 		params += " -p ";
-		params += (isVertex ? "v" : "p");
-		params += "s_5_0";
+		params += compilerProfile;
 
 		STARTUPINFOA si;
 		memset(&si, 0, sizeof(STARTUPINFOA));

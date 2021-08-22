@@ -26,8 +26,6 @@ bool PhysicsSystem::Init() {
 	btSetTaskScheduler(taskScheduler);
 
 	btDefaultCollisionConstructionInfo cci;
-	cci.m_defaultMaxPersistentManifoldPoolSize = 80000;
-	cci.m_defaultMaxCollisionAlgorithmPoolSize = 80000;
 	///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
 	collisionConfiguration = new btDefaultCollisionConfiguration(cci);
 
