@@ -27,3 +27,15 @@ bool Physics::SphereCast(Physics::RaycastHit& hit, Ray ray, float radius, float 
 		return false;
 	}
 }
+
+bool Physics::Raycast(RaycastHit& hit, Ray ray, float maxDistance) {
+	btCollisionWorld::ClosestRayResultCallback cb(btConvert(ray.origin), btConvert(ray.origin + ray.dir * maxDistance));
+	PhysicsSystem::Get()->dynamicsWorld->rayTest(btConvert(ray.origin), btConvert(ray.origin + ray.dir * maxDistance), cb);
+	if (cb.hasHit()) {
+		hit = Physics::RaycastHit(btConvert(cb.m_hitPointWorld), btConvert(cb.m_hitNormalWorld));
+		return true;
+	}
+	else {
+		return false;
+	}
+}

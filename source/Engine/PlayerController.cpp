@@ -7,8 +7,8 @@
 #include "Camera.h"
 #include "Dbg.h"
 #include "BulletSystem.h"
+#include "Physics.h"
 #include "PhysicsSystem.h"
-#include "btBulletDynamicsCommon.h"
 #include "RigidBody.h"
 #include "Scene.h"
 #include "EnemyCreep.h"
@@ -205,20 +205,18 @@ void PlayerController::UpdateGrenading() {
 	if (Input::GetKey(SDL_SCANCODE_G) || Input::GetMouseButtonDown(1)) {//TODO
 		if (grenadesCount > 0 && grenadePrefab) {
 			auto ray = Camera::GetMain()->ScreenPointToRay(Input::GetMousePosition());
-			btCollisionWorld::ClosestRayResultCallback cb(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f));
-			PhysicsSystem::Get()->dynamicsWorld->rayTest(btConvert(ray.origin), btConvert(ray.origin + ray.dir * 100.f), cb);
-			if (cb.hasHit()) {
+			Physics::RaycastHit hit;
+			if (Physics::Raycast(hit, ray, 100.f)) {
 				grenadesCount--;
 				auto grenadeGO = Object::Instantiate(grenadePrefab);
 				auto pos = gameObject()->transform()->GetPosition() + Vector3(0, bulletSpawnOffset, 0);
 				grenadeGO->transform()->SetPosition(pos);
 				auto grenade = grenadeGO->GetComponent<Grenade>();
 				if (grenade) {
-					grenade->ThrowAt(btConvert(cb.m_hitPointWorld));
+					grenade->ThrowAt(hit.GetPoint());
 				}
 				Scene::Get()->AddGameObject(grenadeGO);
 			}
-
 		}
 	}
 }

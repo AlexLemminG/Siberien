@@ -18,4 +18,5 @@ public:
 	};
 
 	static bool SphereCast(RaycastHit& hit, Ray ray, float radius, float maxDistance);
+	static bool Raycast(RaycastHit& hit, Ray ray, float maxDistance);
 };
