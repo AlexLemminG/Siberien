@@ -51,7 +51,7 @@ public:
 	//TODO only if T is Object
 	template<typename T>
 	void RequestDeserialization(std::shared_ptr<T>& ptr, const std::string& assetPath) const {
-		RequestDeserialization((void*)&ptr, assetPath);
+		RequestDeserialization((void*)&ptr, assetPath);//TODO typecheck
 	}
 
 	template<typename T>

@@ -100,6 +100,7 @@
     <ClCompile Include="GameLibrariesManager.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GameplaySceneScenario.cpp" />
+    <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Grenade.cpp" />
     <ClCompile Include="Gun.cpp" />
     <ClCompile Include="Health.cpp" />
@@ -118,6 +119,7 @@
     <ClCompile Include="PostProcessingEffect.cpp" />
     <ClCompile Include="Reflect.cpp" />
     <ClCompile Include="Render.cpp" />
+    <ClCompile Include="RenderEvents.cpp" />
     <ClCompile Include="Resources.cpp" />
     <ClCompile Include="RigidBody.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -145,6 +147,7 @@
     <ClInclude Include="FlyCameraMovement.h" />
     <ClInclude Include="GameEvents.h" />
     <ClInclude Include="GameLibrariesManager.h" />
+    <ClInclude Include="Graphics.h" />
     <ClInclude Include="Grenade.h" />
     <ClInclude Include="Gun.h" />
     <ClInclude Include="include\Component.h" />
@@ -163,6 +166,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshCollider.h" />
     <ClInclude Include="PostProcessingEffect.h" />
+    <ClInclude Include="RenderEvents.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="SphericalHarmonics.h" />
     <ClInclude Include="Texture.h" />

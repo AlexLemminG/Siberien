@@ -156,6 +156,12 @@
     <ClCompile Include="Physics.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="RenderEvents.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render.h">
@@ -301,6 +307,12 @@
     </ClInclude>
     <ClInclude Include="include\Physics.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderEvents.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

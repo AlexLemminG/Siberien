@@ -6,7 +6,6 @@ GameObject:
   - $RigidBody
   - $Grenade
   - $PointLight
-  - $Pickup
 MeshRenderer:
   mesh: meshes\grenade.glb$Mesh
   material: materials\scifi.asset

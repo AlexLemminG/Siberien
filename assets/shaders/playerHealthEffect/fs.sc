@@ -9,15 +9,12 @@ $input v_texcoord0
 
 uniform vec4 u_playerHealthParams;
 
-SAMPLER2D(s_texColor,  0);
-SAMPLER2D(s_texEmissive,  2);
+SAMPLER2D(s_texColor, 0);
+SAMPLER2D(s_win, 1);
 
 void main()
 {
-    vec2 texcoord = v_texcoord0;
-	texcoord.y = 1.0-texcoord.y;
-	
-	vec4 color = texture2D(s_texColor, texcoord);
+	vec4 color = texture2D(s_texColor, v_texcoord0);
 	
 	float intensity = u_playerHealthParams.x;
 	float intensityFromLastHit = u_playerHealthParams.y;
@@ -25,14 +22,13 @@ void main()
 	
 	intensity = min(1.0, intensity + intensityFromLastHit * 0.5);
 	
-	float grayscale = (color.r + color.g + color.b) / 3.0;
-	vec3 grayscaleColor = vec3(grayscale,grayscale,grayscale);
+	vec3 grayscaleColor = luma(color);
 	vec3 bloodyColor = vec3(1.0, 0.0, 0.0);
-	float borderT = pow(pow(texcoord.x - 0.5, 2.0) + pow(texcoord.y - 0.5, 2.0), 1.0);
+	float borderT = pow(pow(v_texcoord0.x - 0.5, 2.0) + pow(v_texcoord0.y - 0.5, 2.0), 1.0);
 	
-	color.rgb = lerp(color.rgb, grayscale, intensity);
+	color.rgb = lerp(color.rgb, grayscaleColor, intensity);
 	color.rgb = lerp(color.rgb, bloodyColor, borderT * intensity);
-	color.rgb = lerp(color.rgb, texture2D(s_texEmissive, texcoord), winCreenFade);
+	color.rgb = lerp(color.rgb, texture2D(s_win, v_texcoord0), winCreenFade);
 	
 	gl_FragColor.rgb = color.rgb;
 }

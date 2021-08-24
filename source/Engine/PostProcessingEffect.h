@@ -1,29 +1,28 @@
 #pragma once
 
-#include "Object.h"
+#include "Component.h"
 #include "Reflect.h"
+#include "RenderEvents.h"
 
 class Render;
 class Shader;
+class Material;
 
-class PostProcessingEffect : public Object {
+class PostProcessingEffect : public Component {
 public:
+	void OnEnable() override;
+	void OnDisable() override;
 	void Draw(Render& render);
 
 	float winScreenFade = 0.f;
 	float intensityFromLastHit;
 	float intensity;
 private:
-	std::shared_ptr<Shader> shader;
+	GameEventHandle handle;
+
+	std::shared_ptr<Material> material;
 
 	REFLECT_BEGIN(PostProcessingEffect);
-	REFLECT_VAR(shader);
+	REFLECT_VAR(material);
 	REFLECT_END();
-
-	static std::vector<std::shared_ptr<PostProcessingEffect>> activeEffects; //TODO no static please
-	void ScreenSpaceQuad(
-		float _textureWidth,
-		float _textureHeight,
-		float _texelHalf,
-		bool _originBottomLeft);
 };

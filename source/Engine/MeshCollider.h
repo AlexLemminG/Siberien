@@ -2,6 +2,7 @@
 
 #include "Collider.h"
 #include "System.h"
+#include "GameEvents.h"
 
 class btTriangleIndexVertexArray;
 class Mesh;
@@ -37,7 +38,7 @@ public:
 private:
 	int totalGets = 0;
 	int totalNew = 0;
-	int unloadHandle;
+	GameEventHandle unloadHandle;
 	void OnUnloaded();
 	std::shared_ptr<btBvhTriangleMeshShape> AddNew(std::shared_ptr<Mesh> mesh);
 

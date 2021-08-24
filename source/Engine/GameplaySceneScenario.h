@@ -70,7 +70,7 @@ private:
 	bool IsPlayerAtSphere(Vector3 pos, float radius);
 	bool isIndoor = false;
 
-	int creepDeathHandler;
+	GameEventHandle creepDeathHandler;
 	int countDead = 0;
 	int countSpawned = 0;
 

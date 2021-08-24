@@ -5,7 +5,6 @@
 
 class Engine {
 public:
-	virtual void DoSomething();
 };
 
 class GameLibrary {

@@ -3,36 +3,40 @@
 #include <vector>
 #include <functional>
 
+class GameEventHandle {
+public:
+	int id = -1;
+};
 
 template<typename... Args>
 class GameEvent {
 public:
 	typedef std::function<void(Args...)> HANDLER_TYPE;
 
-	int Subscribe(HANDLER_TYPE handler) {
-		int handle = nextHandleIdx++;
-		handlers.push_back({ handle, handler });
+	GameEventHandle Subscribe(HANDLER_TYPE handler) {
+		GameEventHandle handle{ nextHandleIdx++ };
+		handlers.push_back({ handle.id, handler });
 		return handle;
 	}
-	void Unsubscribe(int handle) {
-		auto l = [handle](const HandlerWithHandler& x) { return x.handle == handle; };
+	void Unsubscribe(GameEventHandle handle) {
+		auto l = [handle](const HandleWithHandler& x) { return x.handleId == handle.id; };
 		handlers.erase(std::remove_if(handlers.begin(), handlers.end(), l));
 	}
 	void Invoke(Args... args) {
-		for (HandlerWithHandler& handler : handlers) {
+		for (HandleWithHandler& handler : handlers) {
 			handler.handler(args...);
 		}
 	}
 
 private:
 	int nextHandleIdx = 0;
-	class HandlerWithHandler {
+	class HandleWithHandler {
 	public:
-		HandlerWithHandler(int handle, HANDLER_TYPE& handler) :handle(handle), handler(handler){}
-		int handle = 0;
+		HandleWithHandler(int handleId, HANDLER_TYPE& handler) :handleId(handleId), handler(handler) {}
+		int handleId = 0;
 		HANDLER_TYPE handler;
 	};
-	std::vector<HandlerWithHandler> handlers;
+	std::vector<HandleWithHandler> handlers;
 };
 
 class EnemyCreepController;

@@ -285,5 +285,23 @@ inline void DeserializeVector(const SerializationContext& context, Vector3& dst)
 	dst.y = context.yamlNode[1].as<float>();
 	dst.z = context.yamlNode[2].as<float>();
 }
+inline void SerializeVector4(SerializationContext& context, const Vector4& src) {
+	context.yamlNode = YAML::Node(YAML::NodeType::Sequence);
+	context.yamlNode[0] = src.x;
+	context.yamlNode[1] = src.y;
+	context.yamlNode[2] = src.z;
+	context.yamlNode[3] = src.w;
+}
+inline void DeserializeVector4(const SerializationContext& context, Vector4& dst) {
+	if (!context.IsDefined() || !context.yamlNode.IsSequence() || context.yamlNode.size() < 4) {
+		//v = defaultValue;
+		return;
+	}
+	dst.x = context.yamlNode[0].as<float>();
+	dst.y = context.yamlNode[1].as<float>();
+	dst.z = context.yamlNode[2].as<float>();
+	dst.w = context.yamlNode[3].as<float>();
+}
 REFLECT_CUSTOM_EXT(Vector3, SerializeVector, DeserializeVector);
+REFLECT_CUSTOM_EXT(Vector4, SerializeVector4, DeserializeVector4);
 REFLECT_CUSTOM_EXT(Color, Color::Serialize, Color::Deserialize);

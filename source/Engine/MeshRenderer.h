@@ -37,7 +37,7 @@ public:
 	std::vector<Matrix4> bonesWorldMatrices;
 	std::vector<Matrix4> bonesLocalMatrices;
 	Transform* m_transform = nullptr;
-	int randomColorTextureIdx = 0;
+	int randomColorTextureIdx = 0;//TODO no sins
 
 private:
 	bool addedToRenderers = false;

@@ -9,8 +9,7 @@ Camera* Camera::mainCamera = nullptr;
 DECLARE_TEXT_ASSET(Camera);
 
 Ray Camera::ScreenPointToRay(Vector2 screenPoint) {
-
-
+	
 	int width;
 	int height;
 	SDL_GetWindowSize(Render::window, &width, &height);

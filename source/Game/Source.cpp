@@ -8,8 +8,6 @@ class GameLib : public GameLibrary {
 		if (!GameLibrary::Init(engine)) {
 			return false;
 		}
-		std::cout << "General kenobi" << std::endl;
-		engine->DoSomething();
 		return true;
 	}
 

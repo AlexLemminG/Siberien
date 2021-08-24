@@ -18,6 +18,7 @@
 #include "System.h"
 #include "SceneManager.h"
 #include "Engine.h"
+#include "Graphics.h"
 
 DECLARE_SERIALATION_INFO_STORAGE();
 
@@ -55,6 +56,8 @@ start:
 			return -1;
 		}
 
+
+		Graphics::Get()->SetRenderPtr(&render); //TODO this is not the way
 
 		Input::Init();
 
@@ -105,6 +108,8 @@ start:
 		SceneManager::Term();
 
 		assets.UnloadAll();
+		
+		Graphics::Get()->SetRenderPtr(nullptr); //TODO this is not the way
 
 		systemsManager.Term();
 

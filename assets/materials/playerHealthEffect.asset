@@ -1,0 +1,9 @@
+Material:
+  shader: shaders\playerHealthEffect.asset
+  textures:
+  - name: s_texColor
+    value: ""
+  - name: s_win
+    value: textures\win.png
+  vectors:
+  - name: u_playerHealthParams

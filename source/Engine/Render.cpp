@@ -20,7 +20,6 @@
 #include "STime.h"
 #include "Scene.h"
 #include "Input.h"
-#include "PostProcessingEffect.h"
 #include "Material.h"
 #include "Texture.h"
 #include "SphericalHarmonics.h"
@@ -29,6 +28,8 @@
 #include "Material.h"
 #include "Mesh.h"
 #include "bounds.h"
+#include "RenderEvents.h"
+#include "Graphics.h"
 
 SDL_Window* Render::window = nullptr;
 
@@ -40,6 +41,8 @@ bool Render::IsFullScreen() {
 void Render::SetFullScreen(bool isFullScreen) {
 	SDL_SetWindowFullscreen(window, isFullScreen ? SDL_WINDOW_FULLSCREEN : 0);
 }
+
+
 bool Render::Init()
 {
 	OPTICK_EVENT();
@@ -78,9 +81,9 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = false;
+	initInfo.debug = true;
 	initInfo.profile = false;
-	initInfo.type = bgfx::RendererType::Vulkan;
+	initInfo.type = bgfx::RendererType::Direct3D11;
 	bgfx::init(initInfo);
 	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
 
@@ -93,7 +96,6 @@ bool Render::Init()
 
 	u_time = bgfx::createUniform("u_time", bgfx::UniformType::Vec4);
 	u_color = bgfx::createUniform("u_color", bgfx::UniformType::Vec4);
-	u_playerHealthParams = bgfx::createUniform("u_playerHealthParams", bgfx::UniformType::Vec4);
 	s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 	s_texNormal = bgfx::createUniform("s_texNormal", bgfx::UniformType::Sampler);
 	s_texEmissive = bgfx::createUniform("s_texEmissive", bgfx::UniformType::Sampler);
@@ -108,13 +110,14 @@ bool Render::Init()
 	whiteTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\white.png");
 	defaultNormalTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultNormal.png");
 	defaultEmissiveTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultEmissive.png");
+	simpleBlitMat = AssetDatabase::Get()->LoadByPath<Material>("materials\\simpleBlit.asset");
 
 	m_fullScreenTex.idx = bgfx::kInvalidHandle;
+	m_fullScreenBuffer.idx = bgfx::kInvalidHandle;
 	m_gbuffer.idx = bgfx::kInvalidHandle;
 
 	prevWidth = width;
 	prevHeight = height;
-	post = AssetDatabase::Get()->LoadByPath<PostProcessingEffect>("playerHealthEffect.asset");
 
 	Dbg::Init();
 
@@ -141,7 +144,6 @@ void Render::Draw(SystemsManager& systems)
 		SetFullScreen(!IsFullScreen());
 	}
 
-
 	Matrix4 cameraViewMatrix;
 	auto camera = Camera::GetMain();
 	int width;
@@ -152,12 +154,12 @@ void Render::Draw(SystemsManager& systems)
 	Vector3 lightsPoi = Vector3_zero;
 	SDL_GetWindowSize(window, &width, &height);
 
-	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenTex)) {
+	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenBuffer)) {
 		prevWidth = width;
 		prevHeight = height;
 		bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
-		if (bgfx::isValid(m_fullScreenTex)) {
-			bgfx::destroy(m_fullScreenTex);
+		if (bgfx::isValid(m_fullScreenBuffer)) {
+			bgfx::destroy(m_fullScreenBuffer);
 		}
 		if (bgfx::isValid(m_gbuffer)) {
 			bgfx::destroy(m_gbuffer);
@@ -169,25 +171,30 @@ void Render::Draw(SystemsManager& systems)
 			| BGFX_SAMPLER_V_CLAMP
 			;
 
-		m_fullScreenTex = bgfx::createFrameBuffer(
-			(uint16_t)(width)
-			, (uint16_t)(height)
-			, bgfx::TextureFormat::RGBA32F
-			, tsFlags
-		);
+		m_fullScreenTex = bgfx::createTexture2D(
+			uint16_t(width),
+			uint16_t(height),
+			false,
+			1,
+			bgfx::TextureFormat::RGBA32F, tsFlags);
+
+		m_fullScreenBuffer = bgfx::createFrameBuffer(1, &m_fullScreenTex, true);
 
 		bgfx::TextureHandle gbufferTex[] =
 		{
-			bgfx::getTexture(m_fullScreenTex),
+			m_fullScreenTex,
 			bgfx::createTexture2D(uint16_t(width), uint16_t(height), false, 1, bgfx::TextureFormat::D32F, tsFlags),
 		};
 
 		m_gbuffer = bgfx::createFrameBuffer(BX_COUNTOF(gbufferTex), gbufferTex, true);
+		bgfx::setName(m_gbuffer, "gbuffer");
+		bgfx::setName(m_fullScreenTex, "fullScreenTex");
+		bgfx::setName(m_fullScreenBuffer, "fullScreenBuffer");
 	}
 	bgfx::setViewRect(0, 0, 0, width, height);
 	bgfx::setViewRect(1, 0, 0, width, height);
 	bgfx::setViewFrameBuffer(0, m_gbuffer);
-	bgfx::setViewFrameBuffer(1, BGFX_INVALID_HANDLE);
+	bgfx::setViewFrameBuffer(1, BGFX_INVALID_HANDLE);//TODO do we need third buffer to go postprocessing?
 
 	if (camera == nullptr) {
 		bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Colors::black.ToIntRGBA(), 1.0f, 0);
@@ -240,11 +247,11 @@ void Render::Draw(SystemsManager& systems)
 		Matrix4 projMatr = Matrix4(proj);
 		auto viewProj = projMatr * cameraViewMatrix;
 
-		bgfx_examples::buildFrustumPlanes((bx::Plane*)frustumPlanes, &viewProj(0,0));
+		bgfx_examples::buildFrustumPlanes((bx::Plane*)frustumPlanes, &viewProj(0, 0));
 	}
 
 	UpdateLights(lightsPoi);
-	
+
 
 	dbgMeshesDrawn = 0;
 	dbgMeshesCulled = 0;
@@ -286,9 +293,9 @@ void Render::Draw(SystemsManager& systems)
 
 	systems.Draw();
 
-	if (post) {
-		post->Draw(*this);
-	}
+	RenderEvents::Get()->onSceneRendered.Invoke(*this);
+
+	Graphics::Get()->Blit(simpleBlitMat, 1);
 
 	Dbg::DrawAll();
 	{
@@ -301,15 +308,24 @@ void Render::Term()
 {
 	OPTICK_EVENT();
 	Dbg::Term();
-	post = nullptr;
 	whiteTexture = nullptr;
 	defaultNormalTexture = nullptr;
 	defaultEmissiveTexture = nullptr;
+	simpleBlitMat = nullptr;
+
+	for (auto u : textureUniforms) {
+		bgfx::destroy(u.second);
+	}
+	for (auto u : colorUniforms) {
+		bgfx::destroy(u.second);
+	}
+	for (auto u : vectorUniforms) {
+		bgfx::destroy(u.second);
+	}
 
 	//TODO destroy programs, buffers and other shit
 	bgfx::destroy(u_time);
 	bgfx::destroy(u_color);
-	bgfx::destroy(u_playerHealthParams);
 	bgfx::destroy(s_texColor);
 	bgfx::destroy(s_texNormal);
 	bgfx::destroy(s_texEmissive);
@@ -318,8 +334,8 @@ void Render::Term()
 	bgfx::destroy(u_sphericalHarmonics);
 	bgfx::destroy(u_pixelSize);
 
-	if (bgfx::isValid(m_fullScreenTex)) {
-		bgfx::destroy(m_fullScreenTex);
+	if (bgfx::isValid(m_fullScreenBuffer)) {
+		bgfx::destroy(m_fullScreenBuffer);
 	}
 	if (bgfx::isValid(m_gbuffer)) {
 		bgfx::destroy(m_gbuffer);
@@ -417,38 +433,12 @@ bool Render::DrawMesh(const MeshRenderer* renderer, bool clearState, bool update
 	else {
 		bgfx::setTransform(&matrix);
 	}
-	if (updateState) {
 
-		bgfx::setUniform(u_color, &renderer->material->color);
+	if (updateState) {
+		ApplyMaterialProperties(renderer->material);
 		if (renderer->material->colorTex) {
 			if (renderer->material->randomColorTextures.size() > 0) {
 				bgfx::setTexture(0, s_texColor, renderer->material->randomColorTextures[renderer->randomColorTextureIdx]->handle);
-			}
-			else {
-				bgfx::setTexture(0, s_texColor, renderer->material->colorTex->handle);
-			}
-		}
-		else {
-			if (whiteTexture) {
-				bgfx::setTexture(0, s_texColor, whiteTexture->handle);
-			}
-		}
-
-		if (renderer->material->normalTex) {
-			bgfx::setTexture(1, s_texNormal, renderer->material->normalTex->handle);
-		}
-		else {
-			if (defaultNormalTexture) {
-				bgfx::setTexture(1, s_texNormal, defaultNormalTexture->handle);
-			}
-		}
-
-		if (renderer->material->emissiveTex) {
-			bgfx::setTexture(2, s_texEmissive, renderer->material->emissiveTex->handle);
-		}
-		else {
-			if (defaultEmissiveTexture) {
-				bgfx::setTexture(2, s_texEmissive, defaultEmissiveTexture->handle);
 			}
 		}
 
@@ -470,4 +460,79 @@ bool Render::DrawMesh(const MeshRenderer* renderer, bool clearState, bool update
 	auto discardFlags = clearState ? BGFX_DISCARD_ALL : BGFX_DISCARD_NONE;
 	bgfx::submit(0, renderer->material->shader->program, 0u, discardFlags);
 	return true;
+}
+
+void Render::ApplyMaterialProperties(const std::shared_ptr<Material> material) {
+	bgfx::setUniform(u_color, &material->color);
+
+	if (material->colorTex) {
+		bgfx::setTexture(0, s_texColor, material->colorTex->handle);
+	}
+	else {
+		if (whiteTexture) {
+			bgfx::setTexture(0, s_texColor, whiteTexture->handle);
+		}
+	}
+
+	if (material->normalTex) {
+		bgfx::setTexture(1, s_texNormal, material->normalTex->handle);
+	}
+	else {
+		if (defaultNormalTexture) {
+			bgfx::setTexture(1, s_texNormal, defaultNormalTexture->handle);
+		}
+	}
+
+	if (material->emissiveTex) {
+		bgfx::setTexture(2, s_texEmissive, material->emissiveTex->handle);
+	}
+	else {
+		if (defaultEmissiveTexture) {
+			bgfx::setTexture(2, s_texEmissive, defaultEmissiveTexture->handle);
+		}
+	}
+
+	for (const auto& colorProp : material->colors) {
+		auto it = colorUniforms.find(colorProp.name);
+		bgfx::UniformHandle uniform;
+		if (it == colorUniforms.end()) {
+			uniform = bgfx::createUniform(colorProp.name.c_str(), bgfx::UniformType::Vec4);
+			colorUniforms[colorProp.name] = uniform;
+		}
+		else {
+			uniform = it->second;
+		}
+		bgfx::setUniform(uniform, &colorProp.value);
+	}
+
+	for (const auto& vecProp : material->vectors) {
+		auto it = vectorUniforms.find(vecProp.name);
+		bgfx::UniformHandle uniform;
+		if (it == vectorUniforms.end()) {
+			uniform = bgfx::createUniform(vecProp.name.c_str(), bgfx::UniformType::Vec4);
+			vectorUniforms[vecProp.name] = uniform;
+		}
+		else {
+			uniform = it->second;
+		}
+		bgfx::setUniform(uniform, &vecProp.value);
+	}
+
+	//TODO i based on shader uniformInfo samplers order ?
+	int i = 0;
+	for (const auto& texProp : material->textures) {
+		auto it = textureUniforms.find(texProp.name);
+		bgfx::UniformHandle uniform;
+		if (it == textureUniforms.end()) {
+			uniform = bgfx::createUniform(texProp.name.c_str(), bgfx::UniformType::Sampler);
+			textureUniforms[texProp.name] = uniform;
+		}
+		else {
+			uniform = it->second;
+		}
+		if (texProp.value) {
+			bgfx::setTexture(i++, uniform, texProp.value->handle);
+		}
+		i++;
+	}
 }

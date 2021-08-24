@@ -240,12 +240,12 @@ DWORD WINAPI win32threadStartFunc(LPVOID lpParam)
 		{
 			//exit Thread
 			status->m_status = 3;
-			printf("Thread with taskId %i with handle %p exiting\n", status->m_taskId, status->m_threadHandle);
+			//printf("Thread with taskId %i with handle %p exiting\n", status->m_taskId, status->m_threadHandle);
 			SetEvent(status->m_eventCompleteHandle);
 			break;
 		}
 	}
-	printf("Thread TERMINATED\n");
+	//printf("Thread TERMINATED\n");
 	return 0;
 }
 
@@ -324,7 +324,7 @@ void btThreadSupportWin32::startThreads(const ConstructionInfo& threadConstructi
 
 	for (int i = 0; i < m_numThreads; i++)
 	{
-		printf("starting thread %d\n", i);
+		//printf("starting thread %d\n", i);
 
 		btThreadStatus& threadStatus = m_activeThreadStatus[i];
 
@@ -376,7 +376,7 @@ void btThreadSupportWin32::startThreads(const ConstructionInfo& threadConstructi
 		threadStatus.m_threadHandle = handle;
 		threadStatus.m_userThreadFunc = threadConstructionInfo.m_userThreadFunc;
 
-		printf("started %s thread %d with threadHandle %p\n", threadConstructionInfo.m_uniqueName, i, handle);
+		//printf("started %s thread %d with threadHandle %p\n", threadConstructionInfo.m_uniqueName, i, handle);
 	}
 }
 

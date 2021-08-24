@@ -7,6 +7,7 @@ GameObject:
   - $SphereCollider
   - $RigidBody
   - $Health
+  - $PostProcessingEffect
 MeshRenderer:
   mesh: meshes\player.glb$Mesh
   material: materials\scifi.asset
@@ -25,21 +26,8 @@ PlayerController:
   bulletSpeed: 20
   healPerSecond: 5
   startGun: gun_pistol.asset$Gun
-  postprocessingEffect: playerHealthEffect.asset
+  postprocessingEffect: $PostProcessingEffect
   grenadePrefab: grenade.asset
-  shootingSounds:
-  - sounds\shooting (1).wav
-  - sounds\shooting (2).wav
-  - sounds\shooting (3).wav
-  footstepSounds:
-  - sounds\footstep (1).wav
-  - sounds\footstep (2).wav
-  - sounds\footstep (3).wav
-  - sounds\footstep (4).wav
-  - sounds\footstep (5).wav
-  - sounds\footstep (6).wav
-  - sounds\footstep (7).wav
-  - sounds\footstep (8).wav
 SphereCollider:
   radius: 1
   center: [0, 0.5, 0]
@@ -56,3 +44,5 @@ PointLight:
   innerRadius: 0.0
 Health:
   amount: 5
+PostProcessingEffect:
+  material: materials\playerHealthEffect.asset
