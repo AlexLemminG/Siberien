@@ -55,7 +55,7 @@ void RigidBody::OnEnable() {
 	//add the body to the dynamics world
 	int group;
 	int mask;
-	PhysicsSystem::GetGroupAndMask(layer, group, mask);
+	PhysicsSystem::Get()->GetGroupAndMask(layer, group, mask);
 	PhysicsSystem::Get()->dynamicsWorld->addRigidBody(pBody, group, mask);
 }
 

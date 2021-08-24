@@ -1,11 +1,7 @@
 #include "PostProcessingEffect.h"
-#include "bgfx/bgfx.h"
 #include "Render.h"
-#include "Texture.h"
-#include "System.h"
-#include "Shader.h"
-#include "Resources.h"
 #include "Serialization.h"
+#include "Common.h"
 #include "Graphics.h"
 #include "Material.h"
 

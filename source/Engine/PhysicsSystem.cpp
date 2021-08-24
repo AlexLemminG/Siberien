@@ -7,6 +7,7 @@
 #include "GameObject.h"
 #include "Mesh.h"
 #include "MeshCollider.h"//TODO move meshPhysicsData to separate class
+#include "Resources.h"
 #include <BulletCollision\CollisionDispatch\btGhostObject.h>
 #include "Bullet3Serialize/Bullet2FileLoader/b3BulletFile.h"
 #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorldMt.h"
@@ -14,14 +15,16 @@
 #include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolverMt.h"
 
 REGISTER_SYSTEM(PhysicsSystem);
+DECLARE_TEXT_ASSET(PhysicsSettings);
 
 bool PhysicsSystem::Init() {
-
+	settings = AssetDatabase::Get()->LoadByPath<PhysicsSettings>("settings.asset");
+	ASSERT(settings != nullptr);
 	///-----includes_end-----
 
 	int i;
 	///-----initialization_start-----
-	
+
 	taskScheduler = btCreateDefaultTaskScheduler();
 	//taskScheduler->setNumThreads(taskScheduler->getMaxNumThreads());
 	btSetTaskScheduler(taskScheduler);
@@ -90,44 +93,7 @@ Vector3 PhysicsSystem::GetGravity() const {
 }
 
 void PhysicsSystem::GetGroupAndMask(const std::string& groupName, int& group, int& mask) {
-	if (groupName.empty() || groupName == "default") {
-		group = defaultGroup;
-		mask = defaultMask;
-	}
-	else if (groupName == "player") {
-		group = playerGroup;
-		mask = playerMask;
-	}
-	else  if (groupName == "playerBullet") {
-		group = playerBulletGroup;
-		mask = playerBulletMask;
-	}
-	else  if (groupName == "enemy") {
-		group = enemyGroup;
-		mask = enemyMask;
-	}
-	else  if (groupName == "enemyBullet") {
-		group = enemyBulletGroup;
-		mask = enemyBulletMask;
-	}
-	else  if (groupName == "enemyCorpse") {
-		group = enemyCorpseGroup;
-		mask = enemyCorpseMask;
-	}
-	else  if (groupName == "grenade") {
-		group = grenadeGroup;
-		mask = grenadeMask;
-	}
-	else  if (groupName == "staticGeom") {
-		group = staticGeomGroup;
-		mask = staticGeomMask;
-	}
-	else {
-		LogError("Unknown group name %s", groupName.c_str());
-		group = defaultGroup;
-		mask = defaultMask;
-	}
-
+	return settings->GetGroupAndMask(groupName, group, mask);
 }
 
 void PhysicsSystem::SerializeMeshPhysicsDataToBuffer(std::vector<std::shared_ptr<Mesh>>& meshes, BinaryBuffer& buffer) {
@@ -175,7 +141,7 @@ void PhysicsSystem::DeserializeMeshPhysicsDataFromBuffer(std::vector<std::shared
 			buffer.Read(&mesh->physicsData->triangleShapeBuffer[0], size);
 
 			btOptimizedBvh* bvh = btOptimizedBvh::deSerializeInPlace(&mesh->physicsData->triangleShapeBuffer[0], size, false);
-			
+
 			auto nonBuildShape = MeshColliderStorageSystem::Get()->Create(mesh, false);
 			mesh->physicsData->triangleShape = nonBuildShape.shape;
 			mesh->physicsData->triangles = nonBuildShape.triangles;
@@ -222,8 +188,9 @@ std::vector<GameObject*> PhysicsSystem::GetOverlaping(Vector3 pos, float radius)
 	ghost.setWorldTransform(xform);
 
 	GetAllContacts_ContactResultCallback cb;
-	cb.m_collisionFilterGroup = PhysicsSystem::playerBulletGroup;
-	cb.m_collisionFilterMask = PhysicsSystem::playerBulletMask;
+	//TODO layer as parameter
+	cb.m_collisionFilterGroup = -1;
+	cb.m_collisionFilterMask = -1;
 	PhysicsSystem::Get()->dynamicsWorld->contactTest(&ghost, cb);
 
 	//TODO may contain doubles 
@@ -241,4 +208,69 @@ std::vector<GameObject*> PhysicsSystem::GetOverlaping(Vector3 pos, float radius)
 	PhysicsSystem::Get()->dynamicsWorld->removeCollisionObject(&ghost);
 
 	return results;
+}
+
+void PhysicsSettings::GetGroupAndMask(const std::string& groupName, int& group, int& mask) {
+	auto it = layersMap.find(groupName);
+	if (it == layersMap.end()) {
+		ASSERT(false);
+		group = 0;
+		mask = 0;
+	}
+	{
+		group = it->second.group;
+		mask = it->second.mask;
+	}
+}
+
+void PhysicsSettings::OnAfterDeserializeCallback(const SerializationContext& context) {
+	for (int i = 0; i < layers.size(); i++) {
+		layers[i].group = 1 << i;
+		layersMap[layers[i].name] = layers[i];
+	}
+	static const std::string allKeyword = "all";
+	for (auto& kv : layersMap) {
+		auto& layer = kv.second;
+		if (layer.doNotCollideWith.size() > 0) {
+			ASSERT(layer.collideWith.size() == 0);
+			layer.mask = -1;
+			for (const auto layerName : layer.doNotCollideWith) {
+				if (layerName == allKeyword) {
+					layer.mask = 0;
+					break;
+				}
+				else {
+					auto it = layersMap.find(layerName);
+					if (it == layersMap.end()) {
+						ASSERT(false);
+						continue;
+					}
+					layer.mask &= (-1 ^ it->second.group);
+				}
+			}
+		}
+		else {
+			layer.mask = 0;
+			for (const auto layerName : layer.collideWith) {
+				if (layerName == allKeyword) {
+					layer.mask = -1;
+					break;
+				}
+				else {
+					auto it = layersMap.find(layerName);
+					if (it == layersMap.end()) {
+						ASSERT(false);
+						continue;
+					}
+					layer.mask |= it->second.group;
+				}
+			}
+		}
+	}
+	if (layers.size() == 0) {
+		layersMap[""] = Layer{};
+	}
+	else {
+		layersMap[""] = layersMap[layers[0].name];
+	}
 }

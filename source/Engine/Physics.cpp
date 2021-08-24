@@ -15,8 +15,9 @@ bool Physics::SphereCast(Physics::RaycastHit& hit, Ray ray, float radius, float 
 	from.setOrigin(castFrom);
 	to.setOrigin(castTo);
 	btCollisionWorld::ClosestConvexResultCallback cb(from.getOrigin(), to.getOrigin());
-	cb.m_collisionFilterMask = PhysicsSystem::playerMask;
-	cb.m_collisionFilterGroup = PhysicsSystem::playerGroup;
+	//TODO layer as parameter
+	cb.m_collisionFilterMask = -1;
+	cb.m_collisionFilterGroup = -1;
 	PhysicsSystem::Get()->dynamicsWorld->convexSweepTest(&sphereShape, from, to, cb);
 
 	if (cb.hasHit()) {

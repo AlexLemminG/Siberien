@@ -64,7 +64,36 @@ class btDynamicsWorld;
 class GameObject;
 class BinaryBuffer;
 
-class PhysicsSystem : public System< PhysicsSystem> {
+class PhysicsSettings : public Object{
+public:
+	void GetGroupAndMask(const std::string& groupName, int& group, int& mask);
+private:
+	class Layer {
+	public:
+		std::string name;
+		std::vector<std::string> collideWith;
+		std::vector<std::string> doNotCollideWith;
+
+		int group = 0;
+		int mask = 0;
+
+		REFLECT_BEGIN(Layer);
+		REFLECT_VAR(name);
+		REFLECT_VAR(collideWith);
+		REFLECT_VAR(doNotCollideWith);
+		REFLECT_END();
+	};
+	std::vector<Layer> layers;
+	REFLECT_BEGIN(PhysicsSettings);
+	REFLECT_VAR(layers);
+	REFLECT_END();
+
+	std::unordered_map<std::string, Layer> layersMap;
+
+	virtual void OnAfterDeserializeCallback(const SerializationContext& context);;
+};
+
+class PhysicsSystem : public System<PhysicsSystem> {
 public:
 	virtual bool Init() override;
 	virtual void Update() override;
@@ -86,34 +115,15 @@ public:
 	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
 	btITaskScheduler* taskScheduler = nullptr;
 
-
-	static constexpr int defaultGroup = 64;
-	static constexpr int playerGroup = 128;
-	static constexpr int enemyGroup = 256;
-	static constexpr int playerBulletGroup = 512;
-	static constexpr int enemyBulletGroup = 1024;
-	static constexpr int enemyCorpseGroup = 2048;
-	static constexpr int grenadeGroup = 4096;
-	static constexpr int staticGeomGroup = 8192;
-
-
-	static constexpr int defaultMask = -1 ^ (playerBulletGroup | enemyBulletGroup);
-	static constexpr int playerMask = staticGeomGroup | defaultGroup | playerGroup | enemyGroup | enemyBulletGroup;
-	static constexpr int enemyMask = staticGeomGroup | defaultGroup | enemyGroup | playerGroup | playerBulletGroup | enemyCorpseGroup;
-	static constexpr int playerBulletMask = staticGeomGroup | enemyMask | enemyCorpseGroup;
-	static constexpr int enemyBulletMask = staticGeomGroup | playerMask;
-	static constexpr int enemyCorpseMask = defaultGroup | enemyGroup | playerBulletGroup | enemyCorpseGroup | staticGeomGroup;
-	static constexpr int grenadeMask = -1 ^ (playerGroup | enemyGroup);
-	static constexpr int staticGeomMask = enemyBulletMask | playerBulletMask | playerMask | enemyMask | enemyCorpseGroup;
-
-	static void GetGroupAndMask(const std::string& groupName, int& group, int& mask);
+	void GetGroupAndMask(const std::string& groupName, int& group, int& mask);
 
 	void SerializeMeshPhysicsDataToBuffer(std::vector<std::shared_ptr<Mesh>>& meshes, BinaryBuffer& buffer);
 	void DeserializeMeshPhysicsDataFromBuffer(std::vector<std::shared_ptr<Mesh>>& meshes, BinaryBuffer& buffer);
 	void CalcMeshPhysicsDataFromBuffer(std::shared_ptr<Mesh> mesh);
-
 private:
 	static void OnPhysicsTick(btDynamicsWorld* world, btScalar timeStep);
 
 	float prevSimulationTime = 0.f;
+
+	std::shared_ptr<PhysicsSettings> settings;
 };

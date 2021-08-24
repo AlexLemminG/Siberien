@@ -70,8 +70,7 @@ void BulletSystem::UpdateBullets(BulletsVector& bulletsVector) {
 			from.setOrigin(castFrom);
 			to.setOrigin(castTo);
 			btCollisionWorld::ClosestConvexResultCallback cb(from.getOrigin(), to.getOrigin());
-			cb.m_collisionFilterMask = PhysicsSystem::playerBulletMask;
-			cb.m_collisionFilterGroup = PhysicsSystem::playerBulletGroup;
+			PhysicsSystem::Get()->GetGroupAndMask("playerBullet", cb.m_collisionFilterGroup, cb.m_collisionFilterMask);
 			physics->convexSweepTest(&sphereShape, from, to, cb);
 			if (cb.hasHit()) {
 				bullet.timeLeft = 0.f;

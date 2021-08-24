@@ -5,6 +5,7 @@
 
 class GameLib : public GameLibrary {
 	virtual bool Init(Engine* engine) override {
+		OPTICK_EVENT();
 		if (!GameLibrary::Init(engine)) {
 			return false;
 		}

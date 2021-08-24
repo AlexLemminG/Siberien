@@ -2,6 +2,7 @@
 
 #include "Serialization.h"
 #include "Defines.h"
+#include "optick.h"
 
 class Engine {
 public:
