@@ -6,6 +6,22 @@
 #include "Serialization.h"
 
 
+bool AssetDatabase2::Init() {
+	OPTICK_EVENT();
+	return true;
+}
+
+void AssetDatabase2::Term() {
+	OPTICK_EVENT();
+	UnloadAll();
+}
+
+void AssetDatabase2::UnloadAll() {
+	OPTICK_EVENT();
+	assets.clear();
+	objectPaths.clear();
+}
+
 std::string AssetDatabase2::GetAssetPath(std::shared_ptr<Object> obj) {
 	auto it = objectPaths.find(obj);
 	if (it != objectPaths.end()) {
@@ -169,6 +185,20 @@ std::shared_ptr<Object> AssetDatabase::LoadByPath(std::string path) {
 	LoadNextWhileNotEmpty();
 
 	return GetLoaded(path);
+}
+
+bool AssetDatabase::Init() {
+	OPTICK_EVENT();
+	mainDatabase = this;
+	database2.Init();
+	return true;
+}
+
+void AssetDatabase::Term() {
+	OPTICK_EVENT();
+	UnloadAll();
+	mainDatabase = nullptr;
+	database2.Term();
 }
 
 //TODO remove doublecoding shit
@@ -471,6 +501,10 @@ AssetDatabase::PathDescriptor::PathDescriptor(std::string path) {
 	}
 }
 
+std::string AssetDatabase::PathDescriptor::ToFullPath() {
+	return assetId.size() > 0 ? FormatString("%s$%s", assetPath.c_str(), assetId.c_str()) : assetPath;
+}
+
 void AssetDatabase2_BinaryImporterHandle::AddAssetToLoaded(std::string id, std::shared_ptr<Object> object)
 {
 	auto& asset = database->assets[assetPath];
@@ -592,4 +626,8 @@ bool AssetDatabase2_BinaryImporterHandle::ReadYAML(const std::string& fullPath, 
 	else {
 		return true;
 	}
+}
+
+std::string AssetDatabase2::PathDescriptor::ToFullPath() {
+	return assetId.size() > 0 ? FormatString("%s$%s", assetPath.c_str(), assetId.c_str()) : assetPath;
 }

@@ -14,11 +14,11 @@ typedef mathfu::Matrix<float, 3, 3> Matrix3;
 typedef mathfu::Quaternion<float> Quaternion;
 
 extern SE_CPP_API const Vector3 Vector3_zero;
-extern const Vector3 Vector3_one;
-extern const Vector3 Vector3_forward;
-extern const Vector3 Vector3_up;
-extern const Vector3 Vector3_right;
-extern const Vector3 Vector3_max;
+extern SE_CPP_API const Vector3 Vector3_one;
+extern SE_CPP_API const Vector3 Vector3_forward;
+extern SE_CPP_API const Vector3 Vector3_up;
+extern SE_CPP_API const Vector3 Vector3_right;
+extern SE_CPP_API const Vector3 Vector3_max;
 
 class SerializedObject;
 
@@ -51,7 +51,7 @@ inline Quaternion LookRotation(const Vector3& forward, const Vector3& up) {
 	return Quaternion::FromMatrix(lookAtMatr.Transpose());
 }
 
-class Mathf {
+class SE_CPP_API Mathf {
 public:
 	static int Round(float f) {
 		return (int)(f + 0.5f - (f < 0));
@@ -165,7 +165,7 @@ public:
 };
 
 
-class Color {
+class SE_CPP_API Color {
 public:
 	float r = 0.f;
 	float g = 0.f;

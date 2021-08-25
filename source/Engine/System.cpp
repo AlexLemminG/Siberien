@@ -7,7 +7,7 @@ SystemsManager* SystemsManager::manager;
 bool SystemsManager::Init() {
 	OPTICK_EVENT();
 	manager = this;
-	for (auto registrator : GetRegistrators()) {
+	for (auto registrator : GameLibraryStaticStorage::Get().systemRegistrators) {
 		systems.push_back(registrator->CreateSystem());
 	}
 

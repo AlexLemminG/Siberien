@@ -30,6 +30,7 @@
 #include "bounds.h"
 #include "RenderEvents.h"
 #include "Graphics.h"
+#include "Config.h"
 
 SDL_Window* Render::window = nullptr;
 

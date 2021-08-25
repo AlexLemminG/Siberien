@@ -1,18 +1,18 @@
 #include "BulletSystem.h"
-#include "bgfx/bgfx.h"
+#include "bgfx/c99/bgfx.h"
 #include "Resources.h"
 #include "MeshRenderer.h"
 #include "STime.h"
-#include "PhysicsSystem.h"
-#include "btBulletDynamicsCommon.h"
 #include "Dbg.h"
 #include "GameObject.h"
+#include "Physics.h"
 #include "Health.h"
+#include "RigidBody.h"
 #include "Material.h"
 #include "Shader.h"
 #include "Mesh.h"
 
-REGISTER_SYSTEM(BulletSystem);
+REGISTER_GAME_SYSTEM(BulletSystem);
 DECLARE_TEXT_ASSET(BulletSettings);
 
 bool BulletSystem::Init() {
@@ -36,8 +36,6 @@ void BulletSystem::UpdateBullets(BulletsVector& bulletsVector) {
 
 	auto& bullets = bulletsVector.bullets;
 	float dt = Time::deltaTime();
-	auto* physics = PhysicsSystem::Get()->dynamicsWorld;
-
 
 	if (bulletsVector.settings->applyGravity) {
 		for (auto& bullet : bullets) {
@@ -53,34 +51,23 @@ void BulletSystem::UpdateBullets(BulletsVector& bulletsVector) {
 		}
 	}
 	else {
-		btSphereShape sphereShape{ bulletsVector.settings->radius };
-		btTransform from;
-		from.setIdentity();
-		btTransform to;
-		to.setIdentity();
-
+		int collisionMask = Physics::GetLayerCollisionMask("playerBullet");
 		for (auto& bullet : bullets) {
 			Vector3 bulletPrevPos = bullet.pos;
 			bullet.pos += bullet.dir * (dt * bullet.speed);
 			bullet.timeLeft -= dt;
 			//TODO bullet.dir is not normalized, but maybe for better
-
-			btVector3 castFrom = btConvert(bulletPrevPos - bullet.dir * bulletsVector.settings->radius);
-			btVector3 castTo = btConvert(bullet.pos + bullet.dir * bulletsVector.settings->radius);
-			from.setOrigin(castFrom);
-			to.setOrigin(castTo);
-			btCollisionWorld::ClosestConvexResultCallback cb(from.getOrigin(), to.getOrigin());
-			PhysicsSystem::Get()->GetGroupAndMask("playerBullet", cb.m_collisionFilterGroup, cb.m_collisionFilterMask);
-			physics->convexSweepTest(&sphereShape, from, to, cb);
-			if (cb.hasHit()) {
+			Ray ray{ bulletPrevPos - bullet.dir * bulletsVector.settings->radius , bullet.dir * bulletsVector.settings->radius * 2.f };
+			Physics::RaycastHit hit;
+			//TODO layer
+			if (Physics::SphereCast(hit, ray, bulletsVector.settings->radius, bullet.dir.Length() * bulletsVector.settings->radius * 2.f, collisionMask)) {
 				bullet.timeLeft = 0.f;
 				bool hitCharacter = false;
-				auto obj = dynamic_cast<const btRigidBody*>(cb.m_hitCollisionObject);
-				if (obj) {
+				auto rb = hit.GetRigidBody();
+				if (rb) {
 					bool needImpulse = true;
-					auto nonConst = const_cast<btRigidBody*>(obj);
 
-					auto gameObject = (GameObject*)nonConst->getUserPointer();
+					auto gameObject = rb->gameObject();
 					if (gameObject) {
 						auto health = gameObject->GetComponent<Health>();
 						if (health) {
@@ -93,18 +80,16 @@ void BulletSystem::UpdateBullets(BulletsVector& bulletsVector) {
 					}
 
 					if (needImpulse) {
-						auto localPos = nonConst->getCenterOfMassTransform().inverse() * btConvert(bullet.pos);
-						nonConst->activate(true);
-						nonConst->applyImpulse(btConvert(bullet.dir * bulletsVector.settings->impulse), localPos);
+						rb->ApplyLinearImpulse(bullet.dir * bulletsVector.settings->impulse, bullet.pos);
 					}
 				}
 				{
-					Vector3 pos = btConvert(cb.m_hitPointWorld);
+					Vector3 pos = hit.GetPoint();
 					if (hitCharacter) {
 						CreateBloodParticle(pos, bullet.dir * bullet.speed);
 					}
 					else {
-						Vector3 normalVel = btConvert(cb.m_hitNormalWorld);
+						Vector3 normalVel = hit.GetNormal();
 						Vector3 velFromBullet = bullet.dir - normalVel * Vector3::DotProduct(bullet.dir, normalVel);
 						Vector3 particleVel = Mathf::Lerp(normalVel, velFromBullet, 0.5f) * bullet.speed * 0.7f;
 						CreateDamageParticle(pos, particleVel);
@@ -141,24 +126,26 @@ void BulletSystem::DrawBullets(BulletsVector& bulletsVector) {
 	// 80 bytes stride = 64 bytes for 4x4 matrix + 16 bytes for RGBA color.
 	const uint16_t instanceStride = 80;
 	// to total number of instances to draw
-	uint32_t totalCubes = bullets.size();
+	size_t totalCubes = bullets.size();
 
 	if (totalCubes == 0) {
 		return;
 	}
 
 	// figure out how big of a buffer is available
-	uint32_t drawnCubes = bgfx::getAvailInstanceDataBuffer(totalCubes, instanceStride);
+	uint32_t drawnCubes = bgfx_get_avail_instance_data_buffer(totalCubes, instanceStride);
+	
 
 	// save how many we couldn't draw due to buffer room so we can display it
 	int m_lastFrameMissing = totalCubes - drawnCubes;
 
 	bgfx::InstanceDataBuffer idb;
-	bgfx::allocInstanceDataBuffer(&idb, drawnCubes, instanceStride);
+	bgfx_alloc_instance_data_buffer((bgfx_instance_data_buffer_t*)&idb, drawnCubes, instanceStride);
+	
 
 	uint8_t* data = idb.data;
 
-	
+
 	float scaleMult = bulletsVector.settings->radius * 2.f;
 	float timeLeftToScaleMult = 1.f / bulletsVector.settings->lifeTime;
 	for (uint32_t ii = 0; ii < drawnCubes; ++ii)
@@ -191,17 +178,17 @@ void BulletSystem::DrawBullets(BulletsVector& bulletsVector) {
 	}
 
 
-	bgfx::setVertexBuffer(0, bulletsVector.settings->renderer->mesh->vertexBuffer);
-	bgfx::setIndexBuffer(bulletsVector.settings->renderer->mesh->indexBuffer);
+	bgfx_set_vertex_buffer(0, *(bgfx_vertex_buffer_handle_t*)(&bulletsVector.settings->renderer->mesh->vertexBuffer), 0, UINT32_MAX);
+	bgfx_set_index_buffer(*(bgfx_index_buffer_handle_t*)(&bulletsVector.settings->renderer->mesh->indexBuffer), 0, UINT32_MAX);
+	
 
 	// Set instance data buffer.
-	bgfx::setInstanceDataBuffer(&idb);
-
+	bgfx_set_instance_data_buffer((bgfx_instance_data_buffer_t*)&idb, 0, UINT32_MAX);
 	// Set render states.
-	bgfx::setState(BGFX_STATE_DEFAULT);
+	bgfx_set_state(BGFX_STATE_DEFAULT, 0);
 
 	// Submit primitive for rendering to view 0.
-	bgfx::submit(0, bulletsVector.settings->renderer->material->shader->program);
+	bgfx_submit(0, *(bgfx_program_handle_t*)(&bulletsVector.settings->renderer->material->shader->program), 0, BGFX_DISCARD_ALL);
 }
 
 void BulletSystem::Term() {}

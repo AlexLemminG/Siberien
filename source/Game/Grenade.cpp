@@ -1,10 +1,10 @@
 #include "Grenade.h"
 #include "STime.h"
 #include "Scene.h"
-#include "PhysicsSystem.h"
 #include "RigidBody.h"
-#include "btBulletDynamicsCommon.h"
+#include "GameObject.h"
 #include "Health.h"
+#include "Physics.h"
 
 void Grenade::ThrowAt(Vector3 pos) {
 
@@ -22,7 +22,7 @@ void Grenade::OnEnable() {
 	}
 
 	float t = explodeTimer;
-	Vector3 g = PhysicsSystem::Get()->GetGravity();
+	Vector3 g = Physics::GetGravity();
 	Vector3 pos0 = gameObject()->transform()->GetPosition();
 	Vector3 pos = throwTarget;
 	Vector3 v = (pos - pos0 - g * t * t / 2.f) / t;
@@ -30,7 +30,7 @@ void Grenade::OnEnable() {
 	v.y = Mathf::Min(v.y, dxLength);
 	v = Mathf::ClampLength(v, startSpeed);
 
-	gameObject()->GetComponent<RigidBody>()->GetHandle()->setLinearVelocity(btConvert(v));
+	gameObject()->GetComponent<RigidBody>()->SetLinearVelocity(v);
 }
 void Grenade::Update() {
 	if (explodeOnCollision) {
@@ -46,22 +46,18 @@ void Grenade::Update() {
 
 void Grenade::Explode() {
 	auto pos = gameObject()->transform()->GetPosition();
-	auto gos = PhysicsSystem::Get()->GetOverlaping(pos, radius);
+	auto rbs = Physics::OveplapSphere(pos, radius);
 	auto player = Scene::Get()->FindGameObjectByTag("Player");
-	for (auto go : gos) {
-		if (go == player.get()) {
+	for (auto rb : rbs) {
+		auto go = rb->gameObject();
+		if (go == player) {
 			continue;
 		}
-		auto rb = go->GetComponent<RigidBody>();
-		if (!rb || !rb->GetHandle()) {
-			continue;
-		}
-		auto body = rb->GetHandle();
-		auto bodyPos = body->getCenterOfMassPosition();
-		auto deltaPos = btConvert(bodyPos) - pos;
+		auto bodyPos = rb->GetCenterOfMass();
+		auto deltaPos = bodyPos - pos;
 		float impulseMag = Mathf::Lerp(pushImpulse, 0.f, deltaPos.LengthSquared() / (radius * radius));
 		auto impulse = deltaPos.Normalized() * impulseMag;
-		body->applyCentralImpulse(btConvert(impulse));
+		rb->ApplyLinearImpulse(impulse);
 
 		auto health = go->GetComponent<Health>();
 		if (health) {
@@ -69,7 +65,6 @@ void Grenade::Explode() {
 			health->DoDamage(currentDamage);
 		}
 	}
-
 
 	Scene::Get()->RemoveGameObject(gameObject());
 }

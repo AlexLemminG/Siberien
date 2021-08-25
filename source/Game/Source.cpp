@@ -11,8 +11,7 @@ class GameLib : public GameLibrary {
 		}
 		return true;
 	}
-
-	virtual SerializationInfoStorage& GetSerializationInfoStorage() override;
+	INNER_LIBRARY();
 };
 
-DECLARE_LIBRARY(GameLib);
+DEFINE_LIBRARY(GameLib);

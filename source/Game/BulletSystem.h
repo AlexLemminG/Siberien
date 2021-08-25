@@ -7,7 +7,7 @@
 class MeshRenderer;
 class BulletSettings;
 
-class BulletSystem : public System<BulletSystem> {
+class BulletSystem : public GameSystem<BulletSystem> {
 public:
 	BulletSystem() {}
 

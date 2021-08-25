@@ -9,6 +9,8 @@
 #include "STime.h"
 #include "PlayerController.h"
 #include "Gun.h"
+#include "Asserts.h"
+#include "ZombiepunkGame.h"
 
 DECLARE_TEXT_ASSET(GameplaySceneScenario);
 
@@ -22,7 +24,8 @@ void GameplaySceneScenario::OnEnable() {
 	doors.push_back(Door("door5"));
 
 	indoorHidePlane = Scene::Get()->FindGameObjectByTag("indoorHidePlane");
-	creepDeathHandler = GameEvents::Get()->creepDeath.Subscribe([this](auto creep) {HandleCreepDeath(creep); });
+	auto events = GameEvents::Get();
+	creepDeathHandler = events->creepDeath.Subscribe([this](auto creep) {HandleCreepDeath(creep); });
 
 	LoadLastCheckpoint();
 
@@ -33,13 +36,13 @@ void GameplaySceneScenario::Update() {
 
 	if (!IsTriggered("init")) {
 		Trigger("init");
-		SpawnZombies(slowZombiePrefab, Vector3(-6, 1.f, 26), 15);
+		SpawnZombies(slowZombiePrefab, Vector3(-6.f, 1.f, 26.f), 15);
 	}
 
 	if (!IsTriggered("roof")) {
-		if (IsPlayerAtSphere(Vector3(-3.7f, 0.f, 43.5), 7.5f)) {
+		if (IsPlayerAtSphere(Vector3(-3.7f, 0.f, 43.5f), 7.5f)) {
 			Trigger("roof");
-			SpawnZombies(fastZombiePrefab, Vector3(-16.34, 5, 43.97), 40);
+			SpawnZombies(fastZombiePrefab, Vector3(-16.34f, 5.f, 43.97f), 40);
 		}
 		else {
 			return;
@@ -50,7 +53,7 @@ void GameplaySceneScenario::Update() {
 		if (countSpawned == countDead) {
 			Trigger("door1_open");
 			doors[0].SetOpened(true);
-			SaveCheckpoint(0, Vector3(-2.75, 0, 61.54));
+			SaveCheckpoint(0, Vector3(-2.75, 0.f, 61.54f));
 		}
 		else {
 			return;
@@ -201,7 +204,7 @@ void GameplaySceneScenario::OnDisable() {
 
 Vector2 GameplaySceneScenario::SunflowerPattern(int n, float seedRadius) {
 	float angle = Mathf::pi * 2 / Mathf::Pow(Mathf::phi, 2) * n;
-	float radius = seedRadius * Mathf::Sqrt(n) * seedRadius;
+	float radius = seedRadius * Mathf::Sqrt((float)n) * seedRadius;
 
 	return Vector2(Mathf::Sin(angle), Mathf::Cos(angle)) * radius;
 }

@@ -8,7 +8,7 @@
 #include "bgfx/bgfx.h"
 #include <assimp/scene.h>
 
-class aiMesh;
+struct aiMesh;
 //class aiScene;
 class MeshAnimation;
 class Material;

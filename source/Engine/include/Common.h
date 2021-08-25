@@ -2,16 +2,12 @@
 
 #include <cassert>
 #include <iostream>
-#include "Config.h"
-#include "SDL_assert.h"
 #include "optick.h"
+#include "Asserts.h"
+#include <vector>
+#include <string>
 
-#define ASSERT(cond) SDL_assert(cond)
-
-#define INIT_SYSTEM(InitFunc) \
-if (!InitFunc()) {	\
-	ASSERT(false);				\
-}
+//TODO rename file
 
 #define LOG_ERROR(msg) \
 std::cout << msg << std::endl;

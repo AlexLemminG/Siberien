@@ -4,7 +4,7 @@
 #include "SDL_scancode.h"
 #include "SMath.h"
 
-class Input {
+class SE_CPP_API Input {
 public:
 
 	static bool Init();

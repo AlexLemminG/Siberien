@@ -1,10 +1,11 @@
 #include "PostProcessingEffect.h"
-#include "Render.h"
 #include "Serialization.h"
 #include "Common.h"
 #include "Graphics.h"
 #include "Material.h"
+#include "Engine.h"
 
+class Render;
 
 void PostProcessingEffect::OnEnable() {
 	handle = RenderEvents::Get()->onSceneRendered.Subscribe([this](Render& render) {Draw(render); });

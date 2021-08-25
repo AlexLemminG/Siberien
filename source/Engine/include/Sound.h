@@ -1,11 +1,12 @@
 #pragma once
 
+#include "Defines.h"
 #include "Object.h"
 #include "Serialization.h"
 #include "System.h"
 
 
-class AudioClip : public Object {
+class SE_CPP_API AudioClip : public Object {
 public:
 	AudioClip();
 	~AudioClip();
@@ -15,7 +16,7 @@ public:
 };
 
 
-class AudioSystem : public System<AudioSystem> {
+class SE_CPP_API AudioSystem : public System<AudioSystem> {
 public:
 	void Play(std::shared_ptr<AudioClip> clip);
 };

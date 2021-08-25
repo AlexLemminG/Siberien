@@ -2,7 +2,6 @@
 #include "Scene.h"
 #include "GameObject.h"
 #include "RigidBody.h"
-#include "PhysicsSystem.h"
 #include "STime.h"
 #include "Health.h"
 #include "MeshRenderer.h"
@@ -10,6 +9,7 @@
 #include "BoxCollider.h"
 #include "Animation.h"
 #include "GameEvents.h"
+#include "ZombiepunkGame.h"
 
 DECLARE_TEXT_ASSET(EnemyCreepController);
 
@@ -18,7 +18,7 @@ void EnemyCreepController::OnEnable() {
 	animator = gameObject()->GetComponent<Animator>();
 	health = gameObject()->GetComponent<Health>();
 	transform = gameObject()->transform();
-	target = Scene::FindGameObjectByTag(targetTag);
+	target = GameObject::FindWithTag(targetTag);
 	if (target) {
 		targetTransform = target->transform();
 	}
@@ -48,7 +48,7 @@ void EnemyCreepController::HandleDeath() {
 	collider->radius *= radiusScale;
 	rb->friction = 0.7f;
 
-	rb->SetCenterOfMass(Vector3(0, 0.4, 0));
+	rb->SetCenterOfMass(Vector3(0.f, 0.4f, 0.f));
 
 	collider->SetEnabled(true);
 	rb->SetEnabled(true);

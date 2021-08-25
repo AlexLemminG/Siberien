@@ -91,12 +91,16 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<AssetImporter2>> binaryImporters2;
 };
 
-SerializationInfoStorage& GetSerialiationInfoStorage();
+class SystemRegistratorBase;
+class GameLibraryStaticStorage {
+public:
+	SerializationInfoStorage serializationInfoStorage;
+	std::vector<SystemRegistratorBase*> systemRegistrators;//TODO shared ptrs
+	static GameLibraryStaticStorage& Get();
+};
 
-#define DECLARE_SERIALATION_INFO_STORAGE() \
-SerializationInfoStorage& GetSerialiationInfoStorage(){\
-	static SerializationInfoStorage storage;\
-	return storage;\
+inline SerializationInfoStorage& GetSerialiationInfoStorage() {
+	return GameLibraryStaticStorage::Get().serializationInfoStorage;
 }
 
 template <typename ImporterType>

@@ -21,7 +21,7 @@ class AssetDatabase;
 
 class Object;
 
-class SerializationContext {
+class SE_CPP_API SerializationContext {
 public:
 	SerializationContext(YAML::Node yamlNode, std::vector<std::shared_ptr<Object>> objectsAllowedToSerialize = std::vector<std::shared_ptr<Object>>{})
 		:yamlNode(yamlNode)
@@ -264,11 +264,11 @@ class ReflectedField {
 public:
 	ReflectedField(ReflectedTypeBase* type,
 		std::string name,
-		int offset) :type(type), name(name), offset(offset) {
+		size_t offset) :type(type), name(name), offset(offset) {
 	}
 	ReflectedTypeBase* type;
 	std::string name;
-	int offset;
+	size_t offset;
 };
 
 template<typename T, typename U> constexpr size_t offsetOf(U T::* member)

@@ -1,8 +1,10 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include "Defines.h"
+#include "Engine.h"
 
-class SystemBase {
+class SE_CPP_API SystemBase {
 public:
 	SystemBase() {
 	}
@@ -23,18 +25,32 @@ public:
 };
 
 template<typename T>
-class System : public SystemBase {
+class SE_CPP_API System : public SystemBase {
 public:
 	System() {
-		instance = (T*)this;
+		GetInternal() = (T*)this;
 	}
 	virtual ~System() {
-		instance = nullptr;
+		GetInternal() = nullptr;
 	}
 
-	static T* Get() { return instance; }
+	static T* Get() { return GetInternal(); }
 private:
-	static T* instance;
+	static T*& GetInternal();
+};
+template<typename T>
+class GameSystem : public SystemBase {
+public:
+	GameSystem() {
+		GetInternal() = (T*)this;
+	}
+	virtual ~GameSystem() {
+		GetInternal() = nullptr;
+	}
+
+	static T* Get() { return GetInternal(); }
+private:
+	static T*& GetInternal();
 };
 
 class SystemRegistratorBase {
@@ -44,10 +60,10 @@ public:
 	virtual std::shared_ptr<SystemBase> CreateSystem() = 0;
 };
 
-class SystemsManager {
+class SE_CPP_API SystemsManager {
 public:
 	static void Register(SystemRegistratorBase* registrator) {
-		GetRegistrators().push_back(registrator);
+		GameLibraryStaticStorage::Get().systemRegistrators.push_back(registrator);
 	}
 	static SystemsManager* manager;
 	static SystemsManager* Get() {
@@ -67,10 +83,6 @@ public:
 	void Term();
 
 private:
-	static std::vector<SystemRegistratorBase*>& GetRegistrators() {
-		static std::vector<SystemRegistratorBase*> registrators;
-		return registrators;
-	}
 
 	std::vector<std::shared_ptr<SystemBase>> systems;
 };
@@ -87,11 +99,19 @@ public:
 	virtual std::shared_ptr<SystemBase> CreateSystem() override { return std::make_shared<T>(); }
 };
 
-
+//TODO remove from include/
 #define REGISTER_SYSTEM(systemName) \
 static SystemRegistrator<##systemName> SystemRegistrator_##systemName{}; \
-systemName* ##systemName::instance;
+template<> \
+##systemName*& System<##systemName>::GetInternal() { \
+	static systemName* instance = nullptr; \
+	return instance; \
+}
 
-//
-//#define DECLARE_TEXT_ASSET(className) \
-//static TextAssetImporterRegistrator<SerializedObjectImporter<##className>> AssetImporterRegistrator_##className{#className};
+#define REGISTER_GAME_SYSTEM(systemName) \
+static SystemRegistrator<##systemName> SystemRegistrator_##systemName{}; \
+template<> \
+##systemName*& GameSystem<##systemName>::GetInternal() { \
+	static systemName* instance = nullptr; \
+	return instance; \
+}

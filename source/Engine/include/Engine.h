@@ -8,16 +8,21 @@ class Engine {
 public:
 };
 
-class GameLibrary {
+
+class SE_CPP_API GameLibrary {
 public:
 	GameLibrary() {}
-	~GameLibrary() {}
-	virtual bool Init(Engine* engine) { return true; }
-	virtual void Term() {}
-	virtual SerializationInfoStorage& GetSerializationInfoStorage() = 0;
+	virtual ~GameLibrary() {}
+	virtual bool Init(Engine* engine);
+	virtual void Term();
+	virtual GameLibraryStaticStorage& GetStaticStorage() = 0;
 };
 
-#define DECLARE_LIBRARY(className) \
+
+#define INNER_LIBRARY(className) \
+	virtual GameLibraryStaticStorage& GetStaticStorage() override;
+
+#define DEFINE_LIBRARY(className) \
 extern "C" { __declspec(dllexport) className* __cdecl SEngine_CreateLibrary() { return new className(); } } \
-DECLARE_SERIALATION_INFO_STORAGE(); \
-SerializationInfoStorage& className::GetSerializationInfoStorage() { return ::GetSerialiationInfoStorage(); }
+GameLibraryStaticStorage& ##className::GetStaticStorage() { return GameLibraryStaticStorage::Get(); } \
+GameLibraryStaticStorage& GameLibraryStaticStorage::Get() { static GameLibraryStaticStorage instance; return instance; }

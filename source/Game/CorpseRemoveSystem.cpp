@@ -1,7 +1,7 @@
 #include "CorpseRemoveSystem.h"
 #include "Scene.h"
 
-REGISTER_SYSTEM(CorpseRemoveSystem);
+REGISTER_GAME_SYSTEM(CorpseRemoveSystem);
 
 void CorpseRemoveSystem::Update() {
 	int corpsesCountToRemove = corpses.size() - maxCorpsesCount;

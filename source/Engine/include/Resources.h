@@ -68,7 +68,7 @@ public:
 //maybe yes and we need to rename it to Object
 
 
-class AssetDatabase2_BinaryImporterHandle {
+class SE_CPP_API AssetDatabase2_BinaryImporterHandle {
 	friend class AssetDatabase2;
 	AssetDatabase2_BinaryImporterHandle(AssetDatabase2* database, std::string assetPath) :database(database), assetPath(assetPath) {}
 public:
@@ -96,24 +96,14 @@ private:
 	AssetDatabase2* database = nullptr;
 };
 
-class AssetDatabase2 {
+class SE_CPP_API AssetDatabase2 {
 	friend AssetDatabase2_BinaryImporterHandle;
 public:
-	bool Init() {
-		OPTICK_EVENT();
-		return true;
-	}
+	bool Init();
 
-	void Term() {
-		OPTICK_EVENT();
-		UnloadAll();
-	}
+	void Term();
 
-	void UnloadAll() {
-		OPTICK_EVENT();
-		assets.clear();
-		objectPaths.clear();
-	}
+	void UnloadAll();
 
 	template<typename T>
 	std::shared_ptr<T> Load(const std::string& path) {
@@ -196,9 +186,7 @@ private:
 		std::string assetPath;
 		std::string assetId;
 
-		std::string ToFullPath() {
-			return assetId.size() > 0 ? FormatString("%s$%s", assetPath.c_str(), assetId.c_str()) : assetPath;
-		}
+		std::string ToFullPath();
 	};
 
 	std::shared_ptr<Object> GetLoaded(const PathDescriptor& path, ReflectedTypeBase* type);
@@ -214,26 +202,16 @@ private:
 };
 
 
-class AssetDatabase {
+class SE_CPP_API AssetDatabase {
 	friend AssetImporter;
 public:
 
 	GameEvent<> onUnloaded;
 
 	AssetDatabase2 database2;
-	bool Init() {
-		OPTICK_EVENT();
-		mainDatabase = this;
-		database2.Init();
-		return true;
-	}
+	bool Init();
 
-	void Term() {
-		OPTICK_EVENT();
-		UnloadAll();
-		mainDatabase = nullptr;
-		database2.Term();
-	}
+	void Term();
 
 
 	//TODO make sure everyone knows that it does not cache
@@ -244,7 +222,7 @@ public:
 
 	template<typename AssetType>
 	std::shared_ptr<AssetType> LoadByPath(std::string path) {
-		auto& asset = LoadByPath(path);
+		auto asset = LoadByPath(path);
 		return std::dynamic_pointer_cast<AssetType>(asset);
 	}
 	std::shared_ptr<Object> LoadByPath(std::string path);
@@ -298,9 +276,7 @@ public:
 		std::string assetPath;
 		std::string assetId;
 
-		std::string ToFullPath() {
-			return assetId.size() > 0 ? FormatString("%s$%s", assetPath.c_str(), assetId.c_str()) : assetPath;
-		}
+		std::string ToFullPath();
 	};
 private:
 

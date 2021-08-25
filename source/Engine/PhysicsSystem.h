@@ -100,7 +100,6 @@ public:
 	virtual void Term() override;
 
 	Vector3 GetGravity()const;
-	std::vector<GameObject*> GetOverlaping(Vector3 pos, float radius);
 
 	btDefaultCollisionConfiguration* collisionConfiguration = nullptr;
 

@@ -7,7 +7,7 @@ class GameObject;
 
 class SphericalHarmonics;
 
-class Scene : public Object {
+class SE_CPP_API Scene : public Object {
 public:
 	std::vector<std::shared_ptr<GameObject>> gameObjects;
 	std::string name;

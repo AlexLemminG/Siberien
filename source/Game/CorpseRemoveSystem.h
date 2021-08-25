@@ -4,7 +4,7 @@
 
 class GameObject;
 
-class CorpseRemoveSystem : public System<CorpseRemoveSystem>{
+class CorpseRemoveSystem : public GameSystem<CorpseRemoveSystem>{
 	virtual void Update() override;
 public:
 	void Add(std::shared_ptr<GameObject> corpse) { corpses.push_back(corpse); }

@@ -3,10 +3,10 @@
 #include "Component.h"
 #include "SMath.h"
 
-class btDefaultMotionState;
+struct btDefaultMotionState;
 class btRigidBody;
 
-class RigidBody : public Component {
+class SE_CPP_API RigidBody : public Component {
 public:
 	btRigidBody* GetHandle() { return pBody; }
 	virtual void OnEnable() override;
@@ -44,6 +44,9 @@ public:
 
 	Matrix4 GetTransform() const;
 	void SetTransform(const Matrix4& transform);
+
+	void ApplyLinearImpulse(Vector3 impulse);
+	void ApplyLinearImpulse(Vector3 impulse, Vector3 worldPos);
 
 	//Vector3 GetCurrentPosition() const { 
 	//	return btConvert((pBody->getCenterOfMassTransform() * pMotionState->m_centerOfMassOffset).getOrigin()); 

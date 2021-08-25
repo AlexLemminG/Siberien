@@ -19,12 +19,17 @@
 #include "SceneManager.h"
 #include "Engine.h"
 #include "Graphics.h"
-
-DECLARE_SERIALATION_INFO_STORAGE();
+#include "Config.h"
+#include "GameLibrariesManager.h"
 
 std::string GetFirstSceneName() {
 	return CfgGetString("scene") + ".asset";
 }
+
+class EngineLib : public GameLibrary {
+	INNER_LIBRARY(EngineLib);
+};
+DEFINE_LIBRARY(EngineLib);
 
 
 int main(int argc, char* argv[]) {
@@ -37,6 +42,7 @@ start:
 	Render render;
 	SystemsManager systemsManager;
 	Engine engine;
+	GameLibrariesManager libs;
 
 	{
 		OPTICK_EVENT("Init");
@@ -49,6 +55,10 @@ start:
 		}
 
 		if (!render.Init()) {
+			return -1;
+		}
+
+		if (!libs.Init()) {
 			return -1;
 		}
 
@@ -107,11 +117,13 @@ start:
 
 		SceneManager::Term();
 
-		assets.UnloadAll();
-		
 		Graphics::Get()->SetRenderPtr(nullptr); //TODO this is not the way
 
 		systemsManager.Term();
+
+		assets.UnloadAll();
+
+		libs.Term();
 
 		render.Term();
 

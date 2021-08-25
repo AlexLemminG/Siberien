@@ -8,7 +8,6 @@
 #include "Mesh.h"
 #include "MeshCollider.h"//TODO move meshPhysicsData to separate class
 #include "Resources.h"
-#include <BulletCollision\CollisionDispatch\btGhostObject.h>
 #include "Bullet3Serialize/Bullet2FileLoader/b3BulletFile.h"
 #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorldMt.h"
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcherMt.h"
@@ -166,50 +165,6 @@ void PhysicsSystem::OnPhysicsTick(btDynamicsWorld* world, btScalar timeStep) {
 }
 
 
-class GetAllContacts_ContactResultCallback : public btCollisionWorld::ContactResultCallback {
-public:
-	// Inherited via ContactResultCallback
-	virtual btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1) override
-	{
-		objects.push_back(const_cast<btCollisionObject*>(colObj0Wrap->getCollisionObject()));
-		return btScalar();
-	}
-	std::vector<btCollisionObject*> objects;
-};
-
-std::vector<GameObject*> PhysicsSystem::GetOverlaping(Vector3 pos, float radius) {
-	std::vector<GameObject*> results;
-
-	btSphereShape sphere(radius);
-	btPairCachingGhostObject ghost;
-	btTransform xform;
-	xform.setOrigin(btConvert(pos));
-	ghost.setCollisionShape(&sphere);
-	ghost.setWorldTransform(xform);
-
-	GetAllContacts_ContactResultCallback cb;
-	//TODO layer as parameter
-	cb.m_collisionFilterGroup = -1;
-	cb.m_collisionFilterMask = -1;
-	PhysicsSystem::Get()->dynamicsWorld->contactTest(&ghost, cb);
-
-	//TODO may contain doubles 
-
-	for (auto o : cb.objects) {
-		auto* rb = dynamic_cast<btRigidBody*>(o);
-		if (rb) {
-			auto ptr = rb->getUserPointer();
-			auto go = (GameObject*)(ptr);
-			if (go) {
-				results.push_back(go);
-			}
-		}
-	}
-	PhysicsSystem::Get()->dynamicsWorld->removeCollisionObject(&ghost);
-
-	return results;
-}
-
 void PhysicsSettings::GetGroupAndMask(const std::string& groupName, int& group, int& mask) {
 	auto it = layersMap.find(groupName);
 	if (it == layersMap.end()) {
@@ -224,8 +179,9 @@ void PhysicsSettings::GetGroupAndMask(const std::string& groupName, int& group, 
 }
 
 void PhysicsSettings::OnAfterDeserializeCallback(const SerializationContext& context) {
+	int firstLayerGroup = 1; //reserve 1 for collide with everything group (usefull for queries)
 	for (int i = 0; i < layers.size(); i++) {
-		layers[i].group = 1 << i;
+		layers[i].group = 1 << (i + firstLayerGroup);
 		layersMap[layers[i].name] = layers[i];
 	}
 	static const std::string allKeyword = "all";
@@ -266,6 +222,7 @@ void PhysicsSettings::OnAfterDeserializeCallback(const SerializationContext& con
 				}
 			}
 		}
+		layer.mask |= 1; // always collide with reserved fake group
 	}
 	if (layers.size() == 0) {
 		layersMap[""] = Layer{};

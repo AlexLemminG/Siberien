@@ -4,7 +4,7 @@
 class Render;
 class Material;
 
-class Graphics : public System<Graphics> {
+class SE_CPP_API Graphics : public System<Graphics> {
 	friend class Render;
 public:
 	bool Init();

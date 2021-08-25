@@ -6,7 +6,7 @@
 #include <string>
 #include "SMath.h"
 
-class Dbg {
+class SE_CPP_API Dbg {
 public:
 	static void Draw(Ray ray, float length = 1.f, Color color = Colors::white);
 	static void Draw(Vector3 point, float radius = 0.1f);

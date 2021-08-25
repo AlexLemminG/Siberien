@@ -2,9 +2,11 @@
 
 #include <string>
 #include <memory>
+#include "Defines.h"
+
 class Scene;
 
-class SceneManager {
+class SE_CPP_API SceneManager {
 public:
 	static void LoadScene(std::string sceneName);
 

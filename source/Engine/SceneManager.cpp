@@ -2,6 +2,7 @@
 #include "Resources.h"
 #include "Scene.h"
 #include "Object.h"
+#include "Config.h"
 
 std::string SceneManager::lastLoadRequest;
 std::shared_ptr<Scene> SceneManager::currentScene;

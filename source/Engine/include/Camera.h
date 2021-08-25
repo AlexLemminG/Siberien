@@ -5,7 +5,7 @@
 #include "Resources.h"
 #include "Component.h"
 
-class Camera :public Component {
+class SE_CPP_API Camera :public Component {
 public:
 	float GetFarPlane() { return farPlane; }
 	float GetNearPlane() { return nearPlane; }

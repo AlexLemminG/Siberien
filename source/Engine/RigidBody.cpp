@@ -130,4 +130,14 @@ Matrix4 RigidBody::GetTransform() const { return btConvert(pBody->getCenterOfMas
 
 void RigidBody::SetTransform(const Matrix4& transform) { pBody->setCenterOfMassTransform(btConvert(transform) * pMotionState->m_centerOfMassOffset.inverse()); }
 
-void RigidBody::Activate() { pBody->activate(true); }
+void RigidBody::ApplyLinearImpulse(Vector3 impulse) {
+	pBody->applyCentralImpulse(btConvert(impulse));
+	pBody->activate();
+}
+void RigidBody::ApplyLinearImpulse(Vector3 impulse, Vector3 worldPos) {
+	auto localPos = pBody->getCenterOfMassTransform().inverse() * btConvert(worldPos);
+	pBody->applyImpulse(btConvert(impulse), localPos);
+	pBody->activate();
+}
+
+void RigidBody::Activate() { pBody->activate(); }

@@ -8,7 +8,6 @@
 #include "Dbg.h"
 #include "BulletSystem.h"
 #include "Physics.h"
-#include "PhysicsSystem.h"
 #include "RigidBody.h"
 #include "Scene.h"
 #include "EnemyCreep.h"
@@ -18,6 +17,7 @@
 #include "MeshRenderer.h"
 #include "Sound.h"
 #include "PostProcessingEffect.h"
+#include "ZombiepunkGame.h"
 
 void PlayerController::OnEnable() {
 	rigidBody = gameObject()->GetComponent<RigidBody>();
@@ -25,7 +25,7 @@ void PlayerController::OnEnable() {
 		shootingLight = Object::Instantiate(shootingLightPrefab);
 		Scene::Get()->AddGameObject(shootingLight);
 	}
-	if (CfgGetBool("godMode")) {
+	if (ZombiepunkGame::Get()->IsGodMode()) {
 		auto health = gameObject()->GetComponent<Health>();
 		health->SetInvinsible(true);
 	}
@@ -116,7 +116,7 @@ void PlayerController::Update() {
 		Dbg::Text("SPACE - Restart");
 	}
 
-	if (CfgGetBool("godMode")) {
+	if (ZombiepunkGame::Get()->IsGodMode()) {
 		if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LSHIFT)) {
 			speed = defaultSpeed * 3.f;
 		}
@@ -146,7 +146,7 @@ void PlayerController::Update() {
 		prevFootstepPos = currentPos;
 		if (footstepSounds.size() > 0) {
 			auto audio = footstepSounds[Random::Range(0, footstepSounds.size())];
-			AudioSystem::Get()->Play(audio);
+			//AudioSystem::Get()->Play(audio);
 		}
 	}
 }
@@ -163,7 +163,7 @@ void PlayerController::FixedUpdate() {
 		if (upVel < 0.f) {
 			gravityMultiplier = Mathf::Lerp(1.f, 2.f, -upVel / 1.f);
 		}
-		rigidBody->OverrideWorldGravity(PhysicsSystem::Get()->GetGravity() * gravityMultiplier);
+		rigidBody->OverrideWorldGravity(Physics::GetGravity() * gravityMultiplier);
 	}
 	rigidBody->SetAngularFactor(Vector3(0, 1, 0));
 }
@@ -245,7 +245,7 @@ void PlayerController::UpdateShooting() {
 	if (bulletShot) {
 		if (shootingSounds.size() > 0) {
 			auto audio = shootingSounds[Random::Range(0, shootingSounds.size())];
-			AudioSystem::Get()->Play(audio);
+			//AudioSystem::Get()->Play(audio);
 		}
 		SetRandomShootingLight(); //TODO move to gun
 	}
@@ -303,7 +303,7 @@ void PlayerController::Jump() {
 }
 
 bool PlayerController::CanJump() {
-	if (!CfgGetBool("godMode")) {
+	if (!ZombiepunkGame::Get()->IsGodMode()) {
 		return false;
 	}
 	if (Time::time() - lastJumpTime < jumpDelay) {
@@ -389,9 +389,9 @@ void PlayerController::SetWon() {
 DECLARE_TEXT_ASSET(PlayerController);
 
 void PlayerController::UpdateZombiesAttacking() {
-	auto nearby = PhysicsSystem::Get()->GetOverlaping(gameObject()->transform()->GetPosition(), 1.5f);
-	for (auto go : nearby) {
-		auto creep = go->GetComponent<EnemyCreepController>();
+	auto nearby = Physics::OveplapSphere(gameObject()->transform()->GetPosition(), 1.5f);
+	for (auto rb : nearby) {
+		auto creep = rb->gameObject()->GetComponent<EnemyCreepController>();
 		if (!creep) {
 			continue;
 		}

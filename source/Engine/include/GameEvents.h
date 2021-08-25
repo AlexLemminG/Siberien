@@ -38,11 +38,3 @@ private:
 	};
 	std::vector<HandleWithHandler> handlers;
 };
-
-class EnemyCreepController;
-class GameEvents : public System<GameEvents> {
-	bool Init() override;
-
-public:
-	GameEvent<EnemyCreepController*> creepDeath;
-};

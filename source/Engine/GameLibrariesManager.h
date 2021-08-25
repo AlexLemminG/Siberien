@@ -4,11 +4,10 @@
 
 class GameLibrary;
 
-class GameLibrariesManager : public System<GameLibrariesManager> {
+class GameLibrariesManager {
+public:
 	bool Init();
-
 	void Term();
-
 private:
 	class LibraryHandle {
 	public:
