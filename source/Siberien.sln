@@ -65,6 +65,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Bullet2FileLoader", "libs\b
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Bullet3Common", "libs\bullet\build3\vs2010\Bullet3Common.vcxproj", "{880C1B6F-E19C-D34E-BDF6-BB8AAFBFFACD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameMod", "GameMod\GameMod.vcxproj", "{3AD096CE-BB8D-4B4D-B1B3-7255785FDAF0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -189,6 +191,12 @@ Global
 		{880C1B6F-E19C-D34E-BDF6-BB8AAFBFFACD}.Release|x64.ActiveCfg = Release|x64
 		{880C1B6F-E19C-D34E-BDF6-BB8AAFBFFACD}.Release|x64.Build.0 = Release|x64
 		{880C1B6F-E19C-D34E-BDF6-BB8AAFBFFACD}.Release|x86.ActiveCfg = Release|x64
+		{3AD096CE-BB8D-4B4D-B1B3-7255785FDAF0}.Debug|x64.ActiveCfg = Debug|x64
+		{3AD096CE-BB8D-4B4D-B1B3-7255785FDAF0}.Debug|x64.Build.0 = Debug|x64
+		{3AD096CE-BB8D-4B4D-B1B3-7255785FDAF0}.Debug|x86.ActiveCfg = Debug|x64
+		{3AD096CE-BB8D-4B4D-B1B3-7255785FDAF0}.Release|x64.ActiveCfg = Release|x64
+		{3AD096CE-BB8D-4B4D-B1B3-7255785FDAF0}.Release|x64.Build.0 = Release|x64
+		{3AD096CE-BB8D-4B4D-B1B3-7255785FDAF0}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

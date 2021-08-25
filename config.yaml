@@ -8,3 +8,4 @@ godMode: true
 soundEnabled: false
 libraries:
   - Game.dll
+  - GameMod.dll
