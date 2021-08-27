@@ -278,6 +278,8 @@ public:
 
 		std::string ToFullPath();
 	};
+
+	std::vector<std::string> GetAllAssetNames();
 private:
 
 	std::string currentAssetLoadingPath;

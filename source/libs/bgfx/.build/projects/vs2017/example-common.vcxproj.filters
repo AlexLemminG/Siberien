@@ -293,6 +293,9 @@
     <ClInclude Include="..\..\..\examples\common\ps\vs_particle.bin.h">
       <Filter>examples\common\ps</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\3rdparty\dear-imgui\imgui_impl_sdl.h">
+      <Filter>3rdparty\dear-imgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\3rdparty\meshoptimizer\src\allocator.cpp">
@@ -429,6 +432,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\examples\common\entry\entry_winrt.cx">
       <Filter>examples\common\entry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\3rdparty\dear-imgui\imgui_impl_sdl.cpp">
+      <Filter>3rdparty\dear-imgui</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

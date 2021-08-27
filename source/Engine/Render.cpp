@@ -31,6 +31,8 @@
 #include "RenderEvents.h"
 #include "Graphics.h"
 #include "Config.h"
+#include "imgui/imgui.h"
+#include "dear-imgui/imgui_impl_sdl.h"
 
 SDL_Window* Render::window = nullptr;
 
@@ -220,6 +222,10 @@ bool Render::Init()
 	prevWidth = width;
 	prevHeight = height;
 
+
+	imguiCreate();
+	ImGui_ImplSDL2_InitForMetal(window);
+
 	Dbg::Init();
 
 	return true;
@@ -296,6 +302,7 @@ void Render::Draw(SystemsManager& systems)
 		bgfx::setName(m_fullScreenTex, "fullScreenTex");
 		bgfx::setName(m_fullScreenBuffer, "fullScreenBuffer");
 	}
+
 	bgfx::setViewRect(kRenderPassGeometry, 0, 0, width, height);
 	bgfx::setViewRect(1, 0, 0, width, height);
 	bgfx::setViewRect(kRenderPassCombine, 0, 0, width, height);
@@ -408,7 +415,8 @@ void Render::Draw(SystemsManager& systems)
 	{
 		OPTICK_EVENT("DrawRenderers");
 		bool prevEq = false;
-		for (int i = 0; i < MeshRenderer::enabledMeshRenderers.size() - 1; i++) {
+		//TODO get rid of std::vector / std::string
+		for (int i = 0; i < ((int)MeshRenderer::enabledMeshRenderers.size() - 1); i++) {
 			const auto& mesh = MeshRenderer::enabledMeshRenderers[i];
 			const auto& meshNext = MeshRenderer::enabledMeshRenderers[i + 1];
 			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
@@ -464,6 +472,7 @@ void Render::Draw(SystemsManager& systems)
 void Render::Term()
 {
 	OPTICK_EVENT();
+	imguiDestroy();
 	Dbg::Term();
 	whiteTexture = nullptr;
 	defaultNormalTexture = nullptr;

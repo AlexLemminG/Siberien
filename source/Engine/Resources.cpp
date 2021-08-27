@@ -4,6 +4,10 @@
 #include <memory>
 #include <windows.h>
 #include "Serialization.h"
+#include "SDL_filesystem.h"
+#include <filesystem>
+#include <locale>
+#include <codecvt>
 
 
 bool AssetDatabase2::Init() {
@@ -81,7 +85,7 @@ void AssetDatabase2::LoadAsset(const std::string& path) {
 		}
 	}
 	else if (extention == "asset") {
-		
+
 	}
 	else {
 		return;
@@ -342,6 +346,28 @@ void AssetDatabase::LoadAllAtYaml(const YAML::Node& node, const std::string& pat
 			LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
 		}
 	}
+}
+
+std::vector<std::string> AssetDatabase::GetAllAssetNames() {
+	auto result = std::vector<std::string>();
+	std::string path = assetsFolderPrefix;
+	for (const auto& entry : std::filesystem::recursive_directory_iterator(path)) {
+		if (entry.is_regular_file()) {
+			std::wstring string_to_convert = entry.path();
+			//setup converter
+			using convert_type = std::codecvt_utf8<wchar_t>;
+			std::wstring_convert<convert_type, wchar_t> converter;
+
+			//use converter (.to_bytes: wstr->str, .from_bytes: str->wstr)
+			std::string converted_str = converter.to_bytes(string_to_convert);
+			converted_str = converted_str.substr(assetsFolderPrefix.size(), converted_str.size() - assetsFolderPrefix.size());
+
+			result.push_back(converted_str);
+		}
+	}
+
+	//SDL_FindFirst();
+	return result;
 }
 
 void AssetDatabase::LoadAllAtPath(std::string path)

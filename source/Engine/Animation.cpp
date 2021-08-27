@@ -11,7 +11,7 @@ Vector3 aiConvert(const aiVector3D& v) {
 	return Vector3(v.x, v.y, v.z);
 }
 Quaternion aiConvert(const aiQuaternion& v) {
-	return Quaternion(v.x, v.y, v.z, v.w);
+	return Quaternion(v.w, v.x, v.y, v.z);
 }
 
 template<typename OUT_T, typename IN_T>
@@ -49,11 +49,13 @@ AnimationTransform MeshAnimation::GetTransform(const std::string& bone, float t)
 
 	auto lowerBound = std::lower_bound(channel.begin(), channel.end(), t, [](const auto& keyframe, float time) {return keyframe.time < time; });
 	int iBefore = lowerBound - channel.begin();
+	if (iBefore > 0) {
+		iBefore--;
+	}
 	if (lowerBound == channel.end() || iBefore == channel.size()-1) {
 		return channel[channel.size() - 1].transform;
 	}
 	else {
-		int iBefore = lowerBound - channel.begin();
 		float lerpT = Mathf::InverseLerp(channel[iBefore].time, channel[iBefore + 1].time, t);
 		return AnimationTransform::Lerp(channel[iBefore].transform, channel[iBefore + 1].transform, lerpT);
 	}

@@ -362,49 +362,10 @@ struct OcornutImguiContext
 	}
 
 	void beginFrame(
-		  int32_t _mx
-		, int32_t _my
-		, uint8_t _button
-		, int32_t _scroll
-		, int _width
-		, int _height
-		, int _inputChar
-		, bgfx::ViewId _viewId
+		bgfx::ViewId _viewId
 		)
 	{
 		m_viewId = _viewId;
-
-		ImGuiIO& io = ImGui::GetIO();
-		if (_inputChar >= 0)
-		{
-			io.AddInputCharacter(_inputChar);
-		}
-
-		io.DisplaySize = ImVec2( (float)_width, (float)_height);
-
-		const int64_t now = bx::getHPCounter();
-		const int64_t frameTime = now - m_last;
-		m_last = now;
-		const double freq = double(bx::getHPFrequency() );
-		io.DeltaTime = float(frameTime/freq);
-
-		io.MousePos = ImVec2( (float)_mx, (float)_my);
-		io.MouseDown[0] = 0 != (_button & IMGUI_MBUT_LEFT);
-		io.MouseDown[1] = 0 != (_button & IMGUI_MBUT_RIGHT);
-		io.MouseDown[2] = 0 != (_button & IMGUI_MBUT_MIDDLE);
-		io.MouseWheel = (float)(_scroll - m_lastScroll);
-		m_lastScroll = _scroll;
-
-#if USE_ENTRY
-		uint8_t modifiers = inputGetModifiersState();
-		io.KeyShift = 0 != (modifiers & (entry::Modifier::LeftShift | entry::Modifier::RightShift) );
-		io.KeyCtrl  = 0 != (modifiers & (entry::Modifier::LeftCtrl  | entry::Modifier::RightCtrl ) );
-		io.KeyAlt   = 0 != (modifiers & (entry::Modifier::LeftAlt   | entry::Modifier::RightAlt  ) );
-		for (int32_t ii = 0; ii < (int32_t)entry::Key::Count; ++ii)
-		{
-			io.KeysDown[ii] = inputGetKeyState(entry::Key::Enum(ii) );
-		}
-#endif // USE_ENTRY
 
 		ImGui::NewFrame();
 
@@ -455,9 +416,9 @@ void imguiDestroy()
 	s_ctx.destroy();
 }
 
-void imguiBeginFrame(int32_t _mx, int32_t _my, uint8_t _button, int32_t _scroll, uint16_t _width, uint16_t _height, int _inputChar, bgfx::ViewId _viewId)
+void imguiBeginFrame(bgfx::ViewId _viewId)
 {
-	s_ctx.beginFrame(_mx, _my, _button, _scroll, _width, _height, _inputChar, _viewId);
+	s_ctx.beginFrame(_viewId);
 }
 
 void imguiEndFrame()

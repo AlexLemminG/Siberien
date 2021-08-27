@@ -54,7 +54,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalOptions>/wd4201 /wd4324 /Ob2  %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>..\..\..\..\bx\include\compat\msvc;..\..\..\..\bx\include;..\..\..\..\bimg\include;..\..\..\include;..\..\..\3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\bx\include\compat\msvc;..\..\..\..\bx\include;..\..\..\..\bimg\include;..\..\..\include;..\..\..\3rdparty;..\..\..\..\SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;_DEBUG;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -86,7 +86,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalOptions>/wd4201 /wd4324 /Ob2  %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>..\..\..\..\bx\include\compat\msvc;..\..\..\..\bx\include;..\..\..\..\bimg\include;..\..\..\include;..\..\..\3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\bx\include\compat\msvc;..\..\..\..\bx\include;..\..\..\..\bimg\include;..\..\..\include;..\..\..\3rdparty;..\..\..\..\SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;NDEBUG;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
@@ -119,6 +119,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\3rdparty\dear-imgui\imgui_impl_sdl.h" />
     <ClInclude Include="..\..\..\3rdparty\meshoptimizer\src\meshoptimizer.h" />
     <ClInclude Include="..\..\..\3rdparty\dear-imgui\imconfig.h" />
     <ClInclude Include="..\..\..\3rdparty\dear-imgui\imgui.h" />
@@ -201,6 +202,7 @@
     <ClInclude Include="..\..\..\examples\common\ps\vs_particle.bin.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\3rdparty\dear-imgui\imgui_impl_sdl.cpp" />
     <ClCompile Include="..\..\..\3rdparty\meshoptimizer\src\allocator.cpp">
     </ClCompile>
     <ClCompile Include="..\..\..\3rdparty\meshoptimizer\src\clusterizer.cpp">

@@ -48,8 +48,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PreprocessorDefinitions>BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;_DEBUG;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
@@ -62,8 +62,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PreprocessorDefinitions>BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
@@ -97,6 +97,7 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshCollider.cpp" />
     <ClCompile Include="MeshRenderer.cpp" />
+    <ClCompile Include="ModelPreview.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="PhysicsSystem.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="include\System.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\Transform.h" />
+    <ClInclude Include="ModelPreview.h" />
     <ClInclude Include="PhysicsSystem.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="SphericalHarmonics.h" />

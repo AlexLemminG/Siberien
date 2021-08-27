@@ -36,7 +36,7 @@ struct RawVertexData {
 	Vector3 tangent;
 	Vector2 uv;
 	float boneWeights[bonesPerVertex];
-	uint16_t boneIndices[bonesPerVertex];
+	uint8_t boneIndices[bonesPerVertex];
 };
 
 class MeshPhysicsData;

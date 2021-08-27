@@ -1,0 +1,13 @@
+Scene:
+  sphericalHarmonics: harmonics.asset
+  gameObjects:
+    - gun_gatling.asset
+    - engine\modelPreview\camera.asset
+    - engine\modelPreview\floor.asset
+    - $preview
+    
+GameObject$preview:
+  components:
+  - $ModelPreview
+  
+ModelPreview:

@@ -132,6 +132,9 @@
     <ClCompile Include="Graphics.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="ModelPreview.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BlenderSceneLoader.h">
@@ -256,6 +259,9 @@
     </ClInclude>
     <ClInclude Include="include\Common.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelPreview.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

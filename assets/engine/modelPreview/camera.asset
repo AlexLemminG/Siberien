@@ -1,0 +1,13 @@
+GameObject:
+  tag: camera
+  components:
+    - $Camera
+    - $Transform
+Camera:
+  clearColor: 0x000000ff
+  fov: 75.0
+  nearPlane: 0.01
+  farPlane: 1000
+Transform:
+  pos: [0, 0.999, 4]
+  euler: [0, 180, 0]

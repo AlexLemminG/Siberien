@@ -20,7 +20,9 @@
 #include "Engine.h"
 #include "Graphics.h"
 #include "Config.h"
+#include "imgui/imgui.h"
 #include "GameLibrariesManager.h"
+#include <dear-imgui/imgui_impl_sdl.h>
 
 std::string GetFirstSceneName() {
 	return CfgGetString("scene") + ".asset";
@@ -86,6 +88,11 @@ start:
 
 		Input::Update();
 
+		//TODO move away
+		ImGui_ImplSDL2_NewFrame();
+		imguiBeginFrame();
+
+
 		if (Scene::Get()) {
 			Scene::Get()->Update();
 		}
@@ -119,6 +126,9 @@ start:
 		}
 
 		SceneManager::Update();
+
+
+		imguiEndFrame();
 	}
 
 	{

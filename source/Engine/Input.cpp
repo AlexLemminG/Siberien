@@ -1,6 +1,7 @@
 #include "Common.h"
 #include "Input.h"
 #include <SDL.h>
+#include <dear-imgui/imgui_impl_sdl.h>
 
 std::vector<bool> Input::justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 std::vector<bool> Input::pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
@@ -34,6 +35,7 @@ void Input::Update() {
 
 	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0) {
+		ImGui_ImplSDL2_ProcessEvent(&e);
 		if (e.type == SDL_QUIT)
 		{
 			quitPressed = true;

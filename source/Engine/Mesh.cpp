@@ -62,10 +62,11 @@ MeshVertexLayout& MeshVertexLayout::End() {
 static std::vector<uint16_t> CalcIndicesFromAiMesh(aiMesh* mesh) {
 	std::vector<uint16_t> indices;
 	for (int i = 0; i < mesh->mNumFaces; i++) {
-		ASSERT(mesh->mFaces[i].mNumIndices == 3);
-		indices.push_back(mesh->mFaces[i].mIndices[0]);
-		indices.push_back(mesh->mFaces[i].mIndices[1]);
-		indices.push_back(mesh->mFaces[i].mIndices[2]);
+		if (mesh->mFaces[i].mNumIndices == 3) {
+			indices.push_back(mesh->mFaces[i].mIndices[0]);
+			indices.push_back(mesh->mFaces[i].mIndices[1]);
+			indices.push_back(mesh->mFaces[i].mIndices[2]);
+		}
 	}
 	return std::move(indices);
 }
@@ -79,19 +80,24 @@ static std::vector<RawVertexData> CalcVerticesFromAiMesh(aiMesh* mesh) {
 	result.resize(numVerts);
 
 	memset(result.data(), 0, result.size() * sizeof(RawVertexData));
-
+	ASSERT(mesh->mNumBones < 256);
 	for (int iBone = 0; iBone < mesh->mNumBones; iBone++) {
 		for (int j = 0; j < mesh->mBones[iBone]->mNumWeights; j++) {
 			int vertexID = mesh->mBones[iBone]->mWeights[j].mVertexId;
 			float weight = mesh->mBones[iBone]->mWeights[j].mWeight;
 			auto& vertex = result[vertexID];
 
+			bool found = false;
 			for (int i = 0; i < RawVertexData::bonesPerVertex; i++) {
 				if (vertex.boneWeights[i] == 0.f) {
 					vertex.boneWeights[i] = weight;
 					vertex.boneIndices[i] = iBone;
+					found = true;
 					break;
 				}
+			}
+			if (!found) {
+				ASSERT(false);
 			}
 		}
 	}
@@ -119,16 +125,25 @@ static std::vector<RawVertexData> CalcVerticesFromAiMesh(aiMesh* mesh) {
 			vertex.normal.y = aiNormal.y;
 			vertex.normal.z = aiNormal.z;
 		}
-		{
+		if(mesh->mTextureCoords[0]){
 			const auto& aiTexCoord = mesh->mTextureCoords[0][i];
 			vertex.uv.x = aiTexCoord.x;
 			vertex.uv.y = aiTexCoord.y;
 		}
-		{
+		else {
+			vertex.uv.x = 0.f;
+			vertex.uv.y = 0.f;
+		}
+		if(mesh->mTangents){
 			const auto& aiTangent = mesh->mTangents[i];
 			vertex.tangent.x = aiTangent.x;
 			vertex.tangent.y = aiTangent.y;
 			vertex.tangent.z = aiTangent.z;
+		}
+		else {
+			vertex.tangent.x = 0.f;
+			vertex.tangent.y = 0.f;
+			vertex.tangent.z = 1.f;
 		}
 	}
 	return std::move(result);
