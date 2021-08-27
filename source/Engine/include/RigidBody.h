@@ -38,9 +38,10 @@ public:
 
 	void SetAngularFactor(const Vector3& factor);
 
-	void SetCenterOfMass(const Vector3& center);
+	void SetCenterOfMassLocal(const Vector3& center);
+	Vector3 GetCenterOfMassLocal() const;
 
-	Vector3 GetCenterOfMass() const;
+	Vector3 GetCenterOfMassWorld() const;
 
 	Matrix4 GetTransform() const;
 	void SetTransform(const Matrix4& transform);

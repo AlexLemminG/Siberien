@@ -53,7 +53,7 @@ void Grenade::Explode() {
 		if (go == player) {
 			continue;
 		}
-		auto bodyPos = rb->GetCenterOfMass();
+		auto bodyPos = rb->GetCenterOfMassWorld();
 		auto deltaPos = bodyPos - pos;
 		float impulseMag = Mathf::Lerp(pushImpulse, 0.f, deltaPos.LengthSquared() / (radius * radius));
 		auto impulse = deltaPos.Normalized() * impulseMag;

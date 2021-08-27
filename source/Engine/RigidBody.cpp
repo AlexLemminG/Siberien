@@ -114,7 +114,7 @@ void RigidBody::UseWorldGravity() {
 
 void RigidBody::SetAngularFactor(const Vector3& factor) { pBody->setAngularFactor(btConvert(factor)); }
 
-void RigidBody::SetCenterOfMass(const Vector3& center) {
+void RigidBody::SetCenterOfMassLocal(const Vector3& center) {
 	this->centerOfMass = center;
 	//TODO offset body
 	if (pMotionState) {
@@ -122,8 +122,12 @@ void RigidBody::SetCenterOfMass(const Vector3& center) {
 	}
 }
 
-Vector3 RigidBody::GetCenterOfMass() const {
+Vector3 RigidBody::GetCenterOfMassLocal() const {
 	return centerOfMass;
+}
+
+Vector3 RigidBody::GetCenterOfMassWorld() const {
+	return btConvert(pBody->getCenterOfMassTransform().getOrigin());
 }
 
 Matrix4 RigidBody::GetTransform() const { return btConvert(pBody->getCenterOfMassTransform() * pMotionState->m_centerOfMassOffset); }
