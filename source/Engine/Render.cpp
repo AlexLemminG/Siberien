@@ -35,12 +35,110 @@
 SDL_Window* Render::window = nullptr;
 
 
+constexpr bgfx::ViewId kRenderPassGeometry = 0;
+constexpr bgfx::ViewId kRenderPassClearUav = 1;
+constexpr bgfx::ViewId kRenderPassLight = 2;
+constexpr bgfx::ViewId kRenderPassCombine = 3;
+constexpr bgfx::ViewId kRenderPassDebugLights = 4;
+constexpr bgfx::ViewId kRenderPassDebugGBuffer = 5;
+
+
+static bool SphereInFrustum(const Sphere& sphere, Vector4 frustum_planes[6])
+{
+	bool res = true;
+	for (int i = 0; i < 6; i++)
+	{
+		if (frustum_planes[i].x * sphere.pos.x + frustum_planes[i].y * sphere.pos.y +
+			frustum_planes[i].z * sphere.pos.z + frustum_planes[i].w <= -sphere.radius)
+			res = false;
+	}
+	return res;
+}
+
 bool Render::IsFullScreen() {
 	auto flags = SDL_GetWindowFlags(window);
 	return flags & SDL_WINDOW_FULLSCREEN;
 }
 void Render::SetFullScreen(bool isFullScreen) {
 	SDL_SetWindowFullscreen(window, isFullScreen ? SDL_WINDOW_FULLSCREEN : 0);
+}
+
+
+//TODO cleanup
+Vector3 multH(const Matrix4& m, const Vector3& v) {
+	Vector4 v4(v[0], v[1], v[2], 1);
+	v4 = m * v4;
+	float t = 1.f / Mathf::Abs(v4[3]);
+	return Vector3(v4[0], v4[1], v4[2]) * t;
+}
+
+void Render::DrawLights() {
+	if (!deferredLightShader) {
+		return;
+	}
+	std::vector<PointLight*> lights = PointLight::pointLights;
+
+	for (auto light : lights) {
+		if (light->radius <= 0.f) {
+			continue;
+		}
+
+		auto pos = light->gameObject()->transform()->GetPosition();
+		auto sphere = Sphere{ pos, light->radius};
+		bool isVisible = SphereInFrustum(sphere, frustumPlanes);
+		if (!isVisible) {
+			continue;
+			//TODO wtf culling fails
+		}
+
+		auto posRadius = Vector4(pos, light->radius);
+		bgfx::setUniform(u_lightPosRadius, &posRadius, 1);
+		auto colorInnerRadius = Vector4(light->color.r, light->color.g, light->color.b, light->innerRadius);
+		bgfx::setUniform(u_lightRgbInnerR, &colorInnerRadius, 1);
+
+		AABB aabb = sphere.ToAABB();
+
+		const Vector3 box[8] =
+		{
+			{ aabb.min.x, aabb.min.y, aabb.min.z },
+			{ aabb.min.x, aabb.min.y, aabb.max.z },
+			{ aabb.min.x, aabb.max.y, aabb.min.z },
+			{ aabb.min.x, aabb.max.y, aabb.max.z },
+			{ aabb.max.x, aabb.min.y, aabb.min.z },
+			{ aabb.max.x, aabb.min.y, aabb.max.z },
+			{ aabb.max.x, aabb.max.y, aabb.min.z },
+			{ aabb.max.x, aabb.max.y, aabb.max.z },
+		};
+
+
+		Vector3 xyz = multH(viewProj, box[0]);
+		Vector3 min = xyz;
+		Vector3 max = xyz;
+
+		for (uint32_t ii = 1; ii < 8; ++ii)
+		{
+			xyz = multH(viewProj, box[ii]);
+			min = Vector3::Min(min, xyz);
+			max = Vector3::Max(max, xyz);
+		}
+
+		const float x0 = Mathf::Clamp((min.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
+		const float y0 = Mathf::Clamp((min.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
+		const float x1 = Mathf::Clamp((max.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
+		const float y1 = Mathf::Clamp((max.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
+
+		bgfx::setTexture(0, gBuffer.normalSampler, gBuffer.normalTexture);
+		bgfx::setTexture(1, gBuffer.depthSampler, gBuffer.depthTexture);
+		const uint16_t scissorHeight = uint16_t(y1 - y0);
+		//bgfx::setScissor(uint16_t(x0), uint16_t(prevHeight - scissorHeight - y0), uint16_t(x1 - x0), uint16_t(scissorHeight));
+		bgfx::setState(0
+			| BGFX_STATE_WRITE_RGB
+			| BGFX_STATE_WRITE_A
+			| BGFX_STATE_BLEND_ADD
+		);
+		Graphics::Get()->SetScreenSpaceQuadBuffer();
+		bgfx::submit(kRenderPassLight, deferredLightShader->program);
+	}
 }
 
 
@@ -82,8 +180,8 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = true;
-	initInfo.profile = false;
+	initInfo.debug = true;//TODO cfgvar?
+	initInfo.profile = true;
 	initInfo.type = bgfx::RendererType::Direct3D11;
 	bgfx::init(initInfo);
 	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
@@ -103,6 +201,7 @@ bool Render::Init()
 
 	u_lightPosRadius = bgfx::createUniform("u_lightPosRadius", bgfx::UniformType::Vec4, maxLightsCount);
 	u_lightRgbInnerR = bgfx::createUniform("u_lightRgbInnerR", bgfx::UniformType::Vec4, maxLightsCount);
+	u_mtx = bgfx::createUniform("u_mtx", bgfx::UniformType::Mat4);
 
 	u_sphericalHarmonics = bgfx::createUniform("u_sphericalHarmonics", bgfx::UniformType::Vec4, 9);
 
@@ -112,10 +211,11 @@ bool Render::Init()
 	defaultNormalTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultNormal.png");
 	defaultEmissiveTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultEmissive.png");
 	simpleBlitMat = AssetDatabase::Get()->LoadByPath<Material>("materials\\simpleBlit.asset");
+	deferredLightShader = AssetDatabase::Get()->LoadByPath<Shader>("shaders\\deferredLight.asset");
 
 	m_fullScreenTex.idx = bgfx::kInvalidHandle;
 	m_fullScreenBuffer.idx = bgfx::kInvalidHandle;
-	m_gbuffer.idx = bgfx::kInvalidHandle;
+	gBuffer.buffer.idx = bgfx::kInvalidHandle;
 
 	prevWidth = width;
 	prevHeight = height;
@@ -123,18 +223,6 @@ bool Render::Init()
 	Dbg::Init();
 
 	return true;
-}
-
-static bool SphereInFrustum(const Sphere& sphere, Vector4 frustum_planes[6])
-{
-	bool res = true;
-	for (int i = 0; i < 6; i++)
-	{
-		if (frustum_planes[i].x * sphere.pos.x + frustum_planes[i].y * sphere.pos.y +
-			frustum_planes[i].z * sphere.pos.z + frustum_planes[i].w <= -sphere.radius)
-			res = false;
-	}
-	return res;
 }
 
 void Render::Draw(SystemsManager& systems)
@@ -162,8 +250,8 @@ void Render::Draw(SystemsManager& systems)
 		if (bgfx::isValid(m_fullScreenBuffer)) {
 			bgfx::destroy(m_fullScreenBuffer);
 		}
-		if (bgfx::isValid(m_gbuffer)) {
-			bgfx::destroy(m_gbuffer);
+		if (bgfx::isValid(gBuffer.buffer)) {
+			bgfx::destroy(gBuffer.buffer);
 		}
 
 		const uint64_t tsFlags = 0
@@ -172,30 +260,60 @@ void Render::Draw(SystemsManager& systems)
 			| BGFX_SAMPLER_V_CLAMP
 			;
 
-		m_fullScreenTex = bgfx::createTexture2D(
-			uint16_t(width),
-			uint16_t(height),
-			false,
-			1,
-			bgfx::TextureFormat::RGBA32F, tsFlags);
-
+		m_fullScreenTex = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
 		m_fullScreenBuffer = bgfx::createFrameBuffer(1, &m_fullScreenTex, true);
 
+		gBuffer.albedoTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
+		gBuffer.normalTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
+		gBuffer.lightTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
+		gBuffer.emissiveTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
+		gBuffer.depthTexture = bgfx::createTexture2D(uint16_t(width), uint16_t(height), false, 1, bgfx::TextureFormat::D32F, tsFlags);
 		bgfx::TextureHandle gbufferTex[] =
 		{
-			m_fullScreenTex,
-			bgfx::createTexture2D(uint16_t(width), uint16_t(height), false, 1, bgfx::TextureFormat::D32F, tsFlags),
+			gBuffer.albedoTexture,
+			gBuffer.normalTexture,
+			gBuffer.lightTexture,
+			gBuffer.emissiveTexture,
+			gBuffer.depthTexture
 		};
+		gBuffer.buffer = bgfx::createFrameBuffer(BX_COUNTOF(gbufferTex), gbufferTex, true);
+		gBuffer.lightBuffer = bgfx::createFrameBuffer(1, &gBuffer.lightTexture, true);//TODO delete
+		//TODO destroy
+		gBuffer.albedoSampler = bgfx::createUniform("s_albedo", bgfx::UniformType::Sampler);
+		gBuffer.normalSampler = bgfx::createUniform("s_normals", bgfx::UniformType::Sampler);
+		gBuffer.lightSampler = bgfx::createUniform("s_light", bgfx::UniformType::Sampler);
+		gBuffer.emissiveSampler = bgfx::createUniform("s_emissive", bgfx::UniformType::Sampler);
+		gBuffer.depthSampler = bgfx::createUniform("s_depth", bgfx::UniformType::Sampler);
 
-		m_gbuffer = bgfx::createFrameBuffer(BX_COUNTOF(gbufferTex), gbufferTex, true);
-		bgfx::setName(m_gbuffer, "gbuffer");
+		bgfx::setName(gBuffer.buffer, "gbuffer");
+		bgfx::setName(gBuffer.albedoTexture, "albedo");
+		bgfx::setName(gBuffer.normalTexture, "normal");
+		bgfx::setName(gBuffer.lightTexture, "light");
+		bgfx::setName(gBuffer.lightBuffer, "light");
+		bgfx::setName(gBuffer.emissiveTexture, "emissive");
+		bgfx::setName(gBuffer.depthTexture, "depth");
+
 		bgfx::setName(m_fullScreenTex, "fullScreenTex");
 		bgfx::setName(m_fullScreenBuffer, "fullScreenBuffer");
 	}
-	bgfx::setViewRect(0, 0, 0, width, height);
+	bgfx::setViewRect(kRenderPassGeometry, 0, 0, width, height);
 	bgfx::setViewRect(1, 0, 0, width, height);
-	bgfx::setViewFrameBuffer(0, m_gbuffer);
+	bgfx::setViewRect(kRenderPassCombine, 0, 0, width, height);
+	bgfx::setViewRect(kRenderPassLight, 0, 0, width, height);
+
+	bgfx::setViewFrameBuffer(kRenderPassGeometry, gBuffer.buffer);
+	bgfx::setViewFrameBuffer(kRenderPassCombine, m_fullScreenBuffer);
+	bgfx::setViewFrameBuffer(kRenderPassLight, gBuffer.lightBuffer);
 	bgfx::setViewFrameBuffer(1, BGFX_INVALID_HANDLE);//TODO do we need third buffer to go postprocessing?
+
+	const float pixelSize[4] =
+	{
+		1.0f / width,
+		1.0f / height,
+		0.0f,
+		0.0f,
+	};
+	bgfx::setUniform(u_pixelSize, pixelSize);
 
 	if (camera == nullptr) {
 		bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Colors::black.ToIntRGBA(), 1.0f, 0);
@@ -244,11 +362,21 @@ void Render::Draw(SystemsManager& systems)
 		bx::mtxProj(proj, fov, float(width) / float(height), nearPlane, farPlane, bgfx::getCaps()->homogeneousDepth);
 		bgfx::setViewTransform(0, &cameraViewMatrix(0, 0), proj);
 		bgfx::setViewTransform(1, &cameraViewMatrix(0, 0), proj);
+		bgfx::setViewTransform(kRenderPassGeometry, &cameraViewMatrix(0, 0), proj);
 
 		Matrix4 projMatr = Matrix4(proj);
 		auto viewProj = projMatr * cameraViewMatrix;
-
 		bgfx_examples::buildFrustumPlanes((bx::Plane*)frustumPlanes, &viewProj(0, 0));
+
+		auto invViewProj = viewProj.Inverse();
+		bgfx::setUniform(u_mtx, &invViewProj, 1);
+		this->viewProj = viewProj;
+
+		const bgfx::Caps* caps = bgfx::getCaps();
+		bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f, 0.0f, caps->homogeneousDepth);
+		bgfx::setViewTransform(kRenderPassLight, nullptr, proj);
+		bgfx::setViewTransform(kRenderPassCombine, nullptr, proj);
+
 	}
 
 	UpdateLights(lightsPoi);
@@ -294,6 +422,34 @@ void Render::Draw(SystemsManager& systems)
 
 	systems.Draw();
 
+	DrawLights();
+
+	// combining gbuffer
+	{
+		auto material = AssetDatabase::Get()->LoadByPath<Material>("materials\\deferredCombine.asset");//TOOD on init
+		if (!material || !material->shader) {
+			return;
+		}
+		ApplyMaterialProperties(material);
+
+		bgfx::setTexture(0, gBuffer.albedoSampler, gBuffer.albedoTexture);
+		bgfx::setTexture(1, gBuffer.normalSampler, gBuffer.normalTexture);
+		bgfx::setTexture(2, gBuffer.lightSampler, gBuffer.lightTexture);
+		bgfx::setTexture(3, gBuffer.emissiveSampler, gBuffer.emissiveTexture);
+		bgfx::setTexture(4, gBuffer.depthSampler, gBuffer.depthTexture);
+
+		bgfx::setState(0
+			| BGFX_STATE_WRITE_RGB
+			| BGFX_STATE_WRITE_A
+		);
+
+		Graphics::Get()->SetScreenSpaceQuadBuffer();
+
+		bgfx::submit(kRenderPassCombine, material->shader->program);
+	}
+
+
+
 	RenderEvents::Get()->onSceneRendered.Invoke(*this);
 
 	Graphics::Get()->Blit(simpleBlitMat, 1);
@@ -313,6 +469,7 @@ void Render::Term()
 	defaultNormalTexture = nullptr;
 	defaultEmissiveTexture = nullptr;
 	simpleBlitMat = nullptr;
+	deferredLightShader = nullptr;
 
 	for (auto u : textureUniforms) {
 		bgfx::destroy(u.second);
@@ -332,14 +489,15 @@ void Render::Term()
 	bgfx::destroy(s_texEmissive);
 	bgfx::destroy(u_lightPosRadius);
 	bgfx::destroy(u_lightRgbInnerR);
+	bgfx::destroy(u_mtx);
 	bgfx::destroy(u_sphericalHarmonics);
 	bgfx::destroy(u_pixelSize);
 
 	if (bgfx::isValid(m_fullScreenBuffer)) {
 		bgfx::destroy(m_fullScreenBuffer);
 	}
-	if (bgfx::isValid(m_gbuffer)) {
-		bgfx::destroy(m_gbuffer);
+	if (bgfx::isValid(gBuffer.buffer)) {
+		bgfx::destroy(gBuffer.buffer);
 	}
 
 	bgfx::shutdown();

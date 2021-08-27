@@ -11,6 +11,7 @@ public:
 private:
 	class LibraryHandle {
 	public:
+		std::string name;
 		std::shared_ptr<GameLibrary> library;
 		void* objectHandle = nullptr;
 	};

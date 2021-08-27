@@ -10,6 +10,8 @@ class Texture;
 class Material;
 class MeshRenderer;
 class Mesh;
+class Shader;
+
 
 class Render {
 public:
@@ -19,7 +21,6 @@ public:
 
 	int GetWidth() { return prevWidth; }
 	int GetHeight() { return prevHeight; }
-	bgfx::UniformHandle GetPixelSizeUniform() { return u_pixelSize; }
 	bgfx::UniformHandle GetTexColorSampler() { return s_texColor; }
 	bgfx::TextureHandle GetFullScreenTexture() { return m_fullScreenTex; }
 
@@ -30,11 +31,32 @@ public:
 	void ApplyMaterialProperties(const std::shared_ptr<Material> material);
 
 private:
+	class GBuffer {
+	public:
+		bgfx::FrameBufferHandle buffer;
+		bgfx::FrameBufferHandle lightBuffer;
+
+		bgfx::TextureHandle albedoTexture;
+		bgfx::TextureHandle normalTexture;
+		bgfx::TextureHandle lightTexture;
+		bgfx::TextureHandle emissiveTexture;
+		bgfx::TextureHandle depthTexture;
+
+		bgfx::UniformHandle albedoSampler;
+		bgfx::UniformHandle normalSampler;
+		bgfx::UniformHandle lightSampler;
+		bgfx::UniformHandle emissiveSampler;
+		bgfx::UniformHandle depthSampler;
+	};
+	GBuffer gBuffer;
+	
 	bool DrawMesh(const MeshRenderer* renderer, bool clearState, bool updateState); //returns true if was not culled
 	void UpdateLights(Vector3 poi);
 	
 	bool IsFullScreen();
 	void SetFullScreen(bool isFullScreen);
+
+	void DrawLights();
 
 
 	//The surface contained by the window
@@ -53,13 +75,13 @@ private:
 	std::unordered_map<std::string, bgfx::UniformHandle> vectorUniforms;
 	std::unordered_map<std::string, bgfx::UniformHandle> textureUniforms;
 
-	bgfx::FrameBufferHandle m_gbuffer;
 	bgfx::FrameBufferHandle m_fullScreenBuffer;
 	bgfx::TextureHandle m_fullScreenTex;
 	
 	static constexpr int maxLightsCount = 8;
 	bgfx::UniformHandle u_lightPosRadius;
 	bgfx::UniformHandle u_lightRgbInnerR;
+	bgfx::UniformHandle u_mtx;//TODO naming
 
 	int prevWidth;
 	int prevHeight;
@@ -68,6 +90,8 @@ private:
 	std::shared_ptr<Texture> defaultNormalTexture;
 	std::shared_ptr<Texture> defaultEmissiveTexture;
 	std::shared_ptr<Material> simpleBlitMat;
+	std::shared_ptr<Shader> deferredLightShader;
+	Matrix4 viewProj;
 
 	int dbgMeshesDrawn = 0;
 	int dbgMeshesCulled = 0;

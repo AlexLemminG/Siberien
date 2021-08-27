@@ -32,6 +32,7 @@ private:
 	void UpdateHealth();
 	void SetRandomShootingLight();
 	void DisableShootingLight();
+	void FadeAwayShootingLight();
 
 	std::shared_ptr<Gun> GetCurrentGun();
 

@@ -28,7 +28,6 @@ void GameplaySceneScenario::OnEnable() {
 	creepDeathHandler = events->creepDeath.Subscribe([this](auto creep) {HandleCreepDeath(creep); });
 
 	LoadLastCheckpoint();
-
 }
 
 void GameplaySceneScenario::Update() {

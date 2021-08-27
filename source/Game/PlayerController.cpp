@@ -250,7 +250,7 @@ void PlayerController::UpdateShooting() {
 		SetRandomShootingLight(); //TODO move to gun
 	}
 	else {
-		DisableShootingLight();
+		FadeAwayShootingLight();
 	}
 
 }
@@ -348,8 +348,21 @@ void PlayerController::DisableShootingLight() {
 	if (!shootingLight) {
 		return;
 	}
-	shootingLight->GetComponent<PointLight>()->color = Colors::black;
-	shootingLight->GetComponent<PointLight>()->radius = 0.f;
+	auto light = shootingLight->GetComponent<PointLight>();
+	light->color = Colors::black;
+	light->radius = 0.f;
+}
+
+void PlayerController::FadeAwayShootingLight() {
+	if (!shootingLight) {
+		return;
+	}
+	auto light = shootingLight->GetComponent<PointLight>();
+
+	light->color = Color::Lerp(light->color, Colors::black, Time::deltaTime() * 60.f);//TODO uniform
+	if (light->color.r < Mathf::epsilon && light->color.g < Mathf::epsilon && light->color.b < Mathf::epsilon) {
+		DisableShootingLight();
+	}
 }
 
 std::shared_ptr<Gun> PlayerController::GetCurrentGun() {

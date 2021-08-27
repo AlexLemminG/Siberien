@@ -68,7 +68,7 @@ public:
 	}
 
 	AssetDatabase* database = nullptr;
-	YAML::Node yamlNode;
+	YAML::Node yamlNode{};
 
 	void FlushRequiestedToSerialize();
 

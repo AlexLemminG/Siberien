@@ -36,6 +36,7 @@ bool GameLibrariesManager::Init() {
 
 		auto handle = LibraryHandle{};
 		handle.library = libPtr;
+		handle.name = libName;
 		handle.objectHandle = objectHandle;
 
 		libraries.push_back(handle);
@@ -44,15 +45,17 @@ bool GameLibrariesManager::Init() {
 
 	Engine engine;
 
+	auto& thisStaticStorage = GameLibraryStaticStorage::Get();
 	for (auto& lib : libraries) {
 		lib.library->Init(&engine);
-		auto& storage = lib.library->GetStaticStorage().serializationInfoStorage;
+		const auto& libStaticStorage = lib.library->GetStaticStorage();
+		auto& storage = libStaticStorage.serializationInfoStorage;
 		GetSerialiationInfoStorage().Register(storage);
 
-		auto& systems = lib.library->GetStaticStorage().systemRegistrators;
+		auto& libSystems = libStaticStorage.systemRegistrators;
 		//TODO cleaner
-		for (auto s : systems) {
-			GameLibraryStaticStorage::Get().systemRegistrators.push_back(s);
+		for (auto s : libSystems) {
+			thisStaticStorage.systemRegistrators.push_back(s);
 		}
 	}
 

@@ -72,7 +72,7 @@ start:
 		Input::Init();
 
 		SceneManager::Init();
-		
+
 		SceneManager::LoadScene(GetFirstSceneName());
 
 		SceneManager::Update();
@@ -80,6 +80,7 @@ start:
 
 	bool quit = false;
 	bool needConstantSceneReload = false;
+	bool needSceneReload = false;
 	while (!quit) {
 		OPTICK_FRAME("MainThread");
 
@@ -99,11 +100,20 @@ start:
 				needReload = true;
 			}
 			if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F6)) {
-				needConstantSceneReload = !needConstantSceneReload;
+				if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LSHIFT)) {
+					needConstantSceneReload = !needConstantSceneReload;
+				}
+				else {
+					needSceneReload = true;
+				}
 			}
 		}
 
 		if (needConstantSceneReload) {
+			needSceneReload = true;
+		}
+		if (needSceneReload) {
+			needSceneReload = false;
 			SceneManager::LoadScene(GetFirstSceneName());
 			assets.UnloadAll();
 		}

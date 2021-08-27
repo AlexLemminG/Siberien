@@ -198,7 +198,7 @@
 
 /// Enable uniform debug checks.
 #ifndef BGFX_CONFIG_DEBUG_UNIFORM
-#	define BGFX_CONFIG_DEBUG_UNIFORM BGFX_CONFIG_DEBUG
+#	define BGFX_CONFIG_DEBUG_UNIFORM 0
 #endif // BGFX_CONFIG_DEBUG_UNIFORM
 
 /// Enable occlusion debug checks.

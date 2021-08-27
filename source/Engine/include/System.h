@@ -62,9 +62,6 @@ public:
 
 class SE_CPP_API SystemsManager {
 public:
-	static void Register(SystemRegistratorBase* registrator) {
-		GameLibraryStaticStorage::Get().systemRegistrators.push_back(registrator);
-	}
 	static SystemsManager* manager;
 	static SystemsManager* Get() {
 		return manager;
@@ -92,7 +89,7 @@ template<typename T>
 class SystemRegistrator : public SystemRegistratorBase {
 public:
 	SystemRegistrator() :SystemRegistratorBase() {
-		SystemsManager::Register(this);
+		GameLibraryStaticStorage::Get().systemRegistrators.push_back(this);//TODO remove ?
 	}
 	~SystemRegistrator() {
 	}

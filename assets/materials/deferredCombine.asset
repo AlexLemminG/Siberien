@@ -1,0 +1,11 @@
+Material:
+  shader: shaders\deferredCombine.asset
+  textures:
+  - name: s_albedo
+    value: ""
+  - name: s_normal
+    value: ""
+  - name: s_light
+    value: ""
+  - name: s_depth
+    value: ""

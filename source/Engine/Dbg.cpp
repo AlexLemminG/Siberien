@@ -15,6 +15,32 @@ void Dbg::Draw(::Ray ray, float length, Color color) {
 void Dbg::Draw(Vector3 point, float radius) {
 	points.push_back(Point{ point, radius });
 }
+
+void Dbg::DrawLine(Vector3 from, Vector3 to) {
+	Draw(::Ray(from, to - from), Vector3::Distance(from, to), Colors::white);
+}
+
+void Dbg::Draw(AABB aabb) {
+	Vector3 dirX = Vector3(aabb.max.x - aabb.min.x, 0.f, 0.f);
+	Vector3 dirY = Vector3(0.f, aabb.max.y - aabb.min.y, 0.f);
+	Vector3 dirZ = Vector3(0.f, 0.f, aabb.max.z - aabb.min.z);
+
+	Dbg::DrawLine(aabb.min, aabb.min + dirX);
+	Dbg::DrawLine(aabb.min + dirY, aabb.min + dirY + dirX);
+	Dbg::DrawLine(aabb.min + dirZ, aabb.min + dirZ + dirX);
+	Dbg::DrawLine(aabb.min + dirY + dirZ, aabb.min + dirY + dirZ + dirX);
+
+	Dbg::DrawLine(aabb.min, aabb.min + dirZ);
+	Dbg::DrawLine(aabb.min + dirY, aabb.min + dirY + dirZ);
+	Dbg::DrawLine(aabb.min + dirX, aabb.min + dirX + dirZ);
+	Dbg::DrawLine(aabb.min + dirY + dirX, aabb.min + dirY + dirX + dirZ);
+
+	Dbg::DrawLine(aabb.min, aabb.min + dirY);
+	Dbg::DrawLine(aabb.min + dirZ, aabb.min + dirZ + dirY);
+	Dbg::DrawLine(aabb.min + dirX, aabb.min + dirX + dirY);
+	Dbg::DrawLine(aabb.min + dirZ + dirX, aabb.min + dirZ + dirX + dirY);
+}
+
 void Dbg::Draw(Matrix4 matr, float length) {
 	Draw(::Ray(GetPos(matr), GetRot(matr) * Vector3_up), length, Colors::green);
 	Draw(::Ray(GetPos(matr), GetRot(matr) * Vector3_right), length, Colors::red);

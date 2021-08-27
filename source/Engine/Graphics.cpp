@@ -36,27 +36,9 @@ void Graphics::Blit(std::shared_ptr<Material> material, int targetViewId) {
 	if (!material || !material->shader) {
 		return;
 	}
-	//TODO use material properties
+	
 	render->ApplyMaterialProperties(material);
 
-	int width = render->GetWidth();
-	int height = render->GetHeight();
-
-	const bgfx::RendererType::Enum renderer = bgfx::getRendererType();
-	auto texelHalf = bgfx::RendererType::Direct3D9 == renderer ? 0.5f : 0.0f;
-
-	auto caps = bgfx::getCaps();
-
-	const float pixelSize[4] =
-	{
-		1.0f / width,
-		1.0f / height,
-		0.0f,
-		0.0f,
-	};
-
-	auto u_pixelSize = render->GetPixelSizeUniform();
-	bgfx::setUniform(u_pixelSize, pixelSize);
 	auto s_tex = render->GetTexColorSampler();
 
 	auto texture = render->GetFullScreenTexture();
