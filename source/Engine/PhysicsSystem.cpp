@@ -12,9 +12,31 @@
 #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorldMt.h"
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcherMt.h"
 #include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolverMt.h"
+#include "Dbg.h"
 
 REGISTER_SYSTEM(PhysicsSystem);
 DECLARE_TEXT_ASSET(PhysicsSettings);
+
+class DebugDraw : public btIDebugDraw {
+	virtual void drawLine(const btVector3& from, const btVector3& to, const btVector3& color) {
+		Dbg::DrawLine(btConvert(from), btConvert(to));
+	}
+
+	virtual void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) {
+		Dbg::Draw(btConvert(PointOnB), distance);
+	}
+
+	virtual void reportErrorWarning(const char* warningString) {}
+
+	virtual void draw3dText(const btVector3& location, const char* textString) {}
+
+	virtual void setDebugMode(int debugMode) { this->debugMode = debugMode; }
+
+	virtual int getDebugMode() const {
+		return debugMode;
+	}
+	int debugMode = 0;
+};
 
 bool PhysicsSystem::Init() {
 	settings = AssetDatabase::Get()->LoadByPath<PhysicsSettings>("settings.asset");
@@ -57,12 +79,17 @@ bool PhysicsSystem::Init() {
 	///-----stepsimulation_start-----
 	prevSimulationTime = Time::time();
 
+	//TODO delete
+	dynamicsWorld->setDebugDrawer(new DebugDraw());
+	//dynamicsWorld->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+
 	return true;
 }
 
 void PhysicsSystem::Update() {
 	OPTICK_EVENT();
 	dynamicsWorld->stepSimulation(Time::deltaTime(), 2, Time::fixedDeltaTime());
+	dynamicsWorld->debugDrawWorld();
 }
 
 void PhysicsSystem::Term() {

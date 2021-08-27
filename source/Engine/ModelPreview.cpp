@@ -8,6 +8,7 @@
 #include "MeshRenderer.h"
 #include "Animation.h"
 #include "Mesh.h"
+#include "Input.h"
 
 DECLARE_TEXT_ASSET(ModelPreview);
 static int current = 0;
@@ -30,6 +31,7 @@ void ModelPreview::OnEnable() {
 void ModelPreview::Update() {
 	UpdateSelection();
 	UpdateAnimator();
+	UpdateCamera();
 }
 
 void ModelPreview::UpdateAnimator() {
@@ -85,6 +87,28 @@ void ModelPreview::UpdateSelection() {
 	}
 
 	ImGui::End();
+}
+
+void ModelPreview::UpdateCamera() {
+	if (Input::GetMouseButton(0)) {
+		if (!wasMouseDown) {
+			wasMouseDown = true;
+			mouseDownPos = Input::GetMousePosition();
+			mouseDownRotation = currentRotation;
+		}
+		auto deltaRot = Input::GetMousePosition() - mouseDownPos;
+		currentRotation = mouseDownRotation + deltaRot * 0.05f;
+
+		auto camera = Scene::FindGameObjectByTag("camera");
+		if (camera) {
+			Matrix4 matr = (Quaternion::FromAngleAxis(Mathf::DegToRad(currentRotation.x), Vector3_up) * Quaternion::FromAngleAxis(Mathf::DegToRad(currentRotation.y), Vector3_right)).ToMatrix4();
+			SetPos(matr, matr * Vector3_forward * (-5.f));
+			camera->transform()->matrix = matr;
+		}
+	}
+	else {
+		wasMouseDown = false;
+	}
 }
 
 void ModelPreview::OnDisable() {

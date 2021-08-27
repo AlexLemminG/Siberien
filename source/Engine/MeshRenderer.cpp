@@ -39,6 +39,7 @@ void PointLight::OnDisable() {
 	pointLights.erase(std::find(pointLights.begin(), pointLights.end(), this));
 }
 std::vector<PointLight*> PointLight::pointLights;
+std::vector<DirLight*> DirLight::dirLights;
 
 void MeshRenderer::OnEnable() {
 	addedToRenderers = material != nullptr && mesh != nullptr;
@@ -61,4 +62,12 @@ void MeshRenderer::OnDisable() {
 		enabledMeshRenderers.erase(std::find(enabledMeshRenderers.begin(), enabledMeshRenderers.end(), this));
 		addedToRenderers = false;
 	}
+}
+
+void DirLight::OnEnable() {
+	dirLights.push_back(this);
+}
+
+void DirLight::OnDisable() {
+	dirLights.erase(std::find(dirLights.begin(), dirLights.end(), this));
 }

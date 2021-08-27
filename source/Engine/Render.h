@@ -70,6 +70,8 @@ private:
 	bgfx::UniformHandle u_sphericalHarmonics;
 	bgfx::UniformHandle u_pixelSize;
 	bgfx::UniformHandle s_fullScreen;
+	bgfx::UniformHandle u_dirLightDirHandle;
+	bgfx::UniformHandle u_dirLightColorHandle;
 
 	std::unordered_map<std::string, bgfx::UniformHandle> colorUniforms;
 	std::unordered_map<std::string, bgfx::UniformHandle> vectorUniforms;
@@ -91,6 +93,7 @@ private:
 	std::shared_ptr<Texture> defaultEmissiveTexture;
 	std::shared_ptr<Material> simpleBlitMat;
 	std::shared_ptr<Shader> deferredLightShader;
+	std::shared_ptr<Shader> deferredDirLightShader;
 	Matrix4 viewProj;
 
 	int dbgMeshesDrawn = 0;

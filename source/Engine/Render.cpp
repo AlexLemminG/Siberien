@@ -75,12 +75,12 @@ Vector3 multH(const Matrix4& m, const Vector3& v) {
 }
 
 void Render::DrawLights() {
-	if (!deferredLightShader) {
+	if (!deferredLightShader || ! deferredDirLightShader) {
 		return;
 	}
-	std::vector<PointLight*> lights = PointLight::pointLights;
+	std::vector<PointLight*> pointLights = PointLight::pointLights;
 
-	for (auto light : lights) {
+	for (auto light : pointLights) {
 		if (light->radius <= 0.f) {
 			continue;
 		}
@@ -90,7 +90,6 @@ void Render::DrawLights() {
 		bool isVisible = SphereInFrustum(sphere, frustumPlanes);
 		if (!isVisible) {
 			continue;
-			//TODO wtf culling fails
 		}
 
 		auto posRadius = Vector4(pos, light->radius);
@@ -132,6 +131,7 @@ void Render::DrawLights() {
 		bgfx::setTexture(0, gBuffer.normalSampler, gBuffer.normalTexture);
 		bgfx::setTexture(1, gBuffer.depthSampler, gBuffer.depthTexture);
 		const uint16_t scissorHeight = uint16_t(y1 - y0);
+		//TODO
 		//bgfx::setScissor(uint16_t(x0), uint16_t(prevHeight - scissorHeight - y0), uint16_t(x1 - x0), uint16_t(scissorHeight));
 		bgfx::setState(0
 			| BGFX_STATE_WRITE_RGB
@@ -141,6 +141,25 @@ void Render::DrawLights() {
 		Graphics::Get()->SetScreenSpaceQuadBuffer();
 		bgfx::submit(kRenderPassLight, deferredLightShader->program);
 	}
+
+	std::vector<DirLight*> dirLights = DirLight::dirLights;
+	for (auto light : dirLights) {
+		auto dir = Vector4(GetRot(light->gameObject()->transform()->matrix) * Vector3_forward, 0.f);
+		auto color = Vector4(light->color.r, light->color.g, light->color.b, 0.f);
+		bgfx::setUniform(u_dirLightDirHandle, &dir, 1);
+		bgfx::setUniform(u_dirLightColorHandle, &color, 1);
+
+		bgfx::setTexture(0, gBuffer.normalSampler, gBuffer.normalTexture);
+		bgfx::setTexture(1, gBuffer.depthSampler, gBuffer.depthTexture);
+		bgfx::setState(0
+			| BGFX_STATE_WRITE_RGB
+			| BGFX_STATE_WRITE_A
+			| BGFX_STATE_BLEND_ADD
+		);
+		Graphics::Get()->SetScreenSpaceQuadBuffer();
+		bgfx::submit(kRenderPassLight, deferredDirLightShader->program);
+	}
+
 }
 
 
@@ -209,11 +228,15 @@ bool Render::Init()
 
 	u_pixelSize = bgfx::createUniform("u_pixelSize", bgfx::UniformType::Vec4);
 
+	u_dirLightDirHandle = bgfx::createUniform("u_lightDir", bgfx::UniformType::Vec4);
+	u_dirLightColorHandle = bgfx::createUniform("u_lightColor", bgfx::UniformType::Vec4);
+
 	whiteTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\white.png");
 	defaultNormalTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultNormal.png");
 	defaultEmissiveTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultEmissive.png");
 	simpleBlitMat = AssetDatabase::Get()->LoadByPath<Material>("materials\\simpleBlit.asset");
 	deferredLightShader = AssetDatabase::Get()->LoadByPath<Shader>("shaders\\deferredLight.asset");
+	deferredDirLightShader = AssetDatabase::Get()->LoadByPath<Shader>("shaders\\deferredDirLight.asset");
 
 	m_fullScreenTex.idx = bgfx::kInvalidHandle;
 	m_fullScreenBuffer.idx = bgfx::kInvalidHandle;
@@ -479,6 +502,7 @@ void Render::Term()
 	defaultEmissiveTexture = nullptr;
 	simpleBlitMat = nullptr;
 	deferredLightShader = nullptr;
+	deferredDirLightShader = nullptr;
 
 	for (auto u : textureUniforms) {
 		bgfx::destroy(u.second);
@@ -501,6 +525,8 @@ void Render::Term()
 	bgfx::destroy(u_mtx);
 	bgfx::destroy(u_sphericalHarmonics);
 	bgfx::destroy(u_pixelSize);
+	bgfx::destroy(u_dirLightDirHandle);
+	bgfx::destroy(u_dirLightColorHandle);
 
 	if (bgfx::isValid(m_fullScreenBuffer)) {
 		bgfx::destroy(m_fullScreenBuffer);
