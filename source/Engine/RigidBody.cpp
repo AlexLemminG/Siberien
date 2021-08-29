@@ -75,7 +75,7 @@ void RigidBody::Update() {
 		//pBody->setCenterOfMassTransform(trans);
 	}
 #ifdef SE_DBG_OUT
-	{
+	if(false){
 		auto camera = Camera::GetMain();
 		if (camera) {
 			btVector3 min;

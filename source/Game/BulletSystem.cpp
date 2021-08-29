@@ -11,6 +11,9 @@
 #include "Material.h"
 #include "Shader.h"
 #include "Mesh.h"
+#include "Light.h"
+#include "Scene.h"
+#include "GameObject.h"
 
 REGISTER_GAME_SYSTEM(BulletSystem);
 DECLARE_TEXT_ASSET(BulletSettings);
@@ -97,6 +100,38 @@ void BulletSystem::UpdateBullets(BulletsVector& bulletsVector) {
 				}
 			}
 		}
+
+		//TODO lights without game objects
+		for (int i = 0; i < bullets.size(); i++) {
+			if (i >= addedLightsCount) {
+				if (lights.size() > i) {
+					Scene::Get()->AddGameObject(lights[i]);
+				}
+				else {
+					auto go = std::make_shared<GameObject>();
+					go->components.push_back(std::make_shared<Transform>());
+					go->components.push_back(std::make_shared<PointLight>());
+
+					const auto& bullet = bullets[i];
+					go->transform()->SetPosition(bullets[i].pos);
+					auto light = go->GetComponent<PointLight>();
+					lights.push_back(go);
+					light->innerRadius = 0.0f;
+					light->radius = 1.5f;
+					Scene::Get()->AddGameObject(lights[i]);
+				}
+				addedLightsCount++;
+			}
+			auto go = lights[i];
+			auto light = go->GetComponent<PointLight>();
+			const auto& bullet = bullets[i];
+			go->transform()->SetPosition(bullets[i].pos);
+			light->color = Color::Lerp(bullet.color, Colors::black, 0.2f);
+		}
+		for (int i = bullets.size(); i < addedLightsCount; i++) {
+			Scene::Get()->RemoveGameObject(lights[i]);
+		}
+		addedLightsCount = bullets.size();
 	}
 
 	int bulletsCountBefore = bullets.size();

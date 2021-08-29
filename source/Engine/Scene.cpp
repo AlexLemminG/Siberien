@@ -20,21 +20,21 @@ void Scene::Init() {
 			}
 		}
 	}
-	for (auto go : gameObjects) {
+	for (auto& go : gameObjects) {
 		if (!go->transform()) {
 			go->components.push_back(std::make_shared<Transform>());
 		}
 	}
 
 
-	for (auto go : gameObjects) {
+	for (auto& go : gameObjects) {
 		for (auto c : go->components) {
 			c->m_gameObject = go;
 		}
 	}
 
-	for (auto go : gameObjects) {
-		for (auto c : go->components) {
+	for (auto& go : gameObjects) {
+		for (auto& c : go->components) {
 			c->SetEnabled(true);
 		}
 	}
@@ -47,8 +47,8 @@ void Scene::Init() {
 
 void Scene::Update() {
 	OPTICK_EVENT();
-	for (auto go : gameObjects) {
-		for (auto c : go->components) {
+	for (auto& go : gameObjects) {
+		for (auto& c : go->components) {
 			if (c->isEnabled) {
 				c->Update();
 			}
@@ -60,8 +60,8 @@ void Scene::Update() {
 
 void Scene::FixedUpdate() {
 	OPTICK_EVENT();
-	for (auto go : gameObjects) {
-		for (auto c : go->components) {
+	for (auto& go : gameObjects) {
+		for (auto& c : go->components) {
 			if (c->isEnabled) {
 				c->FixedUpdate();
 			}
@@ -76,7 +76,7 @@ void Scene::RemoveGameObject(std::shared_ptr<GameObject> gameObject) {
 
 void Scene::ProcessRemovedGameObjects() {
 	OPTICK_EVENT();
-	for (auto gameObject : removedGameObjects) {
+	for (auto& gameObject : removedGameObjects) {
 		auto it = std::find(gameObjects.begin(), gameObjects.end(), gameObject);
 		if (it != gameObjects.end()) {
 			if (isInited) {
@@ -101,7 +101,7 @@ void Scene::ProcessRemovedGameObjects() {
 
 void Scene::Term() {
 	OPTICK_EVENT();
-	for (auto go : gameObjects) {
+	for (auto& go : gameObjects) {
 		for (int iC = go->components.size() - 1; iC >= 0; iC--) {
 			go->components[iC]->SetEnabled(false);
 		}
@@ -116,7 +116,7 @@ void Scene::AddGameObject(std::shared_ptr<GameObject> go) {
 
 void Scene::ProcessAddedGameObjects() {
 	OPTICK_EVENT();
-	for (auto go : addedGameObjects) {
+	for (auto& go : addedGameObjects) {
 		//TODO share code with Init()
 
 		if (go == nullptr) {
@@ -135,11 +135,11 @@ void Scene::ProcessAddedGameObjects() {
 		}
 
 
-		for (auto c : go->components) {
+		for (auto& c : go->components) {
 			c->m_gameObject = go;
 		}
 
-		for (auto c : go->components) {
+		for (auto& c : go->components) {
 			c->SetEnabled(true);
 		}
 	}
@@ -148,7 +148,7 @@ void Scene::ProcessAddedGameObjects() {
 
 std::shared_ptr<GameObject> Scene::FindGameObjectByTag(std::string tag) {
 	OPTICK_EVENT();
-	for (auto go : Get()->gameObjects) {
+	for (auto& go : Get()->gameObjects) {
 		if (go->tag == tag) {
 			return go;
 		}

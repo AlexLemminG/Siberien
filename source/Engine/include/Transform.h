@@ -3,7 +3,7 @@
 #include "Component.h"
 #include "SMath.h"
 
-class Transform : public Component {
+class SE_CPP_API Transform : public Component {
 	//TODO private
 	//TODO custom serializer from pos,eulers to matrix
 

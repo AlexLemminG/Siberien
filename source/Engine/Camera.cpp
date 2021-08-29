@@ -65,8 +65,10 @@ void ICamera::OnBeforeRender() {
 	viewProjectionMatrix = GetProjectionMatrix() * GetViewMatrix();
 
 	frustum.SetFromViewProjection(viewProjectionMatrix);
-}
 
+	position = GetPos(GetViewMatrix().Inverse());//not good not terrible
+}
+SE_DEBUG_OPTIMIZE_ON
 bool ICamera::IsVisible(const Sphere& sphere) const {
 	return frustum.IsOverlapingSphere(sphere);
 }
@@ -86,3 +88,4 @@ bool ICamera::IsVisible(const MeshRenderer& renderer) const {
 	sphere.pos = renderer.m_transform->matrix * sphere.pos;
 	return IsVisible(sphere);
 }
+SE_DEBUG_OPTIMIZE_OFF

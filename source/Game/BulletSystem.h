@@ -6,6 +6,8 @@
 
 class MeshRenderer;
 class BulletSettings;
+class PointLight;
+class GameObject;
 
 class BulletSystem : public GameSystem<BulletSystem> {
 public:
@@ -49,6 +51,9 @@ private:
 
 	void CreateDamageParticle(const Vector3& pos, const Vector3& dir);
 	void CreateBloodParticle(const Vector3& pos, const Vector3& dir);
+
+	std::vector<std::shared_ptr<GameObject>> lights;
+	int addedLightsCount = 0;
 };
 
 class BulletSettings : public Object{

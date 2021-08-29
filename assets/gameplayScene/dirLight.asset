@@ -8,5 +8,5 @@ DirLight:
   drawShadows: true
   
 Transform:
-  euler: [60, -45, 0]
-  pos: [0, -5, 0]
+  euler: [60, 135, 0]
+  pos: [-20, 30, 100]

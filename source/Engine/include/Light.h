@@ -31,7 +31,7 @@ public:
 	static std::vector<PointLight*> pointLights;
 
 	float radius = 5.f;
-	float innerRadius = 4.f;
+	float innerRadius = 0.f;
 
 	REFLECT_BEGIN(PointLight);
 	REFLECT_VAR(color);

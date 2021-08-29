@@ -16,3 +16,7 @@ bool Frustum::IsOverlapingSphere(const Sphere& sphere) const
 	}
 	return res;
 }
+
+bool AABB::Contains(const Vector3 pos) const {
+	return min.x <= pos.x && min.y <= pos.y && min.z <= pos.z && max.x >= pos.x && max.y >= pos.y && max.z >= pos.z;
+}

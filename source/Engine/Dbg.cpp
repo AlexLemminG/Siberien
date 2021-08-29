@@ -15,13 +15,15 @@ void Dbg::Draw(::Ray ray, float length, Color color) {
 void Dbg::Draw(Vector3 point, float radius) {
 	points.push_back(Point{ point, radius });
 }
-
+void Dbg::Draw(const Sphere& sphere) {
+	Draw(sphere.pos, sphere.radius);
+}
 void Dbg::DrawLine(Vector3 from, Vector3 to, Color color) {
 	Draw(::Ray(from, to - from), Vector3::Distance(from, to), color);
 }
 
 
-void Dbg::Draw(AABB aabb) {
+void Dbg::Draw(const AABB& aabb) {
 	Vector3 dirX = Vector3(aabb.max.x - aabb.min.x, 0.f, 0.f);
 	Vector3 dirY = Vector3(0.f, aabb.max.y - aabb.min.y, 0.f);
 	Vector3 dirZ = Vector3(0.f, 0.f, aabb.max.z - aabb.min.z);

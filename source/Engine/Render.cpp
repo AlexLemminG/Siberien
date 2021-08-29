@@ -116,16 +116,23 @@ void Render::DrawLights(const ICamera& camera) {
 			max = Vector3::Max(max, xyz);
 		}
 
-		const float x0 = Mathf::Clamp((min.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
-		const float y0 = Mathf::Clamp((min.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
-		const float x1 = Mathf::Clamp((max.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
-		const float y1 = Mathf::Clamp((max.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
+		float x0 = Mathf::Clamp((min.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
+		float y0 = Mathf::Clamp((min.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
+		float x1 = Mathf::Clamp((max.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
+		float y1 = Mathf::Clamp((max.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
+
+		if (aabb.Contains(camera.GetPosition())) {
+			x0 = 0.f;
+			y0 = 0.f;
+			x1 = prevWidth;
+			y1 = prevHeight;
+		}
 
 		bgfx::setTexture(0, gBuffer.normalSampler, gBuffer.normalTexture);
 		bgfx::setTexture(1, gBuffer.depthSampler, gBuffer.depthTexture);
 		const uint16_t scissorHeight = uint16_t(y1 - y0);
-		//TODO
-		//bgfx::setScissor(uint16_t(x0), uint16_t(prevHeight - scissorHeight - y0), uint16_t(x1 - x0), uint16_t(scissorHeight));
+		//TODO something wrong
+		bgfx::setScissor(uint16_t(x0), uint16_t(prevHeight - scissorHeight - y0), uint16_t(x1 - x0), uint16_t(scissorHeight));
 		bgfx::setState(0
 			| BGFX_STATE_WRITE_RGB
 			| BGFX_STATE_WRITE_A
@@ -195,8 +202,8 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = false;//TODO cfgvar?
-	initInfo.profile = false;
+	initInfo.debug = true;//TODO cfgvar?
+	initInfo.profile = true;
 	initInfo.type = bgfx::RendererType::Direct3D11;
 	//initInfo.limits.transientVbSize *= 10;//TODO debug only
 	//initInfo.limits.transientIbSize *= 10;//TODO debug only
@@ -356,17 +363,19 @@ void Render::Draw(SystemsManager& systems)
 
 	Vector3 lightsPoi = GetPos(camera->gameObject()->transform()->matrix) + GetRot(camera->gameObject()->transform()->matrix) * Vector3_forward * 15.f;
 
-	//TODO not here
-	float realTime = Time::time();
-	float time = Time::time();
-	static float prevTimeCheck = 0;
-	static int prevFramesCount = 0;
 	static float fps = 0;
-	if ((int)realTime != (int)prevTimeCheck) {
-		fps = (Time::frameCount() - prevFramesCount) / (time - prevTimeCheck);
-		prevTimeCheck = realTime;
-		prevFramesCount = Time::frameCount();
+	{
+		//TODO not here
+		float realTime = Time::getRealTime();
+		static float prevTimeCheck = 0;
+		static int prevFramesCount = 0;
+		if ((int)realTime != (int)prevTimeCheck) {
+			fps = (Time::frameCount() - prevFramesCount) / (realTime - prevTimeCheck);
+			prevTimeCheck = realTime;
+			prevFramesCount = Time::frameCount();
+		}
 	}
+	float time = Time::time();
 
 	{
 		float time = Time::time();

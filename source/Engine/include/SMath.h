@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Defines.h"
+
 #include "mathfu/vector.h"
 #include "mathfu/matrix.h"
 #include "mathfu/quaternion.h"
@@ -255,6 +257,8 @@ public:
 	Vector3 GetCenter() const {
 		return (max + min) * 0.5f;
 	}
+
+	bool Contains(const Vector3 pos) const;
 };
 
 class Sphere {

@@ -18,3 +18,12 @@
 #ifndef SE_RETAIL
 #define SE_DBG_OUT
 #endif
+
+#if defined(_MSC_VER) && defined(SE_DEBUG)
+//force optimization of this code section in special debug configuration
+#define SE_DEBUG_OPTIMIZE_ON __pragma(optimize("gt", on))    //enable optimizations
+#define SE_DEBUG_OPTIMIZE_OFF __pragma(optimize("", on))     //reset optimization settings
+#else
+#define SE_DEBUG_OPTIMIZE_ON
+#define SE_DEBUG_OPTIMIZE_OFF
+#endif

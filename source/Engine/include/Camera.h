@@ -23,9 +23,11 @@ public:
 	virtual void OnBeforeRender();
 	const Matrix4& GetViewProjectionMatrix() const { return viewProjectionMatrix; }
 	const Frustum& GetFrustum() const { return frustum; }
+	const Vector3& GetPosition() const { return position; }
 private:
 	Frustum frustum;
 	Matrix4 viewProjectionMatrix;
+	Vector3 position;
 };
 
 class ManualCamera :public ICamera{

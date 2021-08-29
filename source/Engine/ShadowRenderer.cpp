@@ -436,7 +436,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	static float m_fovYAdjust = 1.0f;
 
 	static float m_near = 0.1f;
-	static float m_far = 256.f;
+	static float m_far = 128.f;
 	static DepthImpl::Enum m_depthImpl = DepthImpl::Linear;
 	static int m_numSplits = 2;
 	static float m_splitDistribution = 0.6;
@@ -693,8 +693,8 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 			, -1.0f
 			, 1.0f
 			, -1.0f
-			, -m_far
-			, m_far
+			, -m_far * 10.f
+			, m_far * 10.f
 			, 0.0f
 			, caps->homogeneousDepth
 		);
