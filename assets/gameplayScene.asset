@@ -6,6 +6,7 @@ Scene:
     - player.asset
     - gun_shotgun.asset
     - gun_gatling.asset
+    - gameplayScene\dirLight.asset
     - gameplayScene\indoorHidePlane.asset
     - gameplayScene\static.asset
     - gameplayScene_staticGeometry.asset

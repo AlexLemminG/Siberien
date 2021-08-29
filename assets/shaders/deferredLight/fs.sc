@@ -54,7 +54,7 @@ SAMPLER2D(s_depth,  1);
 
 uniform vec4 u_lightPosRadius[1];
 uniform vec4 u_lightRgbInnerR[1];
-uniform mat4 u_mtx;
+uniform mat4 u_viewProjInv;
 
 void main()
 {
@@ -66,7 +66,7 @@ void main()
 #if !BGFX_SHADER_LANGUAGE_GLSL
 	clip.y = -clip.y;
 #endif // !BGFX_SHADER_LANGUAGE_GLSL
-	vec3 wpos = clipToWorld(u_mtx, clip);
+	vec3 wpos = clipToWorld(u_viewProjInv, clip);
 
 	vec3 view = mul(u_view, vec4(wpos, 0.0) ).xyz;
 	view = -normalize(view);

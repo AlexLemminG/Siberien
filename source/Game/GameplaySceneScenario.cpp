@@ -11,6 +11,7 @@
 #include "Gun.h"
 #include "Asserts.h"
 #include "ZombiepunkGame.h"
+#include "Light.h"
 
 DECLARE_TEXT_ASSET(GameplaySceneScenario);
 

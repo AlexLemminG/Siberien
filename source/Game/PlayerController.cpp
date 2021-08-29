@@ -18,6 +18,7 @@
 #include "Sound.h"
 #include "PostProcessingEffect.h"
 #include "ZombiepunkGame.h"
+#include "Light.h"
 
 void PlayerController::OnEnable() {
 	rigidBody = gameObject()->GetComponent<RigidBody>();

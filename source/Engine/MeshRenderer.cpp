@@ -26,20 +26,7 @@ void PrintHierarchy(aiNode* node, int offset) {
 }
 
 DECLARE_TEXT_ASSET(MeshRenderer);
-DECLARE_TEXT_ASSET(DirLight);
-DECLARE_TEXT_ASSET(PointLight);
 
-std::vector<MeshRenderer*> MeshRenderer::enabledMeshRenderers;
-
-void PointLight::OnEnable() {
-	pointLights.push_back(this);
-}
-
-void PointLight::OnDisable() {
-	pointLights.erase(std::find(pointLights.begin(), pointLights.end(), this));
-}
-std::vector<PointLight*> PointLight::pointLights;
-std::vector<DirLight*> DirLight::dirLights;
 
 void MeshRenderer::OnEnable() {
 	addedToRenderers = material != nullptr && mesh != nullptr;
@@ -63,11 +50,4 @@ void MeshRenderer::OnDisable() {
 		addedToRenderers = false;
 	}
 }
-
-void DirLight::OnEnable() {
-	dirLights.push_back(this);
-}
-
-void DirLight::OnDisable() {
-	dirLights.erase(std::find(dirLights.begin(), dirLights.end(), this));
-}
+std::vector<MeshRenderer*> MeshRenderer::enabledMeshRenderers;

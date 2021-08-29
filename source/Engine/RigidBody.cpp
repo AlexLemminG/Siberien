@@ -5,6 +5,8 @@
 #include "PhysicsSystem.h"
 #include "btBulletDynamicsCommon.h"
 #include "Common.h"
+#include "Camera.h"
+#include "MeshRenderer.h"
 
 DECLARE_TEXT_ASSET(RigidBody);
 
@@ -72,6 +74,26 @@ void RigidBody::Update() {
 		pMotionState->m_graphicsWorldTrans = trans;
 		//pBody->setCenterOfMassTransform(trans);
 	}
+#ifdef SE_DBG_OUT
+	{
+		auto camera = Camera::GetMain();
+		if (camera) {
+			btVector3 min;
+			btVector3 max;
+			pBody->getAabb(min, max);
+			AABB aabb{ btConvert(min),btConvert(max) };
+			if (camera->IsVisible(aabb)) {
+				pBody->setCollisionFlags(Bits::SetMaskFalse(pBody->getCollisionFlags(), btCollisionObject::CollisionFlags::CF_DISABLE_VISUALIZE_OBJECT));
+			}
+			else {
+				pBody->setCollisionFlags(Bits::SetMaskTrue(pBody->getCollisionFlags(), btCollisionObject::CollisionFlags::CF_DISABLE_VISUALIZE_OBJECT));
+			}
+		}
+		else {
+			pBody->setCollisionFlags(Bits::SetMaskTrue(pBody->getCollisionFlags(), btCollisionObject::CollisionFlags::CF_DISABLE_VISUALIZE_OBJECT));
+		}
+	}
+#endif
 }
 
 void RigidBody::OnDisable() {

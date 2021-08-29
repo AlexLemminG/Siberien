@@ -14,3 +14,7 @@
 #else
 #   define SE_CPP_API SE_SHARED_LIB_API
 #endif // defined(__cplusplus)
+
+#ifndef SE_RETAIL
+#define SE_DBG_OUT
+#endif

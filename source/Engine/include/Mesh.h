@@ -41,13 +41,6 @@ struct RawVertexData {
 
 class MeshPhysicsData;
 
-class Sphere {
-public:
-	Vector3 pos;
-	float radius;
-
-	AABB ToAABB() const;
-};
 
 class Mesh : public Object {
 public:

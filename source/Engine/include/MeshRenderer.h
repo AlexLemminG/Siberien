@@ -42,36 +42,3 @@ public:
 private:
 	bool addedToRenderers = false;
 };
-
-
-class DirLight : public Component {
-public:
-	Color color = Colors::white;
-
-	void OnEnable();
-	void OnDisable();
-
-	static std::vector<DirLight*> dirLights;
-
-	REFLECT_BEGIN(DirLight);
-	REFLECT_VAR(color);
-	REFLECT_END();
-};
-
-class PointLight : public Component {
-public:
-	void OnEnable();
-	void OnDisable();
-
-	static std::vector<PointLight*> pointLights;
-
-	Color color = Colors::white;
-	float radius = 5.f;
-	float innerRadius = 4.f;
-
-	REFLECT_BEGIN(PointLight);
-	REFLECT_VAR(color);
-	REFLECT_VAR(radius);
-	REFLECT_VAR(innerRadius);
-	REFLECT_END();
-};

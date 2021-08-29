@@ -19,7 +19,12 @@ DECLARE_TEXT_ASSET(PhysicsSettings);
 
 class DebugDraw : public btIDebugDraw {
 	virtual void drawLine(const btVector3& from, const btVector3& to, const btVector3& color) {
-		Dbg::DrawLine(btConvert(from), btConvert(to));
+		Color c;
+		c.r = color.x();
+		c.g = color.y();
+		c.b = color.z();
+		c.a = 1.f;
+		Dbg::DrawLine(btConvert(from), btConvert(to), c);
 	}
 
 	virtual void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) {
@@ -81,6 +86,7 @@ bool PhysicsSystem::Init() {
 
 	//TODO delete
 	dynamicsWorld->setDebugDrawer(new DebugDraw());
+	//TODO config var
 	//dynamicsWorld->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
 
 	return true;

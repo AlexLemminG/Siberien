@@ -47,10 +47,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;_DEBUG;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SE_DEBUG;BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;_DEBUG;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -61,10 +63,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SE_RELEASE;BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -90,7 +94,9 @@
     <ClCompile Include="GameLibrariesManager.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="include\SMath.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Light.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Math.cpp" />
@@ -109,6 +115,7 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="ShadowRenderer.cpp" />
     <ClCompile Include="Sound.cpp" />
     <ClCompile Include="SphericalHarmonics.cpp" />
     <ClCompile Include="System.cpp" />
@@ -135,6 +142,7 @@
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\Graphics.h" />
     <ClInclude Include="include\Input.h" />
+    <ClInclude Include="include\Light.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Mesh.h" />
     <ClInclude Include="include\MeshCollider.h" />
@@ -157,7 +165,9 @@
     <ClInclude Include="include\Transform.h" />
     <ClInclude Include="ModelPreview.h" />
     <ClInclude Include="PhysicsSystem.h" />
+    <ClInclude Include="Precompiled.h" />
     <ClInclude Include="Render.h" />
+    <ClInclude Include="ShadowRenderer.h" />
     <ClInclude Include="SphericalHarmonics.h" />
   </ItemGroup>
   <ItemGroup>

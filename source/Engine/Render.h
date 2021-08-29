@@ -11,9 +11,12 @@ class Material;
 class MeshRenderer;
 class Mesh;
 class Shader;
-
+class Camera;
+class ShadowRenderer;
+class ICamera;
 
 class Render {
+	friend class ShadowRenderer;
 public:
 	bool Init();
 	void Draw(SystemsManager& systems);
@@ -29,6 +32,11 @@ public:
 	static SDL_Window* window;
 
 	void ApplyMaterialProperties(const std::shared_ptr<Material> material);
+	
+	//TODO move viewId to camera
+	void DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial);
+
+	bgfx::UniformHandle GetOrCreateVectorUniform(const std::string& name);
 
 private:
 	class GBuffer {
@@ -50,13 +58,14 @@ private:
 	};
 	GBuffer gBuffer;
 	
-	bool DrawMesh(const MeshRenderer* renderer, bool clearState, bool updateState); //returns true if was not culled
+	bool DrawMesh(const MeshRenderer* renderer, const ICamera& camera, bool clearState, bool updateState, int viewId = 0); //returns true if was not culled
 	void UpdateLights(Vector3 poi);
 	
 	bool IsFullScreen();
 	void SetFullScreen(bool isFullScreen);
 
-	void DrawLights();
+	void DrawLights(const ICamera& camera);
+	void EndFrame();
 
 
 	//The surface contained by the window
@@ -76,6 +85,7 @@ private:
 	std::unordered_map<std::string, bgfx::UniformHandle> colorUniforms;
 	std::unordered_map<std::string, bgfx::UniformHandle> vectorUniforms;
 	std::unordered_map<std::string, bgfx::UniformHandle> textureUniforms;
+	std::unordered_map<std::string, bgfx::UniformHandle> matrixUniforms;
 
 	bgfx::FrameBufferHandle m_fullScreenBuffer;
 	bgfx::TextureHandle m_fullScreenTex;
@@ -83,7 +93,7 @@ private:
 	static constexpr int maxLightsCount = 8;
 	bgfx::UniformHandle u_lightPosRadius;
 	bgfx::UniformHandle u_lightRgbInnerR;
-	bgfx::UniformHandle u_mtx;//TODO naming
+	bgfx::UniformHandle u_viewProjInv;
 
 	int prevWidth;
 	int prevHeight;
@@ -94,10 +104,8 @@ private:
 	std::shared_ptr<Material> simpleBlitMat;
 	std::shared_ptr<Shader> deferredLightShader;
 	std::shared_ptr<Shader> deferredDirLightShader;
-	Matrix4 viewProj;
 
 	int dbgMeshesDrawn = 0;
 	int dbgMeshesCulled = 0;
-
-	Vector4 frustumPlanes[6];
+	std::shared_ptr<ShadowRenderer> shadowRenderer;
 };

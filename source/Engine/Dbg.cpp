@@ -16,9 +16,10 @@ void Dbg::Draw(Vector3 point, float radius) {
 	points.push_back(Point{ point, radius });
 }
 
-void Dbg::DrawLine(Vector3 from, Vector3 to) {
-	Draw(::Ray(from, to - from), Vector3::Distance(from, to), Colors::white);
+void Dbg::DrawLine(Vector3 from, Vector3 to, Color color) {
+	Draw(::Ray(from, to - from), Vector3::Distance(from, to), color);
 }
+
 
 void Dbg::Draw(AABB aabb) {
 	Vector3 dirX = Vector3(aabb.max.x - aabb.min.x, 0.f, 0.f);
@@ -68,6 +69,8 @@ void Dbg::DrawAll() {
 	bgfx_examples::DebugDrawEncoder dde;
 	dde.begin(0);
 
+	dde.setState(false, false, true);
+
 	for (const auto& ray : rays) {
 		dde.setColor(ray.color.ToIntARGB());
 		dde.moveTo(ray.ray.origin.x, ray.ray.origin.y, ray.ray.origin.z);
@@ -84,8 +87,6 @@ void Dbg::DrawAll() {
 	for (int i = 0; i < texts.size(); i++) {
 		bgfx::dbgTextPrintf(1, yTextOffset + i, 0x0f, texts[i].c_str());
 	}
-
-	//dde.drawGrid(bx::Vec3(0, 1, 0), bx::Vec3(0, 0, 0));
 
 	ClearAll();
 

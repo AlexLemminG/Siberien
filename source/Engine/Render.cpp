@@ -32,35 +32,26 @@
 #include "Graphics.h"
 #include "Config.h"
 #include "imgui/imgui.h"
+#include "Light.h"
+#include "ShadowRenderer.h"
 #include "dear-imgui/imgui_impl_sdl.h"
 
 SDL_Window* Render::window = nullptr;
 
-
+//TODO deal with viewId ordering from other systems
 constexpr bgfx::ViewId kRenderPassGeometry = 0;
 constexpr bgfx::ViewId kRenderPassClearUav = 1;
-constexpr bgfx::ViewId kRenderPassLight = 2;
-constexpr bgfx::ViewId kRenderPassCombine = 3;
-constexpr bgfx::ViewId kRenderPassDebugLights = 4;
-constexpr bgfx::ViewId kRenderPassDebugGBuffer = 5;
+constexpr bgfx::ViewId kRenderPassLight = 10;
+constexpr bgfx::ViewId kRenderPassCombine = 11;
+constexpr bgfx::ViewId kRenderPassDebugLights = 12;
+constexpr bgfx::ViewId kRenderPassDebugGBuffer = 13;
 
-
-static bool SphereInFrustum(const Sphere& sphere, Vector4 frustum_planes[6])
-{
-	bool res = true;
-	for (int i = 0; i < 6; i++)
-	{
-		if (frustum_planes[i].x * sphere.pos.x + frustum_planes[i].y * sphere.pos.y +
-			frustum_planes[i].z * sphere.pos.z + frustum_planes[i].w <= -sphere.radius)
-			res = false;
-	}
-	return res;
-}
 
 bool Render::IsFullScreen() {
 	auto flags = SDL_GetWindowFlags(window);
 	return flags & SDL_WINDOW_FULLSCREEN;
 }
+
 void Render::SetFullScreen(bool isFullScreen) {
 	SDL_SetWindowFullscreen(window, isFullScreen ? SDL_WINDOW_FULLSCREEN : 0);
 }
@@ -74,8 +65,8 @@ Vector3 multH(const Matrix4& m, const Vector3& v) {
 	return Vector3(v4[0], v4[1], v4[2]) * t;
 }
 
-void Render::DrawLights() {
-	if (!deferredLightShader || ! deferredDirLightShader) {
+void Render::DrawLights(const ICamera& camera) {
+	if (!deferredLightShader || !deferredDirLightShader) {
 		return;
 	}
 	std::vector<PointLight*> pointLights = PointLight::pointLights;
@@ -86,11 +77,13 @@ void Render::DrawLights() {
 		}
 
 		auto pos = light->gameObject()->transform()->GetPosition();
-		auto sphere = Sphere{ pos, light->radius};
-		bool isVisible = SphereInFrustum(sphere, frustumPlanes);
+		auto sphere = Sphere{ pos, light->radius };
+		bool isVisible = camera.IsVisible(sphere);
 		if (!isVisible) {
 			continue;
 		}
+
+		shadowRenderer->Draw(light, camera);
 
 		auto posRadius = Vector4(pos, light->radius);
 		bgfx::setUniform(u_lightPosRadius, &posRadius, 1);
@@ -112,13 +105,13 @@ void Render::DrawLights() {
 		};
 
 
-		Vector3 xyz = multH(viewProj, box[0]);
+		Vector3 xyz = multH(camera.GetViewProjectionMatrix(), box[0]);
 		Vector3 min = xyz;
 		Vector3 max = xyz;
 
 		for (uint32_t ii = 1; ii < 8; ++ii)
 		{
-			xyz = multH(viewProj, box[ii]);
+			xyz = multH(camera.GetViewProjectionMatrix(), box[ii]);
 			min = Vector3::Min(min, xyz);
 			max = Vector3::Max(max, xyz);
 		}
@@ -144,6 +137,7 @@ void Render::DrawLights() {
 
 	std::vector<DirLight*> dirLights = DirLight::dirLights;
 	for (auto light : dirLights) {
+		shadowRenderer->Draw(light, camera);
 		auto dir = Vector4(GetRot(light->gameObject()->transform()->matrix) * Vector3_forward, 0.f);
 		auto color = Vector4(light->color.r, light->color.g, light->color.b, 0.f);
 		bgfx::setUniform(u_dirLightDirHandle, &dir, 1);
@@ -204,6 +198,8 @@ bool Render::Init()
 	initInfo.debug = true;//TODO cfgvar?
 	initInfo.profile = true;
 	initInfo.type = bgfx::RendererType::Direct3D11;
+	//initInfo.limits.transientVbSize *= 10;//TODO debug only
+	//initInfo.limits.transientIbSize *= 10;//TODO debug only
 	bgfx::init(initInfo);
 	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
 
@@ -222,7 +218,7 @@ bool Render::Init()
 
 	u_lightPosRadius = bgfx::createUniform("u_lightPosRadius", bgfx::UniformType::Vec4, maxLightsCount);
 	u_lightRgbInnerR = bgfx::createUniform("u_lightRgbInnerR", bgfx::UniformType::Vec4, maxLightsCount);
-	u_mtx = bgfx::createUniform("u_mtx", bgfx::UniformType::Mat4);
+	u_viewProjInv = bgfx::createUniform("u_viewProjInv", bgfx::UniformType::Mat4);
 
 	u_sphericalHarmonics = bgfx::createUniform("u_sphericalHarmonics", bgfx::UniformType::Vec4, 9);
 
@@ -231,12 +227,6 @@ bool Render::Init()
 	u_dirLightDirHandle = bgfx::createUniform("u_lightDir", bgfx::UniformType::Vec4);
 	u_dirLightColorHandle = bgfx::createUniform("u_lightColor", bgfx::UniformType::Vec4);
 
-	whiteTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\white.png");
-	defaultNormalTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultNormal.png");
-	defaultEmissiveTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultEmissive.png");
-	simpleBlitMat = AssetDatabase::Get()->LoadByPath<Material>("materials\\simpleBlit.asset");
-	deferredLightShader = AssetDatabase::Get()->LoadByPath<Shader>("shaders\\deferredLight.asset");
-	deferredDirLightShader = AssetDatabase::Get()->LoadByPath<Shader>("shaders\\deferredDirLight.asset");
 
 	m_fullScreenTex.idx = bgfx::kInvalidHandle;
 	m_fullScreenBuffer.idx = bgfx::kInvalidHandle;
@@ -244,6 +234,8 @@ bool Render::Init()
 
 	prevWidth = width;
 	prevHeight = height;
+
+	shadowRenderer = std::make_shared<ShadowRenderer>();
 
 
 	imguiCreate();
@@ -258,18 +250,21 @@ void Render::Draw(SystemsManager& systems)
 {
 	OPTICK_EVENT();
 
+
+	whiteTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\white.png");
+	defaultNormalTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultNormal.png");
+	defaultEmissiveTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultEmissive.png");
+	simpleBlitMat = AssetDatabase::Get()->LoadByPath<Material>("materials\\simpleBlit.asset");
+	deferredLightShader = AssetDatabase::Get()->LoadByPath<Shader>("shaders\\deferredLight.asset");
+	deferredDirLightShader = AssetDatabase::Get()->LoadByPath<Shader>("shaders\\deferredDirLight.asset");
+
+	//TODO not here
 	if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_RETURN) && (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LALT) || Input::GetKey(SDL_Scancode::SDL_SCANCODE_RALT))) {
 		SetFullScreen(!IsFullScreen());
 	}
 
-	Matrix4 cameraViewMatrix;
-	auto camera = Camera::GetMain();
 	int width;
 	int height;
-	float fov = 60.f;
-	float nearPlane = 0.1f;
-	float farPlane = 100.f;
-	Vector3 lightsPoi = Vector3_zero;
 	SDL_GetWindowSize(window, &width, &height);
 
 	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenBuffer)) {
@@ -324,17 +319,18 @@ void Render::Draw(SystemsManager& systems)
 
 		bgfx::setName(m_fullScreenTex, "fullScreenTex");
 		bgfx::setName(m_fullScreenBuffer, "fullScreenBuffer");
+
+		bgfx::setViewFrameBuffer(kRenderPassGeometry, gBuffer.buffer);
+		bgfx::setViewFrameBuffer(kRenderPassCombine, m_fullScreenBuffer);
+		bgfx::setViewFrameBuffer(kRenderPassLight, gBuffer.lightBuffer);
+		bgfx::setViewFrameBuffer(1, BGFX_INVALID_HANDLE);//TODO do we need third buffer to go postprocessing?
 	}
 
+	bgfx::dbgTextClear();
 	bgfx::setViewRect(kRenderPassGeometry, 0, 0, width, height);
 	bgfx::setViewRect(1, 0, 0, width, height);
 	bgfx::setViewRect(kRenderPassCombine, 0, 0, width, height);
 	bgfx::setViewRect(kRenderPassLight, 0, 0, width, height);
-
-	bgfx::setViewFrameBuffer(kRenderPassGeometry, gBuffer.buffer);
-	bgfx::setViewFrameBuffer(kRenderPassCombine, m_fullScreenBuffer);
-	bgfx::setViewFrameBuffer(kRenderPassLight, gBuffer.lightBuffer);
-	bgfx::setViewFrameBuffer(1, BGFX_INVALID_HANDLE);//TODO do we need third buffer to go postprocessing?
 
 	const float pixelSize[4] =
 	{
@@ -345,24 +341,24 @@ void Render::Draw(SystemsManager& systems)
 	};
 	bgfx::setUniform(u_pixelSize, pixelSize);
 
+
+	auto camera = Camera::GetMain();
 	if (camera == nullptr) {
 		bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Colors::black.ToIntRGBA(), 1.0f, 0);
-	}
-	else {
-		bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, camera->GetClearColor().ToIntRGBA(), 1.0f, 0);
-		auto cameraMatrix = camera->gameObject()->transform()->matrix;
-		SetScale(cameraMatrix, Vector3_one);
-		cameraViewMatrix = cameraMatrix.Inverse();
-		fov = camera->GetFov();
-		nearPlane = camera->GetNearPlane();
-		farPlane = camera->GetFarPlane();
-		lightsPoi = GetPos(cameraMatrix) + GetRot(cameraMatrix) * Vector3_forward * 15.f;
+		bgfx::dbgTextPrintf(1, 1, 0x0f, "NO CAMERA");
+		EndFrame();
+		return;
 	}
 
+	camera->OnBeforeRender();
+
+	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, camera->GetClearColor().ToIntRGBA(), 1.0f, 0);
+
+	Vector3 lightsPoi = GetPos(camera->gameObject()->transform()->matrix) + GetRot(camera->gameObject()->transform()->matrix) * Vector3_forward * 15.f;
+
+	//TODO not here
 	float realTime = Time::time();
 	float time = Time::time();
-	bgfx::setUniform(u_time, &time);
-
 	static float prevTimeCheck = 0;
 	static int prevFramesCount = 0;
 	static float fps = 0;
@@ -373,36 +369,33 @@ void Render::Draw(SystemsManager& systems)
 	}
 
 	{
-		OPTICK_EVENT("bgfx::touch");
-		bgfx::touch(0);
+		float time = Time::time();
+		bgfx::setUniform(u_time, &time);
 	}
-	bgfx::dbgTextClear();
+	{
+		OPTICK_EVENT("bgfx::touch");
+		bgfx::touch(0);//TODO not needed ?
+	}
 
 	bgfx::dbgTextPrintf(1, 2, 0x0f, "FPS: %.1f", fps);
 
 	if (camera == nullptr) {
-		//bgfx::dbgTextPrintf(1, 1, 0x0f, "NO CAMERA");
-	}
-	else {
-		//bgfx::dbgTextPrintf(1, 1, 0x0f, "YES CAMERA");
+		if (camera == nullptr) {
+			bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Colors::black.ToIntRGBA(), 1.0f, 0);
+			bgfx::dbgTextPrintf(1, 1, 0x0f, "NO CAMERA");
+		}
 	}
 
 	{
-		float proj[16];
-		bx::mtxProj(proj, fov, float(width) / float(height), nearPlane, farPlane, bgfx::getCaps()->homogeneousDepth);
-		bgfx::setViewTransform(0, &cameraViewMatrix(0, 0), proj);
-		bgfx::setViewTransform(1, &cameraViewMatrix(0, 0), proj);
-		bgfx::setViewTransform(kRenderPassGeometry, &cameraViewMatrix(0, 0), proj);
+		bgfx::setViewTransform(0, &camera->GetViewMatrix()(0, 0), &camera->GetProjectionMatrix()(0, 0));
+		bgfx::setViewTransform(1, &camera->GetViewMatrix()(0, 0), &camera->GetProjectionMatrix()(0, 0));
+		bgfx::setViewTransform(kRenderPassGeometry, &camera->GetViewMatrix()(0, 0), &camera->GetProjectionMatrix()(0, 0));
 
-		Matrix4 projMatr = Matrix4(proj);
-		auto viewProj = projMatr * cameraViewMatrix;
-		bgfx_examples::buildFrustumPlanes((bx::Plane*)frustumPlanes, &viewProj(0, 0));
-
-		auto invViewProj = viewProj.Inverse();
-		bgfx::setUniform(u_mtx, &invViewProj, 1);
-		this->viewProj = viewProj;
+		auto invViewProj = camera->GetViewProjectionMatrix().Inverse();
+		bgfx::setUniform(u_viewProjInv, &invViewProj, 1);
 
 		const bgfx::Caps* caps = bgfx::getCaps();
+		float proj[16];
 		bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f, 0.0f, caps->homogeneousDepth);
 		bgfx::setViewTransform(kRenderPassLight, nullptr, proj);
 		bgfx::setViewTransform(kRenderPassCombine, nullptr, proj);
@@ -415,45 +408,11 @@ void Render::Draw(SystemsManager& systems)
 	dbgMeshesDrawn = 0;
 	dbgMeshesCulled = 0;
 
-	auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
-		if (r1->mesh.get() < r2->mesh.get()) {
-			return true;
-		}
-		else if (r1->mesh.get() > r2->mesh.get()) {
-			return false;
-		}
-		if (r1->material.get() < r2->material.get()) {
-			return true;
-		}
-		else if (r1->material.get() > r2->material.get()) {
-			return false;
-		}
-		return r1->randomColorTextureIdx < r2->randomColorTextureIdx;
-	};
-	{
-		OPTICK_EVENT("SortRenderers");
-		auto& renderers = MeshRenderer::enabledMeshRenderers;
-		std::sort(renderers.begin(), renderers.end(), renderersSort);
-	}
-	{
-		OPTICK_EVENT("DrawRenderers");
-		bool prevEq = false;
-		//TODO get rid of std::vector / std::string
-		for (int i = 0; i < ((int)MeshRenderer::enabledMeshRenderers.size() - 1); i++) {
-			const auto& mesh = MeshRenderer::enabledMeshRenderers[i];
-			const auto& meshNext = MeshRenderer::enabledMeshRenderers[i + 1];
-			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
-			bool drawn = DrawMesh(mesh, !nextEq, !prevEq);
-			prevEq = nextEq && drawn;
-		}
-		if (MeshRenderer::enabledMeshRenderers.size() > 0) {
-			DrawMesh(MeshRenderer::enabledMeshRenderers[MeshRenderer::enabledMeshRenderers.size() - 1], true, !prevEq);
-		}
-	}
+	DrawAll(0, *camera, nullptr);
 
 	systems.Draw();
 
-	DrawLights();
+	DrawLights(*camera);
 
 	// combining gbuffer
 	{
@@ -485,6 +444,11 @@ void Render::Draw(SystemsManager& systems)
 
 	Graphics::Get()->Blit(simpleBlitMat, 1);
 
+	EndFrame();
+}
+
+void Render::EndFrame() {
+
 	Dbg::DrawAll();
 	{
 		OPTICK_EVENT("bgfx::frame");
@@ -513,6 +477,9 @@ void Render::Term()
 	for (auto u : vectorUniforms) {
 		bgfx::destroy(u.second);
 	}
+	for (auto u : matrixUniforms) {
+		bgfx::destroy(u.second);
+	}
 
 	//TODO destroy programs, buffers and other shit
 	bgfx::destroy(u_time);
@@ -522,7 +489,7 @@ void Render::Term()
 	bgfx::destroy(s_texEmissive);
 	bgfx::destroy(u_lightPosRadius);
 	bgfx::destroy(u_lightRgbInnerR);
-	bgfx::destroy(u_mtx);
+	bgfx::destroy(u_viewProjInv);
 	bgfx::destroy(u_sphericalHarmonics);
 	bgfx::destroy(u_pixelSize);
 	bgfx::destroy(u_dirLightDirHandle);
@@ -604,16 +571,89 @@ void Render::UpdateLights(Vector3 poi) {
 	}
 }
 
-bool Render::DrawMesh(const MeshRenderer* renderer, bool clearState, bool updateState) {
+void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial) {
+	//TODO setup camera
+	OPTICK_EVENT();
+
+	if (!overrideMaterial) {
+		auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
+			if (r1->mesh.get() < r2->mesh.get()) {
+				return true;
+			}
+			else if (r1->mesh.get() > r2->mesh.get()) {
+				return false;
+			}
+			if (r1->material.get() < r2->material.get()) {
+				return true;
+			}
+			else if (r1->material.get() > r2->material.get()) {
+				return false;
+			}
+			return r1->randomColorTextureIdx < r2->randomColorTextureIdx;
+		};
+		{
+			OPTICK_EVENT("SortRenderers");
+			auto& renderers = MeshRenderer::enabledMeshRenderers;
+			std::sort(renderers.begin(), renderers.end(), renderersSort);
+		}
+
+
+		OPTICK_EVENT("DrawRenderers");
+		bool prevEq = false;
+		//TODO get rid of std::vector / std::string
+		for (int i = 0; i < ((int)MeshRenderer::enabledMeshRenderers.size() - 1); i++) {
+			const auto& mesh = MeshRenderer::enabledMeshRenderers[i];
+			const auto& meshNext = MeshRenderer::enabledMeshRenderers[i + 1];
+			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
+			bool drawn = DrawMesh(mesh, camera, !nextEq, !prevEq, viewId);
+			prevEq = nextEq && drawn;
+		}
+		//TODO do we really need this ?
+		if (MeshRenderer::enabledMeshRenderers.size() > 0) {
+			DrawMesh(MeshRenderer::enabledMeshRenderers[MeshRenderer::enabledMeshRenderers.size() - 1], camera, true, !prevEq, viewId);
+		}
+	}
+	else {
+		//TODO refactor duplicated code
+
+		auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
+			return r1->mesh.get() < r2->mesh.get();
+		};
+		{
+			OPTICK_EVENT("SortRenderers");
+			auto& renderers = MeshRenderer::enabledMeshRenderers;
+			std::sort(renderers.begin(), renderers.end(), renderersSort);
+		}
+
+
+		OPTICK_EVENT("DrawRenderers");
+		bool prevEq = false;
+		//TODO get rid of std::vector / std::string
+		for (int i = 0; i < ((int)MeshRenderer::enabledMeshRenderers.size() - 1); i++) {
+			const auto& mesh = MeshRenderer::enabledMeshRenderers[i];
+			const auto& meshNext = MeshRenderer::enabledMeshRenderers[i + 1];
+			//TODO optimize
+			auto mat = mesh->material;
+			mesh->material = overrideMaterial;
+			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
+			bool drawn = DrawMesh(mesh, camera, !nextEq, !prevEq, viewId);
+			mesh->material = mat;
+			prevEq = nextEq && drawn;
+		}
+		if (MeshRenderer::enabledMeshRenderers.size() > 0) {
+			const auto& mesh = MeshRenderer::enabledMeshRenderers[MeshRenderer::enabledMeshRenderers.size() - 1];
+			auto mat = mesh->material;
+			mesh->material = overrideMaterial;
+			DrawMesh(mesh, camera, true, !prevEq, viewId);
+			mesh->material = mat;
+		}
+	}
+}
+
+bool Render::DrawMesh(const MeshRenderer* renderer, const ICamera& camera, bool clearState, bool updateState, int viewId) {
 	const auto& matrix = renderer->m_transform->matrix;
 	{
-		auto sphere = renderer->mesh->boundingSphere;
-		auto scale = GetScale(matrix);
-		float maxScale = Mathf::Max(Mathf::Max(scale.x, scale.y), scale.z);
-		sphere.radius *= maxScale;
-		sphere.pos = matrix * sphere.pos;
-
-		bool isVisible = SphereInFrustum(sphere, frustumPlanes);
+		bool isVisible = camera.IsVisible(*renderer);
 		if (!isVisible) {
 			dbgMeshesCulled++;
 			return false;
@@ -652,7 +692,7 @@ bool Render::DrawMesh(const MeshRenderer* renderer, bool clearState, bool update
 	}
 
 	auto discardFlags = clearState ? BGFX_DISCARD_ALL : BGFX_DISCARD_NONE;
-	bgfx::submit(0, renderer->material->shader->program, 0u, discardFlags);
+	bgfx::submit(viewId, renderer->material->shader->program, 0u, discardFlags);
 	return true;
 }
 
@@ -729,4 +769,19 @@ void Render::ApplyMaterialProperties(const std::shared_ptr<Material> material) {
 		}
 		i++;
 	}
+}
+
+bgfx::UniformHandle Render::GetOrCreateVectorUniform(const std::string& name) {
+
+
+	auto it = vectorUniforms.find(name);
+	bgfx::UniformHandle uniform;
+	if (it == vectorUniforms.end()) {
+		uniform = bgfx::createUniform(name.c_str(), bgfx::UniformType::Vec4);
+		vectorUniforms[name] = uniform;
+	}
+	else {
+		uniform = it->second;
+	}
+	return uniform;
 }

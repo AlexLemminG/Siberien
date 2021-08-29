@@ -5,21 +5,10 @@ Scene:
     - engine\modelPreview\camera.asset
     - engine\modelPreview\floor.asset
     - $preview
-    - $light
+    - engine\modelPreview\light.asset
     
 GameObject$preview:
   components:
   - $ModelPreview
   
 ModelPreview:
-
-GameObject$light:
-  components:
-  - $DirLight
-  - $Transform
-  
-DirLight:
-  color: 0xffffffff
-  
-Transform:
-  euler: [90, 30, 30]

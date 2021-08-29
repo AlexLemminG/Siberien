@@ -54,27 +54,84 @@ SAMPLER2D(s_depth,  1);
 
 uniform vec4 u_lightDir[1];
 uniform vec4 u_lightColor[1];
-uniform mat4 u_mtx;
+uniform mat4 u_viewProjInv;
+
+uniform mat4 u_lightMtx;
+uniform mat4 u_shadowMapMtx0;
+uniform mat4 u_shadowMapMtx1;
+uniform mat4 u_shadowMapMtx2;
+uniform mat4 u_shadowMapMtx3;
+
+#define SM_HARD 1
+#define SM_LINEAR 1
+#define SM_CSM 1
+
+#include "fs_shadowmaps_color_lighting.sh"
 
 void main()
 {
 	vec3  normal      = decodeNormalUint(texture2D(s_normal, v_texcoord0).xyz);
 	float deviceDepth = texture2D(s_depth, v_texcoord0).x;
 	float depth       = toClipSpaceDepth(deviceDepth);
+	
+	
 
 	vec3 clip = vec3(v_texcoord0 * 2.0 - 1.0, depth);
 #if !BGFX_SHADER_LANGUAGE_GLSL
 	clip.y = -clip.y;
 #endif // !BGFX_SHADER_LANGUAGE_GLSL
-	vec3 wpos = clipToWorld(u_mtx, clip);
+	vec3 wpos = clipToWorld(u_viewProjInv, clip);
 
 	vec3 view = mul(u_view, vec4(wpos, 0.0) ).xyz;
 	view = -normalize(view);
 
 	vec3 lightColor = calcLight(normal, view, u_lightColor[0].xyz, u_lightDir[0].xyz);
-	gl_FragColor.xyz = toGamma(lightColor.xyz / 5.0);
-	gl_FragColor.w = 1.0;
+	//gl_FragColor.xyz = toGamma(lightColor.xyz / 5.0);
+	//gl_FragColor.w = 1.0;
 	
-	//gl_FragColor.xyz = depth;
-	//gl_FragColor.xyz = vec3(v_texcoord0.x,v_texcoord0.y,0.0);
+	//return;
+	
+	
+	
+	
+	vec3 v_view = view;
+	vec3 v_normal = normal;
+	vec4 v_worldPos = vec4(wpos, 1.0);
+	
+	
+	
+	vec4 v_texcoord1 = mul(u_shadowMapMtx0, v_worldPos);
+	vec4 v_texcoord2 = mul(u_shadowMapMtx1, v_worldPos);
+	vec4 v_texcoord3 = mul(u_shadowMapMtx2, v_worldPos);
+	vec4 v_texcoord4 = mul(u_shadowMapMtx3, v_worldPos);
+	//TODO why?
+	v_texcoord1.z += 0.5;
+	v_texcoord2.z += 0.5;
+	v_texcoord3.z += 0.5;
+	v_texcoord4.z += 0.5;
+	
+	
+	
+	
+	
+	
+	
+	
+	//gl_FragColor.xyz = vec3_splat(v_texcoord3.w);
+	//gl_FragColor.w = 1.0;
+	//return;
+	float visibility;
+	
+#include "fs_shadowmaps_color_lighting_main.sh"
+
+
+	gl_FragColor.xyz = toGamma(lightColor.xyz / 5.0) * visibility;
+	
+	
+	
+	
+	
+	
+
+	//gl_FragColor.xyz = vec3_splat(visibility);
 }

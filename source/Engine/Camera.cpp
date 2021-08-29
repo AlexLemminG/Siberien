@@ -3,6 +3,10 @@
 #include "Transform.h"
 #include <SDL.h>
 #include "Render.h"
+#include <bgfx_utils.h>
+#include "Graphics.h"
+#include "MeshRenderer.h"
+#include "Mesh.h"
 
 Camera* Camera::mainCamera = nullptr;
 
@@ -40,4 +44,45 @@ Ray Camera::ScreenPointToRay(Vector2 screenPoint) {
 
 	return ray;
 
+}
+
+void Camera::OnBeforeRender() {
+	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, GetClearColor().ToIntRGBA(), 1.0f, 0);
+	viewMatrix = gameObject()->transform()->matrix;
+	SetScale(viewMatrix, Vector3_one);
+	viewMatrix = viewMatrix.Inverse();
+
+	float proj[16];
+	int width = Graphics::Get()->GetScreenWidth();
+	int height = Graphics::Get()->GetScreenHeight();
+	bx::mtxProj(proj, fov, float(width) / float(height), nearPlane, farPlane, bgfx::getCaps()->homogeneousDepth);
+	projectionMatrix = Matrix4(proj);
+
+	ICamera::OnBeforeRender();
+}
+
+void ICamera::OnBeforeRender() {
+	viewProjectionMatrix = GetProjectionMatrix() * GetViewMatrix();
+
+	frustum.SetFromViewProjection(viewProjectionMatrix);
+}
+
+bool ICamera::IsVisible(const Sphere& sphere) const {
+	return frustum.IsOverlapingSphere(sphere);
+}
+
+bool ICamera::IsVisible(const AABB& aabb) const {
+	Sphere sphere;
+	sphere.pos = aabb.GetCenter();
+	sphere.radius = aabb.GetSize().Length() / 2;
+	return frustum.IsOverlapingSphere(sphere);
+}
+
+bool ICamera::IsVisible(const MeshRenderer& renderer) const {
+	auto sphere = renderer.mesh->boundingSphere;
+	auto scale = GetScale(renderer.m_transform->matrix);
+	float maxScale = Mathf::Max(Mathf::Max(scale.x, scale.y), scale.z);
+	sphere.radius *= maxScale;
+	sphere.pos = renderer.m_transform->matrix * sphere.pos;
+	return IsVisible(sphere);
 }

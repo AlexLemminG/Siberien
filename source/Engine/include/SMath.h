@@ -142,6 +142,7 @@ public:
 	static constexpr float phi = 1.61803398875f; // golden ratio
 };
 
+
 class Random {
 public:
 	static float Range(float minInclusive, float maxExclusive) {
@@ -161,6 +162,16 @@ public:
 		}
 		//TODO can you do better ?
 		return Vector3(x, y, z);
+	}
+};
+
+class Bits {
+public:
+	static int SetMaskTrue(int value, int mask) {
+		return value | mask;
+	}
+	static int SetMaskFalse(int value, int mask) {
+		return value & (-1 ^ mask);
 	}
 };
 
@@ -222,6 +233,8 @@ namespace Colors {
 
 class AABB {
 public:
+	AABB() = default;
+	AABB(const Vector3& min, const Vector3& max) :min(min), max(max) {}
 	Vector3 min = Vector3_max;
 	Vector3 max = -Vector3_max;
 
@@ -242,6 +255,14 @@ public:
 	Vector3 GetCenter() const {
 		return (max + min) * 0.5f;
 	}
+};
+
+class Sphere {
+public:
+	Vector3 pos;
+	float radius;
+
+	AABB ToAABB() const;
 };
 
 class Ray {
@@ -302,6 +323,17 @@ inline void DeserializeVector4(const SerializationContext& context, Vector4& dst
 	dst.z = context.yamlNode[2].as<float>();
 	dst.w = context.yamlNode[3].as<float>();
 }
+
+class Frustum {
+public:
+	void SetFromViewProjection(const Matrix4& viewProjection);
+
+	bool IsOverlapingSphere(const Sphere& sphere)const;
+
+private:
+	Vector4 frustumPlanes[6];
+};
+
 REFLECT_CUSTOM_EXT(Vector3, SerializeVector, DeserializeVector);
 REFLECT_CUSTOM_EXT(Vector4, SerializeVector4, DeserializeVector4);
 REFLECT_CUSTOM_EXT(Color, Color::Serialize, Color::Deserialize);

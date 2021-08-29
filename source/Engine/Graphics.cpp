@@ -57,6 +57,10 @@ void Graphics::Blit(std::shared_ptr<Material> material, int targetViewId) {
 
 void Graphics::SetRenderPtr(Render* render) { this->render = render; }
 
+int Graphics::GetScreenWidth() const { return render->GetWidth(); }
+
+int Graphics::GetScreenHeight() const { return render->GetHeight(); }
+
 void Graphics::SetScreenSpaceQuadBuffer() {
 	float textureWidth = render->GetWidth();
 	float textureHeight = render->GetHeight();

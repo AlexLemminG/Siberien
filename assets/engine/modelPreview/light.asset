@@ -1,0 +1,12 @@
+GameObject:
+  components:
+  - $DirLight
+  - $Transform
+  
+DirLight:
+  color: 0xffffffff
+  drawShadows: true
+  
+Transform:
+  euler: [90, 30, 30]
+  pos: [1,1,1]

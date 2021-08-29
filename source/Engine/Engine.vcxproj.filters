@@ -135,6 +135,15 @@
     <ClCompile Include="ModelPreview.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="include\SMath.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadowRenderer.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BlenderSceneLoader.h">
@@ -262,6 +271,15 @@
     </ClInclude>
     <ClInclude Include="ModelPreview.h">
       <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Precompiled.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowRenderer.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Light.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

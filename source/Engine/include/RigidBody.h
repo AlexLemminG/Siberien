@@ -68,7 +68,6 @@ public:
 
 	void Activate();
 private:
-
 	btDefaultMotionState* pMotionState = nullptr;
 	btRigidBody* pBody = nullptr;
 
