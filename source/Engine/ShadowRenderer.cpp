@@ -407,6 +407,23 @@ private:
 static Uniforms s_uniforms;
 
 
+void ShadowRenderer::Init() {
+	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
+	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
+	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
+	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
+}
+
+void ShadowRenderer::Term() {
+
+	for (uint8_t ii = 0; ii < ShadowMapRenderTargets::Count; ++ii)
+	{
+		if (bgfx::isValid(s_rtShadowMap[ii])) {
+			bgfx::destroy(s_rtShadowMap[ii]);
+		}
+	}
+}
+
 void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 {
 	if (!light->drawShadows) {
@@ -414,13 +431,6 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	}
 	//TODO
 	int lightShadowSize = 1024;
-	static int m_currentShadowMapSize = 0;
-	static bgfx::FrameBufferHandle s_rtShadowMap[]{
-		bgfx::FrameBufferHandle{ bgfx::kInvalidHandle } ,
-		bgfx::FrameBufferHandle{ bgfx::kInvalidHandle },
-		bgfx::FrameBufferHandle{ bgfx::kInvalidHandle } ,
-		bgfx::FrameBufferHandle{ bgfx::kInvalidHandle } };//TODO zero
-	static bgfx::FrameBufferHandle s_rtBlur = bgfx::FrameBufferHandle{ bgfx::kInvalidHandle };//TODO zero
 	static bool m_stencilPack = false;
 	static float m_fovXAdjust = 1.0f;
 	static float m_fovYAdjust = 1.0f;
@@ -524,18 +534,13 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 
 					bgfx::TextureHandle fbtextures[] =
 					{
-						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT),
+						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT),//TODO why not just depth?
 						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D24S8, BGFX_TEXTURE_RT),
 					};
 					s_rtShadowMap[ii] = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
 				}
 			}
 		}
-
-		if (bgfx::isValid(s_rtBlur)) {
-			bgfx::destroy(s_rtBlur);
-		}
-		s_rtBlur = bgfx::createFrameBuffer(m_currentShadowMapSize, m_currentShadowMapSize, bgfx::TextureFormat::BGRA8);
 	}
 
 	if (isSpot)
@@ -655,7 +660,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		memcpy(&(lightView[1][0]), &viewMatrix(0, 0), 16 * sizeof(float));
 		memcpy(&(lightView[2][0]), &viewMatrix(0, 0), 16 * sizeof(float));
 		memcpy(&(lightView[3][0]), &viewMatrix(0, 0), 16 * sizeof(float));
-		
+
 		//bx::mtxLookAt(lightView[0], eye, at);
 
 		// Compute camera inverse view mtx.

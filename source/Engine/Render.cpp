@@ -49,11 +49,11 @@ constexpr bgfx::ViewId kRenderPassDebugGBuffer = 13;
 
 bool Render::IsFullScreen() {
 	auto flags = SDL_GetWindowFlags(window);
-	return flags & SDL_WINDOW_FULLSCREEN;
+	return flags & SDL_WINDOW_FULLSCREEN_DESKTOP;
 }
 
 void Render::SetFullScreen(bool isFullScreen) {
-	SDL_SetWindowFullscreen(window, isFullScreen ? SDL_WINDOW_FULLSCREEN : 0);
+	SDL_SetWindowFullscreen(window, isFullScreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
 }
 
 
@@ -195,8 +195,8 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = true;//TODO cfgvar?
-	initInfo.profile = true;
+	initInfo.debug = false;//TODO cfgvar?
+	initInfo.profile = false;
 	initInfo.type = bgfx::RendererType::Direct3D11;
 	//initInfo.limits.transientVbSize *= 10;//TODO debug only
 	//initInfo.limits.transientIbSize *= 10;//TODO debug only
@@ -236,7 +236,7 @@ bool Render::Init()
 	prevHeight = height;
 
 	shadowRenderer = std::make_shared<ShadowRenderer>();
-
+	shadowRenderer->Init();
 
 	imguiCreate();
 	ImGui_ImplSDL2_InitForMetal(window);
@@ -386,10 +386,13 @@ void Render::Draw(SystemsManager& systems)
 		}
 	}
 
+
 	{
 		bgfx::setViewTransform(0, &camera->GetViewMatrix()(0, 0), &camera->GetProjectionMatrix()(0, 0));
 		bgfx::setViewTransform(1, &camera->GetViewMatrix()(0, 0), &camera->GetProjectionMatrix()(0, 0));
 		bgfx::setViewTransform(kRenderPassGeometry, &camera->GetViewMatrix()(0, 0), &camera->GetProjectionMatrix()(0, 0));
+		Vector3 cameraPos = GetPos(camera->GetViewMatrix().Inverse());
+		bgfx::setUniform(GetOrCreateVectorUniform("u_cameraPos"), &cameraPos.x);
 
 		auto invViewProj = camera->GetViewProjectionMatrix().Inverse();
 		bgfx::setUniform(u_viewProjInv, &invViewProj, 1);
@@ -397,7 +400,7 @@ void Render::Draw(SystemsManager& systems)
 		const bgfx::Caps* caps = bgfx::getCaps();
 		float proj[16];
 		bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f, 0.0f, caps->homogeneousDepth);
-		bgfx::setViewTransform(kRenderPassLight, nullptr, proj);
+		bgfx::setViewTransform(kRenderPassLight, &camera->GetViewMatrix()(0, 0), proj);
 		bgfx::setViewTransform(kRenderPassCombine, nullptr, proj);
 
 	}
@@ -459,6 +462,8 @@ void Render::EndFrame() {
 void Render::Term()
 {
 	OPTICK_EVENT();
+	shadowRenderer->Term();
+	shadowRenderer = nullptr;
 	imguiDestroy();
 	Dbg::Term();
 	whiteTexture = nullptr;
