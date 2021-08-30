@@ -6,7 +6,7 @@
 class GameObject;
 class Scene;
 
-class Component : public Object {
+class SE_CPP_API Component : public Object {
 	friend Scene;
 public:
 	virtual void Update() {}//TODO use scheduler instead

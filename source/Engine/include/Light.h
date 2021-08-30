@@ -7,6 +7,9 @@ class Light : public Component {
 public:
 	Color color = Colors::white;
 	bool drawShadows = false;
+	REFLECT_BEGIN(Light);
+	REFLECT_VAR(color)
+	REFLECT_END();
 };
 
 class SE_CPP_API DirLight : public Light {
@@ -17,8 +20,7 @@ public:
 
 	static std::vector<DirLight*> dirLights;
 
-	REFLECT_BEGIN(DirLight);
-	REFLECT_VAR(color);
+	REFLECT_BEGIN(DirLight, Light);
 	REFLECT_VAR(drawShadows);//TODO inheritance
 	REFLECT_END();
 };
@@ -33,8 +35,7 @@ public:
 	float radius = 5.f;
 	float innerRadius = 0.f;
 
-	REFLECT_BEGIN(PointLight);
-	REFLECT_VAR(color);
+	REFLECT_BEGIN(PointLight, Light);
 	REFLECT_VAR(radius);
 	REFLECT_VAR(innerRadius);
 	REFLECT_VAR(drawShadows);

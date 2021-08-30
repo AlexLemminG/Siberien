@@ -98,6 +98,8 @@ public:
 
 protected:
 	ReflectedTypeBase(const std::string& name) : __name__(name) {}
+	
+	ReflectedTypeBase* __parentType__ = nullptr;
 private:
 	std::string __name__;
 };
@@ -276,10 +278,17 @@ template<typename T, typename U> constexpr size_t offsetOf(U T::* member)
 	return (char*)&((T*)nullptr->*member) - (char*)nullptr;
 }
 
-template<typename T>
-class ReflectedType : public ReflectedTypeBase {
+
+class ReflectedTypeNonTemplated : public ReflectedTypeBase {
 public:
-	ReflectedType(std::string name) :ReflectedTypeBase(name) {
+	ReflectedTypeNonTemplated(std::string name) : ReflectedTypeBase(name) {}
+	std::vector<ReflectedField> fields;
+};
+
+template<typename T>
+class ReflectedType : public ReflectedTypeNonTemplated {
+public:
+	ReflectedType(std::string name) :ReflectedTypeNonTemplated(name) {
 
 	}
 	virtual void Serialize(SerializationContext& context, const void* object) override {
@@ -335,12 +344,10 @@ public:
 		CallOnBeforeSerialize(SerializationContext& context, const T& object) {
 		object.OnBeforeSerializeCallback(context);
 	}
-
-	std::vector<ReflectedField> fields;
 };
 
 
-#define REFLECT_BEGIN(className) \
+#define _REFLECT_BEGIN_NO_PARENT_(className) \
 public:\
 class Type : public ReflectedType<##className> { \
 	using TYPE = ##className; \
@@ -361,6 +368,20 @@ class Type : public ReflectedType<##className> { \
 		return TypeOf(); \
 	}
 
+
+
+#define _REFLECT_BEGIN_WITH_PARENT_(className, parentClassName) \
+_REFLECT_BEGIN_NO_PARENT_(className) \
+	__parentType__ = parentClassName::TypeOf(); \
+	for(auto parentField : dynamic_cast<ReflectedTypeNonTemplated*>(__parentType__)->fields){\
+		this->fields.push_back(parentField);\
+	}
+
+#define _EXPAND_(x) x
+
+#define _GET_REFLECT_MACRO_(_1,_2,NAME,...) NAME
+
+#define REFLECT_BEGIN(...) _EXPAND_(_GET_REFLECT_MACRO_(__VA_ARGS__, _REFLECT_BEGIN_WITH_PARENT_, _REFLECT_BEGIN_NO_PARENT_) (__VA_ARGS__))
 
 #define REFLECT_CUSTOM(className, Serialize, Deserialize) \
 public:\

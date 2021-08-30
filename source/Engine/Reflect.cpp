@@ -46,3 +46,14 @@ void SerializationContext::RequestDeserialization(void* ptr, const std::string& 
 		AssetDatabase::Get()->RequestObjPtr(ptr, assetPath);
 	}
 }
+
+
+class Test {
+	REFLECT_BEGIN(Test);
+	REFLECT_END();
+};
+
+class TestInh {
+	REFLECT_BEGIN(TestInh, Test);
+	REFLECT_END();
+};
