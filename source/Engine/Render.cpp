@@ -75,6 +75,9 @@ void Render::DrawLights(const ICamera& camera) {
 		if (light->radius <= 0.f) {
 			continue;
 		}
+		if (light->color.r <= 0.f && light->color.g <= 0.f && light->color.b <= 0.f) {
+			continue;
+		}
 
 		auto pos = light->gameObject()->transform()->GetPosition();
 		auto sphere = Sphere{ pos, light->radius };
@@ -87,6 +90,7 @@ void Render::DrawLights(const ICamera& camera) {
 
 		auto posRadius = Vector4(pos, light->radius);
 		bgfx::setUniform(u_lightPosRadius, &posRadius, 1);
+
 		auto colorInnerRadius = Vector4(light->color.r, light->color.g, light->color.b, light->innerRadius);
 		bgfx::setUniform(u_lightRgbInnerR, &colorInnerRadius, 1);
 
@@ -144,6 +148,9 @@ void Render::DrawLights(const ICamera& camera) {
 
 	std::vector<DirLight*> dirLights = DirLight::dirLights;
 	for (auto light : dirLights) {
+		if (light->color.r <= 0.f && light->color.g <= 0.f && light->color.b <= 0.f) {
+			continue;
+		}
 		shadowRenderer->Draw(light, camera);
 		auto dir = Vector4(GetRot(light->gameObject()->transform()->matrix) * Vector3_forward, 0.f);
 		auto color = Vector4(light->color.r, light->color.g, light->color.b, 0.f);
@@ -202,8 +209,8 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = true;//TODO cfgvar?
-	initInfo.profile = true;
+	initInfo.debug = false;//TODO cfgvar?
+	initInfo.profile = false;
 	initInfo.type = bgfx::RendererType::Direct3D11;
 	//initInfo.limits.transientVbSize *= 10;//TODO debug only
 	//initInfo.limits.transientIbSize *= 10;//TODO debug only

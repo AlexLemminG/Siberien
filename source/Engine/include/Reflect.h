@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include "yaml-cpp/yaml.h" //TODO this is not the way
 #include "Object.h"
+#include "Component.h"
 
 template<class T>
 struct is_shared_ptr : std::false_type {};
@@ -95,10 +96,16 @@ public:
 	const std::string& GetName() {
 		return __name__;
 	}
+	bool HasTag(const std::string tag) {
+		return std::find(tags.begin(), tags.end(), tag) != tags.end();
+	}
+
+
+	std::vector<std::string> tags;//TODO make protected
 
 protected:
 	ReflectedTypeBase(const std::string& name) : __name__(name) {}
-	
+
 	ReflectedTypeBase* __parentType__ = nullptr;
 private:
 	std::string __name__;
@@ -347,12 +354,27 @@ public:
 };
 
 
+template<typename T>
+std::enable_if_t<!std::is_assignable<Component, T>::value, int>
+inline AddComponentTags(ReflectedTypeBase* type) {
+	return -1;
+}
+
+template<typename T>
+std::enable_if_t<std::is_assignable<Component, T>::value, int>
+inline AddComponentTags(ReflectedTypeBase* type) {
+	if (typeid(&T::Update) != typeid(&Component::Update)) { type->tags.push_back("HasUpdate"); }
+	if (typeid(&T::FixedUpdate) != typeid(&Component::FixedUpdate)) { type->tags.push_back("HasFixedUpdate"); }
+	return -1;
+}
+
 #define _REFLECT_BEGIN_NO_PARENT_(className) \
 public:\
 class Type : public ReflectedType<##className> { \
 	using TYPE = ##className; \
 	public:\
 	Type() : ReflectedType<##className>(#className) {\
+		AddComponentTags<##className>(this);
 
 #define REFLECT_VAR(varName)\
 		fields.push_back(ReflectedField(GetReflectedType<decltype(varName)>(), #varName, offsetOf(&TYPE::varName))); \
@@ -375,6 +397,9 @@ _REFLECT_BEGIN_NO_PARENT_(className) \
 	__parentType__ = parentClassName::TypeOf(); \
 	for(auto parentField : dynamic_cast<ReflectedTypeNonTemplated*>(__parentType__)->fields){\
 		this->fields.push_back(parentField);\
+	} \
+	for (auto parentTag : dynamic_cast<ReflectedTypeNonTemplated*>(__parentType__)->tags) {	\
+		this->tags.push_back(parentTag); \
 	}
 
 #define _EXPAND_(x) x

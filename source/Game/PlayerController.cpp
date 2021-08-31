@@ -125,7 +125,7 @@ void PlayerController::Update() {
 			speed = defaultSpeed;
 		}
 		if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LSHIFT) && Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_K)) {
-			for (auto go : Scene::Get()->gameObjects) {
+			for (auto go : Scene::Get()->GetAllGameObjects()) {
 				auto health = go->GetComponent<Health>();
 				if (health && go != gameObject()) {
 					health->DoDamage(health->GetAmount());

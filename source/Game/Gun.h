@@ -1,9 +1,8 @@
 #pragma once
 
+#include "Serialization.h"
 #include "Object.h"
 #include "SMath.h"
-
-
 
 class Gun : public Object {
 public:

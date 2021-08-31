@@ -59,9 +59,14 @@ void RigidBody::OnEnable() {
 	int mask;
 	PhysicsSystem::Get()->GetGroupAndMask(layer, group, mask);
 	PhysicsSystem::Get()->dynamicsWorld->addRigidBody(pBody, group, mask);
+
+	if (isStatic) {
+		ignoreUpdate = true;
+	}
 }
 
 void RigidBody::Update() {
+		//TODO isStatic means not kinematic!!!
 	if (!isStatic) {
 		auto matr = btConvert(pMotionState->m_graphicsWorldTrans);
 		auto scale = GetScale(gameObject()->transform()->matrix);

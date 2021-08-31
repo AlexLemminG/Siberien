@@ -7,6 +7,7 @@
 #include "STime.h"
 
 class FlyCameraMovement : public Component {
+public:
 	float speed = 5.f;
 	float rotationSpeed = 0.1f;
 

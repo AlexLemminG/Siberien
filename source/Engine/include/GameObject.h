@@ -5,6 +5,7 @@
 #include "Transform.h"
 
 class SE_CPP_API GameObject : public Object {
+	friend class Scene;
 public:
 	std::string tag;
 	std::vector<std::shared_ptr<Component>> components;
@@ -32,4 +33,15 @@ public:
 	REFLECT_VAR(tag);
 	REFLECT_VAR(components);
 	REFLECT_END();
+
+	bool IsActive() const;
+	void SetActive(bool isActive);
+
+private:
+	uint64_t flags = 0;
+	struct FLAGS {
+		enum :uint64_t {
+			IS_ACTIVE = 1 << 0
+		};
+	};
 };

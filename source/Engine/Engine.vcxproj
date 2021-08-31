@@ -94,6 +94,7 @@
     <ClCompile Include="GameLibrariesManager.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="include\Component.cpp" />
     <ClCompile Include="include\SMath.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Light.cpp" />

@@ -4,6 +4,7 @@
 #include "SMath.h"
 
 class ModelPreview : public Component {
+public:
 	virtual void OnEnable() override;
 	virtual void Update() override;
 	virtual void OnDisable() override;

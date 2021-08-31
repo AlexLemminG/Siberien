@@ -506,6 +506,7 @@ public:
 			aiProcess_CalcTangentSpace |
 			aiProcess_PopulateArmatureData |
 			aiProcess_Triangulate |
+			aiProcess_ImproveCacheLocality |
 			aiProcess_ConvertToLeftHanded;
 
 		auto* scene = importer.ReadFile(assetPath.c_str(), importFlags);

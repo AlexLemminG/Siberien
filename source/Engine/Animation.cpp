@@ -37,7 +37,10 @@ void AnimationTransform::ToMatrix(Matrix4& matrix) {
 	matrix = Matrix4::Transform(position, rotation.ToMatrix(), scale);
 }
 
+
+
 AnimationTransform MeshAnimation::GetTransform(const std::string& bone, float t) {
+
 	auto it = boneNameToKeyframesMapping.find(bone);
 	if (it == boneNameToKeyframesMapping.end()) {
 		ASSERT(false);

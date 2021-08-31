@@ -4,6 +4,7 @@
 #include "GameObject.h"
 
 class Pickup : public Component {
+public:
 	void Update();
 
 	std::shared_ptr<Gun> gun;

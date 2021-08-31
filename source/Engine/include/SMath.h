@@ -169,11 +169,24 @@ public:
 
 class Bits {
 public:
-	static int SetMaskTrue(int value, int mask) {
+	template<typename T, typename MASK_T>
+	static bool IsMaskTrue(T value, MASK_T mask) {
+		return value & mask;
+	}
+
+	template<typename T, typename MASK_T>
+	static T SetMaskTrue(T value, MASK_T mask) {
 		return value | mask;
 	}
-	static int SetMaskFalse(int value, int mask) {
-		return value & (-1 ^ mask);
+
+	template<typename T, typename MASK_T>
+	static T SetMaskFalse(T value, MASK_T mask) {
+		return value & (~mask);
+	}
+
+	template<typename T, typename MASK_T>
+	static T SetMask(T original, MASK_T mask, bool value) {
+		return value ? SetMaskTrue(original, mask) : SetMaskFalse(original, mask);
 	}
 };
 

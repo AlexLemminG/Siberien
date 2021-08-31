@@ -18,6 +18,7 @@ public:
 };
 
 class GameplaySceneScenario : public Component {
+public:
 	void OnEnable();
 	void Update();
 	void OnDisable();
