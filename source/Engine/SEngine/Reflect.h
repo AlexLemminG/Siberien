@@ -22,6 +22,23 @@ class AssetDatabase;
 
 class Object;
 
+class SE_CPP_API AssetDatabase2_TextImporterHandle {
+	friend class AssetDatabase2;
+public:
+	const YAML::Node& yaml;
+
+	//TODO where T : Object
+	template<typename T>
+	void RequestObjectPtr(std::shared_ptr<T>& dest, const std::string& uid) {
+		RequestObjectPtr((void*)&dest, uid);//TODO store type info as well(at least for debugging
+	}
+	void RequestObjectPtr(void* dest, const std::string& uid);
+
+private:
+	AssetDatabase2_TextImporterHandle(AssetDatabase2* database, const YAML::Node yaml) :database(database), yaml(yaml) {}
+	AssetDatabase2* database = nullptr;
+};
+
 class SE_CPP_API SerializationContext {
 public:
 	SerializationContext(YAML::Node yamlNode, std::vector<std::shared_ptr<Object>> objectsAllowedToSerialize = std::vector<std::shared_ptr<Object>>{})
@@ -30,6 +47,7 @@ public:
 		, rootObjectsRequestedToSerialize(&objectsRequestedToSerialize)
 		, rootObjectsRequestedToSerializeRequesters(&objectsRequestedToSerializeRequesters)
 		, rootObjectsAllowedToSerialize(&(this->objectsAllowedToSerialize))
+		, rootDeserializedObjects(&(this->deserializedObjects))
 	{}
 	//SerializationContext(const TextAsset& textAsset) :yamlNode(textAsset.GetYamlNode()) {}
 
@@ -69,15 +87,21 @@ public:
 	}
 
 	AssetDatabase* database = nullptr;
+	AssetDatabase2_TextImporterHandle* databaseHandle = nullptr;
 	YAML::Node yamlNode{};
 
 	void FlushRequiestedToSerialize();
+	void FinishDeserialization();
+
+	std::vector<Object*>* rootDeserializedObjects = nullptr;//TODO make private
 
 private:
 	SerializationContext(YAML::Node yamlNode, const SerializationContext& parent)
 		:yamlNode(yamlNode)
+		, databaseHandle(parent.databaseHandle)
 		, rootObjectsRequestedToSerialize(parent.rootObjectsRequestedToSerialize)
 		, rootObjectsAllowedToSerialize(parent.rootObjectsAllowedToSerialize)
+		, rootDeserializedObjects(parent.rootDeserializedObjects)
 		, rootObjectsRequestedToSerializeRequesters(parent.rootObjectsRequestedToSerializeRequesters) {}
 
 	void RequestDeserialization(void* ptr, const std::string& assetPath) const;
@@ -87,6 +111,8 @@ private:
 	std::vector<std::shared_ptr<Object>> objectsAllowedToSerialize;
 	std::unordered_map<std::shared_ptr<Object>, std::vector<YAML::Node>>* rootObjectsRequestedToSerializeRequesters = nullptr;
 	std::unordered_map<std::shared_ptr<Object>, std::vector<YAML::Node>> objectsRequestedToSerializeRequesters;
+	std::vector<Object*> deserializedObjects;
+
 };
 
 class ReflectedTypeBase {
@@ -179,7 +205,10 @@ public:
 			return;
 		}
 		std::string path = context.yamlNode.as<std::string>();
-		context.RequestDeserialization(ptr, path);
+		// TODO not here ?
+		if (path.size() > 0) {
+			context.RequestDeserialization(ptr, path);
+		}
 	}
 };
 
@@ -337,7 +366,9 @@ public:
 	template<typename T>
 	std::enable_if_t<std::is_assignable<Object, T>::value, void>
 		CallOnAfterDeserialize(const SerializationContext& context, T& object) {
-		object.OnAfterDeserializeCallback(context);
+		//TODO rename 
+		//TODO not raw pointer ?
+		context.rootDeserializedObjects->push_back(&object);
 	}
 
 	template<typename T>

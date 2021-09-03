@@ -430,15 +430,15 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		return;
 	}
 	//TODO
-	int lightShadowSize = 1024;
+	int lightShadowSize = 512;
 	static bool m_stencilPack = false;
 	static float m_fovXAdjust = 1.0f;
 	static float m_fovYAdjust = 1.0f;
 
-	static float m_near = 0.1f;
-	static float m_far = 128.f;
+	static float m_near = 0.1;//TODO params
+	static float m_far = 22.f;//TODO params
 	static DepthImpl::Enum m_depthImpl = DepthImpl::Linear;
-	static int m_numSplits = 2;
+	static int m_numSplits = 1;
 	static float m_splitDistribution = 0.6;
 	static bool m_stabilize = true;
 	static uint32_t clearRgba = 0;
@@ -459,7 +459,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	static int RENDERVIEW_LAST = 9;
 
 	// Set view and projection matrices.
-	const float camFovy = 60.0f;
+	const float camFovy = Camera::GetMain()->GetFov();
 	int m_width = Graphics::Get()->GetScreenWidth();
 	int m_height = Graphics::Get()->GetScreenHeight();
 	const float camAspect = float(int32_t(m_width)) / float(int32_t(m_height));
@@ -693,8 +693,8 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 			, -1.0f
 			, 1.0f
 			, -1.0f
-			, -m_far * 10.f
-			, m_far * 10.f
+			, -1024.f//TODO params
+			, 1024.f//TODO params
 			, 0.0f
 			, caps->homogeneousDepth
 		);

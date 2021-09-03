@@ -1,3 +1,0 @@
-Shader:
-  vs: shaders\spooky\vs_spooky.sc
-  fs: shaders\spooky\fs_spooky.sc

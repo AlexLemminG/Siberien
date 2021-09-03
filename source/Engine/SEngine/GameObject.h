@@ -29,14 +29,13 @@ public:
 
 	static std::shared_ptr<GameObject> FindWithTag(const std::string& tag);
 
-	REFLECT_BEGIN(GameObject);
-	REFLECT_VAR(tag);
-	REFLECT_VAR(components);
-	REFLECT_END();
-
 	bool IsActive() const;
 	void SetActive(bool isActive);
 
+	static void Des(const SerializationContext& so, GameObject& t);
+	static void Ser(SerializationContext& so, const GameObject& t);
+
+	REFLECT_CUSTOM(GameObject, GameObject::Ser, GameObject::Des);
 private:
 	uint64_t flags = 0;
 	struct FLAGS {
@@ -44,4 +43,7 @@ private:
 			IS_ACTIVE = 1 << 0
 		};
 	};
+
+	//TODO optimize
+	std::shared_ptr<GameObject> prefab;
 };

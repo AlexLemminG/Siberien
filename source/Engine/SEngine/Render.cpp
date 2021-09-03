@@ -209,8 +209,8 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = false;//TODO cfgvar?
-	initInfo.profile = false;
+	initInfo.debug = true;//TODO cfgvar?
+	initInfo.profile = true;
 	initInfo.type = bgfx::RendererType::Direct3D11;
 	//initInfo.limits.transientVbSize *= 10;//TODO debug only
 	//initInfo.limits.transientIbSize *= 10;//TODO debug only
@@ -264,13 +264,14 @@ void Render::Draw(SystemsManager& systems)
 {
 	OPTICK_EVENT();
 
-
+	//TODO not on draw!
 	whiteTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\white.png");
 	defaultNormalTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultNormal.png");
 	defaultEmissiveTexture = AssetDatabase::Get()->LoadByPath<Texture>("textures\\defaultEmissive.png");
 	simpleBlitMat = AssetDatabase::Get()->LoadByPath<Material>("materials\\simpleBlit.asset");
 	deferredLightShader = AssetDatabase::Get()->LoadByPath<Shader>("shaders\\deferredLight.asset");
 	deferredDirLightShader = AssetDatabase::Get()->LoadByPath<Shader>("shaders\\deferredDirLight.asset");
+	auto material = AssetDatabase::Get()->LoadByPath<Material>("materials\\deferredCombine.asset");//TOOD on init
 
 	//TODO not here
 	if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_RETURN) && (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LALT) || Input::GetKey(SDL_Scancode::SDL_SCANCODE_RALT))) {

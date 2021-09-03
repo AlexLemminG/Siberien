@@ -55,17 +55,19 @@ public:
 //assets referenced by path from assets/ folder
 //ex: prefabs/hero.asset
 //    textures/floor.png
-//each path can contain multiple assets even of the same type, they could be referenced by @__id
+//each path can contain multiple assets even of the same type, they could be referenced by $__id
 //__id is decalred explicitly for text assets such as *.asset
 //__id is generated for meshes
-//ex: meshes/hero.fbx@animations/run
-//ex: meshes/hero.fbx@bones/left_leg
-//ex: meshes/hero.fbx@meshes/hat
-//ex: meshes/hero.fbx@materials/head
+//ex: meshes/hero.fbx$animations/run
+//ex: meshes/hero.fbx$bones/left_leg
+//ex: meshes/hero.fbx$meshes/hat
+//ex: meshes/hero.fbx$materials/head
 //
 //TODO
 //does this make bone asset ?
 //maybe yes and we need to rename it to Object
+
+
 
 
 class SE_CPP_API AssetDatabase2_BinaryImporterHandle {
@@ -75,6 +77,7 @@ public:
 	void AddAssetToLoaded(std::string id, std::shared_ptr<Object> object);
 
 	bool ReadAssetAsBinary(std::vector<uint8_t>& buffer);
+	bool ReadAssetAsYAML(YAML::Node& node);
 	bool ReadMeta(YAML::Node& node);
 
 	void WriteToLibraryFile(const std::string& id, const YAML::Node& node);
@@ -86,9 +89,12 @@ public:
 	void GetLastModificationTime(long& assetModificationTime, long& metaModificationTime);
 
 	std::string GetAssetPath();
+	std::string GetFileExtension();
 	void EnsureForderForLibraryFileExists(std::string id);
 
 	std::string GetLibraryPathFromId(const std::string& id);
+	
+
 private:
 	bool ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer);
 	bool ReadYAML(const std::string& fullPath, YAML::Node& node);
@@ -98,6 +104,7 @@ private:
 
 class SE_CPP_API AssetDatabase2 {
 	friend AssetDatabase2_BinaryImporterHandle;
+	friend AssetDatabase2_TextImporterHandle;
 public:
 	bool Init();
 
@@ -117,6 +124,15 @@ public:
 	}
 	//TODO LoadAll
 
+	//TODO where T is Object
+	template<typename T>
+	std::shared_ptr<T> DeserializeFromYAML(const YAML::Node& node) {
+		//TODO not only mainObj
+		auto mainObj = DeserializeFromYAMLInternal(node);
+		return std::dynamic_pointer_cast<T>(mainObj);
+	}
+
+	//TODO rename to something like get asset uid (which may be path)
 	std::string GetAssetPath(std::shared_ptr<Object> obj);
 
 	std::shared_ptr<AssetImporter2>& GetAssetImporter(const std::string& type);
@@ -188,14 +204,24 @@ private:
 
 		std::string ToFullPath();
 	};
+	class LoadingRequest {
+	public:
+		void* target;
+		PathDescriptor descriptor;
+	};
 
 	std::shared_ptr<Object> GetLoaded(const PathDescriptor& path, ReflectedTypeBase* type);
 	void LoadAsset(const std::string& path);
 	std::string GetFileExtension(std::string path);
 	std::string GetFileName(std::string path);
+	std::shared_ptr<Object> DeserializeFromYAMLInternal(const YAML::Node& node);
+	void ProcessLoadingQueue();
 
 	std::unordered_map<std::string, Asset> assets;
 	std::unordered_map<std::shared_ptr<Object>, std::string> objectPaths;
+
+	std::string currentAssetLoadingPath;
+	std::vector<LoadingRequest> loadingQueue;
 
 	std::string assetsRootFolder = "assets\\";
 	std::string libraryRootFolder = "library\\assets\\";
@@ -298,7 +324,6 @@ private:
 	//TODO typeinfo for safety
 	std::unordered_map<void*, std::string> requestedObjectPtrs;
 
-	std::shared_ptr<AssetImporter>& GetAssetImporter(const std::string& type);
 	std::shared_ptr<TextAssetImporter>& GetTextAssetImporter(const std::string& type);
 
 	static AssetDatabase* mainDatabase;

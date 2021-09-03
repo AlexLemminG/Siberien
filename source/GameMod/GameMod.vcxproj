@@ -64,7 +64,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\Engine\include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Engine\SEngine;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -83,7 +83,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\Engine\include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Engine\SEngine;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

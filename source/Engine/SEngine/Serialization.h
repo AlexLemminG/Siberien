@@ -17,11 +17,18 @@ public:
 
 class AssetImporter2;
 class AssetDatabase2_BinaryImporterHandle;
+class AssetDatabase2_TextImporterHandle;
 
 class TextAssetImporter {
 public:
 	virtual std::shared_ptr<Object> Import(AssetDatabase& database, const YAML::Node& node) = 0;
 };
+
+class TextAssetImporter2 {
+public:
+	virtual std::shared_ptr<Object> Import (AssetDatabase2_TextImporterHandle& databaseHandle) = 0; // return false on error and true otherwise (even if no assets are imported)
+};
+
 class AssetImporter2 {
 public:
 	virtual bool ImportAll(AssetDatabase2_BinaryImporterHandle& databaseHandle) = 0; // return false on error and true otherwise (even if no assets are imported)
@@ -34,6 +41,9 @@ public:
 	void Register(std::string typeName, std::shared_ptr<TextAssetImporter> importer) {
 		textImporters[typeName] = importer;
 	}
+	void Register(std::string typeName, std::shared_ptr<TextAssetImporter2> importer) {
+		textImporters2[typeName] = importer;
+	}
 	void Register(std::string typeName, std::shared_ptr<AssetImporter> importer) {
 		binaryImporters[typeName] = importer;
 	}
@@ -43,6 +53,7 @@ public:
 
 	void UnregisterText(std::string typeName) {
 		textImporters[typeName] = nullptr;
+		textImporters2[typeName] = nullptr;
 	}
 	void UnregisterBinary(std::string typeName) {
 		binaryImporters[typeName] = nullptr;
@@ -53,6 +64,9 @@ public:
 
 	void Register(const SerializationInfoStorage& otherStorage) {
 		for (auto& i : otherStorage.textImporters) {
+			Register(i.first, i.second);
+		}
+		for (auto& i : otherStorage.textImporters2) {
 			Register(i.first, i.second);
 		}
 		for (auto& i : otherStorage.binaryImporters) {
@@ -67,6 +81,9 @@ public:
 		for (auto& i : otherStorage.textImporters) {
 			UnregisterText(i.first);
 		}
+		for (auto& i : otherStorage.textImporters2) {
+			UnregisterText(i.first);
+		}
 		for (auto& i : otherStorage.binaryImporters) {
 			UnregisterBinary(i.first);
 		}
@@ -78,6 +95,9 @@ public:
 	std::shared_ptr<TextAssetImporter>& GetTextImporter(const std::string typeName) {
 		return textImporters[typeName];
 	}
+	std::shared_ptr<TextAssetImporter2>& GetTextImporter2(const std::string typeName) {
+		return textImporters2[typeName];
+	}
 	std::shared_ptr<AssetImporter>& GetBinaryImporter(const std::string typeName) {
 		return binaryImporters[typeName];
 	}
@@ -87,6 +107,7 @@ public:
 
 private:
 	std::unordered_map<std::string, std::shared_ptr<TextAssetImporter>> textImporters;
+	std::unordered_map<std::string, std::shared_ptr<TextAssetImporter2>> textImporters2;
 	std::unordered_map<std::string, std::shared_ptr<AssetImporter>> binaryImporters;
 	std::unordered_map<std::string, std::shared_ptr<AssetImporter2>> binaryImporters2;
 };
@@ -112,6 +133,14 @@ public:
 };
 
 template <typename ImporterType>
+class TextAssetImporterRegistrator2 {
+public:
+	TextAssetImporterRegistrator2(std::string typeName) {
+		GetSerialiationInfoStorage().Register(typeName, std::make_shared<ImporterType>());
+	}
+};
+
+template <typename ImporterType>
 class BinaryAssetImporterRegistrator {
 public:
 	BinaryAssetImporterRegistrator(std::string typeName) {
@@ -128,10 +157,11 @@ public:
 };
 
 template <typename Type>
-class SerializedObjectImporter : public TextAssetImporter {
-	std::shared_ptr<Object> Import(AssetDatabase& database, const YAML::Node& node) override {
+class SerializedObjectImporter : public TextAssetImporter2 {
+	std::shared_ptr<Object> Import(AssetDatabase2_TextImporterHandle& handle) override {
 		std::unique_ptr<Type> asset = std::make_unique<Type>();
-		auto context = SerializationContext(node);
+		auto context = SerializationContext(handle.yaml);
+		context.databaseHandle = &handle;
 		Deserialize(context, *(asset.get()));
 		return std::shared_ptr<Object>(std::move(asset));
 	}

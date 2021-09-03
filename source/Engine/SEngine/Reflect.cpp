@@ -33,7 +33,13 @@ void SerializationContext::FlushRequiestedToSerialize() {
 			node = path;
 		}
 	}
+}
 
+void SerializationContext::FinishDeserialization() {
+	for (auto obj : deserializedObjects) {
+		//TODO not this!!
+		obj->OnAfterDeserializeCallback(*this);
+	}
 }
 
 void SerializationContext::RequestDeserialization(void* ptr, const std::string& assetPath) const {
@@ -42,8 +48,13 @@ void SerializationContext::RequestDeserialization(void* ptr, const std::string& 
 		database->RequestObjPtr(ptr, assetPath);
 	}
 	else {
-		//TODO assert false
-		AssetDatabase::Get()->RequestObjPtr(ptr, assetPath);
+		if (databaseHandle) {
+			databaseHandle->RequestObjectPtr(ptr, assetPath);
+		}
+		else {
+			//TODO assert false
+			AssetDatabase::Get()->RequestObjPtr(ptr, assetPath);
+		}
 	}
 }
 

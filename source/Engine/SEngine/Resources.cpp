@@ -37,13 +37,18 @@ std::string AssetDatabase2::GetAssetPath(std::shared_ptr<Object> obj) {
 }
 
 
+void AssetDatabase2_TextImporterHandle::RequestObjectPtr(void* dest, const std::string& uid) {
+	auto descriptor = AssetDatabase2::PathDescriptor(uid);
+	if (descriptor.assetPath.size() == 0) {
+		descriptor.assetPath = database->currentAssetLoadingPath;
+	}
+	database->loadingQueue.push_back(AssetDatabase2::LoadingRequest{ dest, descriptor });
+}
+
 std::shared_ptr<AssetImporter2>& AssetDatabase2::GetAssetImporter(const std::string& type) {
 	return GetSerialiationInfoStorage().GetBinaryImporter2(type);
 }
 
-std::shared_ptr<AssetImporter>& AssetDatabase::GetAssetImporter(const std::string& type) {
-	return GetSerialiationInfoStorage().GetBinaryImporter(type);
-}
 
 std::shared_ptr<TextAssetImporter>& AssetDatabase::GetTextAssetImporter(const std::string& type) {
 	return GetSerialiationInfoStorage().GetTextImporter(type);
@@ -56,40 +61,183 @@ AssetDatabase* AssetDatabase::Get() {
 
 
 std::shared_ptr<Object> AssetDatabase2::GetLoaded(const PathDescriptor& descriptor, ReflectedTypeBase* type) {
-	if (assets.find(descriptor.assetPath) != assets.end()) {
+	auto it = assets.find(descriptor.assetPath);
+	if (it != assets.end()) {
 		//TODO
 		//return assets[descriptor.assetPath].Get(GetReflectedType<T>(), descriptor.assetPath);
-		return assets[descriptor.assetPath].Get(descriptor.assetId);
+		return it->second.Get(descriptor.assetId);
 	}
 	else {
 		return nullptr;
 	}
 }
 
+
+void AssetDatabase2::ProcessLoadingQueue() {
+	std::vector<std::shared_ptr<Object>> loadedObjects;
+	while (!loadingQueue.empty()) {
+		const auto request = loadingQueue[0];
+		currentAssetLoadingPath = request.descriptor.assetPath;
+		//TODO optimize traversing
+		loadingQueue.erase(loadingQueue.begin());
+
+		auto loaded = GetLoaded(request.descriptor, nullptr);
+		if (loaded) {
+			if (request.target) {
+				*(std::shared_ptr<Object>*)(request.target) = loaded;
+			}
+			continue;
+		}
+
+		const auto& path = request.descriptor.assetPath;
+		auto extention = GetFileExtension(path);
+		//TODO get extensions list from asset importer
+		if (extention == "png") {
+			auto& importer = GetAssetImporter("Texture");
+			if (importer) {
+				importer->ImportAll(AssetDatabase2_BinaryImporterHandle(this, path));
+			}
+		}
+		else if (extention == "fbx" || extention == "glb" || extention == "blend") {
+			auto& importer = GetAssetImporter("Mesh");
+			if (importer) {
+				importer->ImportAll(AssetDatabase2_BinaryImporterHandle(this, path));
+			}
+		}
+		else if (extention == "fs" || extention == "vs") {
+			auto& importer = GetAssetImporter("Shader");
+			if (importer) {
+				importer->ImportAll(AssetDatabase2_BinaryImporterHandle(this, path));
+			}
+		}
+		else if (extention == "asset") {
+			YAML::Node node;
+			std::ifstream input(assetsRootFolder + path);
+			if (input) {
+				//TODO
+				//LogError("Failed to load '%s': file not found", fullPath.c_str());
+
+				node = YAML::Load(input);
+				if (node.IsDefined()) {
+					for (const auto& kv : node) {
+						PathDescriptor descriptor(kv.first.as<std::string>());
+						std::string type = descriptor.assetPath;
+						std::string id = descriptor.assetId.size() > 0 ? descriptor.assetId : descriptor.assetPath;
+
+						auto node = kv.second;
+
+						auto& importer = GetSerialiationInfoStorage().GetTextImporter2(type);
+						if (importer) {
+							AssetDatabase2_TextImporterHandle handle{ this, kv.second };
+							auto object = importer->Import(handle);//TODO rename to deserializer->Deserialize or something
+
+							if (object != nullptr) {
+								loadedObjects.push_back(object);
+								auto& asset = assets[path];
+								asset.Add(id, object);
+								objectPaths[object] = AssetDatabase2::PathDescriptor(path, id).ToFullPath();
+							}
+							else {
+								//TODO LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
+							}
+						}
+						else {
+							//TODO error
+						}
+					}
+				}
+				else {
+					node = YAML::Node();
+					//TODO error
+				}
+			}
+			else {
+				//TORO error
+				node = YAML::Node();
+			}
+		}
+		else {
+			//TODO error
+		}
+
+
+		loaded = GetLoaded(request.descriptor, nullptr);
+		if (loaded) {
+			if (request.target) {
+				*(std::shared_ptr<Object>*)(request.target) = loaded;
+			}
+			continue;
+		}
+		else {
+			if (request.target) {
+				*(std::shared_ptr<Object>*)(request.target) = nullptr;
+			}
+		}
+		currentAssetLoadingPath = "";
+	}
+
+	for (auto o : loadedObjects) {
+		SerializationContext c{ YAML::Node() };//TODO HAAAKING
+		o->OnAfterDeserializeCallback(c);
+	}
+}
+
+
 void AssetDatabase2::LoadAsset(const std::string& path) {
 	if (assets.find(path) != assets.end()) {
 		return;//TODO dont call LoadAsset in the first place
 	}
-	auto extention = GetFileExtension(path);
-	//TODO get extensions list from asset importer
-	if (extention == "png") {
-		auto& importer = GetAssetImporter("Texture");
-		if (importer) {
-			importer->ImportAll(AssetDatabase2_BinaryImporterHandle(this, path));
-		}
-	}
-	else if (extention == "fbx" || extention == "glb" || extention == "blend") {
-		auto& importer = GetAssetImporter("Mesh");
-		if (importer) {
-			importer->ImportAll(AssetDatabase2_BinaryImporterHandle(this, path));
-		}
-	}
-	else if (extention == "asset") {
 
+	loadingQueue.push_back(AssetDatabase2::LoadingRequest{ nullptr, PathDescriptor{path} });
+	ProcessLoadingQueue();
+}
+
+
+std::shared_ptr<Object> AssetDatabase2::DeserializeFromYAMLInternal(const YAML::Node& node) {
+	std::string path = "***temp_asset***";
+	std::vector<std::shared_ptr<Object>> loadedObjects;
+	currentAssetLoadingPath = path;
+	//TODO less code duplication
+	//TODO less hacking
+	if (node.IsDefined()) {
+		for (const auto& kv : node) {
+			PathDescriptor descriptor(kv.first.as<std::string>());
+			std::string type = descriptor.assetPath;
+			std::string id = descriptor.assetId.size() > 0 ? descriptor.assetId : descriptor.assetPath;
+
+			auto node = kv.second;
+
+			auto& importer = GetSerialiationInfoStorage().GetTextImporter2(type);
+			if (importer) {
+				AssetDatabase2_TextImporterHandle handle{ this, kv.second };
+				auto object = importer->Import(handle);//TODO rename to deserializer->Deserialize or something
+
+				if (object != nullptr) {
+					loadedObjects.push_back(object);
+					auto& asset = assets[path];
+					asset.Add(id, object);
+					objectPaths[object] = AssetDatabase2::PathDescriptor(path, id).ToFullPath();//TODO delete
+				}
+				else {
+					//TODO LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
+				}
+			}
+			else {
+				//TODO error
+			}
+		}
 	}
-	else {
-		return;
+
+	ProcessLoadingQueue();
+
+	for (auto o : loadedObjects) {
+		SerializationContext c{ YAML::Node() };//TODO HAAAKING
+		o->OnAfterDeserializeCallback(c);
 	}
+	currentAssetLoadingPath = "";
+	auto main = assets[path].GetMain();
+	assets[path] = Asset();
+	return main;
 }
 
 void AssetDatabase2_BinaryImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) {
@@ -304,6 +452,8 @@ std::shared_ptr<BinaryAsset> AssetDatabase::LoadBinaryAssetFromLibrary(std::stri
 }
 
 std::shared_ptr<Object> AssetDatabase::LoadFromYaml(const YAML::Node& node) {
+	return database2.DeserializeFromYAML<Object>(node);
+
 	std::string path = "***temp_storage***";
 	currentAssetLoadingPath = path;
 	LoadAllAtYaml(node, path);
@@ -378,13 +528,7 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 	currentAssetLoadingPath = path;
 	std::string ext = GetFileExtension(path);
 	if (ext == "asset") {
-		auto textAsset = LoadTextAsset(path);
-		if (!textAsset) {
-			currentAssetLoadingPath = "";//TODO scope exis shit
-			return;
-		}
-
-		LoadAllAtYaml(textAsset->GetYamlNode(), path);
+		database2.Load<Object>(path);
 	}
 	else if (ext == "fbx" || ext == "glb" || ext == "blend") {
 		database2.Load<Object>(path);
@@ -393,14 +537,7 @@ void AssetDatabase::LoadAllAtPath(std::string path)
 		database2.Load<Object>(path);
 	}
 	else if (ext == "wav") {
-		std::string type = "AudioClip";
-		auto& importer = GetAssetImporter(type);
-		if (importer) {
-			importer->Import(*this, path);
-		}
-		else {
-			ASSERT(false);
-		}
+		//TODO
 	}
 	else {
 		LogError("unknown extension '%s' at file '%s'", ext.c_str(), currentAssetLoadingPath.c_str());
@@ -543,13 +680,17 @@ bool AssetDatabase2_BinaryImporterHandle::ReadAssetAsBinary(std::vector<uint8_t>
 	return ReadBinary(GetAssetPath(), buffer);
 }
 
+bool AssetDatabase2_BinaryImporterHandle::ReadAssetAsYAML(YAML::Node& node) {
+	return ReadYAML(GetAssetPath(), node);
+}
+
 bool AssetDatabase2_BinaryImporterHandle::ReadMeta(YAML::Node& node) {
 	const auto fullPath = database->assetsRootFolder + assetPath + ".meta";
 	return ReadYAML(fullPath, node);
 }
 
 std::string AssetDatabase2_BinaryImporterHandle::GetAssetPath() { return database->assetsRootFolder + assetPath; }
-
+std::string AssetDatabase2_BinaryImporterHandle::GetFileExtension() { return database->GetFileExtension(assetPath); }
 void AssetDatabase2_BinaryImporterHandle::EnsureForderForLibraryFileExists(std::string id) {
 	auto fullPath = GetLibraryPathFromId(id);
 	auto firstFolder = fullPath.find_first_of("\\");

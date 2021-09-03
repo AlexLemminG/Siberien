@@ -28,6 +28,7 @@ SerializationContext Object::Serialize(std::shared_ptr<Object> original) {
 	std::vector<std::shared_ptr<Object>> serializedObjects;
 	serializedObjects.push_back(original);
 	SerializationContext context{ node, serializedObjects };
+	//context.databaseHandle = AssetDatabase2
 	context.database = AssetDatabase::Get();
 	::Serialize(context, original);
 	context.FlushRequiestedToSerialize();
@@ -36,5 +37,7 @@ SerializationContext Object::Serialize(std::shared_ptr<Object> original) {
 }
 
 std::shared_ptr<Object> Object::Instantiate(std::shared_ptr<Object> original) {
-	return Instantiate(Serialize(original));
+	auto so = Serialize(original);
+	auto spg = so.yamlNode["sphericalHarmonics"];
+	return Instantiate(so);
 }

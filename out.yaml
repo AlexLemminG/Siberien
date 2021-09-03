@@ -38,214 +38,221 @@ Scene$0:
     - $36
     - $37
     - $38
+    - $39
 GameObject$2:
   tag: ""
   components:
-    - $39
+    - $40
 GameObject$3:
   tag: camera
   components:
-    - $40
     - $41
     - $42
+    - $43
 GameObject$4:
   tag: Player
   components:
-    - $43
     - $44
     - $45
     - $46
     - $47
     - $48
+    - $49
+    - $50
 GameObject$5:
   tag: ""
   components:
-    - $49
-    - $50
     - $51
+    - $52
+    - $53
 GameObject$6:
   tag: ""
   components:
-    - $52
-    - $53
     - $54
     - $55
-GameObject$7:
-  tag: indoorHidePlane
-  components:
     - $56
     - $57
-GameObject$8:
-  tag: BlenderSceneLoader
-  components:
-    - $58
-GameObject$9:
+GameObject$7:
   tag: ""
   components:
+    - $58
     - $59
+GameObject$8:
+  tag: indoorHidePlane
+  components:
     - $60
     - $61
+GameObject$9:
+  tag: BlenderSceneLoader
+  components:
     - $62
 GameObject$10:
-  tag: door1
+  tag: ""
   components:
     - $63
     - $64
     - $65
     - $66
 GameObject$11:
-  tag: door1_light
+  tag: door1
   components:
     - $67
     - $68
-GameObject$12:
-  tag: door2
-  components:
     - $69
     - $70
+GameObject$12:
+  tag: door1_light
+  components:
     - $71
     - $72
 GameObject$13:
-  tag: door2_light
+  tag: door2
   components:
     - $73
     - $74
-GameObject$14:
-  tag: door3
-  components:
     - $75
     - $76
+GameObject$14:
+  tag: door2_light
+  components:
     - $77
     - $78
 GameObject$15:
-  tag: door3_light
+  tag: door3
   components:
     - $79
     - $80
-GameObject$16:
-  tag: door4
-  components:
     - $81
     - $82
+GameObject$16:
+  tag: door3_light
+  components:
     - $83
     - $84
 GameObject$17:
-  tag: door4_light
+  tag: door4
   components:
     - $85
     - $86
-GameObject$18:
-  tag: door5
-  components:
     - $87
     - $88
+GameObject$18:
+  tag: door4_light
+  components:
     - $89
     - $90
 GameObject$19:
-  tag: door5_light
+  tag: door5
   components:
     - $91
     - $92
-GameObject$20:
-  tag: Light
-  components:
     - $93
     - $94
-GameObject$21:
-  tag: Light
+GameObject$20:
+  tag: door5_light
   components:
     - $95
     - $96
-GameObject$22:
+GameObject$21:
   tag: Light
   components:
     - $97
     - $98
-GameObject$23:
+GameObject$22:
   tag: Light
   components:
     - $99
     - $100
-GameObject$24:
+GameObject$23:
   tag: Light
   components:
     - $101
     - $102
-GameObject$25:
+GameObject$24:
   tag: Light
   components:
     - $103
     - $104
-GameObject$26:
+GameObject$25:
   tag: Light
   components:
     - $105
     - $106
-GameObject$27:
+GameObject$26:
   tag: Light
   components:
     - $107
     - $108
-GameObject$28:
+GameObject$27:
   tag: Light
   components:
     - $109
     - $110
-GameObject$29:
+GameObject$28:
   tag: Light
   components:
     - $111
     - $112
-GameObject$30:
+GameObject$29:
   tag: Light
   components:
     - $113
     - $114
-GameObject$31:
+GameObject$30:
   tag: Light
   components:
     - $115
     - $116
-GameObject$32:
+GameObject$31:
   tag: Light
   components:
     - $117
     - $118
-GameObject$33:
+GameObject$32:
   tag: Light
   components:
     - $119
     - $120
-GameObject$34:
+GameObject$33:
   tag: Light
   components:
     - $121
     - $122
-GameObject$35:
-  tag: ""
+GameObject$34:
+  tag: Light
   components:
     - $123
     - $124
+GameObject$35:
+  tag: Light
+  components:
     - $125
+    - $126
 GameObject$36:
   tag: ""
   components:
-    - $126
     - $127
     - $128
+    - $129
 GameObject$37:
   tag: ""
   components:
-    - $129
     - $130
     - $131
+    - $132
 GameObject$38:
   tag: ""
   components:
-    - $132
     - $133
     - $134
-GameplaySceneScenario$39:
+    - $135
+GameObject$39:
+  tag: ""
+  components:
+    - $136
+    - $137
+    - $138
+GameplaySceneScenario$40:
   randomGun: gameplayScene_scenario.asset$pick
   chadZombiePrefab: chadZombie.asset$GameObject
   slowZombiePrefab: slowZombie.asset$GameObject
@@ -277,7 +284,7 @@ GameplaySceneScenario$39:
         - gun_machineGun.asset$Gun
         - gun_machineGun.asset$Gun
       grenades: 0
-Camera$40:
+Camera$41:
   clearColor:
     r: 0
     g: 0
@@ -286,7 +293,7 @@ Camera$40:
   fov: 90
   nearPlane: 0.00999999978
   farPlane: 1000
-Transform$41:
+Transform$42:
   pos:
     - 0
     - 0.999000013
@@ -297,9 +304,9 @@ Transform$41:
     - 0
   scale:
     - 1
-    - 1
-    - 1
-TopDownCameraRig$42:
+    - 0.99999994
+    - 0.99999994
+TopDownCameraRig$43:
   targetTag: Player
   lerpT: 1
   collisionLerpT: 10
@@ -307,10 +314,10 @@ TopDownCameraRig$42:
     - 0
     - 10
     - -5
-MeshRenderer$43:
+MeshRenderer$44:
   mesh: meshes\player.glb$Mesh
   material: materials\scifi.asset$Material
-Transform$44:
+Transform$45:
   pos:
     - 0
     - 0.5
@@ -320,10 +327,10 @@ Transform$44:
     - 60.0000038
     - 0
   scale:
+    - 0.699999928
     - 0.699999988
-    - 0.699999988
-    - 0.699999988
-PlayerController$45:
+    - 0.699999928
+PlayerController$46:
   speed: 5
   jumpVelocity: 5
   jumpPushImpulse: 500
@@ -340,77 +347,70 @@ PlayerController$45:
   startGun: gun_pistol.asset$Gun
   grenadePrefab: grenade.asset$GameObject
   shootingSounds:
-    - sounds\shooting (1).wav
-    - sounds\shooting (2).wav
-    - sounds\shooting (3).wav
+    []
   footstepSounds:
-    - sounds\footstep (1).wav
-    - sounds\footstep (2).wav
-    - sounds\footstep (3).wav
-    - sounds\footstep (4).wav
-    - sounds\footstep (5).wav
-    - sounds\footstep (6).wav
-    - sounds\footstep (7).wav
-    - sounds\footstep (8).wav
-  postprocessingEffect: playerHealthEffect.asset$PostProcessingEffect
-SphereCollider$46:
+    []
+  postprocessingEffect: $50
+SphereCollider$47:
   radius: 1
   center:
     - 0
     - 0.5
     - 0
-RigidBody$47:
+RigidBody$48:
   mass: 50
   isStatic: false
   isKinematic: false
   friction: 0
   restitution: 0
-  localOffset:
+  centerOfMass:
     - 0
     - 0
     - 0
   layer: player
-Health$48:
+Health$49:
   amount: 5
-MeshRenderer$49:
+PostProcessingEffect$50:
+  material: materials\playerHealthEffect.asset$Material
+MeshRenderer$51:
   mesh: meshes\shotgun.glb$Mesh
   material: materials\scifi.asset$Material
-Transform$50:
+Transform$52:
   pos:
     - -24
     - 0
     - 11.3999996
   euler:
     - 0
-    - 60.0000191
+    - 60.0000114
     - 0
   scale:
     - 0.99999994
     - 1
     - 0.99999994
-Pickup$51:
+Pickup$53:
   gun: gun_shotgun.asset$Gun
   grenadesCount: 0
-MeshRenderer$52:
+MeshRenderer$54:
   mesh: meshes\gatling.glb$Mesh
   material: materials\scifi.asset$Material
-Transform$53:
+Transform$55:
   pos:
     - -26.6000004
     - 4.5
     - 146
   euler:
     - 0
-    - 60.0000191
+    - 60.0000114
     - 0
   scale:
     - 0.99999994
     - 1
     - 0.99999994
-Pickup$54:
+Pickup$56:
   gun: gun_gatling.asset$Gun
   grenadesCount: 0
-PointLight$55:
+PointLight$57:
   color:
     r: 1
     g: 0
@@ -418,10 +418,31 @@ PointLight$55:
     a: 1
   radius: 4
   innerRadius: 0.699999988
-MeshRenderer$56:
+  drawShadows: false
+DirLight$58:
+  color:
+    r: 0
+    g: 0.0196078438
+    b: 0.13333334
+    a: 1
+  drawShadows: true
+Transform$59:
+  pos:
+    - -20
+    - 30
+    - 100
+  euler:
+    - -120.091293
+    - 45.091301
+    - -180.091293
+  scale:
+    - 0.99999994
+    - 0.99999994
+    - 0.99999994
+MeshRenderer$60:
   mesh: meshes\gameplayStatic.glb$indoorHidePlane_hidden
   material: materials\scifi.asset$Material
-Transform$57:
+Transform$61:
   pos:
     - 0
     - 0
@@ -434,46 +455,46 @@ Transform$57:
     - 1
     - 1
     - 1
-BlenderSceneLoader$58:
+BlenderSceneLoader$62:
   material: materials\scifi.asset$Material
   materialNeon: materials\scifi_neon.asset$Material
   materialSigns: materials\scifi_signs.asset$Material
   materialRoads: materials\scifi_roads.asset$Material
   materialPosters: materials\scifi_posters.asset$Material
   scene: meshes\gameplayStatic.glb$FullMeshAsset
-MeshRenderer$59:
+MeshRenderer$63:
   mesh: meshes\gameplayStatic.glb$Scene_hidden
   material: ""
-Transform$60:
+Transform$64:
   pos:
     - 0
     - 0
     - 0
   euler:
     - 0
-    - -12.6099997
+    - -12.6099987
     - 0
   scale:
     - 1
     - 1
     - 1
-MeshCollider$61:
+MeshCollider$65:
   mesh: meshes\gameplayStatic.glb$Scene_hidden
-RigidBody$62:
+RigidBody$66:
   mass: 20
   isStatic: true
   isKinematic: false
   friction: 0.5
   restitution: 0
-  localOffset:
+  centerOfMass:
     - 0
     - 0
     - 0
   layer: ""
-MeshRenderer$63:
+MeshRenderer$67:
   mesh: meshes\door.glb$door
   material: materials\scifi.asset$Material
-Transform$64:
+Transform$68:
   pos:
     - -4.32800007
     - 0
@@ -486,7 +507,7 @@ Transform$64:
     - 0.99999994
     - 1
     - 0.99999994
-BoxCollider$65:
+BoxCollider$69:
   size:
     - 4
     - 5
@@ -495,18 +516,18 @@ BoxCollider$65:
     - 0
     - 0
     - 0
-RigidBody$66:
+RigidBody$70:
   mass: 20
   isStatic: true
   isKinematic: false
   friction: 0.5
   restitution: 0
-  localOffset:
+  centerOfMass:
     - 0
     - 0
     - 0
   layer: ""
-Transform$67:
+Transform$71:
   pos:
     - -2.38599992
     - 4.67999983
@@ -519,7 +540,7 @@ Transform$67:
     - 1
     - 1
     - 1
-PointLight$68:
+PointLight$72:
   color:
     r: 1
     g: 0
@@ -527,23 +548,24 @@ PointLight$68:
     a: 1
   radius: 3
   innerRadius: 0.300000012
-MeshRenderer$69:
+  drawShadows: false
+MeshRenderer$73:
   mesh: meshes\door.glb$door
   material: materials\scifi.asset$Material
-Transform$70:
+Transform$74:
   pos:
     - -19.2199993
     - 3
     - 130.300003
   euler:
-    - 180.091308
+    - 180.091309
     - -77.4912949
-    - 180.091308
+    - 180.091309
   scale:
     - 1
     - 0.5
     - 1
-BoxCollider$71:
+BoxCollider$75:
   size:
     - 4
     - 5
@@ -552,18 +574,18 @@ BoxCollider$71:
     - 0
     - 0
     - 0
-RigidBody$72:
+RigidBody$76:
   mass: 20
   isStatic: true
   isKinematic: false
   friction: 0.5
   restitution: 0
-  localOffset:
+  centerOfMass:
     - 0
     - 0
     - 0
   layer: ""
-Transform$73:
+Transform$77:
   pos:
     - -20.5900002
     - 5.17999983
@@ -576,7 +598,7 @@ Transform$73:
     - 1
     - 1
     - 1
-PointLight$74:
+PointLight$78:
   color:
     r: 1
     g: 0
@@ -584,23 +606,24 @@ PointLight$74:
     a: 1
   radius: 3
   innerRadius: 0.300000012
-MeshRenderer$75:
+  drawShadows: false
+MeshRenderer$79:
   mesh: meshes\door.glb$door
   material: materials\scifi.asset$Material
-Transform$76:
+Transform$80:
   pos:
     - -5.01000023
     - 3
     - 123
   euler:
-    - 180.091308
+    - 180.091309
     - -77.4912949
-    - 180.091308
+    - 180.091309
   scale:
     - 1
     - 0.5
     - 1
-BoxCollider$77:
+BoxCollider$81:
   size:
     - 4
     - 5
@@ -609,18 +632,18 @@ BoxCollider$77:
     - 0
     - 0
     - 0
-RigidBody$78:
+RigidBody$82:
   mass: 20
   isStatic: true
   isKinematic: false
   friction: 0.5
   restitution: 0
-  localOffset:
+  centerOfMass:
     - 0
     - 0
     - 0
   layer: ""
-Transform$79:
+Transform$83:
   pos:
     - -6.4000001
     - 6.0999999
@@ -633,7 +656,7 @@ Transform$79:
     - 1
     - 1
     - 1
-PointLight$80:
+PointLight$84:
   color:
     r: 1
     g: 0
@@ -641,23 +664,24 @@ PointLight$80:
     a: 1
   radius: 9
   innerRadius: 0.300000012
-MeshRenderer$81:
+  drawShadows: false
+MeshRenderer$85:
   mesh: meshes\door.glb$door
   material: materials\scifi.asset$Material
-Transform$82:
+Transform$86:
   pos:
     - -5.84000015
     - 3
     - 158.100006
   euler:
-    - 180.091308
+    - 180.091309
     - -77.4912949
-    - 180.091308
+    - 180.091309
   scale:
     - 1
     - 1
     - 1
-BoxCollider$83:
+BoxCollider$87:
   size:
     - 4
     - 5
@@ -666,18 +690,18 @@ BoxCollider$83:
     - 0
     - 0
     - 0
-RigidBody$84:
+RigidBody$88:
   mass: 20
   isStatic: true
   isKinematic: false
   friction: 0.5
   restitution: 0
-  localOffset:
+  centerOfMass:
     - 0
     - 0
     - 0
   layer: ""
-Transform$85:
+Transform$89:
   pos:
     - -5.78000021
     - 7.61299992
@@ -690,7 +714,7 @@ Transform$85:
     - 1
     - 1
     - 1
-PointLight$86:
+PointLight$90:
   color:
     r: 1
     g: 0
@@ -698,23 +722,24 @@ PointLight$86:
     a: 1
   radius: 3
   innerRadius: 0.300000012
-MeshRenderer$87:
+  drawShadows: false
+MeshRenderer$91:
   mesh: meshes\door.glb$door
   material: materials\scifi.asset$Material
-Transform$88:
+Transform$92:
   pos:
     - -68.2200012
     - 4.94399977
     - 139.800003
   euler:
-    - 180.091308
+    - 180.091309
     - -77.4912949
-    - 180.091308
+    - 180.091309
   scale:
     - 0.630000055
     - 0.629999995
     - 0.630000055
-BoxCollider$89:
+BoxCollider$93:
   size:
     - 4
     - 5
@@ -723,18 +748,18 @@ BoxCollider$89:
     - 0
     - 0
     - 0
-RigidBody$90:
+RigidBody$94:
   mass: 20
   isStatic: true
   isKinematic: false
   friction: 0.5
   restitution: 0
-  localOffset:
+  centerOfMass:
     - 0
     - 0
     - 0
   layer: ""
-Transform$91:
+Transform$95:
   pos:
     - -67.3300018
     - 8.35999966
@@ -747,7 +772,7 @@ Transform$91:
     - 1
     - 1
     - 1
-PointLight$92:
+PointLight$96:
   color:
     r: 1
     g: 0
@@ -755,7 +780,8 @@ PointLight$92:
     a: 1
   radius: 3
   innerRadius: 0.300000012
-Transform$93:
+  drawShadows: false
+Transform$97:
   pos:
     - -9.73999977
     - 6.30000019
@@ -768,15 +794,16 @@ Transform$93:
     - 1
     - 1
     - 1
-PointLight$94:
+PointLight$98:
   color:
-    r: 0.200000003
+    r: 0.200000018
     g: 1
     b: 0.600000024
     a: 1
   radius: 20
   innerRadius: 0
-Transform$95:
+  drawShadows: false
+Transform$99:
   pos:
     - -5.73999977
     - 20.2999992
@@ -789,15 +816,16 @@ Transform$95:
     - 1
     - 1
     - 1
-PointLight$96:
+PointLight$100:
   color:
-    r: 0.200000003
+    r: 0.200000018
     g: 0.533333361
     b: 1
     a: 1
   radius: 40
   innerRadius: 0.300000012
-Transform$97:
+  drawShadows: false
+Transform$101:
   pos:
     - -32.2999992
     - 9.30000019
@@ -810,15 +838,16 @@ Transform$97:
     - 1
     - 1
     - 1
-PointLight$98:
+PointLight$102:
   color:
-    r: 0.200000003
+    r: 0.200000018
     g: 1
-    b: 0.200000003
+    b: 0.200000018
     a: 1
   radius: 20
   innerRadius: 0
-Transform$99:
+  drawShadows: false
+Transform$103:
   pos:
     - -15.3000002
     - 12.5
@@ -831,7 +860,7 @@ Transform$99:
     - 1
     - 1
     - 1
-PointLight$100:
+PointLight$104:
   color:
     r: 1
     g: 0.266666681
@@ -839,7 +868,8 @@ PointLight$100:
     a: 1
   radius: 25
   innerRadius: 0
-Transform$101:
+  drawShadows: false
+Transform$105:
   pos:
     - -38.9000015
     - 7.5
@@ -852,7 +882,7 @@ Transform$101:
     - 1
     - 1
     - 1
-PointLight$102:
+PointLight$106:
   color:
     r: 1
     g: 0.266666681
@@ -860,7 +890,8 @@ PointLight$102:
     a: 1
   radius: 25
   innerRadius: 0
-Transform$103:
+  drawShadows: false
+Transform$107:
   pos:
     - -1.55999994
     - 4.4000001
@@ -873,7 +904,7 @@ Transform$103:
     - 1
     - 1
     - 1
-PointLight$104:
+PointLight$108:
   color:
     r: 1
     g: 0
@@ -881,7 +912,8 @@ PointLight$104:
     a: 1
   radius: 4
   innerRadius: 0.699999988
-Transform$105:
+  drawShadows: false
+Transform$109:
   pos:
     - -18.6000004
     - 5.19999981
@@ -894,7 +926,7 @@ Transform$105:
     - 1
     - 1
     - 1
-PointLight$106:
+PointLight$110:
   color:
     r: 0.13333334
     g: 1
@@ -902,53 +934,12 @@ PointLight$106:
     a: 1
   radius: 8
   innerRadius: 0
-Transform$107:
+  drawShadows: false
+Transform$111:
   pos:
     - 18
     - 6.5999999
     - 131.199997
-  euler:
-    - 0
-    - -0
-    - 0
-  scale:
-    - 1
-    - 1
-    - 1
-PointLight$108:
-  color:
-    r: 0
-    g: 1
-    b: 1
-    a: 1
-  radius: 12
-  innerRadius: 0
-Transform$109:
-  pos:
-    - 34.4000015
-    - 6.5999999
-    - 134.800003
-  euler:
-    - 0
-    - -0
-    - 0
-  scale:
-    - 1
-    - 1
-    - 1
-PointLight$110:
-  color:
-    r: 0
-    g: 1
-    b: 1
-    a: 1
-  radius: 12
-  innerRadius: 0
-Transform$111:
-  pos:
-    - 14.8000002
-    - 6.5999999
-    - 144
   euler:
     - 0
     - -0
@@ -965,11 +956,12 @@ PointLight$112:
     a: 1
   radius: 12
   innerRadius: 0
+  drawShadows: false
 Transform$113:
   pos:
-    - 31.5
+    - 34.4000015
     - 6.5999999
-    - 147.800003
+    - 134.800003
   euler:
     - 0
     - -0
@@ -986,11 +978,12 @@ PointLight$114:
     a: 1
   radius: 12
   innerRadius: 0
+  drawShadows: false
 Transform$115:
   pos:
-    - 28
+    - 14.8000002
     - 6.5999999
-    - 162.800003
+    - 144
   euler:
     - 0
     - -0
@@ -1007,11 +1000,12 @@ PointLight$116:
     a: 1
   radius: 12
   innerRadius: 0
+  drawShadows: false
 Transform$117:
   pos:
-    - 11.5
+    - 31.5
     - 6.5999999
-    - 159.300003
+    - 147.800003
   euler:
     - 0
     - -0
@@ -1028,7 +1022,52 @@ PointLight$118:
     a: 1
   radius: 12
   innerRadius: 0
+  drawShadows: false
 Transform$119:
+  pos:
+    - 28
+    - 6.5999999
+    - 162.800003
+  euler:
+    - 0
+    - -0
+    - 0
+  scale:
+    - 1
+    - 1
+    - 1
+PointLight$120:
+  color:
+    r: 0
+    g: 1
+    b: 1
+    a: 1
+  radius: 12
+  innerRadius: 0
+  drawShadows: false
+Transform$121:
+  pos:
+    - 11.5
+    - 6.5999999
+    - 159.300003
+  euler:
+    - 0
+    - -0
+    - 0
+  scale:
+    - 1
+    - 1
+    - 1
+PointLight$122:
+  color:
+    r: 0
+    g: 1
+    b: 1
+    a: 1
+  radius: 12
+  innerRadius: 0
+  drawShadows: false
+Transform$123:
   pos:
     - -18.5
     - 7.5
@@ -1041,7 +1080,7 @@ Transform$119:
     - 1
     - 1
     - 1
-PointLight$120:
+PointLight$124:
   color:
     r: 1
     g: 0
@@ -1049,7 +1088,8 @@ PointLight$120:
     a: 1
   radius: 15
   innerRadius: 0
-Transform$121:
+  drawShadows: false
+Transform$125:
   pos:
     - -59.2000008
     - 23.2000008
@@ -1062,7 +1102,7 @@ Transform$121:
     - 1
     - 1
     - 1
-PointLight$122:
+PointLight$126:
   color:
     r: 0.0666666701
     g: 0.266666681
@@ -1070,10 +1110,11 @@ PointLight$122:
     a: 1
   radius: 35
   innerRadius: 0
-MeshRenderer$123:
+  drawShadows: false
+MeshRenderer$127:
   mesh: meshes\grenadePickup.glb$Mesh
   material: materials\scifi.asset$Material
-Transform$124:
+Transform$128:
   pos:
     - -6.0999999
     - 3
@@ -1086,13 +1127,13 @@ Transform$124:
     - 1
     - 1
     - 1
-Pickup$125:
+Pickup$129:
   gun: ""
   grenadesCount: 2
-MeshRenderer$126:
+MeshRenderer$130:
   mesh: meshes\grenadePickup.glb$Mesh
   material: materials\scifi.asset$Material
-Transform$127:
+Transform$131:
   pos:
     - -3.66599989
     - 3
@@ -1105,13 +1146,13 @@ Transform$127:
     - 1
     - 1
     - 1
-Pickup$128:
+Pickup$132:
   gun: ""
   grenadesCount: 2
-MeshRenderer$129:
+MeshRenderer$133:
   mesh: meshes\grenadePickup.glb$Mesh
   material: materials\scifi.asset$Material
-Transform$130:
+Transform$134:
   pos:
     - -12
     - 3
@@ -1124,25 +1165,25 @@ Transform$130:
     - 1
     - 1
     - 1
-Pickup$131:
+Pickup$135:
   gun: ""
   grenadesCount: 1
-MeshRenderer$132:
+MeshRenderer$136:
   mesh: meshes\shotgun.glb$Mesh
   material: materials\scifi.asset$Material
-Transform$133:
+Transform$137:
   pos:
     - -2
     - 4.30000019
     - 128.100006
   euler:
     - 0
-    - 60.0000191
+    - 60.0000114
     - 0
   scale:
     - 0.99999994
     - 1
     - 0.99999994
-Pickup$134:
+Pickup$138:
   gun: gun_shotgun.asset$Gun
   grenadesCount: 0
