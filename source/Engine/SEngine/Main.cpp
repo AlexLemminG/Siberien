@@ -122,7 +122,7 @@ start:
 		if (needSceneReload) {
 			needSceneReload = false;
 			SceneManager::LoadScene(GetFirstSceneName());
-			assets.UnloadAll();
+			//assets.UnloadAll();
 		}
 
 		SceneManager::Update();

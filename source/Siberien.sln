@@ -67,6 +67,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Bullet3Common", "libs\bullet\build3\vs2010\Bullet3Common.vcxproj", "{880C1B6F-E19C-D34E-BDF6-BB8AAFBFFACD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameMod", "GameMod\GameMod.vcxproj", "{3AD096CE-BB8D-4B4D-B1B3-7255785FDAF0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D3F02BBF-4568-4D3D-BF09-D89C6FBA7D65} = {D3F02BBF-4568-4D3D-BF09-D89C6FBA7D65}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

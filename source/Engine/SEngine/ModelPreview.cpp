@@ -29,6 +29,7 @@ void ModelPreview::OnEnable() {
 }
 
 void ModelPreview::Update() {
+	ImGui::ShowDemoWindow();
 	UpdateSelection();
 	UpdateAnimator();
 	UpdateCamera();

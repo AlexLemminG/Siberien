@@ -32,7 +32,7 @@ void SceneManager::Update() {
 		scene = assets->LoadByPath<Scene>(sceneName);
 		if (!scene) {
 			if (sceneName != "-") { //TODO tidy
-				ASSERT(false);
+				//ASSERT(false);
 			}
 			return;
 		}

@@ -46,7 +46,9 @@ void MeshRenderer::OnEnable() {
 
 void MeshRenderer::OnDisable() {
 	if (addedToRenderers) {
-		enabledMeshRenderers.erase(std::find(enabledMeshRenderers.begin(), enabledMeshRenderers.end(), this));
+		auto it = std::find(enabledMeshRenderers.begin(), enabledMeshRenderers.end(), this);
+		enabledMeshRenderers[it - enabledMeshRenderers.begin()] = enabledMeshRenderers.back();
+		enabledMeshRenderers.pop_back();
 		addedToRenderers = false;
 	}
 }

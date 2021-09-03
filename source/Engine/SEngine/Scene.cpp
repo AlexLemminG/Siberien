@@ -113,7 +113,9 @@ void Scene::ActivateGameObjectInternal(std::shared_ptr<GameObject>& gameObject) 
 
 void Scene::DeactivateGameObjectInternal(std::shared_ptr<GameObject>& gameObject) {
 	//TODO assert active
-	activeGameObjects.erase(std::find(activeGameObjects.begin(), activeGameObjects.end(), gameObject));
+	auto it = std::find(activeGameObjects.begin(), activeGameObjects.end(), gameObject);
+	activeGameObjects[it - activeGameObjects.begin()] = activeGameObjects.back();
+	activeGameObjects.pop_back();
 	for (int iC = gameObject->components.size() - 1; iC >= 0; iC--) {
 		auto& component = gameObject->components[iC];
 		SetComponentEnabledInternal(component.get(), false);

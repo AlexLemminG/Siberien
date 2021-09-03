@@ -28,13 +28,6 @@ void GameplaySceneScenario::OnEnable() {
 	indoorHidePlane = Scene::Get()->FindGameObjectByTag("indoorHidePlane");
 	auto events = GameEvents::Get();
 	creepDeathHandler = events->creepDeath.Subscribe([this](auto creep) {HandleCreepDeath(creep); });
-	auto c1 = &DirLight::Update;
-	auto c2 = &Component::Update;
-	auto c3 = &RigidBody::Update;
-	std::cout << (typeid(c1) == typeid(c2)) << std::endl;
-	std::cout << (typeid(c2) == typeid(c3)) << std::endl;
-	std::cout << (c1) << std::endl;
-	std::cout << (c2) << std::endl;
 
 	LoadLastCheckpoint();
 }
