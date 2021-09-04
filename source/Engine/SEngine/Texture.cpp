@@ -9,10 +9,10 @@
 
 static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
 
-class TextureImporter : public AssetImporter2 {
+class TextureImporter : public AssetImporter {
 public:
-	// Inherited via AssetImporter2
-	virtual bool ImportAll(AssetDatabase2_BinaryImporterHandle& databaseHandle) override
+	// Inherited via AssetImporter
+	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
 		int importerVersion = 5;
 		YAML::Node metaYaml;
@@ -71,7 +71,7 @@ public:
 		return true;
 	}
 
-	std::vector<uint8_t> LoadTexture(int importerVersion, AssetDatabase2_BinaryImporterHandle& databaseHandle, bool mips, std::string format) {
+	std::vector<uint8_t> LoadTexture(int importerVersion, AssetDatabase_BinaryImporterHandle& databaseHandle, bool mips, std::string format) {
 		//std::string assetPath = databaseHandle.;
 		//std::string metaAssetPath = databaseHandle.GetLibraryPathFromId("meta");
 		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("texture");
@@ -96,7 +96,6 @@ public:
 			}
 		}
 
-		std::shared_ptr<BinaryAsset> binaryAsset;
 		std::vector<uint8_t> buffer;
 		bool bufferLoaded = false;
 		if (!needRebuild) {
@@ -170,7 +169,7 @@ public:
 	}
 
 };
-DECLARE_BINARY_ASSET2(Texture, TextureImporter);
+DECLARE_BINARY_ASSET(Texture, TextureImporter);
 
 
 Texture::~Texture() {

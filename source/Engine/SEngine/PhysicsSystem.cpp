@@ -44,7 +44,7 @@ class DebugDraw : public btIDebugDraw {
 };
 
 bool PhysicsSystem::Init() {
-	settings = AssetDatabase::Get()->LoadByPath<PhysicsSettings>("settings.asset");
+	settings = AssetDatabase::Get()->Load<PhysicsSettings>("settings.asset");
 	ASSERT(settings != nullptr);
 	///-----includes_end-----
 

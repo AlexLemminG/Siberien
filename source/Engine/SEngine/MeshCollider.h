@@ -21,7 +21,7 @@ private:
 };
 
 
-
+//TODO is it needed?
 class MeshColliderStorageSystem : public System<MeshColliderStorageSystem> {
 public:
 	std::shared_ptr<btBvhTriangleMeshShape> GetStored(std::shared_ptr<Mesh> mesh);

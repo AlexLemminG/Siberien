@@ -19,8 +19,7 @@ void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::s
 		auto assetPath = baseAssetPath + "$" + meshName;
 		bool isHidden = assetPath.find("hidden") != -1;
 
-		auto meshO = AssetDatabase::Get()->GetLoaded(assetPath);
-		auto mesh = std::dynamic_pointer_cast<Mesh>(meshO);
+		auto mesh = AssetDatabase::Get()->Load<Mesh>(assetPath);
 		if (mesh && !isHidden) {
 			auto gameObject = std::make_shared<GameObject>();
 
@@ -72,9 +71,9 @@ void BlenderSceneLoader::OnEnable() {
 	if (scene == nullptr) {
 		return;
 	}
-	auto path = AssetDatabase::PathDescriptor(AssetDatabase::Get()->GetAssetPath(scene)).assetPath;
+	auto rootUid = AssetDatabase::Get()->GetAssetPath(scene);
 	
-	AddToNodes(scene->rootNode, path, Matrix4::Identity());
+	AddToNodes(scene->rootNode, rootUid, Matrix4::Identity());
 }
 
 DECLARE_TEXT_ASSET(BlenderSceneLoader);

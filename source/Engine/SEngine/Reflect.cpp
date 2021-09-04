@@ -16,7 +16,7 @@ void SerializationContext::FlushRequiestedToSerialize() {
 		}
 		if (std::find(objectsAllowedToSerialize.begin(), objectsAllowedToSerialize.end(), obj) == objectsAllowedToSerialize.end()) {
 			if (database) {
-				objectPaths[obj] = database->GetAssetPath(obj);
+				objectPaths[obj] = database->GetAssetUID(obj);
 			}
 			continue;
 		}
@@ -43,18 +43,11 @@ void SerializationContext::FinishDeserialization() {
 }
 
 void SerializationContext::RequestDeserialization(void* ptr, const std::string& assetPath) const {
-	if (database) {
-		//TODO request load + request ptr
-		database->RequestObjPtr(ptr, assetPath);
+	if (databaseHandle) {
+		databaseHandle->RequestObjectPtr(ptr, assetPath);
 	}
 	else {
-		if (databaseHandle) {
-			databaseHandle->RequestObjectPtr(ptr, assetPath);
-		}
-		else {
-			//TODO assert false
-			AssetDatabase::Get()->RequestObjPtr(ptr, assetPath);
-		}
+		ASSERT(false);
 	}
 }
 

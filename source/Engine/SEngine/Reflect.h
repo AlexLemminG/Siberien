@@ -5,6 +5,7 @@
 #include "yaml-cpp/yaml.h" //TODO this is not the way
 #include "Object.h"
 #include "Component.h"
+#include "ryml.hpp"
 
 template<class T>
 struct is_shared_ptr : std::false_type {};
@@ -22,8 +23,8 @@ class AssetDatabase;
 
 class Object;
 
-class SE_CPP_API AssetDatabase2_TextImporterHandle {
-	friend class AssetDatabase2;
+class SE_CPP_API AssetDatabase_TextImporterHandle {
+	friend class AssetDatabase;
 public:
 	const YAML::Node& yaml;
 
@@ -35,8 +36,8 @@ public:
 	void RequestObjectPtr(void* dest, const std::string& uid);
 
 private:
-	AssetDatabase2_TextImporterHandle(AssetDatabase2* database, const YAML::Node yaml) :database(database), yaml(yaml) {}
-	AssetDatabase2* database = nullptr;
+	AssetDatabase_TextImporterHandle(AssetDatabase* database, const YAML::Node yaml) :database(database), yaml(yaml) {}
+	AssetDatabase* database = nullptr;
 };
 
 class SE_CPP_API SerializationContext {
@@ -49,7 +50,6 @@ public:
 		, rootObjectsAllowedToSerialize(&(this->objectsAllowedToSerialize))
 		, rootDeserializedObjects(&(this->deserializedObjects))
 	{}
-	//SerializationContext(const TextAsset& textAsset) :yamlNode(textAsset.GetYamlNode()) {}
 
 	const bool IsDefined() const {
 		return yamlNode.IsDefined();
@@ -87,7 +87,7 @@ public:
 	}
 
 	AssetDatabase* database = nullptr;
-	AssetDatabase2_TextImporterHandle* databaseHandle = nullptr;
+	AssetDatabase_TextImporterHandle* databaseHandle = nullptr;
 	YAML::Node yamlNode{};
 
 	void FlushRequiestedToSerialize();

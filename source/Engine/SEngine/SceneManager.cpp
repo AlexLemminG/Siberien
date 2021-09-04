@@ -29,7 +29,7 @@ void SceneManager::Update() {
 	std::shared_ptr<Scene> scene;
 	{
 		OPTICK_EVENT("Load scene");
-		scene = assets->LoadByPath<Scene>(sceneName);
+		scene = assets->Load<Scene>(sceneName);
 		if (!scene) {
 			if (sceneName != "-") { //TODO tidy
 				//ASSERT(false);

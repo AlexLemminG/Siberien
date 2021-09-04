@@ -4,7 +4,6 @@
 #include "bgfx/bgfx.h"//TODO forward declare
 #include "Reflect.h"
 
-class BinaryAsset;
 
 class PixelShader : public Object {
 public:
@@ -19,7 +18,6 @@ class Shader : public Object {
 public:
 	bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
 	~Shader();
-	std::vector<std::shared_ptr<BinaryAsset>> buffers;
 
 	std::shared_ptr<PixelShader> fs;
 	std::shared_ptr<PixelShader> vs;

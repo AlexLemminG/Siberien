@@ -15,13 +15,14 @@ static int current = 0;
 static char buff[255];
 
 void ModelPreview::OnEnable() {
-	allGameObjects = AssetDatabase::Get()->GetAllAssetNames();
+	//TODO
+	//allGameObjects = AssetDatabase::Get()->GetAllAssetNames();
 	//TODO get rid of std::vector
 	for (int i = (int)allGameObjects.size() - 1; i >= 0; i--) {
 		if (allGameObjects[i].find(".asset") == -1) {
 			allGameObjects.erase(allGameObjects.begin() + i);
 		}
-		auto go = AssetDatabase::Get()->LoadByPath<GameObject>(allGameObjects[i]);
+		auto go = AssetDatabase::Get()->Load<GameObject>(allGameObjects[i]);
 		if (!go) {
 			allGameObjects.erase(allGameObjects.begin() + i);
 		}
@@ -44,9 +45,8 @@ void ModelPreview::UpdateAnimator() {
 		return;
 	}
 
-	auto assetPath = AssetDatabase::Get()->GetAssetPath(currentPrefab->GetComponent<MeshRenderer>()->mesh);
-	assetPath = AssetDatabase::PathDescriptor(assetPath).assetPath;
-	auto fullSceneAsset = AssetDatabase::Get()->LoadByPath<FullMeshAsset>(assetPath);
+	auto rootUid = AssetDatabase::Get()->GetAssetPath(currentPrefab->GetComponent<MeshRenderer>()->mesh);
+	auto fullSceneAsset = AssetDatabase::Get()->Load<FullMeshAsset>(rootUid);
 	if (!fullSceneAsset) {
 		return;
 	}
@@ -78,7 +78,7 @@ void ModelPreview::UpdateSelection() {
 			continue;
 		}
 		if (ImGui::Selectable(allGameObjects[i].c_str())) {
-			SelectPrefab(AssetDatabase::Get()->LoadByPath<GameObject>(allGameObjects[i]));
+			SelectPrefab(AssetDatabase::Get()->Load<GameObject>(allGameObjects[i]));
 			std::cout << "selected" << allGameObjects[i] << std::endl;
 		}
 		drawn++;

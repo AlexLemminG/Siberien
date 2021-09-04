@@ -231,9 +231,9 @@ public:
 
 REGISTER_SYSTEM(VertexLayoutSystem);
 
-class MeshAssetImporter : public AssetImporter2 {
+class MeshAssetImporter : public AssetImporter {
 public:
-	virtual bool ImportAll(AssetDatabase2_BinaryImporterHandle& databaseHandle) override {
+	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override {
 		auto meshAsset = Import(databaseHandle);
 
 		if (!meshAsset) {
@@ -258,7 +258,7 @@ public:
 		return true;
 	}
 
-	std::shared_ptr<FullMeshAsset> Import(AssetDatabase2_BinaryImporterHandle& databaseHandle) {
+	std::shared_ptr<FullMeshAsset> Import(AssetDatabase_BinaryImporterHandle& databaseHandle) {
 		int importerVersion = 0;//TODO move somewhere
 		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("MeshAsset");
 		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");
@@ -628,7 +628,7 @@ Mesh::~Mesh() {
 		bgfx::destroy(indexBuffer);
 	}
 }
-DECLARE_BINARY_ASSET2(Mesh, MeshAssetImporter);
+DECLARE_BINARY_ASSET(Mesh, MeshAssetImporter);
 
 AABB Sphere::ToAABB() const {
 	AABB aabb;

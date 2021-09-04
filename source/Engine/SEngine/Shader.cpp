@@ -4,8 +4,8 @@
 #include "Serialization.h"
 
 
-class BasicShaderAssetImporter : public AssetImporter2 {
-	virtual bool ImportAll(AssetDatabase2_BinaryImporterHandle& databaseHandle) override
+class BasicShaderAssetImporter : public AssetImporter {
+	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
 		bool isVertex = false;
 		std::vector<uint8_t> buffer;
@@ -46,7 +46,7 @@ class BasicShaderAssetImporter : public AssetImporter2 {
 		return true;
 	}
 
-	bool LoadShader(std::vector<uint8_t>& buffer, AssetDatabase2_BinaryImporterHandle& databaseHandle, bool isVertex) {
+	bool LoadShader(std::vector<uint8_t>& buffer, AssetDatabase_BinaryImporterHandle& databaseHandle, bool isVertex) {
 		std::string textAssetPath = databaseHandle.GetAssetPath();
 		std::string binAssetPathId = "";
 
@@ -169,7 +169,7 @@ class BasicShaderAssetImporter : public AssetImporter2 {
 	}
 };
 //TODO dont pass Shader and others to DECLARE
-DECLARE_BINARY_ASSET2(Shader, BasicShaderAssetImporter);
+DECLARE_BINARY_ASSET(Shader, BasicShaderAssetImporter);
 
 DECLARE_TEXT_ASSET(Shader);
 Shader::~Shader() {

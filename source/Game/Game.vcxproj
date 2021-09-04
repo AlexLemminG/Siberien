@@ -88,7 +88,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp14</LanguageStandard>
-      <AdditionalIncludeDirectories>..\Engine\SEngine;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Engine\SEngine;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -104,7 +104,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp14</LanguageStandard>
-      <AdditionalIncludeDirectories>..\Engine\SEngine;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Engine\SEngine;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

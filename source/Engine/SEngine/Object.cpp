@@ -20,7 +20,7 @@ ReflectedTypeBase* Object::GetType() const {
 }
 
 std::shared_ptr<Object> Object::Instantiate(SerializationContext& serializedOriginal) {
-	return AssetDatabase::Get()->LoadFromYaml<Object>(serializedOriginal.yamlNode);
+	return AssetDatabase::Get()->DeserializeFromYAML<Object>(serializedOriginal.yamlNode);
 }
 
 SerializationContext Object::Serialize(std::shared_ptr<Object> original) {
@@ -28,7 +28,6 @@ SerializationContext Object::Serialize(std::shared_ptr<Object> original) {
 	std::vector<std::shared_ptr<Object>> serializedObjects;
 	serializedObjects.push_back(original);
 	SerializationContext context{ node, serializedObjects };
-	//context.databaseHandle = AssetDatabase2
 	context.database = AssetDatabase::Get();
 	::Serialize(context, original);
 	context.FlushRequiestedToSerialize();

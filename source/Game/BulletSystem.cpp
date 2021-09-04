@@ -19,9 +19,9 @@ REGISTER_GAME_SYSTEM(BulletSystem);
 DECLARE_TEXT_ASSET(BulletSettings);
 
 bool BulletSystem::Init() {
-	bulletSettings = AssetDatabase::Get()->LoadByPath<BulletSettings>("bullet.asset");
-	bulletDamageParticleSettings = AssetDatabase::Get()->LoadByPath<BulletSettings>("bulletDamageParticle.asset");
-	bloodParticle = AssetDatabase::Get()->LoadByPath<BulletSettings>("bloodParticle.asset");
+	bulletSettings = AssetDatabase::Get()->Load<BulletSettings>("bullet.asset");
+	bulletDamageParticleSettings = AssetDatabase::Get()->Load<BulletSettings>("bulletDamageParticle.asset");
+	bloodParticle = AssetDatabase::Get()->Load<BulletSettings>("bloodParticle.asset");
 
 	bullets.push_back(BulletsVector{ bulletSettings, std::vector<Bullet>() });
 	bullets.push_back(BulletsVector{ bulletDamageParticleSettings, std::vector<Bullet>() });

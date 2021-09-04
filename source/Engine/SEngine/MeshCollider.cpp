@@ -21,12 +21,12 @@ std::shared_ptr<btBvhTriangleMeshShape> MeshColliderStorageSystem::GetStored(std
 }
 
 bool MeshColliderStorageSystem::Init() {
-	unloadHandle = AssetDatabase::Get()->onUnloaded.Subscribe([this]() {OnUnloaded(); });
+	unloadHandle = AssetDatabase::Get()->onBeforeUnloaded.Subscribe([this]() {OnUnloaded(); });
 	return true;
 }
 
 void MeshColliderStorageSystem::Term() {
-	AssetDatabase::Get()->onUnloaded.Unsubscribe(unloadHandle);
+	AssetDatabase::Get()->onBeforeUnloaded.Unsubscribe(unloadHandle);
 	meshes.clear();
 }
 
