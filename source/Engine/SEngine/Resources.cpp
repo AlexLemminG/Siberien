@@ -86,7 +86,7 @@ void AssetDatabase::ProcessLoadingQueue() {
 		loadingQueue.erase(loadingQueue.begin());
 
 		auto loaded = GetLoaded(request.descriptor, nullptr);
-		if (loaded) {
+		if (loaded) {//TODO check if was trying to load before and failed as well
 			if (request.target) {
 				*(std::shared_ptr<Object>*)(request.target) = loaded;
 			}
@@ -115,24 +115,32 @@ void AssetDatabase::ProcessLoadingQueue() {
 			}
 		}
 		else if (extention == "asset") {
-			YAML::Node node;
-			std::ifstream input(assetsRootFolder + path);
+			auto fileName = assetsRootFolder + path;
+			std::ifstream input(fileName, std::ios::binary | std::ios::ate);
 			if (input) {
 				//TODO
 				//LogError("Failed to load '%s': file not found", fullPath.c_str());
+				std::vector<char> buffer;
+				std::streamsize size = input.tellg();
+				input.seekg(0, std::ios::beg);
 
-				node = YAML::Load(input);
-				if (node.IsDefined()) {
+				buffer.resize(size);
+				input.read((char*)buffer.data(), size);
+
+				ryml::Tree tree = ryml::parse(c4::csubstr(&buffer[0], buffer.size()));
+				ryml::NodeRef node = tree;
+				if (!node.empty()) {
 					for (const auto& kv : node) {
-						PathDescriptor descriptor(kv.first.as<std::string>());
+						auto key = kv.key();
+						PathDescriptor descriptor{ std::string(key.str, key.len) };
 						std::string type = descriptor.assetPath;
 						std::string id = descriptor.assetId.size() > 0 ? descriptor.assetId : descriptor.assetPath;
 
-						auto node = kv.second;
+						auto subnode = kv;
 
 						auto& importer = GetSerialiationInfoStorage().GetTextImporter(type);
 						if (importer) {
-							AssetDatabase_TextImporterHandle handle{ this, kv.second };
+							AssetDatabase_TextImporterHandle handle{ this, subnode };
 							auto object = importer->Import(handle);//TODO rename to deserializer->Deserialize or something
 
 							if (object != nullptr) {
@@ -146,18 +154,17 @@ void AssetDatabase::ProcessLoadingQueue() {
 							}
 						}
 						else {
+							ASSERT(false);
 							//TODO error
 						}
 					}
 				}
 				else {
-					node = YAML::Node();
 					//TODO error
 				}
 			}
 			else {
 				//TORO error
-				node = YAML::Node();
 			}
 		}
 		else {
@@ -181,7 +188,7 @@ void AssetDatabase::ProcessLoadingQueue() {
 	}
 
 	for (auto o : loadedObjects) {
-		SerializationContext c{ YAML::Node() };//TODO HAAAKING
+		SerializationContext c{ ryml::NodeRef() };//TODO HAAAKING
 		o->OnAfterDeserializeCallback(c);
 	}
 }
@@ -197,23 +204,24 @@ void AssetDatabase::LoadAsset(const std::string& path) {
 }
 
 
-std::shared_ptr<Object> AssetDatabase::DeserializeFromYAMLInternal(const YAML::Node& node) {
+std::shared_ptr<Object> AssetDatabase::DeserializeFromYAMLInternal(const ryml::NodeRef& node) {
 	std::string path = "***temp_asset***";
 	std::vector<std::shared_ptr<Object>> loadedObjects;
 	currentAssetLoadingPath = path;
 	//TODO less code duplication
 	//TODO less hacking
-	if (node.IsDefined()) {
+	if (!node.empty()) {
 		for (const auto& kv : node) {
-			PathDescriptor descriptor(kv.first.as<std::string>());
+			auto key = kv.key();
+			PathDescriptor descriptor{ std::string(key.str, key.len) };
 			std::string type = descriptor.assetPath;
 			std::string id = descriptor.assetId.size() > 0 ? descriptor.assetId : descriptor.assetPath;
 
-			auto node = kv.second;
+			auto node = kv;
 
 			auto& importer = GetSerialiationInfoStorage().GetTextImporter(type);
 			if (importer) {
-				AssetDatabase_TextImporterHandle handle{ this, kv.second };
+				AssetDatabase_TextImporterHandle handle{ this, node };
 				auto object = importer->Import(handle);//TODO rename to deserializer->Deserialize or something
 
 				if (object != nullptr) {
@@ -235,7 +243,7 @@ std::shared_ptr<Object> AssetDatabase::DeserializeFromYAMLInternal(const YAML::N
 	ProcessLoadingQueue();
 
 	for (auto o : loadedObjects) {
-		SerializationContext c{ YAML::Node() };//TODO HAAAKING
+		SerializationContext c{ ryml::NodeRef() };//TODO HAAAKING
 		o->OnAfterDeserializeCallback(c);
 		objectPaths.erase(o);
 	}

@@ -44,7 +44,15 @@ vec3 SampleSH(vec3 normal, vec4 sph[9]) {
 
 void main()
 {
+	
 	vec3 albedo = toLinear(texture2D(s_albedo, v_texcoord0).rgb);
+	
+	float depth = texture2D(s_depth, v_texcoord0).r;
+	if(depth == 1.0){
+		gl_FragColor.rgb = toGamma(albedo);
+		gl_FragColor.w = 1.0;
+		return;
+	}
 	
 	vec3 normal = decodeNormalUint(texture2D(s_normal, v_texcoord0).xyz);
 	

@@ -39,7 +39,7 @@ void SceneManager::Update() {
 	}
 
 	if (CfgGetBool("debugSceneLoading")) {
-		YAML::Node node;
+		ryml::Tree node;
 		std::vector<std::shared_ptr<Object>> serializedObjects;
 		serializedObjects.push_back(scene);
 		SerializationContext context{ node, serializedObjects };
@@ -48,7 +48,7 @@ void SceneManager::Update() {
 		context.FlushRequiestedToSerialize();
 
 		std::ofstream fout("out.yaml");
-		fout << context.yamlNode;
+		fout << context.GetYamlNode();
 	}
 	{
 		OPTICK_EVENT("Instantiate Scene");

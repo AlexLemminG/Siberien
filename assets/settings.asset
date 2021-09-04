@@ -18,5 +18,4 @@ PhysicsSettings:
   - name: grenade
     doNotCollideWith: [default, player, enemy]
   - name: staticGeom
-    collideWith: [all]
     doNotCollideWith: [staticGeom]

@@ -84,7 +84,7 @@ public:
 
 	//TODO where T is Object
 	template<typename T>
-	std::shared_ptr<T> DeserializeFromYAML(const YAML::Node& node) {
+	std::shared_ptr<T> DeserializeFromYAML(const ryml::NodeRef& node) {
 		//TODO not only mainObj
 		auto mainObj = DeserializeFromYAMLInternal(node);
 		return std::dynamic_pointer_cast<T>(mainObj);
@@ -174,7 +174,7 @@ private:
 	void LoadAsset(const std::string& path);
 	std::string GetFileExtension(std::string path);
 	std::string GetFileName(std::string path);
-	std::shared_ptr<Object> DeserializeFromYAMLInternal(const YAML::Node& node);
+	std::shared_ptr<Object> DeserializeFromYAMLInternal(const ryml::NodeRef& node);
 	void ProcessLoadingQueue();
 	std::shared_ptr<AssetImporter>& GetAssetImporter(const std::string& type);
 

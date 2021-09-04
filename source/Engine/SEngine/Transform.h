@@ -11,11 +11,20 @@ public:
 	void SetPosition(const Vector3& pos) {
 		SetPos(matrix, pos);
 	}
+	Vector3 GetPosition() const {
+		return GetPos(matrix);
+	}
 	void SetRotation(const Quaternion& rotation) {
 		SetRot(matrix, rotation);
 	}
-	Vector3 GetPosition() const {
-		return GetPos(matrix);
+	Quaternion GetRotation() const {
+		return GetRot(matrix);
+	}
+	Vector3 GetEulerAngles() const {
+		return GetRotation().ToEulerAngles();
+	}
+	void SetEulerAngles(const Vector3& euler) {
+		SetRotation(Quaternion::FromEulerAngles(euler));
 	}
 	Vector3 GetScale() const {
 		return ::GetScale(matrix);

@@ -339,6 +339,7 @@ void Render::Draw(SystemsManager& systems)
 		bgfx::setViewFrameBuffer(kRenderPassCombine, m_fullScreenBuffer);
 		bgfx::setViewFrameBuffer(kRenderPassLight, gBuffer.lightBuffer);
 		bgfx::setViewFrameBuffer(1, BGFX_INVALID_HANDLE);//TODO do we need third buffer to go postprocessing?
+
 	}
 
 	bgfx::dbgTextClear();
@@ -367,7 +368,11 @@ void Render::Draw(SystemsManager& systems)
 
 	camera->OnBeforeRender();
 
-	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, camera->GetClearColor().ToIntRGBA(), 1.0f, 0);
+	uint8_t clearAlbedo = 1;
+	uint8_t clearOther = 2;
+	bgfx::setPaletteColor(clearAlbedo, camera->GetClearColor().ToIntRGBA());
+	bgfx::setPaletteColor(clearOther, Colors::black.ToIntRGBA());
+	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 1.0f, 0, clearAlbedo, clearOther, clearOther, clearOther, clearOther, clearOther, clearOther, clearOther);
 
 	Vector3 lightsPoi = GetPos(camera->gameObject()->transform()->matrix) + GetRot(camera->gameObject()->transform()->matrix) * Vector3_forward * 15.f;
 

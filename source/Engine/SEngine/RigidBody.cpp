@@ -60,13 +60,11 @@ void RigidBody::OnEnable() {
 	PhysicsSystem::Get()->GetGroupAndMask(layer, group, mask);
 	PhysicsSystem::Get()->dynamicsWorld->addRigidBody(pBody, group, mask);
 
-	if (isStatic) {
-		ignoreUpdate = true;
-	}
+	ignoreUpdate = isStatic;
 }
 
 void RigidBody::Update() {
-		//TODO isStatic means not kinematic!!!
+	//TODO isStatic means not kinematic!!!
 	if (!isStatic) {
 		auto matr = btConvert(pMotionState->m_graphicsWorldTrans);
 		auto scale = GetScale(gameObject()->transform()->matrix);
@@ -80,7 +78,7 @@ void RigidBody::Update() {
 		//pBody->setCenterOfMassTransform(trans);
 	}
 #ifdef SE_DBG_OUT
-	if(false){
+	if (false) {
 		auto camera = Camera::GetMain();
 		if (camera) {
 			btVector3 min;

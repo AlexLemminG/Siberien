@@ -950,15 +950,6 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		//bgfx::setViewFrameBuffer(RENDERVIEW_HBLUR_3_ID, s_rtShadowMap[3]); //hblur
 	}
 
-	// Clear backbuffer at beginning.
-	bgfx::setViewClear(0
-		, BGFX_CLEAR_COLOR
-		| BGFX_CLEAR_DEPTH
-		, clearRgba
-		, clearDepth
-		, clearStencil
-	);
-	bgfx::touch(0);
 
 	// Clear shadowmap rendertarget at beginning.
 	const uint8_t flags0 = (isDirectional)

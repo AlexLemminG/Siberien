@@ -1,4 +1,5 @@
 GameObject:
+  tag: ShootingLight
   components:
   - $Transform
   - $PointLight

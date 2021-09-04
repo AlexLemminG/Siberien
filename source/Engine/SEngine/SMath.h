@@ -309,36 +309,38 @@ public:
 };
 
 inline void SerializeVector(SerializationContext& context, const Vector3& src) {
-	context.yamlNode = YAML::Node(YAML::NodeType::Sequence);
-	context.yamlNode[0] = src.x;
-	context.yamlNode[1] = src.y;
-	context.yamlNode[2] = src.z;
+	context.SetType(SerializationContextType::Sequence);
+
+	context.Child(0) << src.x;
+	context.Child(1) << src.y;
+	context.Child(2) << src.z;
 }
 inline void DeserializeVector(const SerializationContext& context, Vector3& dst) {
-	if (!context.IsDefined() || !context.yamlNode.IsSequence() || context.yamlNode.size() < 3) {
+	if (!context.IsDefined() || !context.IsSequence() || context.Size() < 3) {
 		//v = defaultValue;
 		return;
 	}
-	dst.x = context.yamlNode[0].as<float>();
-	dst.y = context.yamlNode[1].as<float>();
-	dst.z = context.yamlNode[2].as<float>();
+	context.Child(0) >> dst.x;
+	context.Child(1) >> dst.y;
+	context.Child(2) >> dst.z;
 }
 inline void SerializeVector4(SerializationContext& context, const Vector4& src) {
-	context.yamlNode = YAML::Node(YAML::NodeType::Sequence);
-	context.yamlNode[0] = src.x;
-	context.yamlNode[1] = src.y;
-	context.yamlNode[2] = src.z;
-	context.yamlNode[3] = src.w;
+	context.SetType(SerializationContextType::Sequence);
+
+	context.Child(0) << src.x;
+	context.Child(1) << src.y;
+	context.Child(2) << src.z;
+	context.Child(3) << src.w;
 }
 inline void DeserializeVector4(const SerializationContext& context, Vector4& dst) {
-	if (!context.IsDefined() || !context.yamlNode.IsSequence() || context.yamlNode.size() < 4) {
+	if (!context.IsDefined() || !context.IsSequence() || context.Size() < 4) {
 		//v = defaultValue;
 		return;
 	}
-	dst.x = context.yamlNode[0].as<float>();
-	dst.y = context.yamlNode[1].as<float>();
-	dst.z = context.yamlNode[2].as<float>();
-	dst.w = context.yamlNode[3].as<float>();
+	context.Child(0) >> dst.x;
+	context.Child(1) >> dst.y;
+	context.Child(2) >> dst.z;
+	context.Child(3) >> dst.w;
 }
 
 class Frustum {

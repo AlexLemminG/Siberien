@@ -2,14 +2,16 @@
 #include "Serialization.h"
 
 void Color::Deserialize(const SerializationContext& context, Color& color) {
-	if (context.yamlNode.IsMap()) {
+	if (context.IsMap()) {
 		::Deserialize(context.Child("r"), color.r);
 		::Deserialize(context.Child("g"), color.g);
 		::Deserialize(context.Child("b"), color.b);
 		::Deserialize(context.Child("a"), color.a);
 	}
 	else {
-		color = Color::FromIntRGBA(context.yamlNode.as<unsigned int>());
+		unsigned int i;
+		context >> i;
+		color = Color::FromIntRGBA(i);
 	}
 }
 void Color::Serialize(SerializationContext& context, const Color& color) {

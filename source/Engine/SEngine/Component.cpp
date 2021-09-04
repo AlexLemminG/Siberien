@@ -4,3 +4,7 @@
 void Component::SetEnabled(bool isEnabled) {
 	Scene::Get()->SetComponentEnabledInternal(this, isEnabled);
 }
+
+bool Component::IsEnabled() const {
+	return isEnabled;
+}

@@ -50,12 +50,6 @@ public:
 		}
 	}
 private:
-	bool isTriggerPulled = false;
-	bool wasTriggerPulled = false;
-	int currentShotsInMagazine = 0;
-	float bulletReloadingTimer = 0.f;
-	float magazineReloadingTimer = 0.f;
-	int currentAmmo = 0;
 
 
 	bool shootOnlyOnTrigger = false;
@@ -69,6 +63,13 @@ private:
 	Color bulletColor = Colors::white;
 
 	int ammo = INT_MAX;
+
+	bool isTriggerPulled = false;
+	bool wasTriggerPulled = false;
+	int currentShotsInMagazine = 0;
+	float bulletReloadingTimer = 0.f;
+	float magazineReloadingTimer = 0.f;
+	int currentAmmo = 0;
 
 	REFLECT_BEGIN(Gun);
 	REFLECT_VAR(shootOnlyOnTrigger);

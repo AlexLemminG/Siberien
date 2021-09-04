@@ -30,7 +30,7 @@ void SerializationContext::FlushRequiestedToSerialize() {
 	for (auto it : objectsRequestedToSerializeRequesters) {
 		std::string path = objectPaths[it.first];
 		for (auto& node : it.second) {
-			node = path;
+			node << c4::csubstr(path.c_str(), path.length());
 		}
 	}
 }

@@ -50,9 +50,13 @@ private:
 	float healDelay = 5.f;
 	float prevHealTime = -1000.f;
 
+	Gun gg;
+	std::vector<Gun> ggg;
 
 	REFLECT_BEGIN(PlayerController);
 	REFLECT_VAR(speed);
+	REFLECT_VAR(gg);
+	REFLECT_VAR(ggg);
 	REFLECT_VAR(jumpVelocity);
 	REFLECT_VAR(jumpPushImpulse);
 	REFLECT_VAR(jumpPushRadius);
@@ -68,6 +72,7 @@ private:
 	REFLECT_VAR(footstepSounds);
 	REFLECT_VAR(postprocessingEffect);
 	REFLECT_END();
+
 
 	std::vector<std::shared_ptr<AudioClip>> shootingSounds;
 	std::vector<std::shared_ptr<AudioClip>> footstepSounds;

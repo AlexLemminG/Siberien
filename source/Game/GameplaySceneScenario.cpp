@@ -38,7 +38,7 @@ void GameplaySceneScenario::Update() {
 
 	if (!IsTriggered("init")) {
 		Trigger("init");
-		//SpawnZombies(slowZombiePrefab, Vector3(-6.f, 1.f, 26.f), 15);
+		SpawnZombies(slowZombiePrefab, Vector3(-6.f, 1.f, 26.f), 15);
 	}
 
 	if (!IsTriggered("roof")) {

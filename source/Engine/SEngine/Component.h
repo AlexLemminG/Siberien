@@ -16,6 +16,7 @@ public:
 	std::shared_ptr<GameObject> gameObject() { return m_gameObject.lock(); }
 
 	void SetEnabled(bool isEnabled);
+	bool IsEnabled()const;
 
 	bool ignoreUpdate = false;//TODO flag
 	bool ignoreFixedUpdate = false;//TODO flag
