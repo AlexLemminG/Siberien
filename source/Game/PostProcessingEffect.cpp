@@ -25,6 +25,6 @@ void PostProcessingEffect::Draw(Render& render) {
 	params[0] = intensity;
 	params[1] = intensityFromLastHit;
 	params[2] = winScreenFade;
-	Graphics::Get()->Blit(material);
+	Graphics::Get()->Blit(material, 1);
 }
 DECLARE_TEXT_ASSET(PostProcessingEffect);

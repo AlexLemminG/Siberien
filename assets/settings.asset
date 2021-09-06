@@ -8,14 +8,14 @@ PhysicsSettings:
   - name: default
     doNotCollideWith: [playerBullet]
   - name: player
-    doNotCollideWith: [playerBullet, enemyCorpse]
+    doNotCollideWith: [playerBullet, enemyCorpse, grenade]
   - name: enemy
-    collideWith: [all]
+    doNotCollideWith: [grenade]
   - name: playerBullet
-    doNotCollideWith: [player, default]
+    doNotCollideWith: [player, default, grenade]
   - name: enemyCorpse
     collideWith: [all]
   - name: grenade
-    doNotCollideWith: [default, player, enemy]
+    doNotCollideWith: [default, player, enemy, playerBullet]
   - name: staticGeom
     doNotCollideWith: [staticGeom]

@@ -466,10 +466,10 @@ void Render::Draw(SystemsManager& systems)
 	}
 
 
+	//Graphics::Get()->Blit(simpleBlitMat, 1);TODO
 
 	RenderEvents::Get()->onSceneRendered.Invoke(*this);
 
-	Graphics::Get()->Blit(simpleBlitMat, 1);
 
 	EndFrame();
 }

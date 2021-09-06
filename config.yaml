@@ -4,8 +4,7 @@ fixedDeltaTime: 0.016666666666
 fullscreen: false
 debugSceneLoading: false
 vsync: false
-godMode: true
+godMode: false
 soundEnabled: false
 libraries:
   - Game.dll
-  - GameMod.dll

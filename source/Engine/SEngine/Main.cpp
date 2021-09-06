@@ -30,6 +30,7 @@ std::string GetFirstSceneName() {
 	return CfgGetString("scene") + ".asset";
 }
 
+
 static Engine* engine = nullptr;
 Engine* Engine::Get() {
 	//TODO not here
