@@ -1,11 +1,15 @@
+
+
 #include "SceneManager.h"
 #include "Resources.h"
 #include "Scene.h"
 #include "Object.h"
 #include "Config.h"
+#include "ryml.hpp"
 
 std::string SceneManager::lastLoadRequest;
 std::shared_ptr<Scene> SceneManager::currentScene;
+GameEvent<> SceneManager::onSceneLoaded;
 void SceneManager::LoadScene(std::string sceneName) {
 	lastLoadRequest = sceneName;
 }
@@ -56,6 +60,7 @@ void SceneManager::Update() {
 		if (currentScene) {
 			currentScene->name = sceneName;
 			currentScene->Init();
+			onSceneLoaded.Invoke();
 		}
 	}
 }

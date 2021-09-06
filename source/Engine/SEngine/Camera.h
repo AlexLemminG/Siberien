@@ -50,12 +50,11 @@ public:
 	void SetFov(float fov) { this->fov = fov; }
 	virtual Color GetClearColor() const override { return clearColor; }
 
-	static Camera* GetMain() { return mainCamera; }
-	static void SetMain(Camera* mainCamera) { Camera::mainCamera = mainCamera; }
+	static Camera* GetMain();
 
+	void OnEnable() override;
+	void OnDisable() override;
 
-	void OnEnable() override { SetMain(this); }
-	void OnDisable() override { SetMain(nullptr); }
 
 	Ray ScreenPointToRay(Vector2 point);
 
@@ -64,6 +63,7 @@ public:
 	virtual const Matrix4& GetViewMatrix() const override { return viewMatrix; }
 	virtual const Matrix4& GetProjectionMatrix() const override { return projectionMatrix; }
 
+	static std::vector<Camera*> cameras;
 private:
 	Color clearColor = Colors::black;
 	float fov = 60.f;
@@ -75,6 +75,7 @@ private:
 	Matrix4 projectionMatrix;
 
 	REFLECT_BEGIN(Camera);
+	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_VAR(clearColor);
 	REFLECT_VAR(fov);
 	REFLECT_VAR(nearPlane);

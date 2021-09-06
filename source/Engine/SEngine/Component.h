@@ -24,4 +24,5 @@ private:
 	std::weak_ptr<GameObject> m_gameObject;
 	bool isEnabled = false;
 };
+
 #include "Serialization.h"

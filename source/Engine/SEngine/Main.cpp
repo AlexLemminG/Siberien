@@ -1,3 +1,5 @@
+
+
 #include <iostream>
 #include "bgfx/bgfx.h"
 #include "Common.h"
@@ -28,6 +30,12 @@ std::string GetFirstSceneName() {
 	return CfgGetString("scene") + ".asset";
 }
 
+static Engine* engine = nullptr;
+Engine* Engine::Get() {
+	//TODO not here
+	return engine;
+}
+
 class EngineLib : public GameLibrary {
 	INNER_LIBRARY(EngineLib);
 };
@@ -44,6 +52,7 @@ start:
 	Render render;
 	SystemsManager systemsManager;
 	Engine engine;
+	::engine = &engine;
 	GameLibrariesManager libs;
 
 	{
@@ -150,6 +159,8 @@ start:
 		assets.Term();
 
 		config.Term();
+
+		::engine = nullptr;
 	}
 	if (needReload) {
 		goto start;

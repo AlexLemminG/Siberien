@@ -28,9 +28,13 @@ class BlenderSceneLoader : public Component {
 	std::shared_ptr<Material> materialPosters;
 	std::shared_ptr<FullMeshAsset> scene;
 
+
+
 	virtual void OnEnable() override;
+	virtual void OnDisable() override;
 
 	REFLECT_BEGIN(BlenderSceneLoader);
+	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_VAR(material);
 	REFLECT_VAR(materialNeon);
 	REFLECT_VAR(materialSigns);
@@ -39,6 +43,7 @@ class BlenderSceneLoader : public Component {
 	REFLECT_VAR(scene);
 	REFLECT_END();
 
+	std::vector<std::shared_ptr<GameObject>> createdObjects;
 private:
 	void AddToNodes(const FullMeshAsset_Node& node, const std::string& baseAssetPath, const Matrix4& parentTransform);
 };

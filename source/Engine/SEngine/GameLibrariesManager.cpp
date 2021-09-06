@@ -43,11 +43,9 @@ bool GameLibrariesManager::Init() {
 	}
 
 
-	Engine engine;
-
 	auto& thisStaticStorage = GameLibraryStaticStorage::Get();
 	for (auto& lib : libraries) {
-		lib.library->Init(&engine);
+		lib.library->Init(Engine::Get());
 		const auto& libStaticStorage = lib.library->GetStaticStorage();
 		auto& storage = libStaticStorage.serializationInfoStorage;
 		GetSerialiationInfoStorage().Register(storage);

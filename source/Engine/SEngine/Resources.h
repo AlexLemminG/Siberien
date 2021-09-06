@@ -28,6 +28,10 @@
 //does this make bone asset ?
 //maybe yes and we need to rename it to Object
 
+namespace YAML {
+	class Node;
+}
+
 class SE_CPP_API AssetDatabase_BinaryImporterHandle {
 	friend class AssetDatabase;
 	AssetDatabase_BinaryImporterHandle(AssetDatabase* database, std::string assetPath) :database(database), assetPath(assetPath) {}

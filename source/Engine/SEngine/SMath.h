@@ -22,8 +22,6 @@ extern SE_CPP_API const Vector3 Vector3_up;
 extern SE_CPP_API const Vector3 Vector3_right;
 extern SE_CPP_API const Vector3 Vector3_max;
 
-class SerializedObject;
-
 
 inline void SetPos(Matrix4& matrix, const Vector3& pos) {
 	matrix.GetColumn(3) = Vector4(pos, 1);
@@ -136,6 +134,9 @@ public:
 	}
 	static float Abs(float f) {
 		return f < 0 ? -f : f;
+	}
+	static float Sign(float f) {
+		return f < 0 ? -1.f : 1.f;
 	}
 
 	static constexpr float pi = 3.14f;//TODO lol

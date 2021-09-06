@@ -6,6 +6,7 @@
 
 class SE_CPP_API GameObject : public Object {
 	friend class Scene;
+	friend class InspectorWindow;//TODO just add flags setter?
 public:
 	std::string tag;
 	std::vector<std::shared_ptr<Component>> components;
@@ -32,15 +33,17 @@ public:
 	bool IsActive() const;
 	void SetActive(bool isActive);
 
-	static void Des(const SerializationContext& so, GameObject& t);
-	static void Ser(SerializationContext& so, const GameObject& t);
+	REFLECT_BEGIN(GameObject, Object);
+	REFLECT_VAR(tag);
+	REFLECT_VAR(components);
+	REFLECT_END();
 
-	REFLECT_CUSTOM(GameObject, GameObject::Ser, GameObject::Des);
 private:
 	uint64_t flags = 0;
 	struct FLAGS {
 		enum :uint64_t {
-			IS_ACTIVE = 1 << 0
+			IS_ACTIVE = 1 << 0,
+			IS_HIDDEN_IN_INSPECTOR = 1 << 1
 		};
 	};
 

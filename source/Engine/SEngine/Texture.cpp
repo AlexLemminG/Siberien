@@ -1,3 +1,5 @@
+
+
 #include "Texture.h"
 #include "Resources.h"
 #include "bimg/bimg.h"
@@ -6,6 +8,7 @@
 #include <windows.h>
 #include "Serialization.h"
 #include "bimg/decode.h"
+#include "yaml-cpp/yaml.h"
 
 static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
 

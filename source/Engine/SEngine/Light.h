@@ -6,9 +6,13 @@
 class Light : public Component {
 public:
 	Color color = Colors::white;
+	//TODO fix full everything is in shadow when drawShadows==false
+	//TODO shadows for pointLight
 	bool drawShadows = false;
-	REFLECT_BEGIN(Light);
+	REFLECT_BEGIN(Light, Component);
+	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_VAR(color)
+	REFLECT_VAR(drawShadows);
 	REFLECT_END();
 };
 
@@ -21,7 +25,6 @@ public:
 	static std::vector<DirLight*> dirLights;
 
 	REFLECT_BEGIN(DirLight, Light);
-	REFLECT_VAR(drawShadows);//TODO inheritance
 	REFLECT_END();
 };
 
@@ -38,7 +41,6 @@ public:
 	REFLECT_BEGIN(PointLight, Light);
 	REFLECT_VAR(radius);
 	REFLECT_VAR(innerRadius);
-	REFLECT_VAR(drawShadows);
 	REFLECT_END();
 };
 

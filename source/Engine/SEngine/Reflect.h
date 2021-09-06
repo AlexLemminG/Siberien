@@ -2,10 +2,8 @@
 
 #include <string>
 #include <unordered_map>
-#include "yaml-cpp/yaml.h" //TODO this is not the way
 #include "Object.h"
 #include "Component.h"
-#include "ryml.hpp"
 
 template<class T>
 struct is_shared_ptr : std::false_type {};
@@ -23,6 +21,33 @@ class AssetDatabase;
 
 class Object;
 
+class RymlNodeRefDummy {
+	char dummy[32];
+};
+
+class Attribute {
+public:
+	Attribute() {}
+	virtual ~Attribute() {}
+};
+
+namespace c4 {
+	namespace yml {
+		class Tree;
+		class NodeRef;
+	}
+}
+namespace ryml {
+	using namespace c4::yml;
+	using namespace c4;
+}
+
+class ExecuteInEditModeAttribute : public Attribute {
+public:
+	ExecuteInEditModeAttribute() :Attribute() {}
+	virtual ~ExecuteInEditModeAttribute() {}
+};
+
 class SE_CPP_API AssetDatabase_TextImporterHandle {
 	friend class AssetDatabase;
 public:
@@ -36,7 +61,7 @@ public:
 	void RequestObjectPtr(void* dest, const std::string& uid);
 
 private:
-	AssetDatabase_TextImporterHandle(AssetDatabase* database, const ryml::NodeRef yaml) :database(database), yaml(yaml) {}
+	AssetDatabase_TextImporterHandle(AssetDatabase* database, const ryml::NodeRef& yaml) :database(database), yaml(yaml) {}
 	AssetDatabase* database = nullptr;
 };
 
@@ -45,107 +70,42 @@ enum class SerializationContextType {
 	Map
 };
 
+
 class SE_CPP_API SerializationContext {
 public:
 
-	SerializationContext(ryml::NodeRef yamlNode, std::vector<std::shared_ptr<Object>> objectsAllowedToSerialize = std::vector<std::shared_ptr<Object>>{})
-		:yamlNode(yamlNode)
-		, objectsAllowedToSerialize(objectsAllowedToSerialize)
-		, rootObjectsRequestedToSerialize(&objectsRequestedToSerialize)
-		, rootObjectsRequestedToSerializeRequesters(&objectsRequestedToSerializeRequesters)
-		, rootObjectsAllowedToSerialize(&(this->objectsAllowedToSerialize))
-		, rootDeserializedObjects(&(this->deserializedObjects))
-	{}
+	SerializationContext(const ryml::NodeRef& yamlNode, std::vector<std::shared_ptr<Object>> objectsAllowedToSerialize = std::vector<std::shared_ptr<Object>>{});
 
-	SerializationContext(std::vector<std::shared_ptr<Object>> objectsAllowedToSerialize = std::vector<std::shared_ptr<Object>>{})
-	{
-		this->yamlTree = std::make_shared<ryml::Tree>();
-		this->yamlNode = *yamlTree;
-		this->objectsAllowedToSerialize = objectsAllowedToSerialize;
-		this->rootObjectsRequestedToSerialize = (&objectsRequestedToSerialize);
-		this->rootObjectsRequestedToSerializeRequesters = (&objectsRequestedToSerializeRequesters);
-		this->rootObjectsAllowedToSerialize = (&(this->objectsAllowedToSerialize));
-		this->rootDeserializedObjects = (&(this->deserializedObjects));
-	}
+	SerializationContext(std::vector<std::shared_ptr<Object>> objectsAllowedToSerialize = std::vector<std::shared_ptr<Object>>{});
 
 
-	void SetType(SerializationContextType type) {
-		switch (type)
-		{
-		case SerializationContextType::Sequence:
-			yamlNode |= ryml::SEQ;
-			break;
-		case SerializationContextType::Map:
-			yamlNode |= ryml::MAP;
-			break;
-		default:
-			break;
-		}
-		//TODO
-	}
+	void SetType(SerializationContextType type);
 
-	const bool IsDefined() const {
-		return yamlNode.valid();
-	}
-	const SerializationContext Child(const std::string& name) const {
-		if (!yamlNode.is_map()) {
-			return SerializationContext(ryml::NodeRef(), *this);
-		}
-		else {
-			return SerializationContext(yamlNode[c4::csubstr(name.c_str(), name.length())], *this);
-		}
-	}
-	SerializationContext Child(const std::string& name) {
-		yamlNode |= ryml::MAP;
-		auto cname = c4::csubstr(name.c_str(), name.length());
-		ryml::NodeRef child;
-		if (yamlNode.has_child(cname)) {
-			child = yamlNode[cname];
-		}
-		else {
-			child = yamlNode.append_child();
-			child.set_key_serialized(cname);
-		}
-		return SerializationContext(child, *this);
-	}
-	const SerializationContext Child(int iChild) const {
-		if (yamlNode.num_children() > iChild) {
-			return SerializationContext(yamlNode[iChild], *this);
-		}
-		else {
-			return SerializationContext(ryml::NodeRef(), *this);
-		}
-	}
-	SerializationContext Child(int iChild) {
-		yamlNode |= ryml::SEQ;
-		ryml::NodeRef child;
-		if (yamlNode.num_children() > iChild) {
-			child = yamlNode[iChild];
-		}
-		else {
-			child = yamlNode.append_child();
-			//TODO ASSERT(yamlNode.num_children() > iChild);
-		}
-		return SerializationContext(yamlNode[iChild], *this);
-	}
-	bool IsSequence()const {
-		return yamlNode.is_seq();
-	}
-	bool IsMap()const {
-		return yamlNode.is_map();
-	}
-	int Size()const {
-		return yamlNode.num_children();
-	}
+	const bool IsDefined() const;
+	const SerializationContext Child(const std::string& name) const;
+	SerializationContext Child(const std::string& name);
+	const SerializationContext Child(int iChild) const;
+	SerializationContext Child(int iChild);
+	bool IsSequence()const;
+	bool IsMap()const;
+	int Size()const;
 
-	template<typename T>
-	void operator<<(const T& t) {
-		yamlNode << t;
-	}
-	template<typename T>
-	void operator>>(T& t) const {
-		yamlNode >> t;
-	}
+	std::vector<std::string> GetChildrenNames()const;//TODO optimize
+
+	void operator<<(const int& t);
+	void operator>>(int& t) const;
+
+	void operator<<(const unsigned int& t);
+	void operator>>(unsigned int& t) const;
+
+	void operator<<(const float& t);
+	void operator>>(float& t) const;
+
+	void operator<<(const bool& t);
+	void operator>>(bool& t) const;
+
+	void operator<<(const std::string& t);
+	void operator>>(std::string& t) const;
 
 
 	//TODO only if T is Object
@@ -163,9 +123,7 @@ public:
 		(*rootObjectsRequestedToSerializeRequesters)[casted].push_back(yamlNode);
 	}
 
-	void AddAllowedToSerializeObject(std::shared_ptr<Object> obj) {
-		rootObjectsAllowedToSerialize->push_back(obj);
-	}
+	void AddAllowedToSerializeObject(std::shared_ptr<Object> obj);
 
 	AssetDatabase* database = nullptr;
 	AssetDatabase_TextImporterHandle* databaseHandle = nullptr;
@@ -175,19 +133,14 @@ public:
 
 	std::vector<Object*>* rootDeserializedObjects = nullptr;//TODO make private
 
-	ryml::NodeRef GetYamlNode() { return yamlNode; }
+	ryml::NodeRef& GetYamlNode();
+	const ryml::NodeRef& GetYamlNode() const;
 
 private:
-	ryml::NodeRef yamlNode{};
+	RymlNodeRefDummy yamlNode{};
 	std::shared_ptr<ryml::Tree> yamlTree{};
 
-	SerializationContext(ryml::NodeRef yamlNode, const SerializationContext& parent)
-		:yamlNode(yamlNode)
-		, databaseHandle(parent.databaseHandle)
-		, rootObjectsRequestedToSerialize(parent.rootObjectsRequestedToSerialize)
-		, rootObjectsAllowedToSerialize(parent.rootObjectsAllowedToSerialize)
-		, rootDeserializedObjects(parent.rootDeserializedObjects)
-		, rootObjectsRequestedToSerializeRequesters(parent.rootObjectsRequestedToSerializeRequesters) {}
+	SerializationContext(ryml::NodeRef yamlNode, const SerializationContext& parent);
 
 	void RequestDeserialization(void* ptr, const std::string& assetPath) const;
 
@@ -195,8 +148,8 @@ private:
 	std::vector<std::shared_ptr<Object>> objectsRequestedToSerialize;
 	std::vector<std::shared_ptr<Object>>* rootObjectsAllowedToSerialize = nullptr;
 	std::vector<std::shared_ptr<Object>> objectsAllowedToSerialize;
-	std::unordered_map<std::shared_ptr<Object>, std::vector<ryml::NodeRef>>* rootObjectsRequestedToSerializeRequesters = nullptr;
-	std::unordered_map<std::shared_ptr<Object>, std::vector<ryml::NodeRef>> objectsRequestedToSerializeRequesters;
+	std::unordered_map<std::shared_ptr<Object>, std::vector<RymlNodeRefDummy>>* rootObjectsRequestedToSerializeRequesters = nullptr;
+	std::unordered_map<std::shared_ptr<Object>, std::vector<RymlNodeRefDummy>> objectsRequestedToSerializeRequesters;
 	std::vector<Object*> deserializedObjects;
 
 };
@@ -214,6 +167,7 @@ public:
 
 
 	std::vector<std::string> tags;//TODO make protected
+	std::vector<std::shared_ptr<Attribute>> attributes;
 
 protected:
 	ReflectedTypeBase(const std::string& name) : __name__(name) {}
@@ -242,27 +196,13 @@ public:
 	}
 };
 
-class ReflectedTypeString : public ReflectedTypeBase {
+class SE_CPP_API ReflectedTypeString : public ReflectedTypeBase {
 public:
 	ReflectedTypeString(std::string name) : ReflectedTypeBase(name) {
 
 	}
-	virtual void Serialize(SerializationContext& context, const void* object) override
-	{
-		auto& str = *((std::string*)object);
-		auto csubstr = c4::csubstr(str.c_str(), str.length());
-		context << csubstr;
-	}
-	virtual void Deserialize(const SerializationContext& context, void* object) override
-	{
-		if (context.IsDefined()) {
-
-			c4::csubstr csubstr;
-			context >> csubstr;
-			auto& str = *((std::string*)object);
-			str = std::string(csubstr.str, csubstr.len);
-		}
-	}
+	virtual void Serialize(SerializationContext& context, const void* object) override;
+	virtual void Deserialize(const SerializationContext& context, void* object) override;
 };
 //TODO export to dll to make type objects single instanced
 template<typename T>
@@ -540,6 +480,9 @@ class Type : public ReflectedType<##className> { \
 #define REFLECT_VAR(varName)\
 		fields.push_back(ReflectedField(GetReflectedType<decltype(varName)>(), #varName, offsetOf(&TYPE::varName))); \
 
+#define REFLECT_ATTRIBUTE(attribute)\
+		attributes.push_back(std::shared_ptr<Attribute>(new attribute)); \
+
 #define REFLECT_END() \
 		} \
 	}; \
@@ -561,6 +504,9 @@ _REFLECT_BEGIN_NO_PARENT_(className) \
 	} \
 	for (auto parentTag : dynamic_cast<ReflectedTypeNonTemplated*>(__parentType__)->tags) {	\
 		this->tags.push_back(parentTag); \
+	} \
+	for (auto parentAttribute : dynamic_cast<ReflectedTypeNonTemplated*>(__parentType__)->attributes) { \
+			this->attributes.push_back(parentAttribute); \
 	}
 
 #define _EXPAND_(x) x

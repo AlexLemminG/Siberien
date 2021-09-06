@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include "Defines.h"
+#include "GameEvents.h"
 
 class Scene;
 
@@ -16,6 +17,8 @@ public:
 
 	static std::shared_ptr<Scene> GetCurrentScene() { return currentScene; }
 
+	//TODO less static stuff
 	static std::string lastLoadRequest;
 	static std::shared_ptr<Scene> currentScene;
+	static GameEvent<> onSceneLoaded;
 };

@@ -1,3 +1,5 @@
+
+
 #include "Light.h"
 
 std::vector<PointLight*> PointLight::pointLights;

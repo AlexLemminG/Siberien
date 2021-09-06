@@ -52,7 +52,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -68,7 +68,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>Precompiled.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -92,6 +92,7 @@
     <ClCompile Include="SEngine\Component.cpp" />
     <ClCompile Include="SEngine\Config.cpp" />
     <ClCompile Include="SEngine\Dbg.cpp" />
+    <ClCompile Include="SEngine\EditorCameraController.cpp" />
     <ClCompile Include="SEngine\Engine.cpp" />
     <ClCompile Include="SEngine\FlyCameraMovement.cpp" />
     <ClCompile Include="SEngine\GameEvents.cpp" />
@@ -118,12 +119,14 @@
     <ClCompile Include="SEngine\RigidBody.cpp" />
     <ClCompile Include="SEngine\Scene.cpp" />
     <ClCompile Include="SEngine\SceneManager.cpp" />
+    <ClCompile Include="SEngine\Serialization.cpp" />
     <ClCompile Include="SEngine\Shader.cpp" />
     <ClCompile Include="SEngine\ShadowRenderer.cpp" />
     <ClCompile Include="SEngine\SMath.cpp" />
     <ClCompile Include="SEngine\Sound.cpp" />
     <ClCompile Include="SEngine\SphericalHarmonics.cpp" />
     <ClCompile Include="SEngine\System.cpp" />
+    <ClCompile Include="SEngine\Test.cpp" />
     <ClCompile Include="SEngine\Texture.cpp" />
     <ClCompile Include="SEngine\Time.cpp" />
     <ClCompile Include="SEngine\Transform.cpp" />
@@ -140,6 +143,7 @@
     <ClInclude Include="SEngine\Config.h" />
     <ClInclude Include="SEngine\Dbg.h" />
     <ClInclude Include="SEngine\Defines.h" />
+    <ClInclude Include="SEngine\EditorSceneInfo.h" />
     <ClInclude Include="SEngine\Engine.h" />
     <ClInclude Include="SEngine\FlyCameraMovement.h" />
     <ClInclude Include="SEngine\GameEvents.h" />
@@ -156,7 +160,7 @@
     <ClInclude Include="SEngine\Object.h" />
     <ClInclude Include="SEngine\Physics.h" />
     <ClInclude Include="SEngine\PhysicsSystem.h" />
-    <ClInclude Include="SEngine\Precompiled.h" />
+    <ClInclude Include="SEngine\pch.h" />
     <ClInclude Include="SEngine\Reflect.h" />
     <ClInclude Include="SEngine\Render.h" />
     <ClInclude Include="SEngine\RenderEvents.h" />
@@ -165,6 +169,7 @@
     <ClInclude Include="SEngine\Scene.h" />
     <ClInclude Include="SEngine\SceneManager.h" />
     <ClInclude Include="SEngine\Serialization.h" />
+    <ClInclude Include="SEngine\SerializedObject.h" />
     <ClInclude Include="SEngine\Shader.h" />
     <ClInclude Include="SEngine\ShadowRenderer.h" />
     <ClInclude Include="SEngine\SMath.h" />

@@ -9,3 +9,5 @@ bool GameLibrary::Init(Engine* engine) {
 void GameLibrary::Term() {
 }
 
+
+bool Engine::IsEditorMode() const { return false; }

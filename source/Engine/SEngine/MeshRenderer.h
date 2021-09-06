@@ -28,7 +28,8 @@ public:
 
 	void OnDisable() override;
 
-	REFLECT_BEGIN(MeshRenderer);
+	REFLECT_BEGIN(MeshRenderer, Component);
+	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_VAR(mesh);
 	REFLECT_VAR(material);
 	REFLECT_END();

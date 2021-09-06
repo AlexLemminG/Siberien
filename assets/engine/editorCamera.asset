@@ -1,0 +1,15 @@
+GameObject:
+  tag: editorCamera
+  components:
+    - $Camera
+    - $Transform
+    - $EditorCameraController
+Camera:
+  clearColor: 0x000000ff
+  fov: 90.0
+  nearPlane: 0.01
+  farPlane: 1000
+Transform:
+  pos: [0, 10.999, -5]
+  euler: [65, 0, 0]
+EditorCameraController: {}

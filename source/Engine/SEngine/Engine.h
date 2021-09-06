@@ -4,8 +4,11 @@
 #include "Defines.h"
 #include "optick.h"
 
-class Engine {
+class SE_CPP_API Engine {
 public:
+	static Engine* Get();
+
+	bool IsEditorMode() const;
 };
 
 

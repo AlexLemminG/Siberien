@@ -1,3 +1,5 @@
+
+
 #include "Common.h"
 #include "Reflect.h"
 #include "Serialization.h"
@@ -5,11 +7,29 @@
 #include "System.h"
 #include "GameObject.h"
 #include "Scene.h"
-
+#include "SceneManager.h"
+#include "GameEvents.h"
+#include "Resources.h"
 
 
 class InspectorWindow : public System<InspectorWindow> {
+	GameEventHandle onSceneLoadedHandle;
+
 	std::shared_ptr<Object> selectedObject;
+
+	virtual bool Init() override {
+		onSceneLoadedHandle = SceneManager::onSceneLoaded.Subscribe([this]() {
+			auto cameraPrefab = AssetDatabase::Get()->Load<GameObject>("engine\\editorCamera.asset");
+			auto camera = Object::Instantiate(cameraPrefab);
+			camera->flags = Bits::SetMaskTrue(camera->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR);
+			Scene::Get()->AddGameObject(camera);
+			});
+
+		return true;
+	}
+	virtual void Term() override {
+		SceneManager::onSceneLoaded.Unsubscribe(onSceneLoadedHandle);
+	}
 
 	void DrawInspector(char* object, std::string name, ReflectedTypeBase* type) {
 		if (type->GetName() == ::GetReflectedType<float>()->GetName()) {
@@ -136,6 +156,9 @@ class InspectorWindow : public System<InspectorWindow> {
 	}
 
 	void Update() {
+		if (!Engine::Get()->IsEditorMode()) {
+			return;//TODO draw but only in pause
+		}
 		auto scene = Scene::Get();
 		if (!scene) {
 			return;
@@ -155,16 +178,19 @@ class InspectorWindow : public System<InspectorWindow> {
 			ImGui::BeginChild("left pane", ImVec2(150, 0), true);
 			for (int i = 0; i < gameObjects.size(); i++)
 			{
-				// FIXME: Good candidate to use ImGuiSelectableFlags_SelectOnNav
-				std::string name = gameObjects[i]->tag.size() > 0 ? gameObjects[i]->tag.c_str() : "-";
+				auto go = gameObjects[i];
+				std::string name = go->tag.size() > 0 ? go->tag.c_str() : "-";
 				if (filter.size() > 0) {
 					if (name.find(filter) == -1) {
 						continue;//TODO ignoreCase
 					}
 				}
+				if (Bits::IsMaskTrue(go->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR)) {
+					continue;
+				}
 
 				ImGui::PushID(i);
-				if (ImGui::Selectable(gameObjects[i]->tag.size() > 0 ? gameObjects[i]->tag.c_str() : "-", selectedObject == gameObjects[i])) {
+				if (ImGui::Selectable(name.c_str(), selectedObject == gameObjects[i])) {
 					selectedObject = gameObjects[i];
 				}
 				ImGui::PopID();

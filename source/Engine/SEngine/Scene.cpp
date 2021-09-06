@@ -1,3 +1,5 @@
+
+
 #include "Scene.h"
 
 #include "GameObject.h"
@@ -122,11 +124,19 @@ void Scene::DeactivateGameObjectInternal(std::shared_ptr<GameObject>& gameObject
 	}
 }
 
+
 void Scene::SetComponentEnabledInternal(Component* component, bool isEnabled) {
 	if (component->isEnabled == isEnabled) {
 		return;
 	}
 	component->isEnabled = isEnabled;
+	if (Engine::Get()->IsEditorMode() && std::find_if(component->GetType()->attributes.begin(), component->GetType()->attributes.end(),
+		[](const auto& x) {
+			return dynamic_cast<ExecuteInEditModeAttribute*>(x.get()) != nullptr;
+		}
+	) == component->GetType()->attributes.end()) {
+		return;
+	}
 	if (isEnabled) {
 		component->OnEnable();
 		if (component->GetType()->HasTag("HasUpdate") && !component->ignoreUpdate) {

@@ -22,6 +22,7 @@ public:
 	static bool GetMouseButtonDown(int button);
 
 	static Vector2 GetMousePosition();
+	static Vector2 GetMouseDeltaPosition();
 
 	static bool GetQuit();
 
@@ -32,6 +33,7 @@ private:
 	static std::vector<bool> justReleased;
 	static bool quitPressed;
 	static Vector2 mousePos;
+	static Vector2 mouseDeltaPos;
 	static Uint32 mouseState;
 	static Uint32 prevMouseState;
 };

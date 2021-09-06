@@ -1,7 +1,10 @@
+
+
 #include "Shader.h"
 #include "Resources.h"
 #include <windows.h>
 #include "Serialization.h"
+#include "yaml-cpp/yaml.h"
 
 
 class BasicShaderAssetImporter : public AssetImporter {

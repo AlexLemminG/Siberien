@@ -10,6 +10,7 @@ bool Input::quitPressed = false;
 Uint32 Input::mouseState = 0;
 Uint32 Input::prevMouseState = 0;
 Vector2 Input::mousePos = Vector2{ 0,0 };
+Vector2 Input::mouseDeltaPos = Vector2{ 0,0 };
 
 bool Input::Init() {
 	OPTICK_EVENT();
@@ -29,6 +30,8 @@ void Input::Term() {
 
 void Input::Update() {
 	OPTICK_EVENT();
+	mouseDeltaPos = Vector2{ 0,0 };
+
 	quitPressed = false;
 	justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 	justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
@@ -39,6 +42,10 @@ void Input::Update() {
 		if (e.type == SDL_QUIT)
 		{
 			quitPressed = true;
+		}
+		if (e.type == SDL_MOUSEMOTION) {
+			mouseDeltaPos.x += e.motion.xrel;
+			mouseDeltaPos.y += e.motion.yrel;
 		}
 	}
 
@@ -64,8 +71,10 @@ void Input::Update() {
 	int mouseY;
 	prevMouseState = mouseState;
 	mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+	auto prevMousePos = mousePos;
 	mousePos.x = mouseX;
 	mousePos.y = mouseY;
+	//mouseDeltaPos = mousePos - prevMousePos;
 }
 
 bool Input::GetKeyDown(SDL_Scancode code) {
@@ -106,6 +115,10 @@ bool Input::GetMouseButtonDown(int button) {
 
 Vector2 Input::GetMousePosition() {
 	return mousePos;
+}
+
+Vector2 Input::GetMouseDeltaPosition() {
+	return mouseDeltaPos;
 }
 
 bool Input::GetQuit() {

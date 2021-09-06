@@ -8,12 +8,35 @@
 #include "MeshRenderer.h"
 #include "Mesh.h"
 
-Camera* Camera::mainCamera = nullptr;
-
 DECLARE_TEXT_ASSET(Camera);
 
+std::vector<Camera*> Camera::cameras;
+
+Camera* Camera::GetMain() {
+	if (Engine::Get()->IsEditorMode()) {
+		for (auto camera : cameras) {
+			if (camera->gameObject()->tag == "EditorCamera") {
+				return camera;
+			}
+		}
+	}
+	else {
+		for (auto camera : cameras) {
+			if (camera->gameObject()->tag != "EditorCamera") {
+				return camera;
+			}
+		}
+	}
+	return cameras.size() > 0 ? cameras[0] : nullptr;
+
+}
+
+void Camera::OnEnable() { cameras.push_back(this); }
+
+void Camera::OnDisable() { cameras.erase(std::find(cameras.begin(), cameras.end(), this)); }
+
 Ray Camera::ScreenPointToRay(Vector2 screenPoint) {
-	
+
 	int width;
 	int height;
 	SDL_GetWindowSize(Render::window, &width, &height);

@@ -57,6 +57,7 @@ void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::s
 			rigidBody->layer = "staticGeom";
 			gameObject->components.push_back(rigidBody);
 
+			createdObjects.push_back(gameObject);
 			Scene::Get()->AddGameObject(gameObject);
 		}
 	}
@@ -74,6 +75,13 @@ void BlenderSceneLoader::OnEnable() {
 	auto rootUid = AssetDatabase::Get()->GetAssetPath(scene);
 	
 	AddToNodes(scene->rootNode, rootUid, Matrix4::Identity());
+}
+
+void BlenderSceneLoader::OnDisable() {
+	for (auto obj : createdObjects) {
+		Scene::Get()->RemoveGameObject(obj);
+	}
+	createdObjects.clear();
 }
 
 DECLARE_TEXT_ASSET(BlenderSceneLoader);
