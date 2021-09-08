@@ -2,6 +2,7 @@
 
 #include "Serialization.h"
 #include "GameObject.h"
+#include "Prefab.h"
 
 class GameObject;
 
@@ -30,6 +31,7 @@ public:
 	std::shared_ptr<SphericalHarmonics> sphericalHarmonics; //TODO not here
 private:
 	std::vector<std::shared_ptr<GameObject>> gameObjects; //all gameObjects
+	std::vector<PrefabInstance> prefabInstances; //+ some extra game objects which are not included in 'all'
 
 	std::vector<std::shared_ptr<GameObject>> activeGameObjects;
 
@@ -54,6 +56,7 @@ private:
 	void ProcessRemovedGameObjects();
 
 	REFLECT_BEGIN(Scene);
+	REFLECT_VAR(prefabInstances);
 	REFLECT_VAR(sphericalHarmonics);
 	REFLECT_VAR(gameObjects);
 	REFLECT_END();

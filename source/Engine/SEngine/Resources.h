@@ -98,12 +98,16 @@ public:
 	//returns 
 	std::string GetAssetPath(std::shared_ptr<Object> obj);
 
+	const std::shared_ptr<ryml::Tree> GetOriginalSerializedAsset(const std::string& assetPath);
+
 	static AssetDatabase* Get();
 
 	GameEvent<> onBeforeUnloaded;
 private:
 	class Asset {
 	public:
+		std::shared_ptr<ryml::Tree> originalTree;
+
 		void Add(const std::string& id, std::shared_ptr<Object> object) {
 			objects.push_back(SingleObject{ object, id });
 		}

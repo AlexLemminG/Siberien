@@ -25,3 +25,5 @@ Faster than YAML?
 Prefab = asset + SerializedObject -> (asset to SerializedObject + merge) -> Instantiate from merged SerializedObject
 
 Inspector = edit Serialized -> ???
+
+change asset uid to something like $meshes\playerMesh.glb$Box

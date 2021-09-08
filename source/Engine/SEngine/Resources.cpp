@@ -54,6 +54,10 @@ std::string AssetDatabase::GetAssetPath(std::shared_ptr<Object> obj) {
 	return AssetDatabase::PathDescriptor(GetAssetUID(obj)).assetPath;
 }
 
+const std::shared_ptr<ryml::Tree> AssetDatabase::GetOriginalSerializedAsset(const std::string& assetPath) {
+	return assets[assetPath].originalTree;
+}
+
 void AssetDatabase_TextImporterHandle::RequestObjectPtr(void* dest, const std::string& uid) {
 	auto descriptor = AssetDatabase::PathDescriptor(uid);
 	if (descriptor.assetPath.size() == 0) {
@@ -130,8 +134,10 @@ void AssetDatabase::ProcessLoadingQueue() {
 				buffer.resize(size);
 				input.read((char*)buffer.data(), size);
 
-				ryml::Tree tree = ryml::parse(c4::csubstr(&buffer[0], buffer.size()));
+				auto treePtr = std::make_shared<ryml::Tree>(ryml::parse(c4::csubstr(&buffer[0], buffer.size())));
+				ryml::Tree& tree = *treePtr;
 				ryml::NodeRef node = tree;
+				assets[path].originalTree = treePtr;
 				if (!node.empty()) {
 					for (const auto& kv : node) {
 						auto key = kv.key();

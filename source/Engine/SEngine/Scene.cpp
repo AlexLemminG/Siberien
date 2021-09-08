@@ -5,11 +5,18 @@
 #include "GameObject.h"
 #include "SceneManager.h"
 #include "Common.h"
+#include "Prefab.h"
 
 DECLARE_TEXT_ASSET(Scene);
 
 void Scene::Init() {
 	OPTICK_EVENT();
+	for (const auto& pi : prefabInstances) {
+		auto go = pi.CreateGameObject();
+		ASSERT(go);
+		gameObjects.push_back(go);
+	}
+
 	//TOOD remove nullptr components here ?
 	for (int iG = gameObjects.size() - 1; iG >= 0; iG--) {
 		if (gameObjects[iG] == nullptr) {

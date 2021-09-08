@@ -1,0 +1,55 @@
+Scene:
+  sphericalHarmonics: harmonics.asset
+  prefabInstances:
+    - prefab: gun_shotgun.asset # should not be used in scene!!!
+      overrides:
+        GameObject:
+          components:
+            4: $PointLight # new Component added
+        Transform:
+          pos: [-6,1,15] #overrides
+          scale: [0.3, 0.3, 0.3]
+        MeshRenderer:
+          mesh: meshes\gatling.glb$Mesh #overrides
+        PointLight: #new component
+          color: 0xff0000ff
+          radius: 4
+          innerRadius: 0.7
+  gameObjects:
+    - gameplayScene_scenario.asset
+    - camera.asset
+    - player.asset
+    - gun_gatling.asset
+    - gameplayScene\dirLight.asset
+    - gameplayScene\indoorHidePlane.asset
+    - gameplayScene\static.asset
+    - gameplayScene_staticGeometry.asset
+    - gameplayScene\door1.asset
+    - gameplayScene\door1_light.asset
+    - gameplayScene\door2.asset
+    - gameplayScene\door2_light.asset
+    - gameplayScene\door3.asset
+    - gameplayScene\door3_light.asset
+    - gameplayScene\door4.asset
+    - gameplayScene\door4_light.asset
+    - gameplayScene\door5.asset
+    - gameplayScene\door5_light.asset
+    - gameplayScene\light1.asset
+    - gameplayScene\light2.asset
+    - gameplayScene\light3.asset
+    - gameplayScene\light4.asset
+    - gameplayScene\light5.asset
+    - gameplayScene\light6.asset
+    - gameplayScene\light7.asset
+    - gameplayScene\light8.asset
+    - gameplayScene\light9.asset
+    - gameplayScene\light10.asset
+    - gameplayScene\light11.asset
+    - gameplayScene\light12.asset
+    - gameplayScene\light13.asset
+    - gameplayScene\light14.asset
+    - gameplayScene\light15.asset
+    - gameplayScene\pickup_grenade.asset
+    - gameplayScene\pickup_grenade2.asset
+    - gameplayScene\pickup_grenade3.asset
+    - gameplayScene\pickup_shotgun.asset

@@ -112,6 +112,7 @@
     <ClCompile Include="SEngine\Object.cpp" />
     <ClCompile Include="SEngine\Physics.cpp" />
     <ClCompile Include="SEngine\PhysicsSystem.cpp" />
+    <ClCompile Include="SEngine\Prefab.cpp" />
     <ClCompile Include="SEngine\Reflect.cpp" />
     <ClCompile Include="SEngine\Render.cpp" />
     <ClCompile Include="SEngine\RenderEvents.cpp" />
@@ -120,6 +121,7 @@
     <ClCompile Include="SEngine\Scene.cpp" />
     <ClCompile Include="SEngine\SceneManager.cpp" />
     <ClCompile Include="SEngine\Serialization.cpp" />
+    <ClCompile Include="SEngine\SerializedObject.cpp" />
     <ClCompile Include="SEngine\Shader.cpp" />
     <ClCompile Include="SEngine\ShadowRenderer.cpp" />
     <ClCompile Include="SEngine\SMath.cpp" />
@@ -161,6 +163,7 @@
     <ClInclude Include="SEngine\Physics.h" />
     <ClInclude Include="SEngine\PhysicsSystem.h" />
     <ClInclude Include="SEngine\pch.h" />
+    <ClInclude Include="SEngine\Prefab.h" />
     <ClInclude Include="SEngine\Reflect.h" />
     <ClInclude Include="SEngine\Render.h" />
     <ClInclude Include="SEngine\RenderEvents.h" />

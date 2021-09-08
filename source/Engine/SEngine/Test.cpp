@@ -1,8 +1,13 @@
 #include "Reflect.h"
+#include "SerializedObject.h"
+
 
 class Test {
 	int i;
 	Test() {
-		i++;
+		SerializedObject s;
+
+
+		i += s.GetInt();
 	}
 };
