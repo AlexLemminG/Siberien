@@ -13,6 +13,7 @@ class GameLib : public GameLibrary {
 		std::cout << "Hello there" << std::endl;
 		return true;
 	}
+	void Term() {}
 	INNER_LIBRARY();
 };
 

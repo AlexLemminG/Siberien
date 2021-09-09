@@ -15,15 +15,13 @@ public:
 	static void Draw(const AABB& aabb);
 	static void Draw(Frustum aabb);
 	static void Draw(Matrix4 axes, float length = 1.0f);
-	static void Text(std::string text) {
-		texts.push_back(text);
-	}
+	static void Text(std::string text);
 
 	template<typename ... Args>
 	static void Text(const std::string& format, Args ... args)
 	{
 		std::string str = FormatString(format, args...);
-		texts.push_back(str);
+		Text(str);
 	}
 
 
@@ -32,7 +30,7 @@ public:
 
 	static void DrawAll();
 
-private:
+public:
 	class Point {
 	public:
 		Vector3 pos;
@@ -51,9 +49,4 @@ private:
 	};
 
 	static void ClearAll();
-
-	static std::vector<std::string> texts;
-	static std::vector<Ray> rays;
-	static std::vector<Point> points;
-	static std::vector<Axes> axes;
 };

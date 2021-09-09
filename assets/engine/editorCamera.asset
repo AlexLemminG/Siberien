@@ -1,5 +1,5 @@
 GameObject:
-  tag: editorCamera
+  tag: EditorCamera
   components:
     - $Camera
     - $Transform

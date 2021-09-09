@@ -12,6 +12,16 @@ public:
 	}
 };
 
+Object::Object() {}
+
+Object::~Object() {}
+
+void Object::OnBeforeSerializeCallback(SerializationContext& context) const {}
+
+//TODO make non const
+
+void Object::OnAfterDeserializeCallback(const SerializationContext& context) {}
+
 ReflectedTypeBase* Object::TypeOf() {
 	static Object_Type t;
 	return &t;

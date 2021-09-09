@@ -6,22 +6,18 @@
 
 class SE_CPP_API SystemBase {
 public:
-	SystemBase() {
-	}
-	virtual ~SystemBase() {
-	}
-	virtual bool Init() { return true; }
-	virtual void Update() {}
-	virtual void FixedUpdate() {}
-	virtual void Draw() {}
-	virtual void Term() {}
+	SystemBase();
+	virtual ~SystemBase();
+	virtual bool Init();
+	virtual void Update();
+	virtual void FixedUpdate();
+	virtual void Draw();
+	virtual void Term();
 
 	struct PriorityInfo {
 		int order = 0;
 	};
-	virtual PriorityInfo GetPriorityInfo() const {
-		return PriorityInfo();
-	}
+	virtual PriorityInfo GetPriorityInfo() const;
 };
 
 template<typename T>

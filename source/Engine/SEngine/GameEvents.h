@@ -27,6 +27,9 @@ public:
 			handler.handler(args...);
 		}
 	}
+	void UnsubscribeAll() {
+		handlers.clear();
+	}
 
 private:
 	int nextHandleIdx = 0;

@@ -2,6 +2,7 @@
 
 #include "SMath.h"
 #include "bgfx/bgfx.h"
+#include "GameEvents.h"
 
 struct SDL_Window;
 class SDL_Surface;
@@ -67,6 +68,11 @@ private:
 	void DrawLights(const ICamera& camera);
 	void EndFrame();
 
+	void LoadAssets();
+	void UnloadAssets();
+
+	GameEventHandle databaseAfterUnloadedHandle;
+	GameEventHandle databaseBeforeUnloadedHandle;
 
 	//The surface contained by the window
 	SDL_Surface* screenSurface = nullptr;
@@ -102,6 +108,7 @@ private:
 	std::shared_ptr<Texture> defaultNormalTexture;
 	std::shared_ptr<Texture> defaultEmissiveTexture;
 	std::shared_ptr<Material> simpleBlitMat;
+	std::shared_ptr<Material> defferedCombineMaterial;
 	std::shared_ptr<Shader> deferredLightShader;
 	std::shared_ptr<Shader> deferredDirLightShader;
 

@@ -211,8 +211,8 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = true;//TODO cfgvar?
-	initInfo.profile = true;
+	initInfo.debug = false;//TODO cfgvar?
+	initInfo.profile = false;
 	initInfo.type = bgfx::RendererType::Direct3D11;
 	//initInfo.limits.transientVbSize *= 10;//TODO debug only
 	//initInfo.limits.transientIbSize *= 10;//TODO debug only
@@ -259,21 +259,44 @@ bool Render::Init()
 
 	Dbg::Init();
 
+	LoadAssets();
+	//TODO is it good idea to load something after database is unloaded ?
+	databaseAfterUnloadedHandle = AssetDatabase::Get()->onAfterUnloaded.Subscribe([this]() {LoadAssets(); });
+	databaseBeforeUnloadedHandle = AssetDatabase::Get()->onAfterUnloaded.Subscribe([this]() {UnloadAssets(); });
+
 	return true;
 }
 
+void Render::LoadAssets() {
+	auto* database = AssetDatabase::Get();
+	if (database == nullptr) {
+		return;;//HACK for terminated app
+	}
+	whiteTexture = database->Load<Texture>("textures\\white.png");
+	defaultNormalTexture = database->Load<Texture>("textures\\defaultNormal.png");
+	defaultEmissiveTexture = database->Load<Texture>("textures\\defaultEmissive.png");
+	simpleBlitMat = database->Load<Material>("materials\\simpleBlit.asset");
+	deferredLightShader = database->Load<Shader>("shaders\\deferredLight.asset");
+	deferredDirLightShader = database->Load<Shader>("shaders\\deferredDirLight.asset");
+	defferedCombineMaterial = database->Load<Material>("materials\\deferredCombine.asset");
+}
+
+void Render::UnloadAssets() {
+	//TODO terminate whole database textures, shaders and other stuff on Render::Term()
+
+	whiteTexture = nullptr;
+	defaultNormalTexture = nullptr;
+	defaultEmissiveTexture = nullptr;
+	simpleBlitMat = nullptr;
+	deferredLightShader = nullptr;
+	deferredDirLightShader = nullptr;
+	defferedCombineMaterial = nullptr;
+}
 void Render::Draw(SystemsManager& systems)
 {
 	OPTICK_EVENT();
 
 	//TODO not on draw!
-	whiteTexture = AssetDatabase::Get()->Load<Texture>("textures\\white.png");
-	defaultNormalTexture = AssetDatabase::Get()->Load<Texture>("textures\\defaultNormal.png");
-	defaultEmissiveTexture = AssetDatabase::Get()->Load<Texture>("textures\\defaultEmissive.png");
-	simpleBlitMat = AssetDatabase::Get()->Load<Material>("materials\\simpleBlit.asset");
-	deferredLightShader = AssetDatabase::Get()->Load<Shader>("shaders\\deferredLight.asset");
-	deferredDirLightShader = AssetDatabase::Get()->Load<Shader>("shaders\\deferredDirLight.asset");
-	auto material = AssetDatabase::Get()->Load<Material>("materials\\deferredCombine.asset");//TOOD on init
 
 	//TODO not here
 	if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_RETURN) && (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LALT) || Input::GetKey(SDL_Scancode::SDL_SCANCODE_RALT))) {
@@ -401,7 +424,9 @@ void Render::Draw(SystemsManager& systems)
 		bgfx::touch(0);//TODO not needed ?
 	}
 
-	bgfx::dbgTextPrintf(1, 2, 0x0f, "FPS: %.1f", fps);
+	if (CfgGetBool("showFps")) {
+		bgfx::dbgTextPrintf(1, 2, 0x0f, "FPS: %.1f", fps);
+	}
 
 	if (camera == nullptr) {
 		if (camera == nullptr) {
@@ -443,11 +468,10 @@ void Render::Draw(SystemsManager& systems)
 
 	// combining gbuffer
 	{
-		auto material = AssetDatabase::Get()->Load<Material>("materials\\deferredCombine.asset");//TOOD on init
-		if (!material || !material->shader) {
+		if (!defferedCombineMaterial || !defferedCombineMaterial->shader) {
 			return;
 		}
-		ApplyMaterialProperties(material);
+		ApplyMaterialProperties(defferedCombineMaterial);
 
 		bgfx::setTexture(0, gBuffer.albedoSampler, gBuffer.albedoTexture);
 		bgfx::setTexture(1, gBuffer.normalSampler, gBuffer.normalTexture);
@@ -462,7 +486,7 @@ void Render::Draw(SystemsManager& systems)
 
 		Graphics::Get()->SetScreenSpaceQuadBuffer();
 
-		bgfx::submit(kRenderPassCombine, material->shader->program);
+		bgfx::submit(kRenderPassCombine, defferedCombineMaterial->shader->program);
 	}
 
 
@@ -489,13 +513,13 @@ void Render::Term()
 	shadowRenderer->Term();
 	shadowRenderer = nullptr;
 	imguiDestroy();
+	if (AssetDatabase::Get()) {
+		//HACK when database is terminated
+		AssetDatabase::Get()->onAfterUnloaded.Unsubscribe(databaseBeforeUnloadedHandle);
+		AssetDatabase::Get()->onAfterUnloaded.Unsubscribe(databaseAfterUnloadedHandle);
+	}
 	Dbg::Term();
-	whiteTexture = nullptr;
-	defaultNormalTexture = nullptr;
-	defaultEmissiveTexture = nullptr;
-	simpleBlitMat = nullptr;
-	deferredLightShader = nullptr;
-	deferredDirLightShader = nullptr;
+	UnloadAssets();
 
 	for (auto u : textureUniforms) {
 		bgfx::destroy(u.second);

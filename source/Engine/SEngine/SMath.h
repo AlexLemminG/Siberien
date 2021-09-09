@@ -15,12 +15,12 @@ typedef mathfu::Matrix<float, 4, 4> Matrix4;
 typedef mathfu::Matrix<float, 3, 3> Matrix3;
 typedef mathfu::Quaternion<float> Quaternion;
 
-extern SE_CPP_API const Vector3 Vector3_zero;
-extern SE_CPP_API const Vector3 Vector3_one;
-extern SE_CPP_API const Vector3 Vector3_forward;
-extern SE_CPP_API const Vector3 Vector3_up;
-extern SE_CPP_API const Vector3 Vector3_right;
-extern SE_CPP_API const Vector3 Vector3_max;
+constexpr Vector3 Vector3_zero{ 0.f, 0.f, 0.f };
+constexpr Vector3 Vector3_one{ 1.f,1.f,1.f };
+constexpr Vector3 Vector3_forward{ 0.f, 0.f, 1.f };
+constexpr Vector3 Vector3_up{ 0.f, 1.f, 0.f };
+constexpr Vector3 Vector3_right{ 1.f, 0.f, 0.f };
+constexpr Vector3 Vector3_max{ FLT_MAX,FLT_MAX,FLT_MAX };;
 
 
 inline void SetPos(Matrix4& matrix, const Vector3& pos) {
@@ -121,6 +121,9 @@ public:
 	}
 	static float Lerp(const float& a, const float& b, float t) {
 		return a + (b - a) * Clamp01(t);
+	}
+	static float LerpUnclamped(const float& a, const float& b, float t) {
+		return a + (b - a) * t;
 	}
 	static float InverseLerp(const float& a, const float& b, float t) {
 		return (t - a) / (b - a); //TODO if b-a > 0

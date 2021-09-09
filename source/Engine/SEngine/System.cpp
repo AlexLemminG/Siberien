@@ -9,7 +9,8 @@ SystemsManager* SystemsManager::manager;
 bool SystemsManager::Init() {
 	OPTICK_EVENT();
 	manager = this;
-	for (auto registrator : GameLibraryStaticStorage::Get().systemRegistrators) {
+	auto& registrators = GameLibraryStaticStorage::Get().systemRegistrators;
+	for (auto registrator : registrators) {
 		systems.push_back(registrator->CreateSystem());
 	}
 
@@ -58,4 +59,24 @@ void SystemsManager::Term() {
 	}
 	systems.clear();
 	manager = nullptr;
+}
+
+SystemBase::SystemBase() {
+}
+
+SystemBase::~SystemBase() {
+}
+
+bool SystemBase::Init() { return true; }
+
+void SystemBase::Update() {}
+
+void SystemBase::FixedUpdate() {}
+
+void SystemBase::Draw() {}
+
+void SystemBase::Term() {}
+
+SystemBase::PriorityInfo SystemBase::GetPriorityInfo() const {
+	return PriorityInfo();
 }

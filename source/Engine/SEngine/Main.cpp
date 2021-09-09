@@ -37,11 +37,6 @@ Engine* Engine::Get() {
 	return engine;
 }
 
-class EngineLib : public GameLibrary {
-	INNER_LIBRARY(EngineLib);
-};
-DEFINE_LIBRARY(EngineLib);
-
 
 int main(int argc, char* argv[]) {
 	//TODO no sins here please
@@ -66,13 +61,14 @@ start:
 			return -1;
 		}
 
+		if (!libs.Init()) {
+			return -1;
+		}
+
 		if (!render.Init()) {
 			return -1;
 		}
 
-		if (!libs.Init()) {
-			return -1;
-		}
 
 		if (!systemsManager.Init()) {
 			return -1;
@@ -151,13 +147,11 @@ start:
 
 		systemsManager.Term();
 
-		assets.UnloadAll();
+		assets.Term();
 
 		libs.Term();
 
 		render.Term();
-
-		assets.Term();
 
 		config.Term();
 

@@ -8,11 +8,11 @@ class SerializationContext;
 
 class SE_CPP_API Object {
 public:
-	Object() {}
-	virtual ~Object() {}
+	Object();
+	virtual ~Object();
 
-	virtual void OnBeforeSerializeCallback(SerializationContext& context) const {};//TODO make non const
-	virtual void OnAfterDeserializeCallback(const SerializationContext& context) {};
+	virtual void OnBeforeSerializeCallback(SerializationContext& context) const;;//TODO make non const
+	virtual void OnAfterDeserializeCallback(const SerializationContext& context);;
 
 	static ReflectedTypeBase* TypeOf();
 	virtual	ReflectedTypeBase* GetType() const;

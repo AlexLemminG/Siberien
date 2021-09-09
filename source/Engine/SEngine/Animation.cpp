@@ -139,8 +139,9 @@ void Animator::Update() {
 }
 
 void Animator::OnEnable() {
-	auto meshRenderer = gameObject()->GetComponent<MeshRenderer>();
-	if (!meshRenderer) {
+	meshRenderer = gameObject()->GetComponent<MeshRenderer>();
+	transform = gameObject()->transform();
+	if (meshRenderer == nullptr) {
 		return;
 	}
 	auto mesh = meshRenderer->mesh;
@@ -148,17 +149,20 @@ void Animator::OnEnable() {
 		return;
 	}
 
-	for (auto& bone : mesh->bones) {
+	//TODO support disable in middle of enable
+	transform = gameObject()->transform();
+
+	for (const auto& bone : mesh->bones) {
 		meshRenderer->bonesLocalMatrices[bone.idx] = bone.initialLocal;
 	}
 	UpdateWorldMatrices();
+
 
 	currentAnimation = defaultAnimation;
 }
 
 void Animator::UpdateWorldMatrices() {
-	auto meshRenderer = gameObject()->GetComponent<MeshRenderer>();
-	if (!meshRenderer) {
+	if (meshRenderer == nullptr) {
 		return;
 	}
 	auto mesh = meshRenderer->mesh;
@@ -168,11 +172,11 @@ void Animator::UpdateWorldMatrices() {
 
 	for (auto& bone : mesh->bones) {
 		if (bone.parentBoneIdx != -1) {
-			auto& parentBoneMatrix = meshRenderer->bonesWorldMatrices[bone.parentBoneIdx];
+			const auto& parentBoneMatrix = meshRenderer->bonesWorldMatrices[bone.parentBoneIdx];
 			meshRenderer->bonesWorldMatrices[bone.idx] = parentBoneMatrix * meshRenderer->bonesLocalMatrices[bone.idx];
 		}
 		else {
-			auto& parentBoneMatrix = gameObject()->transform()->matrix;
+			const auto& parentBoneMatrix = transform->matrix;
 			meshRenderer->bonesWorldMatrices[bone.idx] = parentBoneMatrix * meshRenderer->bonesLocalMatrices[bone.idx];
 		}
 		meshRenderer->bonesFinalMatrices[bone.idx] = meshRenderer->bonesWorldMatrices[bone.idx] * bone.offset;

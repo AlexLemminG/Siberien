@@ -3,7 +3,8 @@
 #include "Component.h"
 
 class aiAnimation;
-
+class Transform;
+class MeshRenderer;
 
 class AnimationTransform {
 public:
@@ -43,6 +44,9 @@ public:
 	std::shared_ptr<MeshAnimation> defaultAnimation;
 	float currentTime;
 	float speed = 1.f;
+
+	std::shared_ptr<MeshRenderer> meshRenderer;
+	std::shared_ptr<Transform> transform;
 
 	void OnEnable() override;
 

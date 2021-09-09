@@ -23,6 +23,7 @@ private:
 	std::shared_ptr<Material> material;
 
 	REFLECT_BEGIN(PostProcessingEffect);
+	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_VAR(material);
 	REFLECT_END();
 };

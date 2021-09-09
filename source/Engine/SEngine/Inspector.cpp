@@ -20,8 +20,11 @@ class InspectorWindow : public System<InspectorWindow> {
 	virtual bool Init() override {
 		onSceneLoadedHandle = SceneManager::onSceneLoaded.Subscribe([this]() {
 			auto cameraPrefab = AssetDatabase::Get()->Load<GameObject>("engine\\editorCamera.asset");
+			if (!cameraPrefab) {
+				return;
+			}
 			auto camera = Object::Instantiate(cameraPrefab);
-			camera->flags = Bits::SetMaskTrue(camera->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR);
+			//camera->flags = Bits::SetMaskTrue(camera->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR);
 			Scene::Get()->AddGameObject(camera);
 			});
 

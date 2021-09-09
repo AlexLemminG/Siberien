@@ -23,33 +23,64 @@ public:
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) = 0; // return false on error and true otherwise (even if no assets are imported)
 };
 
-class SE_CPP_API SerializationInfoStorage {
+class SerializationInfoStorage {
 public:
 	//TODO name to importer
 	//TODO overriding existing importer checks
-	void Register(std::string typeName, std::shared_ptr<TextAssetImporter> importer);
-	void Register(std::string typeName, std::shared_ptr<AssetImporter> importer);
+	inline void Register(std::string typeName, std::shared_ptr<TextAssetImporter> importer) {
+		textImporters[typeName] = importer;
+	}
+	inline void Register(std::string typeName, std::shared_ptr<AssetImporter> importer) {
+		binaryImporters[typeName] = importer;
+	}
 
-	void UnregisterText(std::string typeName);
-	void UnregisterBinary(std::string typeName);
+	inline void UnregisterText(std::string typeName) {
+		textImporters[typeName] = nullptr;
+	}
+	inline void UnregisterBinary(std::string typeName) {
+		binaryImporters[typeName] = nullptr;
+	}
 
-	void Register(const SerializationInfoStorage& otherStorage);
+	inline void Register(const SerializationInfoStorage& otherStorage) {
+		for (auto& i : otherStorage.textImporters) {
+			Register(i.first, i.second);
+		}
+		for (auto& i : otherStorage.binaryImporters) {
+			Register(i.first, i.second);
+		}
+	}
 
-	void Unregister(const SerializationInfoStorage& otherStorage);
+	inline void Unregister(const SerializationInfoStorage& otherStorage) {
+		for (auto& i : otherStorage.textImporters) {
+			UnregisterText(i.first);
+		}
+		for (auto& i : otherStorage.binaryImporters) {
+			UnregisterBinary(i.first);
+		}
+	}
 
-	std::shared_ptr<TextAssetImporter>& GetTextImporter(const std::string typeName);
-	std::shared_ptr<AssetImporter>& GetBinaryImporter(const std::string typeName);
+	inline std::shared_ptr<TextAssetImporter>& GetTextImporter(const std::string typeName) {
+		return textImporters[typeName];
+	}
+	inline std::shared_ptr<AssetImporter>& GetBinaryImporter(const std::string typeName) {
+		return binaryImporters[typeName];
+	}
 
 private:
 	std::unordered_map<std::string, std::shared_ptr<TextAssetImporter>> textImporters;
 	std::unordered_map<std::string, std::shared_ptr<AssetImporter>> binaryImporters;
 };
 
+class ImporterRegistratorBase {
+public:
+	virtual void Register() = 0;
+};
 class SystemRegistratorBase;
 class GameLibraryStaticStorage {
 public:
 	SerializationInfoStorage serializationInfoStorage;
 	std::vector<SystemRegistratorBase*> systemRegistrators;//TODO shared ptrs
+	std::vector<ImporterRegistratorBase*> importerRegistrators;//TODO shared ptrs
 	static GameLibraryStaticStorage& Get();
 };
 
@@ -57,28 +88,36 @@ inline SerializationInfoStorage& GetSerialiationInfoStorage() {
 	return GameLibraryStaticStorage::Get().serializationInfoStorage;
 }
 
+
 template <typename ImporterType>
-class TextAssetImporterRegistrator {
+class TextAssetImporterRegistrator : public ImporterRegistratorBase {
 public:
 	TextAssetImporterRegistrator(std::string typeName) {
+		this->typeName = typeName;
+		GameLibraryStaticStorage::Get().importerRegistrators.push_back(this);//TODO remove ?
+	}
+
+	virtual void Register() override {
 		GetSerialiationInfoStorage().Register(typeName, std::make_shared<ImporterType>());
 	}
+
+	std::string typeName;
 };
 
-template <typename ImporterType>
-class TextAssetImporterRegistrator2 {
-public:
-	TextAssetImporterRegistrator2(std::string typeName) {
-		GetSerialiationInfoStorage().Register(typeName, std::make_shared<ImporterType>());
-	}
-};
 
 template <typename ImporterType>
-class BinaryAssetImporterRegistrator {
+class BinaryAssetImporterRegistrator : public ImporterRegistratorBase {
 public:
 	BinaryAssetImporterRegistrator(std::string typeName) {
+		this->typeName = typeName;
+		GameLibraryStaticStorage::Get().importerRegistrators.push_back(this);//TODO remove ?
+	}
+
+	virtual void Register() override {
 		GetSerialiationInfoStorage().Register(typeName, std::make_shared<ImporterType>());
 	}
+
+	std::string typeName;
 };
 
 class SE_CPP_API SerializedObjectImporterBase : public TextAssetImporter {

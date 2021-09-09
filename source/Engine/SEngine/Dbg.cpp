@@ -3,10 +3,10 @@
 #include "debugdraw/debugdraw.h"
 
 
-std::vector<Dbg::Ray> Dbg::rays;
-std::vector<Dbg::Point> Dbg::points;
-std::vector<Dbg::Axes> Dbg::axes;
-std::vector<std::string> Dbg::texts;
+static std::vector<Dbg::Ray> rays;
+static std::vector<Dbg::Point> points;
+static std::vector<Dbg::Axes> axes;
+static std::vector<std::string> texts;
 
 void Dbg::Draw(::Ray ray, float length, Color color) {
 	rays.push_back(Ray{ ray, length, color });
@@ -48,6 +48,10 @@ void Dbg::Draw(Matrix4 matr, float length) {
 	Draw(::Ray(GetPos(matr), GetRot(matr) * Vector3_up), length, Colors::green);
 	Draw(::Ray(GetPos(matr), GetRot(matr) * Vector3_right), length, Colors::red);
 	Draw(::Ray(GetPos(matr), GetRot(matr) * Vector3_forward), length, Colors::blue);
+}
+
+void Dbg::Text(std::string text) {
+	texts.push_back(text);
 }
 
 void Dbg::Init() {

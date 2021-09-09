@@ -99,6 +99,10 @@ public:
 			}
 		}
 
+		if (lastChange == 0) {
+			needRebuild = false;
+		}
+
 		std::vector<uint8_t> buffer;
 		bool bufferLoaded = false;
 		if (!needRebuild) {

@@ -30,7 +30,10 @@ void AssetDatabase::Term() {
 	OPTICK_EVENT();
 	ASSERT(mainDatabase == this);
 	mainDatabase = nullptr;
+	//TODO little bit hacky
+	onAfterUnloaded.UnsubscribeAll();
 	UnloadAll();
+	onBeforeUnloaded.UnsubscribeAll();
 }
 
 void AssetDatabase::UnloadAll() {
@@ -38,6 +41,7 @@ void AssetDatabase::UnloadAll() {
 	onBeforeUnloaded.Invoke();
 	assets.clear();
 	objectPaths.clear();
+	onAfterUnloaded.Invoke();
 }
 
 std::string AssetDatabase::GetAssetUID(std::shared_ptr<Object> obj) {

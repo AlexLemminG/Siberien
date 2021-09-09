@@ -43,6 +43,3 @@ public:
 	REFLECT_VAR(innerRadius);
 	REFLECT_END();
 };
-
-DECLARE_TEXT_ASSET(DirLight);
-DECLARE_TEXT_ASSET(PointLight);

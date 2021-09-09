@@ -103,6 +103,7 @@ public:
 	static AssetDatabase* Get();
 
 	GameEvent<> onBeforeUnloaded;
+	GameEvent<> onAfterUnloaded;
 private:
 	class Asset {
 	public:

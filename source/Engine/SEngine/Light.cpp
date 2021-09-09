@@ -22,3 +22,7 @@ void DirLight::OnEnable() {
 void DirLight::OnDisable() {
 	dirLights.erase(std::find(dirLights.begin(), dirLights.end(), this));
 }
+
+
+DECLARE_TEXT_ASSET(DirLight);
+DECLARE_TEXT_ASSET(PointLight);

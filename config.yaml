@@ -6,6 +6,6 @@ debugSceneLoading: false
 vsync: false
 godMode: true
 soundEnabled: false
+showFps: true
 libraries:
   - Game.dll
-  - GameMod.dll
