@@ -214,8 +214,10 @@ bool Render::Init()
 	initInfo.debug = false;//TODO cfgvar?
 	initInfo.profile = false;
 	initInfo.type = bgfx::RendererType::Direct3D11;
-	//initInfo.limits.transientVbSize *= 10;//TODO debug only
-	//initInfo.limits.transientIbSize *= 10;//TODO debug only
+#ifdef SE_DBG_OUT
+	initInfo.limits.transientVbSize *= 10;//TODO debug only
+	initInfo.limits.transientIbSize *= 10;//TODO debug only
+#endif
 	bgfx::init(initInfo);
 	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
 

@@ -93,6 +93,7 @@
     <ClCompile Include="SEngine\Compression.cpp" />
     <ClCompile Include="SEngine\Config.cpp" />
     <ClCompile Include="SEngine\Dbg.cpp" />
+    <ClCompile Include="SEngine\DbgVars.cpp" />
     <ClCompile Include="SEngine\EditorCameraController.cpp" />
     <ClCompile Include="SEngine\Engine.cpp" />
     <ClCompile Include="SEngine\FlyCameraMovement.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="SEngine\Compression.h" />
     <ClInclude Include="SEngine\Config.h" />
     <ClInclude Include="SEngine\Dbg.h" />
+    <ClInclude Include="SEngine\DbgVars.h" />
     <ClInclude Include="SEngine\Defines.h" />
     <ClInclude Include="SEngine\EditorSceneInfo.h" />
     <ClInclude Include="SEngine\Engine.h" />

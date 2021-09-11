@@ -15,6 +15,11 @@
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcherMt.h"
 #include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolverMt.h"
 #include "Dbg.h"
+#include "DbgVars.h"
+#include "Camera.h"
+
+
+DBG_VAR_BOOL(dbg_drawPhysShapes, "draw phys shapes", false);
 
 REGISTER_SYSTEM(PhysicsSystem);
 DECLARE_TEXT_ASSET(PhysicsSettings);
@@ -90,8 +95,6 @@ bool PhysicsSystem::Init() {
 
 	//TODO delete
 	dynamicsWorld->setDebugDrawer(new DebugDraw());
-	//TODO config var
-	//dynamicsWorld->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
 
 	return true;
 }
@@ -99,7 +102,34 @@ bool PhysicsSystem::Init() {
 void PhysicsSystem::Update() {
 	OPTICK_EVENT();
 	dynamicsWorld->stepSimulation(Time::deltaTime(), 2, Time::fixedDeltaTime());
-	dynamicsWorld->debugDrawWorld();
+
+#ifdef SE_DBG_OUT
+	auto dbgMode = Bits::SetMask(dynamicsWorld->getDebugDrawer()->getDebugMode(), btIDebugDraw::DBG_DrawWireframe, dbg_drawPhysShapes);
+	dynamicsWorld->getDebugDrawer()->setDebugMode(dbgMode);
+	if (dbg_drawPhysShapes) {
+		auto collisionObjects = dynamicsWorld->getCollisionObjectArray();
+		for (int i = 0; i < collisionObjects.size(); i++) {
+			auto& pBody = collisionObjects.at(i);
+			auto camera = Camera::GetMain();
+			if (camera) {
+				btVector3 min;
+				btVector3 max;
+				pBody->getCollisionShape()->getAabb(pBody->getWorldTransform(), min, max);
+				AABB aabb{ btConvert(min),btConvert(max) };
+				if (camera->IsVisible(aabb)) {
+					pBody->setCollisionFlags(Bits::SetMaskFalse(pBody->getCollisionFlags(), btCollisionObject::CollisionFlags::CF_DISABLE_VISUALIZE_OBJECT));
+				}
+				else {
+					pBody->setCollisionFlags(Bits::SetMaskTrue(pBody->getCollisionFlags(), btCollisionObject::CollisionFlags::CF_DISABLE_VISUALIZE_OBJECT));
+				}
+			}
+			else {
+				pBody->setCollisionFlags(Bits::SetMaskTrue(pBody->getCollisionFlags(), btCollisionObject::CollisionFlags::CF_DISABLE_VISUALIZE_OBJECT));
+			}
+		}
+		dynamicsWorld->debugDrawWorld();
+	}
+#endif
 }
 
 void PhysicsSystem::Term() {

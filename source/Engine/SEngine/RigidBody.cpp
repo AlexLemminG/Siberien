@@ -41,6 +41,7 @@ void RigidBody::OnEnable() {
 	}
 
 	auto offset = btTransform(btMatrix3x3::getIdentity(), -btConvert(centerOfMass));
+	//TODO apply offset to shape
 
 	//using motionstate is optional, it provides interpolation capabilities, and only synchronizes 'active' objects
 	pMotionState = new btDefaultMotionState(groundTransform, offset);
@@ -79,26 +80,6 @@ void RigidBody::Update() {
 		pMotionState->m_graphicsWorldTrans = trans;
 		//pBody->setCenterOfMassTransform(trans);
 	}
-#ifdef SE_DBG_OUT
-	if (false) {
-		auto camera = Camera::GetMain();
-		if (camera) {
-			btVector3 min;
-			btVector3 max;
-			pBody->getAabb(min, max);
-			AABB aabb{ btConvert(min),btConvert(max) };
-			if (camera->IsVisible(aabb)) {
-				pBody->setCollisionFlags(Bits::SetMaskFalse(pBody->getCollisionFlags(), btCollisionObject::CollisionFlags::CF_DISABLE_VISUALIZE_OBJECT));
-			}
-			else {
-				pBody->setCollisionFlags(Bits::SetMaskTrue(pBody->getCollisionFlags(), btCollisionObject::CollisionFlags::CF_DISABLE_VISUALIZE_OBJECT));
-			}
-		}
-		else {
-			pBody->setCollisionFlags(Bits::SetMaskTrue(pBody->getCollisionFlags(), btCollisionObject::CollisionFlags::CF_DISABLE_VISUALIZE_OBJECT));
-		}
-	}
-#endif
 }
 
 void RigidBody::OnDisable() {

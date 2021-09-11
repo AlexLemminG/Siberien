@@ -19,6 +19,7 @@
 #include "PostProcessingEffect.h"
 #include "ZombiepunkGame.h"
 #include "Light.h"
+#include <BoxCollider.h>
 
 void PlayerController::OnEnable() {
 	rigidBody = gameObject()->GetComponent<RigidBody>();
@@ -153,10 +154,12 @@ void PlayerController::Update() {
 }
 
 void PlayerController::FixedUpdate() {
-	if (!isDead) {
-		UpdateMovement();
-		UpdateLook();
+	if (isDead) {
+		return;
 	}
+
+	UpdateMovement();
+	UpdateLook();
 
 	if (rigidBody) {
 		float gravityMultiplier = 1.f;
@@ -317,10 +320,21 @@ bool PlayerController::CanJump() {
 }
 
 void PlayerController::OnDeath() {
+	rigidBody->SetEnabled(false);
+	auto shape = gameObject()->GetComponent<SphereCollider>();
+	shape->SetEnabled(false);
+	//TODO allow to recreate shape without disable / enabled stuff
+	shape->radius *= 0.7f;
+	shape->center += Vector3_up * 0.35f;
+
+	shape->SetEnabled(true);
+	rigidBody->SetEnabled(true);
+
 	rigidBody->SetFriction(0.5f);
 	rigidBody->SetAngularFactor(Vector3(1, 1, 1));
 	rigidBody->SetAngularDamping(0.6f);
 	rigidBody->SetLinearDamping(0.6f);
+
 	DisableShootingLight();
 }
 
