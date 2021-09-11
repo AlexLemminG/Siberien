@@ -7,6 +7,7 @@
 #include "mathfu/quaternion.h"
 
 #include "Reflect.h"
+#include <array>
 
 typedef mathfu::Vector<float, 2> Vector2;
 typedef mathfu::Vector<float, 3> Vector3;
@@ -250,6 +251,8 @@ namespace Colors {
 	constexpr Color clear{ 0.f,0.f,0.f,0.f };
 };
 
+class OBB;
+
 class AABB {
 public:
 	AABB() = default;
@@ -276,12 +279,41 @@ public:
 	}
 
 	bool Contains(const Vector3 pos) const;
+
+	OBB ToOBB()const;
+
 };
+OBB operator*(const Matrix4& matrix, const AABB& aabb);
+OBB operator*(const Matrix4& matrix, const OBB& obb);
+
+class OBB {
+public:
+	OBB(const Matrix4& center, const Vector3& size);
+
+	AABB ToAABB()const;
+
+	std::array<Vector3, 8> GetVertices()const;
+
+	Matrix4 GetCenterMatrix() const;
+	Vector3 GetSize() const;
+	Vector3 GetCenter() const;
+private:
+	Matrix4 center;
+	Vector3 halfSize;
+};
+
 
 class Sphere {
 public:
+	Sphere() {}
+	Sphere(const Vector3& pos, float radius)
+		: pos(pos)
+		, radius(radius) {}
+
 	Vector3 pos;
 	float radius;
+
+	static Sphere Combine(const Sphere& a, const Sphere& b);
 
 	AABB ToAABB() const;
 };
@@ -356,6 +388,9 @@ public:
 private:
 	Vector4 frustumPlanes[6];
 };
+
+//TODO static func of namespace
+bool IsOverlapping(const Sphere& sphere, Ray ray);
 
 REFLECT_CUSTOM_EXT(Vector3, SerializeVector, DeserializeVector);
 REFLECT_CUSTOM_EXT(Vector4, SerializeVector4, DeserializeVector4);

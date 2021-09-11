@@ -38,14 +38,14 @@ public:
 	REFLECT_VAR(components);
 	REFLECT_END();
 
-private:
-	uint64_t flags = 0;
+	uint64_t flags = 0;//TODO back to private
 	struct FLAGS {
 		enum :uint64_t {
 			IS_ACTIVE = 1 << 0,
 			IS_HIDDEN_IN_INSPECTOR = 1 << 1
 		};
 	};
+private:
 
 	//TODO optimize
 	std::shared_ptr<GameObject> prefab;

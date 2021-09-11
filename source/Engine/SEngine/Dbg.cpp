@@ -24,24 +24,32 @@ void Dbg::DrawLine(Vector3 from, Vector3 to, Color color) {
 
 
 void Dbg::Draw(const AABB& aabb) {
-	Vector3 dirX = Vector3(aabb.max.x - aabb.min.x, 0.f, 0.f);
-	Vector3 dirY = Vector3(0.f, aabb.max.y - aabb.min.y, 0.f);
-	Vector3 dirZ = Vector3(0.f, 0.f, aabb.max.z - aabb.min.z);
+	OBB obb = aabb.ToOBB();
+	Draw(obb);
+}
 
-	Dbg::DrawLine(aabb.min, aabb.min + dirX);
-	Dbg::DrawLine(aabb.min + dirY, aabb.min + dirY + dirX);
-	Dbg::DrawLine(aabb.min + dirZ, aabb.min + dirZ + dirX);
-	Dbg::DrawLine(aabb.min + dirY + dirZ, aabb.min + dirY + dirZ + dirX);
+void Dbg::Draw(const OBB& obb) {
+	auto rot = Matrix4::ToRotationMatrix(obb.GetCenterMatrix());
+	Vector3 dirX = rot * Vector3(obb.GetSize().x, 0.f, 0.f);
+	Vector3 dirY = rot * Vector3(0.f, obb.GetSize().y, 0.f);
+	Vector3 dirZ = rot * Vector3(0.f, 0.f, obb.GetSize().z);
 
-	Dbg::DrawLine(aabb.min, aabb.min + dirZ);
-	Dbg::DrawLine(aabb.min + dirY, aabb.min + dirY + dirZ);
-	Dbg::DrawLine(aabb.min + dirX, aabb.min + dirX + dirZ);
-	Dbg::DrawLine(aabb.min + dirY + dirX, aabb.min + dirY + dirX + dirZ);
+	auto min = obb.GetCenterMatrix() * (-obb.GetSize() / 2.f);
 
-	Dbg::DrawLine(aabb.min, aabb.min + dirY);
-	Dbg::DrawLine(aabb.min + dirZ, aabb.min + dirZ + dirY);
-	Dbg::DrawLine(aabb.min + dirX, aabb.min + dirX + dirY);
-	Dbg::DrawLine(aabb.min + dirZ + dirX, aabb.min + dirZ + dirX + dirY);
+	Dbg::DrawLine(min, min + dirX);
+	Dbg::DrawLine(min + dirY, min + dirY + dirX);
+	Dbg::DrawLine(min + dirZ, min + dirZ + dirX);
+	Dbg::DrawLine(min + dirY + dirZ, min + dirY + dirZ + dirX);
+
+	Dbg::DrawLine(min, min + dirZ);
+	Dbg::DrawLine(min + dirY, min + dirY + dirZ);
+	Dbg::DrawLine(min + dirX, min + dirX + dirZ);
+	Dbg::DrawLine(min + dirY + dirX, min + dirY + dirX + dirZ);
+
+	Dbg::DrawLine(min, min + dirY);
+	Dbg::DrawLine(min + dirZ, min + dirZ + dirY);
+	Dbg::DrawLine(min + dirX, min + dirX + dirY);
+	Dbg::DrawLine(min + dirZ + dirX, min + dirZ + dirX + dirY);
 }
 
 void Dbg::Draw(Matrix4 matr, float length) {

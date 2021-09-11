@@ -635,10 +635,3 @@ Mesh::~Mesh() {
 	}
 }
 DECLARE_BINARY_ASSET(Mesh, MeshAssetImporter);
-
-AABB Sphere::ToAABB() const {
-	AABB aabb;
-	aabb.min = pos - Vector3_one * radius;
-	aabb.max = pos + Vector3_one * radius;
-	return aabb;
-}

@@ -13,6 +13,7 @@ public:
 	static void DrawLine(Vector3 from, Vector3 to, Color color = Colors::white);
 	static void Draw(const Sphere& sphere);
 	static void Draw(const AABB& aabb);
+	static void Draw(const OBB& obb);
 	static void Draw(Frustum aabb);
 	static void Draw(Matrix4 axes, float length = 1.0f);
 	static void Text(std::string text);

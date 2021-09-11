@@ -10,12 +10,154 @@
 #include "SceneManager.h"
 #include "GameEvents.h"
 #include "Resources.h"
+#include "Camera.h"
+#include "Input.h"
+#include "MeshRenderer.h"
+#include "Mesh.h"
+#include "Light.h"
+#include "Dbg.h"
+#include "bx/bx.h"
+#include <bgfx_utils.h>
+#include "btBulletCollisionCommon.h"
+#include "btBulletDynamicsCommon.h"
+#include "MeshCollider.h"
+#include "PhysicsSystem.h"
+#include "Physics.h"
+#include "dear-imgui/widgets/gizmo.h"
 
+//TODO to utils
+Sphere GetSphere(std::shared_ptr<GameObject> go) {
+	bool hasSphere = false;
+	Sphere sphere;
+	auto renderer = go->GetComponent<MeshRenderer>();
+	if (renderer) {
+		auto meshSphere = renderer->mesh->boundingSphere;
+		auto scale = GetScale(renderer->m_transform->matrix);
+		float maxScale = Mathf::Max(Mathf::Max(scale.x, scale.y), scale.z);
+		meshSphere.radius *= maxScale;
+		meshSphere.pos = renderer->m_transform->matrix * meshSphere.pos;
+
+		hasSphere = true;
+		sphere = meshSphere;
+	}
+
+	auto pointLight = go->GetComponent<PointLight>();
+	if (pointLight) {
+		Sphere lightSphere;
+		lightSphere.pos = go->transform()->GetPosition();
+		lightSphere.radius = pointLight->radius;
+
+		if (hasSphere) {
+			sphere = Sphere::Combine(sphere, lightSphere);
+		}
+		else {
+			hasSphere = true;
+			sphere = lightSphere;
+		}
+	}
+
+	if (hasSphere) {
+		return sphere;
+	}
+	else {
+		return Sphere(go->transform()->GetPosition(), 0.f);
+	}
+}
+
+OBB GetOBB(std::shared_ptr<GameObject> go) {
+	auto renderer = go->GetComponent<MeshRenderer>();
+	if (renderer) {
+		auto aabb = renderer->mesh->aabb;
+		auto obb = renderer->m_transform->matrix * aabb.ToOBB();
+		return obb;
+	}
+
+	auto sphere = GetSphere(go);
+	return sphere.ToAABB().ToOBB();
+}
+
+AABB GetAABB(std::shared_ptr<GameObject> go) {
+	return GetOBB(go).ToAABB();
+}
+
+bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray) {
+	float maxDistance = 100000.f;
+	if (!IsOverlapping(GetSphere(go), ray)) {
+		return false;
+	}
+	auto meshRenderer = go->GetComponent<MeshRenderer>();
+	if (meshRenderer) {
+		auto mesh = meshRenderer->mesh;
+		if (mesh) {
+			auto collider = MeshColliderStorageSystem::Get()->GetStored(mesh);
+			if (collider) {
+				auto scaledShape = std::make_shared<btScaledBvhTriangleMeshShape>(collider.get(), btConvert(go->transform()->GetScale()));
+				auto info = btRigidBody::btRigidBodyConstructionInfo(0, nullptr, scaledShape.get());
+				auto matr = go->transform()->matrix;
+				SetScale(matr, Vector3_one);
+				info.m_startWorldTransform = btConvert(matr);
+				auto* rb = new btRigidBody(info);
+
+				PhysicsSystem::Get()->dynamicsWorld->addRigidBody(rb);
+
+				Physics::RaycastHit hit;
+				bool overlapping = false;
+				if (Physics::Raycast(hit, ray, maxDistance)) {
+					overlapping = true;
+				}
+
+				PhysicsSystem::Get()->dynamicsWorld->removeRigidBody(rb);
+
+				delete rb;
+				if (overlapping) {
+					return true;
+				}
+			}
+		}
+	}
+	//TODO not only point light
+	auto pointLight = go->GetComponent<PointLight>();
+	if (pointLight) {
+		auto center = pointLight->gameObject()->transform()->GetPosition();
+		auto radius = pointLight->radius;
+		if (IsOverlapping(Sphere(center, radius), ray)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+std::vector<std::shared_ptr<GameObject>> GetObjectsUnderCursor() {
+	float maxDistance = 1000.f;
+	auto mouseRay = Camera::GetMain()->ScreenPointToRay(Input::GetMousePosition());
+	std::vector<std::shared_ptr<GameObject>> result;
+	for (auto obj : Scene::Get()->GetAllGameObjects()) {
+		if (Bits::IsMaskTrue(obj->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR)) {
+			continue;
+		}
+		if (RaycastExact(obj, mouseRay)) {
+			result.push_back(obj);
+		}
+	}
+	Vector3 cameraPos = mouseRay.origin;
+	std::sort(result.begin(), result.end(), [cameraPos](std::shared_ptr<GameObject> x, std::shared_ptr<GameObject> y) {
+		auto xPos = GetOBB(x).GetCenter();
+		auto yPos = GetOBB(y).GetCenter();
+		//TODO exact raycast hit results
+		return (cameraPos - xPos).LengthSquared() < (cameraPos - yPos).LengthSquared();
+		});
+	return std::move(result);
+}
 
 class InspectorWindow : public System<InspectorWindow> {
 	GameEventHandle onSceneLoadedHandle;
 
 	std::shared_ptr<Object> selectedObject;
+
+	int nextSelectedObjectIndex = 0;
+	Vector2 prevMousePos;
+public:
+	std::shared_ptr<Camera> editorCamera;
 
 	virtual bool Init() override {
 		onSceneLoadedHandle = SceneManager::onSceneLoaded.Subscribe([this]() {
@@ -24,8 +166,9 @@ class InspectorWindow : public System<InspectorWindow> {
 				return;
 			}
 			auto camera = Object::Instantiate(cameraPrefab);
-			//camera->flags = Bits::SetMaskTrue(camera->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR);
+			camera->flags = Bits::SetMaskTrue(camera->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR);
 			Scene::Get()->AddGameObject(camera);
+			this->editorCamera = camera->GetComponent<Camera>();
 			});
 
 		return true;
@@ -208,6 +351,82 @@ class InspectorWindow : public System<InspectorWindow> {
 		}
 		ImGui::EndGroup();
 		ImGui::End();
+
+		//TODO refactor
+		if (editorCamera != nullptr && Input::GetKeyDown(SDL_SCANCODE_F) && selectedObject != nullptr) {
+			auto selectedGameObject = std::dynamic_pointer_cast<GameObject>(selectedObject);
+			Matrix4 mat = Matrix4::Identity();
+			auto rot = editorCamera->gameObject()->transform()->GetRotation();
+			auto aabb = GetSphere(selectedGameObject);
+			SetPos(mat, aabb.pos);
+			auto offset = Matrix4::Transform(rot * Vector3_forward * aabb.radius * (-2.f), rot.ToMatrix(), Vector3_one);
+			mat = mat * offset;
+			editorCamera->gameObject()->transform()->matrix = mat;
+		}
+
+		auto mousePos = Input::GetMousePosition();
+		if (mousePos != prevMousePos) {
+			prevMousePos = mousePos;
+			nextSelectedObjectIndex = 0;
+		}
+
+		static bool gizmoDisabled = true;
+		static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::OPERATION::TRANSLATE);
+		static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::MODE::WORLD);
+
+		if (Input::GetKeyDown(SDL_SCANCODE_Q)) {
+			gizmoDisabled = true;
+		}
+		if (Input::GetKeyDown(SDL_SCANCODE_W)) {
+			gizmoDisabled = false;
+			mCurrentGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
+		}
+		if (Input::GetKeyDown(SDL_SCANCODE_R)) {
+			gizmoDisabled = false;
+			mCurrentGizmoOperation = ImGuizmo::OPERATION::ROTATE;
+		}
+		if (Input::GetKeyDown(SDL_SCANCODE_E)) {
+			gizmoDisabled = false;
+			mCurrentGizmoOperation = ImGuizmo::OPERATION::SCALE;
+		}
+		if (Input::GetKeyDown(SDL_SCANCODE_Z)) {
+			if (mCurrentGizmoMode == ImGuizmo::MODE::WORLD) {
+				mCurrentGizmoMode = ImGuizmo::MODE::LOCAL;
+			}
+			else {
+				mCurrentGizmoMode = ImGuizmo::MODE::WORLD;
+			}
+		}
+
+		if (selectedObject) {
+			auto go = std::dynamic_pointer_cast<GameObject>(selectedObject);
+			auto box = GetOBB(go);
+			Dbg::Draw(box);
+
+			if(!gizmoDisabled){
+				ImGuiIO& io = ImGui::GetIO();
+				ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+				const auto& view = Camera::GetMain()->GetViewMatrix();
+				const auto& proj = Camera::GetMain()->GetProjectionMatrix();
+				auto& model = go->transform()->matrix;
+				auto deltaMatrix = Matrix4::Identity();
+				ImGuizmo::Manipulate(&view(0, 0), &proj(0, 0), mCurrentGizmoOperation, mCurrentGizmoMode, &model(0, 0), &deltaMatrix(0,0));
+				if (deltaMatrix != Matrix4::Identity()) {
+					//TODO undo
+					int i = 0; 
+					i++;
+				}
+			}
+		}
+
+		if (Input::GetMouseButtonDown(0) && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && !ImGuizmo::IsUsing()) {
+			auto objectsUnderCursor = GetObjectsUnderCursor();
+			if (objectsUnderCursor.size() > 0) {
+				auto idx = nextSelectedObjectIndex % objectsUnderCursor.size();
+				selectedObject = objectsUnderCursor[idx];
+			}
+			nextSelectedObjectIndex++;
+		}
 	}
 };
 
