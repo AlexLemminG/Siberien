@@ -53,7 +53,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\include;..\..;..\..\code;C:\Projects\temp\assimp\contrib\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..;..\..\code;..\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -73,10 +73,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;WIN32_LEAN_AND_MEAN;UNICODE;_UNICODE;NO_FSEEKO;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Projects\temp\assimp\include;C:\Projects\temp\assimp;C:\Projects\temp\assimp\code;C:\Projects\temp\assimp\.;C:\Projects\temp\assimp\contrib\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..;..\..\code;..\..\.;..\..\contrib\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Projects\temp\assimp\include;C:\Projects\temp\assimp;C:\Projects\temp\assimp\code;C:\Projects\temp\assimp\.;C:\Projects\temp\assimp\contrib\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..;..\..\code;..\..\.;..\..\contrib\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -89,7 +89,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\include;..\..;..\..\code;C:\Projects\temp\assimp\contrib\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..;..\..\code;..\..\contrib\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <DisableSpecificWarnings>4131;4127;4244</DisableSpecificWarnings>
@@ -109,10 +109,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;WIN32_LEAN_AND_MEAN;UNICODE;_UNICODE;NO_FSEEKO;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Projects\temp\assimp\include;C:\Projects\temp\assimp;C:\Projects\temp\assimp\code;C:\Projects\temp\assimp\.;C:\Projects\temp\assimp\contrib\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..;..\..\code;..\..\.;..\..\contrib\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Projects\temp\assimp\include;C:\Projects\temp\assimp;C:\Projects\temp\assimp\code;C:\Projects\temp\assimp\.;C:\Projects\temp\assimp\contrib\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..;..\..\code;..\..\.;..\..\contrib\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -124,66 +124,37 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Projects\temp\assimp\contrib\zlib\CMakeLists.txt">
-      <StdOutEncoding>UTF-8</StdOutEncoding>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Projects/temp/assimp/contrib/zlib/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Projects/temp/assimp -BC:/Projects/temp/assimp --check-stamp-file C:/Projects/temp/assimp/contrib/zlib/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-3.21\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckFunctionExists.c;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckFunctionExists.cmake;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckIncludeFile.c.in;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckIncludeFileCXX.cmake;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckTypeSize.c.in;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckTypeSize.cmake;C:\Program Files\CMake\share\cmake-3.21\Modules\Internal\CheckSourceCompiles.cmake;C:\Projects\temp\assimp\CMakeFiles\CheckTypeSize\OFF64_T.c;C:\Projects\temp\assimp\contrib\zlib\zconf.h.cmakein;C:\Projects\temp\assimp\contrib\zlib\zlib.pc.cmakein;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Projects\temp\assimp\contrib\zlib\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Projects/temp/assimp/contrib/zlib/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Projects/temp/assimp -BC:/Projects/temp/assimp --check-stamp-file C:/Projects/temp/assimp/contrib/zlib/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-3.21\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckFunctionExists.c;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckFunctionExists.cmake;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckIncludeFile.c.in;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckIncludeFileCXX.cmake;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckTypeSize.c.in;C:\Program Files\CMake\share\cmake-3.21\Modules\CheckTypeSize.cmake;C:\Program Files\CMake\share\cmake-3.21\Modules\Internal\CheckSourceCompiles.cmake;C:\Projects\temp\assimp\CMakeFiles\CheckTypeSize\OFF64_T.c;C:\Projects\temp\assimp\contrib\zlib\zconf.h.cmakein;C:\Projects\temp\assimp\contrib\zlib\zlib.pc.cmakein;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Projects\temp\assimp\contrib\zlib\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\adler32.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\compress.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\crc32.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\deflate.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\gzclose.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\gzlib.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\gzread.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\gzwrite.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\inflate.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\infback.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\inftrees.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\inffast.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\trees.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\uncompr.c" />
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zlib\zutil.c" />
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zlib\zconf.h" />
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zlib\zlib.h" />
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zlib\crc32.h" />
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zlib\deflate.h" />
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zlib\gzguts.h" />
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zlib\inffast.h" />
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zlib\inffixed.h" />
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zlib\inflate.h" />
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zlib\inftrees.h" />
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zlib\trees.h" />
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zlib\zutil.h" />
+    <ClCompile Include="adler32.c" />
+    <ClCompile Include="compress.c" />
+    <ClCompile Include="crc32.c" />
+    <ClCompile Include="deflate.c" />
+    <ClCompile Include="gzclose.c" />
+    <ClCompile Include="gzlib.c" />
+    <ClCompile Include="gzread.c" />
+    <ClCompile Include="gzwrite.c" />
+    <ClCompile Include="inflate.c" />
+    <ClCompile Include="infback.c" />
+    <ClCompile Include="inftrees.c" />
+    <ClCompile Include="inffast.c" />
+    <ClCompile Include="trees.c" />
+    <ClCompile Include="uncompr.c" />
+    <ClCompile Include="zutil.c" />
+    <ClInclude Include="zconf.h" />
+    <ClInclude Include="zlib.h" />
+    <ClInclude Include="crc32.h" />
+    <ClInclude Include="deflate.h" />
+    <ClInclude Include="gzguts.h" />
+    <ClInclude Include="inffast.h" />
+    <ClInclude Include="inffixed.h" />
+    <ClInclude Include="inflate.h" />
+    <ClInclude Include="inftrees.h" />
+    <ClInclude Include="trees.h" />
+    <ClInclude Include="zutil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="C:\Projects\temp\assimp\ZERO_CHECK.vcxproj">
+    <ProjectReference Include="..\..\ZERO_CHECK.vcxproj">
       <Project>{B1058ED9-A9A4-3606-8D2F-B550C103017F}</Project>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

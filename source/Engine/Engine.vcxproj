@@ -48,7 +48,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PreprocessorDefinitions>RYML_SHARED;RYML_EXPORTS;BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;_DEBUG;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_WIN64;NDEBUG;_CONSOLE;SE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -56,7 +56,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
@@ -64,7 +64,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PreprocessorDefinitions>RYML_SHARED;RYML_EXPORTS;BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;SE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -74,7 +74,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
@@ -90,6 +90,7 @@
     <ClCompile Include="SEngine\Collider.cpp" />
     <ClCompile Include="SEngine\Common.cpp" />
     <ClCompile Include="SEngine\Component.cpp" />
+    <ClCompile Include="SEngine\Compression.cpp" />
     <ClCompile Include="SEngine\Config.cpp" />
     <ClCompile Include="SEngine\Dbg.cpp" />
     <ClCompile Include="SEngine\EditorCameraController.cpp" />
@@ -142,6 +143,7 @@
     <ClInclude Include="SEngine\Collider.h" />
     <ClInclude Include="SEngine\Common.h" />
     <ClInclude Include="SEngine\Component.h" />
+    <ClInclude Include="SEngine\Compression.h" />
     <ClInclude Include="SEngine\Config.h" />
     <ClInclude Include="SEngine\Dbg.h" />
     <ClInclude Include="SEngine\Defines.h" />

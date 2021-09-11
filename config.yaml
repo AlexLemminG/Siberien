@@ -1,4 +1,4 @@
-scene: test\prefabExample #engine\modelPreview\scene #gameplayScene
+scene: gameplayScene #engine\modelPreview\scene #gameplayScene
 maximumDeltaTime: 0.05
 fixedDeltaTime: 0.016666666666
 fullscreen: false

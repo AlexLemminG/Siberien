@@ -262,7 +262,7 @@ bool Render::Init()
 	LoadAssets();
 	//TODO is it good idea to load something after database is unloaded ?
 	databaseAfterUnloadedHandle = AssetDatabase::Get()->onAfterUnloaded.Subscribe([this]() {LoadAssets(); });
-	databaseBeforeUnloadedHandle = AssetDatabase::Get()->onAfterUnloaded.Subscribe([this]() {UnloadAssets(); });
+	databaseBeforeUnloadedHandle = AssetDatabase::Get()->onBeforeUnloaded.Subscribe([this]() {UnloadAssets(); });
 
 	return true;
 }
@@ -515,7 +515,7 @@ void Render::Term()
 	imguiDestroy();
 	if (AssetDatabase::Get()) {
 		//HACK when database is terminated
-		AssetDatabase::Get()->onAfterUnloaded.Unsubscribe(databaseBeforeUnloadedHandle);
+		AssetDatabase::Get()->onBeforeUnloaded.Unsubscribe(databaseBeforeUnloadedHandle);
 		AssetDatabase::Get()->onAfterUnloaded.Unsubscribe(databaseAfterUnloadedHandle);
 	}
 	Dbg::Term();

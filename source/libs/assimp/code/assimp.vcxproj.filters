@@ -1,1655 +1,1655 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\Assimp.cpp">
+    <ClCompile Include="Common\Assimp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\CApi\CInterfaceIOWrapper.cpp">
+    <ClCompile Include="CApi\CInterfaceIOWrapper.cpp">
       <Filter>CApi</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\BaseImporter.cpp">
+    <ClCompile Include="Common\BaseImporter.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\BaseProcess.cpp">
+    <ClCompile Include="Common\BaseProcess.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\PostStepRegistry.cpp">
+    <ClCompile Include="Common\PostStepRegistry.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\ImporterRegistry.cpp">
+    <ClCompile Include="Common\ImporterRegistry.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\DefaultIOStream.cpp">
+    <ClCompile Include="Common\DefaultIOStream.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\DefaultIOSystem.cpp">
+    <ClCompile Include="Common\DefaultIOSystem.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\ZipArchiveIOSystem.cpp">
+    <ClCompile Include="Common\ZipArchiveIOSystem.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\Importer.cpp">
+    <ClCompile Include="Common\Importer.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\SGSpatialSort.cpp">
+    <ClCompile Include="Common\SGSpatialSort.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\VertexTriangleAdjacency.cpp">
+    <ClCompile Include="Common\VertexTriangleAdjacency.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\SpatialSort.cpp">
+    <ClCompile Include="Common\SpatialSort.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\SceneCombiner.cpp">
+    <ClCompile Include="Common\SceneCombiner.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\ScenePreprocessor.cpp">
+    <ClCompile Include="Common\ScenePreprocessor.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\SkeletonMeshBuilder.cpp">
+    <ClCompile Include="Common\SkeletonMeshBuilder.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\StandardShapes.cpp">
+    <ClCompile Include="Common\StandardShapes.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\TargetAnimation.cpp">
+    <ClCompile Include="Common\TargetAnimation.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\RemoveComments.cpp">
+    <ClCompile Include="Common\RemoveComments.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\Subdivision.cpp">
+    <ClCompile Include="Common\Subdivision.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\scene.cpp">
+    <ClCompile Include="Common\scene.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\Bitmap.cpp">
+    <ClCompile Include="Common\Bitmap.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\Version.cpp">
+    <ClCompile Include="Common\Version.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\CreateAnimMesh.cpp">
+    <ClCompile Include="Common\CreateAnimMesh.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\simd.cpp">
+    <ClCompile Include="Common\simd.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\material.cpp">
+    <ClCompile Include="Common\material.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\AssertHandler.cpp">
+    <ClCompile Include="Common\AssertHandler.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\Exceptional.cpp">
+    <ClCompile Include="Common\Exceptional.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\DefaultLogger.cpp">
+    <ClCompile Include="Common\DefaultLogger.cpp">
       <Filter>Logging</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Common\Exporter.cpp">
+    <ClCompile Include="Common\Exporter.cpp">
       <Filter>Exporter</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\CApi\AssimpCExport.cpp">
+    <ClCompile Include="CApi\AssimpCExport.cpp">
       <Filter>Exporter</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\CalcTangentsProcess.cpp">
+    <ClCompile Include="PostProcessing\CalcTangentsProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\ComputeUVMappingProcess.cpp">
+    <ClCompile Include="PostProcessing\ComputeUVMappingProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\ConvertToLHProcess.cpp">
+    <ClCompile Include="PostProcessing\ConvertToLHProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\EmbedTexturesProcess.cpp">
+    <ClCompile Include="PostProcessing\EmbedTexturesProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\FindDegenerates.cpp">
+    <ClCompile Include="PostProcessing\FindDegenerates.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\FindInstancesProcess.cpp">
+    <ClCompile Include="PostProcessing\FindInstancesProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\FindInvalidDataProcess.cpp">
+    <ClCompile Include="PostProcessing\FindInvalidDataProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\FixNormalsStep.cpp">
+    <ClCompile Include="PostProcessing\FixNormalsStep.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\DropFaceNormalsProcess.cpp">
+    <ClCompile Include="PostProcessing\DropFaceNormalsProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\GenFaceNormalsProcess.cpp">
+    <ClCompile Include="PostProcessing\GenFaceNormalsProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\GenVertexNormalsProcess.cpp">
+    <ClCompile Include="PostProcessing\GenVertexNormalsProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\PretransformVertices.cpp">
+    <ClCompile Include="PostProcessing\PretransformVertices.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\ImproveCacheLocality.cpp">
+    <ClCompile Include="PostProcessing\ImproveCacheLocality.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\JoinVerticesProcess.cpp">
+    <ClCompile Include="PostProcessing\JoinVerticesProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\LimitBoneWeightsProcess.cpp">
+    <ClCompile Include="PostProcessing\LimitBoneWeightsProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\RemoveRedundantMaterials.cpp">
+    <ClCompile Include="PostProcessing\RemoveRedundantMaterials.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\RemoveVCProcess.cpp">
+    <ClCompile Include="PostProcessing\RemoveVCProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\SortByPTypeProcess.cpp">
+    <ClCompile Include="PostProcessing\SortByPTypeProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\SplitLargeMeshes.cpp">
+    <ClCompile Include="PostProcessing\SplitLargeMeshes.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\TextureTransform.cpp">
+    <ClCompile Include="PostProcessing\TextureTransform.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\TriangulateProcess.cpp">
+    <ClCompile Include="PostProcessing\TriangulateProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\ValidateDataStructure.cpp">
+    <ClCompile Include="PostProcessing\ValidateDataStructure.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\OptimizeGraph.cpp">
+    <ClCompile Include="PostProcessing\OptimizeGraph.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\OptimizeMeshes.cpp">
+    <ClCompile Include="PostProcessing\OptimizeMeshes.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\DeboneProcess.cpp">
+    <ClCompile Include="PostProcessing\DeboneProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\ProcessHelper.cpp">
+    <ClCompile Include="PostProcessing\ProcessHelper.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\MakeVerboseFormat.cpp">
+    <ClCompile Include="PostProcessing\MakeVerboseFormat.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\ScaleProcess.cpp">
+    <ClCompile Include="PostProcessing\ScaleProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\ArmaturePopulate.cpp">
+    <ClCompile Include="PostProcessing\ArmaturePopulate.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\GenBoundingBoxesProcess.cpp">
+    <ClCompile Include="PostProcessing\GenBoundingBoxesProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\PostProcessing\SplitByBoneCountProcess.cpp">
+    <ClCompile Include="PostProcessing\SplitByBoneCountProcess.cpp">
       <Filter>PostProcessing</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Material\MaterialSystem.cpp">
+    <ClCompile Include="Material\MaterialSystem.cpp">
       <Filter>MaterialSystem</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\STEPParser\STEPFileReader.cpp">
+    <ClCompile Include="AssetLib\STEPParser\STEPFileReader.cpp">
       <Filter>STEPParser</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\STEPParser\STEPFileEncoding.cpp">
+    <ClCompile Include="AssetLib\STEPParser\STEPFileEncoding.cpp">
       <Filter>STEPParser</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\AMF\AMFImporter.cpp">
+    <ClCompile Include="AssetLib\AMF\AMFImporter.cpp">
       <Filter>AssetLib\AMF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\AMF\AMFImporter_Geometry.cpp">
+    <ClCompile Include="AssetLib\AMF\AMFImporter_Geometry.cpp">
       <Filter>AssetLib\AMF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\AMF\AMFImporter_Material.cpp">
+    <ClCompile Include="AssetLib\AMF\AMFImporter_Material.cpp">
       <Filter>AssetLib\AMF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\AMF\AMFImporter_Postprocess.cpp">
+    <ClCompile Include="AssetLib\AMF\AMFImporter_Postprocess.cpp">
       <Filter>AssetLib\AMF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\3DS\3DSConverter.cpp">
+    <ClCompile Include="AssetLib\3DS\3DSConverter.cpp">
       <Filter>AssetLib\3DS</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\3DS\3DSLoader.cpp">
+    <ClCompile Include="AssetLib\3DS\3DSLoader.cpp">
       <Filter>AssetLib\3DS</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\AC\ACLoader.cpp">
+    <ClCompile Include="AssetLib\AC\ACLoader.cpp">
       <Filter>AssetLib\AC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\ASE\ASELoader.cpp">
+    <ClCompile Include="AssetLib\ASE\ASELoader.cpp">
       <Filter>AssetLib\ASE</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\ASE\ASEParser.cpp">
+    <ClCompile Include="AssetLib\ASE\ASEParser.cpp">
       <Filter>AssetLib\ASE</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Assbin\AssbinLoader.cpp">
+    <ClCompile Include="AssetLib\Assbin\AssbinLoader.cpp">
       <Filter>AssetLib\ASSBIN</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\B3D\B3DImporter.cpp">
+    <ClCompile Include="AssetLib\B3D\B3DImporter.cpp">
       <Filter>AssetLib\B3D</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\BVH\BVHLoader.cpp">
+    <ClCompile Include="AssetLib\BVH\BVHLoader.cpp">
       <Filter>AssetLib\BVH</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Collada\ColladaHelper.cpp">
+    <ClCompile Include="AssetLib\Collada\ColladaHelper.cpp">
       <Filter>AssetLib\COLLADA</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Collada\ColladaLoader.cpp">
+    <ClCompile Include="AssetLib\Collada\ColladaLoader.cpp">
       <Filter>AssetLib\COLLADA</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Collada\ColladaParser.cpp">
+    <ClCompile Include="AssetLib\Collada\ColladaParser.cpp">
       <Filter>AssetLib\COLLADA</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\DXF\DXFLoader.cpp">
+    <ClCompile Include="AssetLib\DXF\DXFLoader.cpp">
       <Filter>AssetLib\DXF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\CSM\CSMLoader.cpp">
+    <ClCompile Include="AssetLib\CSM\CSMLoader.cpp">
       <Filter>AssetLib\CSM</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\HMP\HMPLoader.cpp">
+    <ClCompile Include="AssetLib\HMP\HMPLoader.cpp">
       <Filter>AssetLib\HMP</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Irr\IRRMeshLoader.cpp">
+    <ClCompile Include="AssetLib\Irr\IRRMeshLoader.cpp">
       <Filter>AssetLib\IRRMESH</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Irr\IRRShared.cpp">
+    <ClCompile Include="AssetLib\Irr\IRRShared.cpp">
       <Filter>AssetLib\IRRMESH</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Irr\IRRLoader.cpp">
+    <ClCompile Include="AssetLib\Irr\IRRLoader.cpp">
       <Filter>AssetLib\IRR</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\LWO\LWOAnimation.cpp">
+    <ClCompile Include="AssetLib\LWO\LWOAnimation.cpp">
       <Filter>AssetLib\LWO</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\LWO\LWOBLoader.cpp">
+    <ClCompile Include="AssetLib\LWO\LWOBLoader.cpp">
       <Filter>AssetLib\LWO</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\LWO\LWOLoader.cpp">
+    <ClCompile Include="AssetLib\LWO\LWOLoader.cpp">
       <Filter>AssetLib\LWO</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\LWO\LWOMaterial.cpp">
+    <ClCompile Include="AssetLib\LWO\LWOMaterial.cpp">
       <Filter>AssetLib\LWO</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\LWS\LWSLoader.cpp">
+    <ClCompile Include="AssetLib\LWS\LWSLoader.cpp">
       <Filter>AssetLib\LWS</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\M3D\M3DImporter.cpp">
+    <ClCompile Include="AssetLib\M3D\M3DImporter.cpp">
       <Filter>AssetLib\M3D</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\M3D\M3DWrapper.cpp">
+    <ClCompile Include="AssetLib\M3D\M3DWrapper.cpp">
       <Filter>AssetLib\M3D</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MD2\MD2Loader.cpp">
+    <ClCompile Include="AssetLib\MD2\MD2Loader.cpp">
       <Filter>AssetLib\MD2</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MD3\MD3Loader.cpp">
+    <ClCompile Include="AssetLib\MD3\MD3Loader.cpp">
       <Filter>AssetLib\MD3</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MD5\MD5Loader.cpp">
+    <ClCompile Include="AssetLib\MD5\MD5Loader.cpp">
       <Filter>AssetLib\MD5</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MD5\MD5Parser.cpp">
+    <ClCompile Include="AssetLib\MD5\MD5Parser.cpp">
       <Filter>AssetLib\MD5</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MDC\MDCLoader.cpp">
+    <ClCompile Include="AssetLib\MDC\MDCLoader.cpp">
       <Filter>AssetLib\MDC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MDL\MDLLoader.cpp">
+    <ClCompile Include="AssetLib\MDL\MDLLoader.cpp">
       <Filter>AssetLib\MDL</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MDL\MDLMaterialLoader.cpp">
+    <ClCompile Include="AssetLib\MDL\MDLMaterialLoader.cpp">
       <Filter>AssetLib\MDL</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MDL\HalfLife\HL1MDLLoader.cpp">
+    <ClCompile Include="AssetLib\MDL\HalfLife\HL1MDLLoader.cpp">
       <Filter>AssetLib\MDL</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MDL\HalfLife\UniqueNameGenerator.cpp">
+    <ClCompile Include="AssetLib\MDL\HalfLife\UniqueNameGenerator.cpp">
       <Filter>AssetLib\MDL</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\NFF\NFFLoader.cpp">
+    <ClCompile Include="AssetLib\NFF\NFFLoader.cpp">
       <Filter>AssetLib\NFF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\NDO\NDOLoader.cpp">
+    <ClCompile Include="AssetLib\NDO\NDOLoader.cpp">
       <Filter>AssetLib\NDO</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\OFF\OFFLoader.cpp">
+    <ClCompile Include="AssetLib\OFF\OFFLoader.cpp">
       <Filter>AssetLib\OFF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Obj\ObjFileImporter.cpp">
+    <ClCompile Include="AssetLib\Obj\ObjFileImporter.cpp">
       <Filter>AssetLib\OBJ</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Obj\ObjFileMtlImporter.cpp">
+    <ClCompile Include="AssetLib\Obj\ObjFileMtlImporter.cpp">
       <Filter>AssetLib\OBJ</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Obj\ObjFileParser.cpp">
+    <ClCompile Include="AssetLib\Obj\ObjFileParser.cpp">
       <Filter>AssetLib\OBJ</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Ogre\OgreImporter.cpp">
+    <ClCompile Include="AssetLib\Ogre\OgreImporter.cpp">
       <Filter>AssetLib\OGRE</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Ogre\OgreStructs.cpp">
+    <ClCompile Include="AssetLib\Ogre\OgreStructs.cpp">
       <Filter>AssetLib\OGRE</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Ogre\OgreBinarySerializer.cpp">
+    <ClCompile Include="AssetLib\Ogre\OgreBinarySerializer.cpp">
       <Filter>AssetLib\OGRE</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Ogre\OgreXmlSerializer.cpp">
+    <ClCompile Include="AssetLib\Ogre\OgreXmlSerializer.cpp">
       <Filter>AssetLib\OGRE</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Ogre\OgreMaterial.cpp">
+    <ClCompile Include="AssetLib\Ogre\OgreMaterial.cpp">
       <Filter>AssetLib\OGRE</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\OpenGEX\OpenGEXImporter.cpp">
+    <ClCompile Include="AssetLib\OpenGEX\OpenGEXImporter.cpp">
       <Filter>AssetLib\OPENGEX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Ply\PlyLoader.cpp">
+    <ClCompile Include="AssetLib\Ply\PlyLoader.cpp">
       <Filter>AssetLib\PLY</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Ply\PlyParser.cpp">
+    <ClCompile Include="AssetLib\Ply\PlyParser.cpp">
       <Filter>AssetLib\PLY</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MS3D\MS3DLoader.cpp">
+    <ClCompile Include="AssetLib\MS3D\MS3DLoader.cpp">
       <Filter>AssetLib\MS3D</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\COB\COBLoader.cpp">
+    <ClCompile Include="AssetLib\COB\COBLoader.cpp">
       <Filter>AssetLib\COB</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderLoader.cpp">
+    <ClCompile Include="AssetLib\Blender\BlenderLoader.cpp">
       <Filter>AssetLib\BLEND</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderDNA.cpp">
+    <ClCompile Include="AssetLib\Blender\BlenderDNA.cpp">
       <Filter>AssetLib\BLEND</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderScene.cpp">
+    <ClCompile Include="AssetLib\Blender\BlenderScene.cpp">
       <Filter>AssetLib\BLEND</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderModifier.cpp">
+    <ClCompile Include="AssetLib\Blender\BlenderModifier.cpp">
       <Filter>AssetLib\BLEND</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderBMesh.cpp">
+    <ClCompile Include="AssetLib\Blender\BlenderBMesh.cpp">
       <Filter>AssetLib\BLEND</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderTessellator.cpp">
+    <ClCompile Include="AssetLib\Blender\BlenderTessellator.cpp">
       <Filter>AssetLib\BLEND</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderCustomData.cpp">
+    <ClCompile Include="AssetLib\Blender\BlenderCustomData.cpp">
       <Filter>AssetLib\BLEND</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCLoader.cpp">
+    <ClCompile Include="AssetLib\IFC\IFCLoader.cpp">
       <Filter>AssetLib\IFC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCReaderGen1_2x3.cpp">
+    <ClCompile Include="AssetLib\IFC\IFCReaderGen1_2x3.cpp">
       <Filter>AssetLib\IFC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCReaderGen2_2x3.cpp">
+    <ClCompile Include="AssetLib\IFC\IFCReaderGen2_2x3.cpp">
       <Filter>AssetLib\IFC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCUtil.cpp">
+    <ClCompile Include="AssetLib\IFC\IFCUtil.cpp">
       <Filter>AssetLib\IFC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCGeometry.cpp">
+    <ClCompile Include="AssetLib\IFC\IFCGeometry.cpp">
       <Filter>AssetLib\IFC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCMaterial.cpp">
+    <ClCompile Include="AssetLib\IFC\IFCMaterial.cpp">
       <Filter>AssetLib\IFC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCProfile.cpp">
+    <ClCompile Include="AssetLib\IFC\IFCProfile.cpp">
       <Filter>AssetLib\IFC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCCurve.cpp">
+    <ClCompile Include="AssetLib\IFC\IFCCurve.cpp">
       <Filter>AssetLib\IFC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCBoolean.cpp">
+    <ClCompile Include="AssetLib\IFC\IFCBoolean.cpp">
       <Filter>AssetLib\IFC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCOpenings.cpp">
+    <ClCompile Include="AssetLib\IFC\IFCOpenings.cpp">
       <Filter>AssetLib\IFC</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\XGL\XGLLoader.cpp">
+    <ClCompile Include="AssetLib\XGL\XGLLoader.cpp">
       <Filter>AssetLib\XGL</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXImporter.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXImporter.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXParser.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXParser.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXTokenizer.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXTokenizer.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXConverter.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXConverter.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXUtil.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXUtil.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXDocument.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXDocument.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXProperties.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXProperties.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXMeshGeometry.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXMeshGeometry.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXMaterial.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXMaterial.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXModel.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXModel.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXAnimation.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXAnimation.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXNodeAttribute.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXNodeAttribute.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXDeformer.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXDeformer.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXBinaryTokenizer.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXBinaryTokenizer.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXDocumentUtil.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXDocumentUtil.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Q3D\Q3DLoader.cpp">
+    <ClCompile Include="AssetLib\Q3D\Q3DLoader.cpp">
       <Filter>AssetLib\Q3D</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Q3BSP\Q3BSPFileParser.cpp">
+    <ClCompile Include="AssetLib\Q3BSP\Q3BSPFileParser.cpp">
       <Filter>AssetLib\Q3BSP</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Q3BSP\Q3BSPFileImporter.cpp">
+    <ClCompile Include="AssetLib\Q3BSP\Q3BSPFileImporter.cpp">
       <Filter>AssetLib\Q3BSP</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Raw\RawLoader.cpp">
+    <ClCompile Include="AssetLib\Raw\RawLoader.cpp">
       <Filter>AssetLib\RAW</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\SIB\SIBImporter.cpp">
+    <ClCompile Include="AssetLib\SIB\SIBImporter.cpp">
       <Filter>AssetLib\SIB</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\SMD\SMDLoader.cpp">
+    <ClCompile Include="AssetLib\SMD\SMDLoader.cpp">
       <Filter>AssetLib\SMD</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\STL\STLLoader.cpp">
+    <ClCompile Include="AssetLib\STL\STLLoader.cpp">
       <Filter>AssetLib\STL</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Terragen\TerragenLoader.cpp">
+    <ClCompile Include="AssetLib\Terragen\TerragenLoader.cpp">
       <Filter>AssetLib\TERRAGEN</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Unreal\UnrealLoader.cpp">
+    <ClCompile Include="AssetLib\Unreal\UnrealLoader.cpp">
       <Filter>AssetLib\3D</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\X\XFileImporter.cpp">
+    <ClCompile Include="AssetLib\X\XFileImporter.cpp">
       <Filter>AssetLib\X</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\X\XFileParser.cpp">
+    <ClCompile Include="AssetLib\X\XFileParser.cpp">
       <Filter>AssetLib\X</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\X3D\X3DImporter.cpp">
+    <ClCompile Include="AssetLib\X3D\X3DImporter.cpp">
       <Filter>AssetLib\X3D</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\glTF\glTFCommon.cpp">
+    <ClCompile Include="AssetLib\glTF\glTFCommon.cpp">
       <Filter>AssetLib\GLTF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\glTF\glTFImporter.cpp">
+    <ClCompile Include="AssetLib\glTF\glTFImporter.cpp">
       <Filter>AssetLib\GLTF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\glTF2\glTF2Importer.cpp">
+    <ClCompile Include="AssetLib\glTF2\glTF2Importer.cpp">
       <Filter>AssetLib\GLTF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\3MF\D3MFImporter.cpp">
+    <ClCompile Include="AssetLib\3MF\D3MFImporter.cpp">
       <Filter>AssetLib\3MF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\3MF\D3MFOpcPackage.cpp">
+    <ClCompile Include="AssetLib\3MF\D3MFOpcPackage.cpp">
       <Filter>AssetLib\3MF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MMD\MMDImporter.cpp">
+    <ClCompile Include="AssetLib\MMD\MMDImporter.cpp">
       <Filter>AssetLib\MMD</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\MMD\MMDPmxParser.cpp">
+    <ClCompile Include="AssetLib\MMD\MMDPmxParser.cpp">
       <Filter>AssetLib\MMD</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Obj\ObjExporter.cpp">
+    <ClCompile Include="AssetLib\Obj\ObjExporter.cpp">
       <Filter>AssetLib\OBJ</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\OpenGEX\OpenGEXExporter.cpp">
+    <ClCompile Include="AssetLib\OpenGEX\OpenGEXExporter.cpp">
       <Filter>AssetLib\OPENGEX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Ply\PlyExporter.cpp">
+    <ClCompile Include="AssetLib\Ply\PlyExporter.cpp">
       <Filter>AssetLib\PLY</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\3DS\3DSExporter.cpp">
+    <ClCompile Include="AssetLib\3DS\3DSExporter.cpp">
       <Filter>AssetLib\3DS</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Assbin\AssbinExporter.cpp">
+    <ClCompile Include="AssetLib\Assbin\AssbinExporter.cpp">
       <Filter>AssetLib\ASSBIN</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Assbin\AssbinFileWriter.cpp">
+    <ClCompile Include="AssetLib\Assbin\AssbinFileWriter.cpp">
       <Filter>AssetLib\ASSBIN</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Assxml\AssxmlExporter.cpp">
+    <ClCompile Include="AssetLib\Assxml\AssxmlExporter.cpp">
       <Filter>AssetLib\ASSXML</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Assxml\AssxmlFileWriter.cpp">
+    <ClCompile Include="AssetLib\Assxml\AssxmlFileWriter.cpp">
       <Filter>AssetLib\ASSXML</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\M3D\M3DExporter.cpp">
+    <ClCompile Include="AssetLib\M3D\M3DExporter.cpp">
       <Filter>AssetLib\M3D</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Collada\ColladaExporter.cpp">
+    <ClCompile Include="AssetLib\Collada\ColladaExporter.cpp">
       <Filter>AssetLib\COLLADA</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXExporter.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXExporter.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXExportNode.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXExportNode.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXExportProperty.cpp">
+    <ClCompile Include="AssetLib\FBX\FBXExportProperty.cpp">
       <Filter>AssetLib\FBX</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\STL\STLExporter.cpp">
+    <ClCompile Include="AssetLib\STL\STLExporter.cpp">
       <Filter>AssetLib\STL</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\X\XFileExporter.cpp">
+    <ClCompile Include="AssetLib\X\XFileExporter.cpp">
       <Filter>AssetLib\X</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\X3D\X3DExporter.cpp">
+    <ClCompile Include="AssetLib\X3D\X3DExporter.cpp">
       <Filter>AssetLib\X3D</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\glTF\glTFExporter.cpp">
+    <ClCompile Include="AssetLib\glTF\glTFExporter.cpp">
       <Filter>AssetLib\GLTF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\glTF2\glTF2Exporter.cpp">
+    <ClCompile Include="AssetLib\glTF2\glTF2Exporter.cpp">
       <Filter>AssetLib\GLTF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\3MF\D3MFExporter.cpp">
+    <ClCompile Include="AssetLib\3MF\D3MFExporter.cpp">
       <Filter>AssetLib\3MF</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\Pbrt\PbrtExporter.cpp">
+    <ClCompile Include="Pbrt\PbrtExporter.cpp">
       <Filter>AssetLib\PBRT</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Assjson\cencode.c">
+    <ClCompile Include="AssetLib\Assjson\cencode.c">
       <Filter>AssetLib\ASSJSON</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Assjson\json_exporter.cpp">
+    <ClCompile Include="AssetLib\Assjson\json_exporter.cpp">
       <Filter>AssetLib\ASSJSON</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Assjson\mesh_splitter.cpp">
+    <ClCompile Include="AssetLib\Assjson\mesh_splitter.cpp">
       <Filter>AssetLib\ASSJSON</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\code\AssetLib\Step\StepExporter.cpp">
+    <ClCompile Include="AssetLib\Step\StepExporter.cpp">
       <Filter>AssetLib\STEP</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\unzip\crypt.c">
+    <ClCompile Include="..\contrib\unzip\crypt.c">
       <Filter>Contrib\unzip</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\unzip\ioapi.c">
+    <ClCompile Include="..\contrib\unzip\ioapi.c">
       <Filter>Contrib\unzip</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\unzip\unzip.c">
+    <ClCompile Include="..\contrib\unzip\unzip.c">
       <Filter>Contrib\unzip</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\poly2tri\poly2tri\common\shapes.cc">
+    <ClCompile Include="..\contrib\poly2tri\poly2tri\common\shapes.cc">
       <Filter>Contrib\Poly2Tri</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\poly2tri\poly2tri\sweep\advancing_front.cc">
+    <ClCompile Include="..\contrib\poly2tri\poly2tri\sweep\advancing_front.cc">
       <Filter>Contrib\Poly2Tri</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\poly2tri\poly2tri\sweep\cdt.cc">
+    <ClCompile Include="..\contrib\poly2tri\poly2tri\sweep\cdt.cc">
       <Filter>Contrib\Poly2Tri</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\poly2tri\poly2tri\sweep\sweep.cc">
+    <ClCompile Include="..\contrib\poly2tri\poly2tri\sweep\sweep.cc">
       <Filter>Contrib\Poly2Tri</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\poly2tri\poly2tri\sweep\sweep_context.cc">
+    <ClCompile Include="..\contrib\poly2tri\poly2tri\sweep\sweep_context.cc">
       <Filter>Contrib\Poly2Tri</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\clipper\clipper.cpp">
+    <ClCompile Include="..\contrib\clipper\clipper.cpp">
       <Filter>Contrib\Clipper</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\openddlparser\code\OpenDDLParser.cpp">
+    <ClCompile Include="..\contrib\openddlparser\code\OpenDDLParser.cpp">
       <Filter>Contrib\openddl_parser</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\openddlparser\code\DDLNode.cpp">
+    <ClCompile Include="..\contrib\openddlparser\code\DDLNode.cpp">
       <Filter>Contrib\openddl_parser</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\openddlparser\code\OpenDDLCommon.cpp">
+    <ClCompile Include="..\contrib\openddlparser\code\OpenDDLCommon.cpp">
       <Filter>Contrib\openddl_parser</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\openddlparser\code\OpenDDLExport.cpp">
+    <ClCompile Include="..\contrib\openddlparser\code\OpenDDLExport.cpp">
       <Filter>Contrib\openddl_parser</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\openddlparser\code\Value.cpp">
+    <ClCompile Include="..\contrib\openddlparser\code\Value.cpp">
       <Filter>Contrib\openddl_parser</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\openddlparser\code\OpenDDLStream.cpp">
+    <ClCompile Include="..\contrib\openddlparser\code\OpenDDLStream.cpp">
       <Filter>Contrib\openddl_parser</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcArithmeticCodec.cpp">
+    <ClCompile Include="..\contrib\Open3DGC\o3dgcArithmeticCodec.cpp">
       <Filter>Contrib\open3dgc</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcDynamicVectorDecoder.cpp">
+    <ClCompile Include="..\contrib\Open3DGC\o3dgcDynamicVectorDecoder.cpp">
       <Filter>Contrib\open3dgc</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcDynamicVectorEncoder.cpp">
+    <ClCompile Include="..\contrib\Open3DGC\o3dgcDynamicVectorEncoder.cpp">
       <Filter>Contrib\open3dgc</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcTools.cpp">
+    <ClCompile Include="..\contrib\Open3DGC\o3dgcTools.cpp">
       <Filter>Contrib\open3dgc</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcTriangleFans.cpp">
+    <ClCompile Include="..\contrib\Open3DGC\o3dgcTriangleFans.cpp">
       <Filter>Contrib\open3dgc</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Projects\temp\assimp\contrib\zip\src\zip.c">
+    <ClCompile Include="..\contrib\zip\src\zip.c">
       <Filter>ziplib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Projects\temp\assimp\code\CApi\CInterfaceIOWrapper.h">
+    <ClInclude Include="CApi\CInterfaceIOWrapper.h">
       <Filter>CApi</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\BaseProcess.h">
+    <ClInclude Include="Common\BaseProcess.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\Importer.h">
+    <ClInclude Include="Common\Importer.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\ScenePrivate.h">
+    <ClInclude Include="Common\ScenePrivate.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\DefaultProgressHandler.h">
+    <ClInclude Include="Common\DefaultProgressHandler.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\PolyTools.h">
+    <ClInclude Include="Common\PolyTools.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\IFF.h">
+    <ClInclude Include="Common\IFF.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\VertexTriangleAdjacency.h">
+    <ClInclude Include="Common\VertexTriangleAdjacency.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\ScenePreprocessor.h">
+    <ClInclude Include="Common\ScenePreprocessor.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\TargetAnimation.h">
+    <ClInclude Include="Common\TargetAnimation.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\simd.h">
+    <ClInclude Include="Common\simd.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\DefaultLogger.hpp">
+    <ClInclude Include="..\include\assimp\DefaultLogger.hpp">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\LogStream.hpp">
+    <ClInclude Include="..\include\assimp\LogStream.hpp">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Logger.hpp">
+    <ClInclude Include="..\include\assimp\Logger.hpp">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\NullLogger.hpp">
+    <ClInclude Include="..\include\assimp\NullLogger.hpp">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\Win32DebugLogStream.h">
+    <ClInclude Include="Common\Win32DebugLogStream.h">
       <Filter>Logging</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\FileLogStream.h">
+    <ClInclude Include="Common\FileLogStream.h">
       <Filter>Logging</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Common\StdOStreamLogStream.h">
+    <ClInclude Include="Common\StdOStreamLogStream.h">
       <Filter>Logging</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\BlobIOSystem.h">
+    <ClInclude Include="..\include\assimp\BlobIOSystem.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\CalcTangentsProcess.h">
+    <ClInclude Include="PostProcessing\CalcTangentsProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\ComputeUVMappingProcess.h">
+    <ClInclude Include="PostProcessing\ComputeUVMappingProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\ConvertToLHProcess.h">
+    <ClInclude Include="PostProcessing\ConvertToLHProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\EmbedTexturesProcess.h">
+    <ClInclude Include="PostProcessing\EmbedTexturesProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\FindDegenerates.h">
+    <ClInclude Include="PostProcessing\FindDegenerates.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\FindInstancesProcess.h">
+    <ClInclude Include="PostProcessing\FindInstancesProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\FindInvalidDataProcess.h">
+    <ClInclude Include="PostProcessing\FindInvalidDataProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\FixNormalsStep.h">
+    <ClInclude Include="PostProcessing\FixNormalsStep.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\DropFaceNormalsProcess.h">
+    <ClInclude Include="PostProcessing\DropFaceNormalsProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\GenFaceNormalsProcess.h">
+    <ClInclude Include="PostProcessing\GenFaceNormalsProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\GenVertexNormalsProcess.h">
+    <ClInclude Include="PostProcessing\GenVertexNormalsProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\PretransformVertices.h">
+    <ClInclude Include="PostProcessing\PretransformVertices.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\ImproveCacheLocality.h">
+    <ClInclude Include="PostProcessing\ImproveCacheLocality.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\JoinVerticesProcess.h">
+    <ClInclude Include="PostProcessing\JoinVerticesProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\LimitBoneWeightsProcess.h">
+    <ClInclude Include="PostProcessing\LimitBoneWeightsProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\RemoveRedundantMaterials.h">
+    <ClInclude Include="PostProcessing\RemoveRedundantMaterials.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\RemoveVCProcess.h">
+    <ClInclude Include="PostProcessing\RemoveVCProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\SortByPTypeProcess.h">
+    <ClInclude Include="PostProcessing\SortByPTypeProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\SplitLargeMeshes.h">
+    <ClInclude Include="PostProcessing\SplitLargeMeshes.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\TextureTransform.h">
+    <ClInclude Include="PostProcessing\TextureTransform.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\TriangulateProcess.h">
+    <ClInclude Include="PostProcessing\TriangulateProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\ValidateDataStructure.h">
+    <ClInclude Include="PostProcessing\ValidateDataStructure.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\OptimizeGraph.h">
+    <ClInclude Include="PostProcessing\OptimizeGraph.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\OptimizeMeshes.h">
+    <ClInclude Include="PostProcessing\OptimizeMeshes.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\DeboneProcess.h">
+    <ClInclude Include="PostProcessing\DeboneProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\ProcessHelper.h">
+    <ClInclude Include="PostProcessing\ProcessHelper.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\MakeVerboseFormat.h">
+    <ClInclude Include="PostProcessing\MakeVerboseFormat.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\ScaleProcess.h">
+    <ClInclude Include="PostProcessing\ScaleProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\ArmaturePopulate.h">
+    <ClInclude Include="PostProcessing\ArmaturePopulate.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\GenBoundingBoxesProcess.h">
+    <ClInclude Include="PostProcessing\GenBoundingBoxesProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\PostProcessing\SplitByBoneCountProcess.h">
+    <ClInclude Include="PostProcessing\SplitByBoneCountProcess.h">
       <Filter>PostProcessing</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Material\MaterialSystem.h">
+    <ClInclude Include="Material\MaterialSystem.h">
       <Filter>MaterialSystem</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\STEPParser\STEPFileReader.h">
+    <ClInclude Include="AssetLib\STEPParser\STEPFileReader.h">
       <Filter>STEPParser</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\STEPParser\STEPFileEncoding.h">
+    <ClInclude Include="AssetLib\STEPParser\STEPFileEncoding.h">
       <Filter>STEPParser</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\AMF\AMFImporter.hpp">
+    <ClInclude Include="AssetLib\AMF\AMFImporter.hpp">
       <Filter>AssetLib\AMF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\AMF\AMFImporter_Node.hpp">
+    <ClInclude Include="AssetLib\AMF\AMFImporter_Node.hpp">
       <Filter>AssetLib\AMF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\3DS\3DSHelper.h">
+    <ClInclude Include="AssetLib\3DS\3DSHelper.h">
       <Filter>AssetLib\3DS</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\3DS\3DSLoader.h">
+    <ClInclude Include="AssetLib\3DS\3DSLoader.h">
       <Filter>AssetLib\3DS</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\AC\ACLoader.h">
+    <ClInclude Include="AssetLib\AC\ACLoader.h">
       <Filter>AssetLib\AC</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\ASE\ASELoader.h">
+    <ClInclude Include="AssetLib\ASE\ASELoader.h">
       <Filter>AssetLib\ASE</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\ASE\ASEParser.h">
+    <ClInclude Include="AssetLib\ASE\ASEParser.h">
       <Filter>AssetLib\ASE</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Assbin\AssbinLoader.h">
+    <ClInclude Include="AssetLib\Assbin\AssbinLoader.h">
       <Filter>AssetLib\ASSBIN</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\B3D\B3DImporter.h">
+    <ClInclude Include="AssetLib\B3D\B3DImporter.h">
       <Filter>AssetLib\B3D</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\BVH\BVHLoader.h">
+    <ClInclude Include="AssetLib\BVH\BVHLoader.h">
       <Filter>AssetLib\BVH</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Collada\ColladaHelper.h">
+    <ClInclude Include="AssetLib\Collada\ColladaHelper.h">
       <Filter>AssetLib\COLLADA</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Collada\ColladaLoader.h">
+    <ClInclude Include="AssetLib\Collada\ColladaLoader.h">
       <Filter>AssetLib\COLLADA</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Collada\ColladaParser.h">
+    <ClInclude Include="AssetLib\Collada\ColladaParser.h">
       <Filter>AssetLib\COLLADA</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\DXF\DXFLoader.h">
+    <ClInclude Include="AssetLib\DXF\DXFLoader.h">
       <Filter>AssetLib\DXF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\DXF\DXFHelper.h">
+    <ClInclude Include="AssetLib\DXF\DXFHelper.h">
       <Filter>AssetLib\DXF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\CSM\CSMLoader.h">
+    <ClInclude Include="AssetLib\CSM\CSMLoader.h">
       <Filter>AssetLib\CSM</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\HMP\HMPFileData.h">
+    <ClInclude Include="AssetLib\HMP\HMPFileData.h">
       <Filter>AssetLib\HMP</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\HMP\HMPLoader.h">
+    <ClInclude Include="AssetLib\HMP\HMPLoader.h">
       <Filter>AssetLib\HMP</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\HMP\HalfLifeFileData.h">
+    <ClInclude Include="AssetLib\HMP\HalfLifeFileData.h">
       <Filter>AssetLib\HMP</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Irr\IRRMeshLoader.h">
+    <ClInclude Include="AssetLib\Irr\IRRMeshLoader.h">
       <Filter>AssetLib\IRRMESH</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Irr\IRRShared.h">
+    <ClInclude Include="AssetLib\Irr\IRRShared.h">
       <Filter>AssetLib\IRRMESH</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Irr\IRRLoader.h">
+    <ClInclude Include="AssetLib\Irr\IRRLoader.h">
       <Filter>AssetLib\IRR</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\LWO\LWOAnimation.h">
+    <ClInclude Include="AssetLib\LWO\LWOAnimation.h">
       <Filter>AssetLib\LWO</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\LWO\LWOFileData.h">
+    <ClInclude Include="AssetLib\LWO\LWOFileData.h">
       <Filter>AssetLib\LWO</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\LWO\LWOLoader.h">
+    <ClInclude Include="AssetLib\LWO\LWOLoader.h">
       <Filter>AssetLib\LWO</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\LWS\LWSLoader.h">
+    <ClInclude Include="AssetLib\LWS\LWSLoader.h">
       <Filter>AssetLib\LWS</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\M3D\M3DMaterials.h">
+    <ClInclude Include="AssetLib\M3D\M3DMaterials.h">
       <Filter>AssetLib\M3D</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\M3D\M3DImporter.h">
+    <ClInclude Include="AssetLib\M3D\M3DImporter.h">
       <Filter>AssetLib\M3D</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\M3D\M3DWrapper.h">
+    <ClInclude Include="AssetLib\M3D\M3DWrapper.h">
       <Filter>AssetLib\M3D</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\M3D\m3d.h">
+    <ClInclude Include="AssetLib\M3D\m3d.h">
       <Filter>AssetLib\M3D</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MD2\MD2FileData.h">
+    <ClInclude Include="AssetLib\MD2\MD2FileData.h">
       <Filter>AssetLib\MD2</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MD2\MD2Loader.h">
+    <ClInclude Include="AssetLib\MD2\MD2Loader.h">
       <Filter>AssetLib\MD2</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MD2\MD2NormalTable.h">
+    <ClInclude Include="AssetLib\MD2\MD2NormalTable.h">
       <Filter>AssetLib\MD2</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MD3\MD3FileData.h">
+    <ClInclude Include="AssetLib\MD3\MD3FileData.h">
       <Filter>AssetLib\MD3</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MD3\MD3Loader.h">
+    <ClInclude Include="AssetLib\MD3\MD3Loader.h">
       <Filter>AssetLib\MD3</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MD5\MD5Loader.h">
+    <ClInclude Include="AssetLib\MD5\MD5Loader.h">
       <Filter>AssetLib\MD5</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MD5\MD5Parser.h">
+    <ClInclude Include="AssetLib\MD5\MD5Parser.h">
       <Filter>AssetLib\MD5</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDC\MDCFileData.h">
+    <ClInclude Include="AssetLib\MDC\MDCFileData.h">
       <Filter>AssetLib\MDC</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDC\MDCLoader.h">
+    <ClInclude Include="AssetLib\MDC\MDCLoader.h">
       <Filter>AssetLib\MDC</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDC\MDCNormalTable.h">
+    <ClInclude Include="AssetLib\MDC\MDCNormalTable.h">
       <Filter>AssetLib\MDC</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDL\MDLDefaultColorMap.h">
+    <ClInclude Include="AssetLib\MDL\MDLDefaultColorMap.h">
       <Filter>AssetLib\MDL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDL\MDLFileData.h">
+    <ClInclude Include="AssetLib\MDL\MDLFileData.h">
       <Filter>AssetLib\MDL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDL\MDLLoader.h">
+    <ClInclude Include="AssetLib\MDL\MDLLoader.h">
       <Filter>AssetLib\MDL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDL\HalfLife\HalfLifeMDLBaseHeader.h">
+    <ClInclude Include="AssetLib\MDL\HalfLife\HalfLifeMDLBaseHeader.h">
       <Filter>AssetLib\MDL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDL\HalfLife\HL1FileData.h">
+    <ClInclude Include="AssetLib\MDL\HalfLife\HL1FileData.h">
       <Filter>AssetLib\MDL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDL\HalfLife\HL1MDLLoader.h">
+    <ClInclude Include="AssetLib\MDL\HalfLife\HL1MDLLoader.h">
       <Filter>AssetLib\MDL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDL\HalfLife\HL1ImportDefinitions.h">
+    <ClInclude Include="AssetLib\MDL\HalfLife\HL1ImportDefinitions.h">
       <Filter>AssetLib\MDL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDL\HalfLife\HL1ImportSettings.h">
+    <ClInclude Include="AssetLib\MDL\HalfLife\HL1ImportSettings.h">
       <Filter>AssetLib\MDL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDL\HalfLife\HL1MeshTrivert.h">
+    <ClInclude Include="AssetLib\MDL\HalfLife\HL1MeshTrivert.h">
       <Filter>AssetLib\MDL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDL\HalfLife\LogFunctions.h">
+    <ClInclude Include="AssetLib\MDL\HalfLife\LogFunctions.h">
       <Filter>AssetLib\MDL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MDL\HalfLife\UniqueNameGenerator.h">
+    <ClInclude Include="AssetLib\MDL\HalfLife\UniqueNameGenerator.h">
       <Filter>AssetLib\MDL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\NFF\NFFLoader.h">
+    <ClInclude Include="AssetLib\NFF\NFFLoader.h">
       <Filter>AssetLib\NFF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\NDO\NDOLoader.h">
+    <ClInclude Include="AssetLib\NDO\NDOLoader.h">
       <Filter>AssetLib\NDO</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\OFF\OFFLoader.h">
+    <ClInclude Include="AssetLib\OFF\OFFLoader.h">
       <Filter>AssetLib\OFF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Obj\ObjFileData.h">
+    <ClInclude Include="AssetLib\Obj\ObjFileData.h">
       <Filter>AssetLib\OBJ</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Obj\ObjFileImporter.h">
+    <ClInclude Include="AssetLib\Obj\ObjFileImporter.h">
       <Filter>AssetLib\OBJ</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Obj\ObjFileMtlImporter.h">
+    <ClInclude Include="AssetLib\Obj\ObjFileMtlImporter.h">
       <Filter>AssetLib\OBJ</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Obj\ObjFileParser.h">
+    <ClInclude Include="AssetLib\Obj\ObjFileParser.h">
       <Filter>AssetLib\OBJ</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Obj\ObjTools.h">
+    <ClInclude Include="AssetLib\Obj\ObjTools.h">
       <Filter>AssetLib\OBJ</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Ogre\OgreImporter.h">
+    <ClInclude Include="AssetLib\Ogre\OgreImporter.h">
       <Filter>AssetLib\OGRE</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Ogre\OgreStructs.h">
+    <ClInclude Include="AssetLib\Ogre\OgreStructs.h">
       <Filter>AssetLib\OGRE</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Ogre\OgreParsingUtils.h">
+    <ClInclude Include="AssetLib\Ogre\OgreParsingUtils.h">
       <Filter>AssetLib\OGRE</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Ogre\OgreBinarySerializer.h">
+    <ClInclude Include="AssetLib\Ogre\OgreBinarySerializer.h">
       <Filter>AssetLib\OGRE</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Ogre\OgreXmlSerializer.h">
+    <ClInclude Include="AssetLib\Ogre\OgreXmlSerializer.h">
       <Filter>AssetLib\OGRE</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\OpenGEX\OpenGEXImporter.h">
+    <ClInclude Include="AssetLib\OpenGEX\OpenGEXImporter.h">
       <Filter>AssetLib\OPENGEX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\OpenGEX\OpenGEXStructs.h">
+    <ClInclude Include="AssetLib\OpenGEX\OpenGEXStructs.h">
       <Filter>AssetLib\OPENGEX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Ply\PlyLoader.h">
+    <ClInclude Include="AssetLib\Ply\PlyLoader.h">
       <Filter>AssetLib\PLY</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Ply\PlyParser.h">
+    <ClInclude Include="AssetLib\Ply\PlyParser.h">
       <Filter>AssetLib\PLY</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MS3D\MS3DLoader.h">
+    <ClInclude Include="AssetLib\MS3D\MS3DLoader.h">
       <Filter>AssetLib\MS3D</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\COB\COBLoader.h">
+    <ClInclude Include="AssetLib\COB\COBLoader.h">
       <Filter>AssetLib\COB</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\COB\COBScene.h">
+    <ClInclude Include="AssetLib\COB\COBScene.h">
       <Filter>AssetLib\COB</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderLoader.h">
+    <ClInclude Include="AssetLib\Blender\BlenderLoader.h">
       <Filter>AssetLib\BLEND</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderDNA.h">
+    <ClInclude Include="AssetLib\Blender\BlenderDNA.h">
       <Filter>AssetLib\BLEND</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderDNA.inl">
+    <ClInclude Include="AssetLib\Blender\BlenderDNA.inl">
       <Filter>AssetLib\BLEND</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderScene.h">
+    <ClInclude Include="AssetLib\Blender\BlenderScene.h">
       <Filter>AssetLib\BLEND</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderSceneGen.h">
+    <ClInclude Include="AssetLib\Blender\BlenderSceneGen.h">
       <Filter>AssetLib\BLEND</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderIntermediate.h">
+    <ClInclude Include="AssetLib\Blender\BlenderIntermediate.h">
       <Filter>AssetLib\BLEND</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderModifier.h">
+    <ClInclude Include="AssetLib\Blender\BlenderModifier.h">
       <Filter>AssetLib\BLEND</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderBMesh.h">
+    <ClInclude Include="AssetLib\Blender\BlenderBMesh.h">
       <Filter>AssetLib\BLEND</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderTessellator.h">
+    <ClInclude Include="AssetLib\Blender\BlenderTessellator.h">
       <Filter>AssetLib\BLEND</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Blender\BlenderCustomData.h">
+    <ClInclude Include="AssetLib\Blender\BlenderCustomData.h">
       <Filter>AssetLib\BLEND</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCLoader.h">
+    <ClInclude Include="AssetLib\IFC\IFCLoader.h">
       <Filter>AssetLib\IFC</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCReaderGen_2x3.h">
+    <ClInclude Include="AssetLib\IFC\IFCReaderGen_2x3.h">
       <Filter>AssetLib\IFC</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\IFC\IFCUtil.h">
+    <ClInclude Include="AssetLib\IFC\IFCUtil.h">
       <Filter>AssetLib\IFC</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\XGL\XGLLoader.h">
+    <ClInclude Include="AssetLib\XGL\XGLLoader.h">
       <Filter>AssetLib\XGL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXCompileConfig.h">
+    <ClInclude Include="AssetLib\FBX\FBXCompileConfig.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXImporter.h">
+    <ClInclude Include="AssetLib\FBX\FBXImporter.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXParser.h">
+    <ClInclude Include="AssetLib\FBX\FBXParser.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXTokenizer.h">
+    <ClInclude Include="AssetLib\FBX\FBXTokenizer.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXImportSettings.h">
+    <ClInclude Include="AssetLib\FBX\FBXImportSettings.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXConverter.h">
+    <ClInclude Include="AssetLib\FBX\FBXConverter.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXUtil.h">
+    <ClInclude Include="AssetLib\FBX\FBXUtil.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXDocument.h">
+    <ClInclude Include="AssetLib\FBX\FBXDocument.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXProperties.h">
+    <ClInclude Include="AssetLib\FBX\FBXProperties.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXMeshGeometry.h">
+    <ClInclude Include="AssetLib\FBX\FBXMeshGeometry.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXCommon.h">
+    <ClInclude Include="AssetLib\FBX\FBXCommon.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Q3D\Q3DLoader.h">
+    <ClInclude Include="AssetLib\Q3D\Q3DLoader.h">
       <Filter>AssetLib\Q3D</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Q3BSP\Q3BSPFileData.h">
+    <ClInclude Include="AssetLib\Q3BSP\Q3BSPFileData.h">
       <Filter>AssetLib\Q3BSP</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Q3BSP\Q3BSPFileParser.h">
+    <ClInclude Include="AssetLib\Q3BSP\Q3BSPFileParser.h">
       <Filter>AssetLib\Q3BSP</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Q3BSP\Q3BSPFileImporter.h">
+    <ClInclude Include="AssetLib\Q3BSP\Q3BSPFileImporter.h">
       <Filter>AssetLib\Q3BSP</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Raw\RawLoader.h">
+    <ClInclude Include="AssetLib\Raw\RawLoader.h">
       <Filter>AssetLib\RAW</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\SIB\SIBImporter.h">
+    <ClInclude Include="AssetLib\SIB\SIBImporter.h">
       <Filter>AssetLib\SIB</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\SMD\SMDLoader.h">
+    <ClInclude Include="AssetLib\SMD\SMDLoader.h">
       <Filter>AssetLib\SMD</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\STL\STLLoader.h">
+    <ClInclude Include="AssetLib\STL\STLLoader.h">
       <Filter>AssetLib\STL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Terragen\TerragenLoader.h">
+    <ClInclude Include="AssetLib\Terragen\TerragenLoader.h">
       <Filter>AssetLib\TERRAGEN</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Unreal\UnrealLoader.h">
+    <ClInclude Include="AssetLib\Unreal\UnrealLoader.h">
       <Filter>AssetLib\3D</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\X\XFileHelper.h">
+    <ClInclude Include="AssetLib\X\XFileHelper.h">
       <Filter>AssetLib\X</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\X\XFileImporter.h">
+    <ClInclude Include="AssetLib\X\XFileImporter.h">
       <Filter>AssetLib\X</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\X\XFileParser.h">
+    <ClInclude Include="AssetLib\X\XFileParser.h">
       <Filter>AssetLib\X</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\X3D\X3DImporter.hpp">
+    <ClInclude Include="AssetLib\X3D\X3DImporter.hpp">
       <Filter>AssetLib\X3D</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF\glTFCommon.h">
+    <ClInclude Include="AssetLib\glTF\glTFCommon.h">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF\glTFAsset.h">
+    <ClInclude Include="AssetLib\glTF\glTFAsset.h">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF\glTFAsset.inl">
+    <ClInclude Include="AssetLib\glTF\glTFAsset.inl">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF\glTFAssetWriter.h">
+    <ClInclude Include="AssetLib\glTF\glTFAssetWriter.h">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF\glTFAssetWriter.inl">
+    <ClInclude Include="AssetLib\glTF\glTFAssetWriter.inl">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF\glTFImporter.h">
+    <ClInclude Include="AssetLib\glTF\glTFImporter.h">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF2\glTF2Asset.h">
+    <ClInclude Include="AssetLib\glTF2\glTF2Asset.h">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF2\glTF2Asset.inl">
+    <ClInclude Include="AssetLib\glTF2\glTF2Asset.inl">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF2\glTF2AssetWriter.h">
+    <ClInclude Include="AssetLib\glTF2\glTF2AssetWriter.h">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF2\glTF2AssetWriter.inl">
+    <ClInclude Include="AssetLib\glTF2\glTF2AssetWriter.inl">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF2\glTF2Importer.h">
+    <ClInclude Include="AssetLib\glTF2\glTF2Importer.h">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\3MF\D3MFImporter.h">
+    <ClInclude Include="AssetLib\3MF\D3MFImporter.h">
       <Filter>AssetLib\3MF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\3MF\D3MFOpcPackage.h">
+    <ClInclude Include="AssetLib\3MF\D3MFOpcPackage.h">
       <Filter>AssetLib\3MF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\3MF\3MFXmlTags.h">
+    <ClInclude Include="AssetLib\3MF\3MFXmlTags.h">
       <Filter>AssetLib\3MF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MMD\MMDCpp14.h">
+    <ClInclude Include="AssetLib\MMD\MMDCpp14.h">
       <Filter>AssetLib\MMD</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MMD\MMDImporter.h">
+    <ClInclude Include="AssetLib\MMD\MMDImporter.h">
       <Filter>AssetLib\MMD</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MMD\MMDPmdParser.h">
+    <ClInclude Include="AssetLib\MMD\MMDPmdParser.h">
       <Filter>AssetLib\MMD</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MMD\MMDPmxParser.h">
+    <ClInclude Include="AssetLib\MMD\MMDPmxParser.h">
       <Filter>AssetLib\MMD</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\MMD\MMDVmdParser.h">
+    <ClInclude Include="AssetLib\MMD\MMDVmdParser.h">
       <Filter>AssetLib\MMD</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Obj\ObjExporter.h">
+    <ClInclude Include="AssetLib\Obj\ObjExporter.h">
       <Filter>AssetLib\OBJ</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\OpenGEX\OpenGEXExporter.h">
+    <ClInclude Include="AssetLib\OpenGEX\OpenGEXExporter.h">
       <Filter>AssetLib\OPENGEX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Ply\PlyExporter.h">
+    <ClInclude Include="AssetLib\Ply\PlyExporter.h">
       <Filter>AssetLib\PLY</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\3DS\3DSExporter.h">
+    <ClInclude Include="AssetLib\3DS\3DSExporter.h">
       <Filter>AssetLib\3DS</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Assbin\AssbinExporter.h">
+    <ClInclude Include="AssetLib\Assbin\AssbinExporter.h">
       <Filter>AssetLib\ASSBIN</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Assbin\AssbinFileWriter.h">
+    <ClInclude Include="AssetLib\Assbin\AssbinFileWriter.h">
       <Filter>AssetLib\ASSBIN</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Assxml\AssxmlExporter.h">
+    <ClInclude Include="AssetLib\Assxml\AssxmlExporter.h">
       <Filter>AssetLib\ASSXML</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Assxml\AssxmlFileWriter.h">
+    <ClInclude Include="AssetLib\Assxml\AssxmlFileWriter.h">
       <Filter>AssetLib\ASSXML</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\M3D\M3DExporter.h">
+    <ClInclude Include="AssetLib\M3D\M3DExporter.h">
       <Filter>AssetLib\M3D</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Collada\ColladaExporter.h">
+    <ClInclude Include="AssetLib\Collada\ColladaExporter.h">
       <Filter>AssetLib\COLLADA</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXExporter.h">
+    <ClInclude Include="AssetLib\FBX\FBXExporter.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXExportNode.h">
+    <ClInclude Include="AssetLib\FBX\FBXExportNode.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\FBX\FBXExportProperty.h">
+    <ClInclude Include="AssetLib\FBX\FBXExportProperty.h">
       <Filter>AssetLib\FBX</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\STL\STLExporter.h">
+    <ClInclude Include="AssetLib\STL\STLExporter.h">
       <Filter>AssetLib\STL</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\X\XFileExporter.h">
+    <ClInclude Include="AssetLib\X\XFileExporter.h">
       <Filter>AssetLib\X</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\X3D\X3DExporter.hpp">
+    <ClInclude Include="AssetLib\X3D\X3DExporter.hpp">
       <Filter>AssetLib\X3D</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF\glTFExporter.h">
+    <ClInclude Include="AssetLib\glTF\glTFExporter.h">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\glTF2\glTF2Exporter.h">
+    <ClInclude Include="AssetLib\glTF2\glTF2Exporter.h">
       <Filter>AssetLib\GLTF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\3MF\D3MFExporter.h">
+    <ClInclude Include="AssetLib\3MF\D3MFExporter.h">
       <Filter>AssetLib\3MF</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\Pbrt\PbrtExporter.h">
+    <ClInclude Include="Pbrt\PbrtExporter.h">
       <Filter>AssetLib\PBRT</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Assjson\cencode.h">
+    <ClInclude Include="AssetLib\Assjson\cencode.h">
       <Filter>AssetLib\ASSJSON</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Assjson\mesh_splitter.h">
+    <ClInclude Include="AssetLib\Assjson\mesh_splitter.h">
       <Filter>AssetLib\ASSJSON</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\code\AssetLib\Step\StepExporter.h">
+    <ClInclude Include="AssetLib\Step\StepExporter.h">
       <Filter>AssetLib\STEP</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\unzip\crypt.h">
+    <ClInclude Include="..\contrib\unzip\crypt.h">
       <Filter>Contrib\unzip</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\unzip\ioapi.h">
+    <ClInclude Include="..\contrib\unzip\ioapi.h">
       <Filter>Contrib\unzip</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\unzip\unzip.h">
+    <ClInclude Include="..\contrib\unzip\unzip.h">
       <Filter>Contrib\unzip</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\poly2tri\poly2tri\common\shapes.h">
+    <ClInclude Include="..\contrib\poly2tri\poly2tri\common\shapes.h">
       <Filter>Contrib\Poly2Tri</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\poly2tri\poly2tri\common\utils.h">
+    <ClInclude Include="..\contrib\poly2tri\poly2tri\common\utils.h">
       <Filter>Contrib\Poly2Tri</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\poly2tri\poly2tri\sweep\advancing_front.h">
+    <ClInclude Include="..\contrib\poly2tri\poly2tri\sweep\advancing_front.h">
       <Filter>Contrib\Poly2Tri</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\poly2tri\poly2tri\sweep\cdt.h">
+    <ClInclude Include="..\contrib\poly2tri\poly2tri\sweep\cdt.h">
       <Filter>Contrib\Poly2Tri</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\poly2tri\poly2tri\sweep\sweep.h">
+    <ClInclude Include="..\contrib\poly2tri\poly2tri\sweep\sweep.h">
       <Filter>Contrib\Poly2Tri</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\poly2tri\poly2tri\sweep\sweep_context.h">
+    <ClInclude Include="..\contrib\poly2tri\poly2tri\sweep\sweep_context.h">
       <Filter>Contrib\Poly2Tri</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\clipper\clipper.hpp">
+    <ClInclude Include="..\contrib\clipper\clipper.hpp">
       <Filter>Contrib\Clipper</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\openddlparser\include\openddlparser\OpenDDLParser.h">
+    <ClInclude Include="..\contrib\openddlparser\include\openddlparser\OpenDDLParser.h">
       <Filter>Contrib\openddl_parser</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\openddlparser\include\openddlparser\OpenDDLParserUtils.h">
+    <ClInclude Include="..\contrib\openddlparser\include\openddlparser\OpenDDLParserUtils.h">
       <Filter>Contrib\openddl_parser</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\openddlparser\include\openddlparser\OpenDDLCommon.h">
+    <ClInclude Include="..\contrib\openddlparser\include\openddlparser\OpenDDLCommon.h">
       <Filter>Contrib\openddl_parser</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\openddlparser\include\openddlparser\OpenDDLExport.h">
+    <ClInclude Include="..\contrib\openddlparser\include\openddlparser\OpenDDLExport.h">
       <Filter>Contrib\openddl_parser</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\openddlparser\include\openddlparser\OpenDDLStream.h">
+    <ClInclude Include="..\contrib\openddlparser\include\openddlparser\OpenDDLStream.h">
       <Filter>Contrib\openddl_parser</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\openddlparser\include\openddlparser\DDLNode.h">
+    <ClInclude Include="..\contrib\openddlparser\include\openddlparser\DDLNode.h">
       <Filter>Contrib\openddl_parser</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\openddlparser\include\openddlparser\Value.h">
+    <ClInclude Include="..\contrib\openddlparser\include\openddlparser\Value.h">
       <Filter>Contrib\openddl_parser</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcAdjacencyInfo.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcAdjacencyInfo.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcArithmeticCodec.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcArithmeticCodec.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcBinaryStream.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcBinaryStream.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcCommon.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcCommon.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcDVEncodeParams.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcDVEncodeParams.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcDynamicVectorDecoder.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcDynamicVectorDecoder.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcDynamicVectorEncoder.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcDynamicVectorEncoder.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcDynamicVector.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcDynamicVector.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcFIFO.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcFIFO.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcIndexedFaceSet.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcIndexedFaceSet.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcIndexedFaceSet.inl">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcIndexedFaceSet.inl">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcSC3DMCDecoder.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcSC3DMCDecoder.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcSC3DMCDecoder.inl">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcSC3DMCDecoder.inl">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcSC3DMCEncodeParams.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcSC3DMCEncodeParams.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcSC3DMCEncoder.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcSC3DMCEncoder.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcSC3DMCEncoder.inl">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcSC3DMCEncoder.inl">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcTimer.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcTimer.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcTriangleFans.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcTriangleFans.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcTriangleListDecoder.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcTriangleListDecoder.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcTriangleListDecoder.inl">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcTriangleListDecoder.inl">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcTriangleListEncoder.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcTriangleListEncoder.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcTriangleListEncoder.inl">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcTriangleListEncoder.inl">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcVector.h">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcVector.h">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\Open3DGC\o3dgcVector.inl">
+    <ClInclude Include="..\contrib\Open3DGC\o3dgcVector.inl">
       <Filter>Contrib\open3dgc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zip\src\miniz.h">
+    <ClInclude Include="..\contrib\zip\src\miniz.h">
       <Filter>ziplib</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\zip\src\zip.h">
+    <ClInclude Include="..\contrib\zip\src\zip.h">
       <Filter>ziplib</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\pugixml\src\pugiconfig.hpp">
+    <ClInclude Include="..\contrib\pugixml\src\pugiconfig.hpp">
       <Filter>Contrib\Pugixml</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\pugixml\src\pugixml.hpp">
+    <ClInclude Include="..\contrib\pugixml\src\pugixml.hpp">
       <Filter>Contrib\Pugixml</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\contrib\stb\stb_image.h">
+    <ClInclude Include="..\contrib\stb\stb_image.h">
       <Filter>Contrib\stb</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\anim.h">
+    <ClInclude Include="..\include\assimp\anim.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\aabb.h">
+    <ClInclude Include="..\include\assimp\aabb.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\ai_assert.h">
+    <ClInclude Include="..\include\assimp\ai_assert.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\camera.h">
+    <ClInclude Include="..\include\assimp\camera.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\color4.h">
+    <ClInclude Include="..\include\assimp\color4.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\color4.inl">
+    <ClInclude Include="..\include\assimp\color4.inl">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\config.h">
+    <ClInclude Include="..\include\assimp\config.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\ColladaMetaData.h">
+    <ClInclude Include="..\include\assimp\ColladaMetaData.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\commonMetaData.h">
+    <ClInclude Include="..\include\assimp\commonMetaData.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\defs.h">
+    <ClInclude Include="..\include\assimp\defs.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Defines.h">
+    <ClInclude Include="..\include\assimp\Defines.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\cfileio.h">
+    <ClInclude Include="..\include\assimp\cfileio.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\light.h">
+    <ClInclude Include="..\include\assimp\light.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\material.h">
+    <ClInclude Include="..\include\assimp\material.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\material.inl">
+    <ClInclude Include="..\include\assimp\material.inl">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\matrix3x3.h">
+    <ClInclude Include="..\include\assimp\matrix3x3.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\matrix3x3.inl">
+    <ClInclude Include="..\include\assimp\matrix3x3.inl">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\matrix4x4.h">
+    <ClInclude Include="..\include\assimp\matrix4x4.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\matrix4x4.inl">
+    <ClInclude Include="..\include\assimp\matrix4x4.inl">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\mesh.h">
+    <ClInclude Include="..\include\assimp\mesh.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\pbrmaterial.h">
+    <ClInclude Include="..\include\assimp\pbrmaterial.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\postprocess.h">
+    <ClInclude Include="..\include\assimp\postprocess.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\quaternion.h">
+    <ClInclude Include="..\include\assimp\quaternion.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\quaternion.inl">
+    <ClInclude Include="..\include\assimp\quaternion.inl">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\scene.h">
+    <ClInclude Include="..\include\assimp\scene.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\metadata.h">
+    <ClInclude Include="..\include\assimp\metadata.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\texture.h">
+    <ClInclude Include="..\include\assimp\texture.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\types.h">
+    <ClInclude Include="..\include\assimp\types.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\vector2.h">
+    <ClInclude Include="..\include\assimp\vector2.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\vector2.inl">
+    <ClInclude Include="..\include\assimp\vector2.inl">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\vector3.h">
+    <ClInclude Include="..\include\assimp\vector3.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\vector3.inl">
+    <ClInclude Include="..\include\assimp\vector3.inl">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\version.h">
+    <ClInclude Include="..\include\assimp\version.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\cimport.h">
+    <ClInclude Include="..\include\assimp\cimport.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\importerdesc.h">
+    <ClInclude Include="..\include\assimp\importerdesc.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Importer.hpp">
+    <ClInclude Include="..\include\assimp\Importer.hpp">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\ProgressHandler.hpp">
+    <ClInclude Include="..\include\assimp\ProgressHandler.hpp">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\IOStream.hpp">
+    <ClInclude Include="..\include\assimp\IOStream.hpp">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\IOSystem.hpp">
+    <ClInclude Include="..\include\assimp\IOSystem.hpp">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\cexport.h">
+    <ClInclude Include="..\include\assimp\cexport.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Exporter.hpp">
+    <ClInclude Include="..\include\assimp\Exporter.hpp">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\DefaultIOStream.h">
+    <ClInclude Include="..\include\assimp\DefaultIOStream.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\DefaultIOSystem.h">
+    <ClInclude Include="..\include\assimp\DefaultIOSystem.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\ZipArchiveIOSystem.h">
+    <ClInclude Include="..\include\assimp\ZipArchiveIOSystem.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\SceneCombiner.h">
+    <ClInclude Include="..\include\assimp\SceneCombiner.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\fast_atof.h">
+    <ClInclude Include="..\include\assimp\fast_atof.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\qnan.h">
+    <ClInclude Include="..\include\assimp\qnan.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\BaseImporter.h">
+    <ClInclude Include="..\include\assimp\BaseImporter.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Hash.h">
+    <ClInclude Include="..\include\assimp\Hash.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\MemoryIOWrapper.h">
+    <ClInclude Include="..\include\assimp\MemoryIOWrapper.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\ParsingUtils.h">
+    <ClInclude Include="..\include\assimp\ParsingUtils.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\StreamReader.h">
+    <ClInclude Include="..\include\assimp\StreamReader.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\StreamWriter.h">
+    <ClInclude Include="..\include\assimp\StreamWriter.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\StringComparison.h">
+    <ClInclude Include="..\include\assimp\StringComparison.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\StringUtils.h">
+    <ClInclude Include="..\include\assimp\StringUtils.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\SGSpatialSort.h">
+    <ClInclude Include="..\include\assimp\SGSpatialSort.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\GenericProperty.h">
+    <ClInclude Include="..\include\assimp\GenericProperty.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\SpatialSort.h">
+    <ClInclude Include="..\include\assimp\SpatialSort.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\SkeletonMeshBuilder.h">
+    <ClInclude Include="..\include\assimp\SkeletonMeshBuilder.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\SmallVector.h">
+    <ClInclude Include="..\include\assimp\SmallVector.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\SmoothingGroups.h">
+    <ClInclude Include="..\include\assimp\SmoothingGroups.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\SmoothingGroups.inl">
+    <ClInclude Include="..\include\assimp\SmoothingGroups.inl">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\StandardShapes.h">
+    <ClInclude Include="..\include\assimp\StandardShapes.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\RemoveComments.h">
+    <ClInclude Include="..\include\assimp\RemoveComments.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Subdivision.h">
+    <ClInclude Include="..\include\assimp\Subdivision.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Vertex.h">
+    <ClInclude Include="..\include\assimp\Vertex.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\LineSplitter.h">
+    <ClInclude Include="..\include\assimp\LineSplitter.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\TinyFormatter.h">
+    <ClInclude Include="..\include\assimp\TinyFormatter.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Profiler.h">
+    <ClInclude Include="..\include\assimp\Profiler.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\LogAux.h">
+    <ClInclude Include="..\include\assimp\LogAux.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Bitmap.h">
+    <ClInclude Include="..\include\assimp\Bitmap.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\XMLTools.h">
+    <ClInclude Include="..\include\assimp\XMLTools.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\IOStreamBuffer.h">
+    <ClInclude Include="..\include\assimp\IOStreamBuffer.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\CreateAnimMesh.h">
+    <ClInclude Include="..\include\assimp\CreateAnimMesh.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\XmlParser.h">
+    <ClInclude Include="..\include\assimp\XmlParser.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\MathFunctions.h">
+    <ClInclude Include="..\include\assimp\MathFunctions.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Exceptional.h">
+    <ClInclude Include="..\include\assimp\Exceptional.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\ByteSwapper.h">
+    <ClInclude Include="..\include\assimp\ByteSwapper.h">
       <Filter>include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Compiler\pushpack1.h">
+    <ClInclude Include="..\include\assimp\Compiler\pushpack1.h">
       <Filter>Compiler</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Compiler\poppack1.h">
+    <ClInclude Include="..\include\assimp\Compiler\poppack1.h">
       <Filter>Compiler</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Projects\temp\assimp\include\assimp\Compiler\pstdint.h">
+    <ClInclude Include="..\include\assimp\Compiler\pstdint.h">
       <Filter>Compiler</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Projects\temp\assimp\code\CMakeLists.txt" />
+    <CustomBuild Include="CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="C:\Projects\temp\assimp\code\res\assimp.rc">
+    <ResourceCompile Include="res\assimp.rc">
       <Filter>Source Files</Filter>
     </ResourceCompile>
   </ItemGroup>

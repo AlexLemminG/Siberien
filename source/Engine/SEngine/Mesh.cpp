@@ -10,6 +10,7 @@
 #include "Animation.h"
 #include "PhysicsSystem.h"//TODO looks weird
 #include "yaml-cpp/yaml.h"
+#include "Compression.h"
 
 
 
@@ -80,7 +81,7 @@ static std::vector<RawVertexData> CalcVerticesFromAiMesh(aiMesh* mesh) {
 		return result;
 	}
 	int numVerts = mesh->mNumVertices;
-	result.resize(numVerts);
+	ResizeVectorNoInit(result, numVerts);
 
 	memset(result.data(), 0, result.size() * sizeof(RawVertexData));
 	ASSERT(mesh->mNumBones < 256);
@@ -157,7 +158,7 @@ std::vector<uint8_t> MeshVertexLayout::CreateBuffer(const std::vector<RawVertexD
 	int strideSrc = sizeof(RawVertexData);
 	int strideDst = bgfxLayout.m_stride;
 	std::vector<uint8_t> buffer;
-	buffer.resize(bgfxLayout.getSize(numVerts));
+	ResizeVectorNoInit(buffer, bgfxLayout.getSize(numVerts));
 
 	for (int i = 0; i < attributes.size(); i++) {
 		auto attribute = attributes[i];
@@ -292,6 +293,14 @@ public:
 		bool bufferLoaded = false;
 		if (!needRebuild) {
 			bufferLoaded = databaseHandle.ReadFromLibraryFile("MeshAsset", buffer);
+			if (bufferLoaded) {
+				BinaryBuffer from = BinaryBuffer(std::move(buffer));
+				BinaryBuffer to;
+				bufferLoaded = Compression::Decompress(from, to);
+				if (bufferLoaded) {
+					buffer = to.ReleaseData();
+				}
+			}
 		}
 		if (bufferLoaded) {
 			auto meshAsset = DeserializeFromBuffer(buffer);
@@ -313,7 +322,14 @@ public:
 		databaseHandle.EnsureForderForLibraryFileExists("MeshAsset");
 
 		databaseHandle.WriteToLibraryFile("meta", metaNode);
-		databaseHandle.WriteToLibraryFile("MeshAsset", buffer);
+
+		{
+			BinaryBuffer from = BinaryBuffer(std::move(buffer));
+			BinaryBuffer to;
+			bool compressed = Compression::Compress(from, to);
+			ASSERT(compressed);
+			databaseHandle.WriteToLibraryFile("MeshAsset", to.GetData());
+		}
 		return meshAsset;
 	}
 
@@ -334,7 +350,7 @@ public:
 
 		int numChildren;
 		buffer.Read(numChildren);
-		node.childNodes.resize(numChildren);
+		ResizeVectorNoInit(node.childNodes, numChildren);
 		for (int i = 0; i < numChildren; i++) {
 			DeserializeFromBuffer(buffer, meshAsset, node.childNodes[i]);
 		}
@@ -354,21 +370,21 @@ public:
 
 			int numIndices;
 			buffer.Read(numIndices);
-			mesh->rawIndices.resize(numIndices);
+			ResizeVectorNoInit(mesh->rawIndices, numIndices);
 			if (numIndices) {
 				buffer.Read((uint8_t*)&mesh->rawIndices[0], numIndices * sizeof(decltype(mesh->rawIndices[0])));
 			}
 
 			int numVertices;
 			buffer.Read(numVertices);
-			mesh->rawVertices.resize(numVertices);
+			ResizeVectorNoInit(mesh->rawVertices, numVertices);
 			if (numVertices) {
 				buffer.Read((uint8_t*)&mesh->rawVertices[0], numVertices * sizeof(decltype(mesh->rawVertices[0])));
 			}
 
 			int numBones;
 			buffer.Read(numBones);
-			mesh->bones.resize(numBones);
+			ResizeVectorNoInit(mesh->bones, numBones);
 			for (int i = 0; i < numBones; i++) {
 				buffer.Read(mesh->bones[i].name);
 				buffer.Read(mesh->bones[i].idx);
@@ -399,7 +415,7 @@ public:
 				buffer.Read(numKeyframes);
 				auto& keyframes = animation->boneNameToKeyframesMapping[boneName];
 				if (numKeyframes) {
-					keyframes.resize(numKeyframes);
+					ResizeVectorNoInit(keyframes, numKeyframes);
 					buffer.Read((uint8_t*)&keyframes[0], sizeof(decltype(keyframes[0])) * numKeyframes);
 				}
 			}
@@ -554,7 +570,7 @@ public:
 			mesh->boundingSphere.pos = mesh->aabb.GetCenter();
 			mesh->boundingSphere.radius = mesh->aabb.GetSize().Length() / 2.f;
 
-			mesh->bones.resize(aiMesh->mNumBones);
+			ResizeVectorNoInit(mesh->bones, aiMesh->mNumBones);
 			std::unordered_map<std::string, int> boneMapping;
 			for (int iBone = 0; iBone < aiMesh->mNumBones; iBone++) {
 				mesh->bones[iBone].idx = iBone;
@@ -613,7 +629,7 @@ public:
 		}
 		dstNode.localTransformMatrix = *(Matrix4*)&(srcNode->mTransformation);
 		dstNode.localTransformMatrix = dstNode.localTransformMatrix.Transpose();
-		dstNode.childNodes.resize(srcNode->mNumChildren);
+		ResizeVectorNoInit(dstNode.childNodes, srcNode->mNumChildren);
 		for (int iChild = 0; iChild < srcNode->mNumChildren; iChild++) {
 			CopyNodesHierarchy(srcScene, srcNode->mChildren[iChild], dstScene, dstNode.childNodes[iChild]);
 		}

@@ -135,7 +135,7 @@ void AssetDatabase::ProcessLoadingQueue() {
 				std::streamsize size = input.tellg();
 				input.seekg(0, std::ios::beg);
 
-				buffer.resize(size);
+				ResizeVectorNoInit(buffer, size);
 				input.read((char*)buffer.data(), size);
 
 				auto treePtr = std::make_shared<ryml::Tree>(ryml::parse(c4::csubstr(&buffer[0], buffer.size())));
@@ -360,7 +360,7 @@ void AssetDatabase_BinaryImporterHandle::WriteToLibraryFile(const std::string& i
 	fout << node;
 }
 
-void AssetDatabase_BinaryImporterHandle::WriteToLibraryFile(const std::string& id, std::vector<uint8_t>& buffer) {
+void AssetDatabase_BinaryImporterHandle::WriteToLibraryFile(const std::string& id, const std::vector<uint8_t>& buffer) {
 	//TODO checks and make sure folder exists
 	const auto fullPath = GetLibraryPathFromId(id);
 	std::ofstream fout(fullPath, std::ios::binary);
@@ -408,7 +408,7 @@ bool AssetDatabase_BinaryImporterHandle::ReadBinary(const std::string& fullPath,
 	std::streamsize size = file.tellg();
 	file.seekg(0, std::ios::beg);
 
-	buffer.resize(size);
+	ResizeVectorNoInit(buffer, size);
 	if (file.read((char*)buffer.data(), size))
 	{
 		return true;

@@ -27,7 +27,7 @@ std::string Engine::GetExeName() {
 	return "Engine2.exe";
 }
 
-bool Engine::IsEditorMode() const { return true; }
+bool Engine::IsEditorMode() const { return false; }
 
 //void LoadDelayed(char* exeName) {
 

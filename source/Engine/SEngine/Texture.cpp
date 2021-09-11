@@ -9,6 +9,7 @@
 #include "Serialization.h"
 #include "bimg/decode.h"
 #include "yaml-cpp/yaml.h"
+#include "Compression.h"
 
 static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
 
@@ -107,6 +108,14 @@ public:
 		bool bufferLoaded = false;
 		if (!needRebuild) {
 			bufferLoaded = databaseHandle.ReadFromLibraryFile("texture", buffer);
+			if (bufferLoaded) {
+				BinaryBuffer from(std::move(buffer));
+				BinaryBuffer to;
+				bool decompressed = Compression::Decompress(from, to);
+				ASSERT(decompressed);
+				buffer = to.ReleaseData();
+				bufferLoaded = decompressed;
+			}
 		}
 
 		if (bufferLoaded) {
@@ -172,6 +181,13 @@ public:
 
 		databaseHandle.WriteToLibraryFile("meta", metaNode);
 		databaseHandle.ReadFromLibraryFile("texture", buffer);
+		{
+			auto from = BinaryBuffer(std::move(buffer));
+			BinaryBuffer to;
+			Compression::Compress(from, to);
+			databaseHandle.WriteToLibraryFile("texture", to.ReleaseData());
+			buffer = from.ReleaseData();
+		}
 		return buffer;
 	}
 

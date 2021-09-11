@@ -147,7 +147,7 @@ void PhysicsSystem::SerializeMeshPhysicsDataToBuffer(std::vector<std::shared_ptr
 		}
 		auto bvh = mesh->physicsData->triangleShape->getOptimizedBvh();
 		int size = bvh->calculateSerializeBufferSize();
-		tempBuffer.resize(size);
+		ResizeVectorNoInit(tempBuffer, size);
 		buffer.Write(size);
 		if (size) {
 			bvh->serialize(&tempBuffer[0], tempBuffer.size(), false);
@@ -173,7 +173,7 @@ void PhysicsSystem::DeserializeMeshPhysicsDataFromBuffer(std::vector<std::shared
 		int size;
 		buffer.Read(size);
 		if (size) {
-			mesh->physicsData->triangleShapeBuffer.resize(size);//TODO dich
+			ResizeVectorNoInit(mesh->physicsData->triangleShapeBuffer, size);//TODO dich
 			buffer.Read(&mesh->physicsData->triangleShapeBuffer[0], size);
 
 			btOptimizedBvh* bvh = btOptimizedBvh::deSerializeInPlace(&mesh->physicsData->triangleShapeBuffer[0], size, false);

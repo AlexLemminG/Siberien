@@ -43,7 +43,7 @@ public:
 	bool ReadMeta(YAML::Node& node);
 
 	void WriteToLibraryFile(const std::string& id, const YAML::Node& node);
-	void WriteToLibraryFile(const std::string& id, std::vector<uint8_t>& buffer);
+	void WriteToLibraryFile(const std::string& id, const std::vector<uint8_t>& buffer);
 	bool ReadFromLibraryFile(const std::string& id, YAML::Node& node);
 	bool ReadFromLibraryFile(const std::string& id, std::vector<uint8_t>& buffer);
 	std::string GetToolPath(std::string toolName);
