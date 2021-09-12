@@ -5,9 +5,7 @@
 
 class ZombiepunkGame : public GameSystem<ZombiepunkGame> {
 public:
-	bool IsGodMode() {
-		return false;//TODO
-	}
+	bool IsGodMode();
 };
 
 

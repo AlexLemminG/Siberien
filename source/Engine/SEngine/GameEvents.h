@@ -20,7 +20,10 @@ public:
 	}
 	void Unsubscribe(GameEventHandle handle) {
 		auto l = [handle](const HandleWithHandler& x) { return x.handleId == handle.id; };
-		handlers.erase(std::remove_if(handlers.begin(), handlers.end(), l));
+		auto it = std::find_if(handlers.begin(), handlers.end(), l);
+		if (it != handlers.end()) {
+			handlers.erase(it);
+		}
 	}
 	void Invoke(Args... args) {
 		for (HandleWithHandler& handler : handlers) {

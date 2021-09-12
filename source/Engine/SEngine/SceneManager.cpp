@@ -69,4 +69,5 @@ void SceneManager::Term() {
 	OPTICK_EVENT();
 	LoadScene("-");
 	Update();
+	onSceneLoaded.UnsubscribeAll();
 }
