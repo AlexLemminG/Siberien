@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\alexl\Downloads\recastnavigation-master\Detour\Bin\CMakeFiles\e8bf480ba05e155a1f2ce33d7ad9426b\INSTALL_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{15D3FFFD-BDDE-3E27-B05E-94B9E7207D62}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

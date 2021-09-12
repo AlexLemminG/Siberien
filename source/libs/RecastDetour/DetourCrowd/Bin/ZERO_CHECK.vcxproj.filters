@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Projects\Siberien\source\libs\RecastDetour\DetourCrowd\Bin\CMakeFiles\b74c21bf4289c50485fe36ceb0386c0c\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{DE640954-EB30-3EC9-B9D8-65D30392545D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

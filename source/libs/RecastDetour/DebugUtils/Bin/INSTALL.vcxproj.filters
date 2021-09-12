@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Projects\Siberien\source\libs\RecastDetour\DebugUtils\Bin\CMakeFiles\e26b76cfd233ffce6f5d841d3141a088\INSTALL_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{2CE56F8E-0B71-3AB6-B68C-49C4706C1A44}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

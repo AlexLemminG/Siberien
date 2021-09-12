@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\Source\DetourAlloc.cpp" />
+    <ClCompile Include="..\Source\DetourAssert.cpp" />
+    <ClCompile Include="..\Source\DetourCommon.cpp" />
+    <ClCompile Include="..\Source\DetourNavMesh.cpp" />
+    <ClCompile Include="..\Source\DetourNavMeshBuilder.cpp" />
+    <ClCompile Include="..\Source\DetourNavMeshQuery.cpp" />
+    <ClCompile Include="..\Source\DetourNode.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{A11E1051-D7AF-3CDE-9278-73A71BE8703D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

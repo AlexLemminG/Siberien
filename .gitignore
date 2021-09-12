@@ -1,4 +1,4 @@
-bin
-temp
-library
+/bin/
+/temp/
+/library/
 renderdoc.dll
