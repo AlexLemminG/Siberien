@@ -23,7 +23,7 @@ void RigidBody::OnEnable() {
 		return;
 	}
 
-	transform = gameObject()->transform().get();
+	auto transform = gameObject()->transform();
 	if (!transform) {
 		return;
 	}
@@ -55,7 +55,7 @@ void RigidBody::OnEnable() {
 		pBody->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
 	}
 
-	pBody->setUserPointer(this);
+	pBody->setUserPointer(gameObject().get());
 
 	//add the body to the dynamics world
 	int group;
@@ -70,13 +70,13 @@ void RigidBody::Update() {
 	//TODO isStatic means not kinematic!!!
 	if (!isStatic) {
 		auto matr = btConvert(pMotionState->m_graphicsWorldTrans);
-		auto scale = transform->GetScale();
+		auto scale = GetScale(gameObject()->transform()->matrix);
 		SetScale(matr, scale);
 		//TODO not so persistent
-		transform->matrix = matr;
+		gameObject()->transform()->matrix = matr;
 	}
 	else if (isKinematic) {
-		auto trans = btConvert(transform->matrix);
+		auto trans = btConvert(gameObject()->transform()->matrix);
 		pMotionState->m_graphicsWorldTrans = trans;
 		//pBody->setCenterOfMassTransform(trans);
 	}

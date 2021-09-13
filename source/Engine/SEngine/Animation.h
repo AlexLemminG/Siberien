@@ -27,12 +27,8 @@ class MeshAnimation : public Object {
 public:
 	std::string name;
 	AnimationTransform GetTransform(const std::string& bone, float t);
-	AnimationTransform GetTransform(int channelIdx, float t);
 
-	int GetBoneIdx(const std::string& bone);
-
-	std::vector<std::string> channelNames;
-	std::vector<std::vector<AnimationKeyframe>> channelKeyframes;
+	std::unordered_map<std::string, std::vector<AnimationKeyframe>> boneNameToKeyframesMapping;
 
 	void DeserializeFromAssimp(aiAnimation* anim);
 

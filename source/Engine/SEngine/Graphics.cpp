@@ -36,8 +36,8 @@ void Graphics::Blit(std::shared_ptr<Material> material, int targetViewId) {
 	if (!material || !material->shader) {
 		return;
 	}
-
-	render->ApplyMaterialProperties(material.get());
+	
+	render->ApplyMaterialProperties(material);
 
 	auto s_tex = render->GetTexColorSampler();
 

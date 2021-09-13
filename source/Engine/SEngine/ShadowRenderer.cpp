@@ -428,7 +428,6 @@ void ShadowRenderer::Term() {
 
 void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 {
-	OPTICK_EVENT();
 	if (!light->drawShadows) {
 		return;
 	}
@@ -1243,7 +1242,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	v = Vector4(1, 1, 0, 0);
 	bgfx::setUniform(render->GetOrCreateVectorUniform("u_params0"), &v.x);
 
-	v = Vector4(light->shadowBias, 0.001f, 0.7f, 500.0f);
+	v = Vector4(0.0012f, 0.001f, 0.7f, 500.0f);
 	bgfx::setUniform(render->GetOrCreateVectorUniform("u_params1"), &v.x);
 
 	v = Vector4(1, 0, 1.f / shadowMapSize, 0);

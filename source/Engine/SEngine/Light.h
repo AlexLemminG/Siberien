@@ -9,11 +9,9 @@ public:
 	//TODO fix full everything is in shadow when drawShadows==false
 	//TODO shadows for pointLight
 	bool drawShadows = false;
-	float shadowBias = 0.0012f;
 	REFLECT_BEGIN(Light, Component);
 	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
-	REFLECT_VAR(color);
-	REFLECT_VAR(shadowBias);
+	REFLECT_VAR(color)
 	REFLECT_VAR(drawShadows);
 	REFLECT_END();
 };

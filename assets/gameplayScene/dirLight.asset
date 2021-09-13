@@ -6,7 +6,6 @@ GameObject:
 DirLight:
   color: 0x000522ff
   drawShadows: true
-  shadowBias: 0.0012
   
 Transform:
   euler: [60, 135, 0]

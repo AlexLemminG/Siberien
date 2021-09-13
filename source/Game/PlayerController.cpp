@@ -135,6 +135,7 @@ void PlayerController::Update() {
 		}
 	}
 
+	UpdateZombiesAttacking();
 
 	UpdateHealth();
 
@@ -156,8 +157,7 @@ void PlayerController::FixedUpdate() {
 	if (isDead) {
 		return;
 	}
-	
-	UpdateZombiesAttacking();
+
 	UpdateMovement();
 	UpdateLook();
 
@@ -417,8 +417,7 @@ void PlayerController::SetWon() {
 DECLARE_TEXT_ASSET(PlayerController);
 
 void PlayerController::UpdateZombiesAttacking() {
-	auto layer = Physics::GetLayerAsMask("enemy");
-	auto nearby = Physics::OverlapSphere(gameObject()->transform()->GetPosition(), 1.5f, layer);
+	auto nearby = Physics::OveplapSphere(gameObject()->transform()->GetPosition(), 1.5f);
 	for (auto rb : nearby) {
 		auto creep = rb->gameObject()->GetComponent<EnemyCreepController>();
 		if (!creep) {

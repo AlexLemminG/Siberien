@@ -473,7 +473,7 @@ void Render::Draw(SystemsManager& systems)
 		if (!defferedCombineMaterial || !defferedCombineMaterial->shader) {
 			return;
 		}
-		ApplyMaterialProperties(defferedCombineMaterial.get());
+		ApplyMaterialProperties(defferedCombineMaterial);
 
 		bgfx::setTexture(0, gBuffer.albedoSampler, gBuffer.albedoTexture);
 		bgfx::setTexture(1, gBuffer.normalSampler, gBuffer.normalTexture);
@@ -660,13 +660,12 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 			const auto& mesh = MeshRenderer::enabledMeshRenderers[i];
 			const auto& meshNext = MeshRenderer::enabledMeshRenderers[i + 1];
 			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
-			bool drawn = DrawMesh(mesh, mesh->material.get(), camera, !nextEq, !nextEq, !prevEq, !prevEq, viewId);
+			bool drawn = DrawMesh(mesh, camera, !nextEq, !prevEq, viewId);
 			prevEq = nextEq && drawn;
 		}
 		//TODO do we really need this ?
 		if (MeshRenderer::enabledMeshRenderers.size() > 0) {
-			const auto& mesh = MeshRenderer::enabledMeshRenderers[MeshRenderer::enabledMeshRenderers.size() - 1];
-			DrawMesh(mesh, mesh->material.get(), camera, true, true, !prevEq, !prevEq, viewId);
+			DrawMesh(MeshRenderer::enabledMeshRenderers[MeshRenderer::enabledMeshRenderers.size() - 1], camera, true, !prevEq, viewId);
 		}
 	}
 	else {
@@ -676,35 +675,37 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 			return r1->mesh.get() < r2->mesh.get();
 		};
 		{
-			//assuming renderers are already sorted by mesh type
-			// 
-			//OPTICK_EVENT("SortRenderers");
-			//auto& renderers = MeshRenderer::enabledMeshRenderers;
-			//std::sort(renderers.begin(), renderers.end(), renderersSort);
+			OPTICK_EVENT("SortRenderers");
+			auto& renderers = MeshRenderer::enabledMeshRenderers;
+			std::sort(renderers.begin(), renderers.end(), renderersSort);
 		}
 
 
 		OPTICK_EVENT("DrawRenderers");
 		bool prevEq = false;
-		bool materialApplied = false;//TODO dsplit drawMesh into bind material / bind mesh / submit / clear
 		//TODO get rid of std::vector / std::string
 		for (int i = 0; i < ((int)MeshRenderer::enabledMeshRenderers.size() - 1); i++) {
 			const auto& mesh = MeshRenderer::enabledMeshRenderers[i];
 			const auto& meshNext = MeshRenderer::enabledMeshRenderers[i + 1];
 			//TODO optimize
+			auto mat = mesh->material;
+			mesh->material = overrideMaterial;
 			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
-			bool drawn = DrawMesh(mesh, overrideMaterial.get(), camera, false, !nextEq, !materialApplied, !prevEq, viewId);
+			bool drawn = DrawMesh(mesh, camera, !nextEq, !prevEq, viewId);
+			mesh->material = mat;
 			prevEq = nextEq && drawn;
-			materialApplied |= drawn;
 		}
 		if (MeshRenderer::enabledMeshRenderers.size() > 0) {
 			const auto& mesh = MeshRenderer::enabledMeshRenderers[MeshRenderer::enabledMeshRenderers.size() - 1];
-			DrawMesh(mesh, overrideMaterial.get(), camera, true, true, !materialApplied, !prevEq, viewId);
+			auto mat = mesh->material;
+			mesh->material = overrideMaterial;
+			DrawMesh(mesh, camera, true, !prevEq, viewId);
+			mesh->material = mat;
 		}
 	}
 }
 
-bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId) {
+bool Render::DrawMesh(const MeshRenderer* renderer, const ICamera& camera, bool clearState, bool updateState, int viewId) {
 	const auto& matrix = renderer->m_transform->matrix;
 	{
 		bool isVisible = camera.IsVisible(*renderer);
@@ -722,11 +723,11 @@ bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, co
 		bgfx::setTransform(&matrix);
 	}
 
-	if (updateMaterialState) {
-		ApplyMaterialProperties(material);
-		if (material->colorTex) {
-			if (material->randomColorTextures.size() > 0) {
-				bgfx::setTexture(0, s_texColor, material->randomColorTextures[renderer->randomColorTextureIdx]->handle);
+	if (updateState) {
+		ApplyMaterialProperties(renderer->material);
+		if (renderer->material->colorTex) {
+			if (renderer->material->randomColorTextures.size() > 0) {
+				bgfx::setTexture(0, s_texColor, renderer->material->randomColorTextures[renderer->randomColorTextureIdx]->handle);
 			}
 		}
 
@@ -741,27 +742,16 @@ bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, co
 			| BGFX_STATE_CULL_CCW
 			;
 		bgfx::setState(state);
-	}
-	if (updateMeshState) {
 		bgfx::setVertexBuffer(0, renderer->mesh->vertexBuffer);
 		bgfx::setIndexBuffer(renderer->mesh->indexBuffer);
 	}
 
-	auto discardFlags = BGFX_DISCARD_NONE;
-	if (clearMaterialState) {
-		discardFlags = Bits::SetMaskTrue(discardFlags, BGFX_DISCARD_BINDINGS | BGFX_DISCARD_STATE);
-	}
-	if (clearMeshState) {
-		discardFlags = Bits::SetMaskTrue(discardFlags, BGFX_DISCARD_INDEX_BUFFER | BGFX_DISCARD_VERTEX_STREAMS);
-	}
-	if (clearMaterialState && clearMeshState) {
-		discardFlags = Bits::SetMaskTrue(discardFlags, BGFX_DISCARD_ALL);
-	}
-	bgfx::submit(viewId, material->shader->program, 0u, discardFlags);
+	auto discardFlags = clearState ? BGFX_DISCARD_ALL : BGFX_DISCARD_NONE;
+	bgfx::submit(viewId, renderer->material->shader->program, 0u, discardFlags);
 	return true;
 }
 
-void Render::ApplyMaterialProperties(const Material* material) {
+void Render::ApplyMaterialProperties(const std::shared_ptr<Material> material) {
 	bgfx::setUniform(u_color, &material->color);
 
 	if (material->colorTex) {

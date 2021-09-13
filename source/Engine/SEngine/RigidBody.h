@@ -5,7 +5,6 @@
 
 struct btDefaultMotionState;
 class btRigidBody;
-class Transform;
 
 class SE_CPP_API RigidBody : public Component {
 public:
@@ -71,7 +70,6 @@ public:
 private:
 	btDefaultMotionState* pMotionState = nullptr;
 	btRigidBody* pBody = nullptr;
-	Transform* transform = nullptr;
 
 	bool isKinematic = false;
 	float mass = 1.f;

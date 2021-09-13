@@ -38,25 +38,16 @@ void AnimationTransform::ToMatrix(Matrix4& matrix) {
 }
 
 
-int MeshAnimation::GetBoneIdx(const std::string& bone) {
-	auto it = std::find(channelNames.begin(), channelNames.end(), bone);
-	if (it != channelNames.end()) {
-		return it - channelNames.begin();
-	}
-	return -1;
-}
 
 AnimationTransform MeshAnimation::GetTransform(const std::string& bone, float t) {
-	auto idx = GetBoneIdx(bone);
-	if (idx != -1) {
-		return GetTransform(idx, t);
-	}
-	ASSERT(false);
-	return AnimationTransform{};//TODO just return false
-}
 
-AnimationTransform MeshAnimation::GetTransform(int channelIdx, float t) {
-	auto& channel = channelKeyframes[channelIdx];
+	auto it = boneNameToKeyframesMapping.find(bone);
+	if (it == boneNameToKeyframesMapping.end()) {
+		ASSERT(false);
+		return AnimationTransform{};//TODO just return false
+	}
+
+	auto& channel = it->second;
 	t = Mathf::Repeat(t, channel[channel.size() - 1].time);
 
 	auto lowerBound = std::lower_bound(channel.begin(), channel.end(), t, [](const auto& keyframe, float time) {return keyframe.time < time; });
@@ -64,7 +55,7 @@ AnimationTransform MeshAnimation::GetTransform(int channelIdx, float t) {
 	if (iBefore > 0) {
 		iBefore--;
 	}
-	if (lowerBound == channel.end() || iBefore == channel.size() - 1) {
+	if (lowerBound == channel.end() || iBefore == channel.size()-1) {
 		return channel[channel.size() - 1].transform;
 	}
 	else {
@@ -80,7 +71,7 @@ void MeshAnimation::DeserializeFromAssimp(aiAnimation* anim) {
 		animName = animName.substr(armaturePrefix.size(), animName.size() - armaturePrefix.size());
 	}
 	name = animName;
-
+	
 	for (int iChannel = 0; iChannel < anim->mNumChannels; iChannel++) {
 		auto channel = anim->mChannels[iChannel];
 		std::vector<double> times;
@@ -96,8 +87,7 @@ void MeshAnimation::DeserializeFromAssimp(aiAnimation* anim) {
 		std::sort(times.begin(), times.end());
 		times.erase(std::unique(times.begin(), times.end()), times.end());
 
-		channelNames.push_back(channel->mNodeName.C_Str());
-		auto& keyframes = channelKeyframes.emplace_back();
+		auto& keyframes = boneNameToKeyframesMapping[channel->mNodeName.C_Str()];
 
 		for (auto t : times) {
 			//TODO probably has errors
@@ -121,6 +111,7 @@ AnimationTransform AnimationTransform::Lerp(const AnimationTransform& a, const A
 }
 
 void Animator::Update() {
+	auto meshRenderer = gameObject()->GetComponent<MeshRenderer>();
 	if (!meshRenderer) {
 		return;
 	}
@@ -133,10 +124,18 @@ void Animator::Update() {
 		currentTime += Time::deltaTime() * speed;
 		for (auto& bone : mesh->bones) {
 			auto transform = currentAnimation->GetTransform(bone.name, currentTime);
+			transform.rotation = bone.inverseTPoseRotation * transform.rotation;
 			transform.ToMatrix(meshRenderer->bonesLocalMatrices[bone.idx]);
+
+			//SetRot(meshRenderer->bonesLocalMatrices[bone.idx], GetRot(bone.initialLocal));//TODO f this shit
 		}
 	}
 	UpdateWorldMatrices();
+
+
+	for (auto bone : meshRenderer->bonesWorldMatrices) {
+		//Dbg::Draw(bone, 5);
+	}
 }
 
 void Animator::OnEnable() {

@@ -180,7 +180,7 @@ public:
 	void DrawInspector(char* object, std::string name, ReflectedTypeBase* type) {
 		if (type->GetName() == ::GetReflectedType<float>()->GetName()) {
 			float* f = (float*)(object);
-			ImGui::DragFloat(name.c_str(), f, 0.1f, 0.f, 0.f, "%.5f", ImGuiSliderFlags_NoRoundToFormat);
+			ImGui::DragFloat(name.c_str(), f, 0.1f);
 		}
 		else if (type->GetName() == ::GetReflectedType<int>()->GetName()) {
 			int* i = (int*)(object);

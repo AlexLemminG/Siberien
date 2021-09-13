@@ -32,7 +32,7 @@ public:
 	//TODO make non static
 	static SDL_Window* window;
 
-	void ApplyMaterialProperties(const Material* material);
+	void ApplyMaterialProperties(const std::shared_ptr<Material> material);
 	
 	//TODO move viewId to camera
 	void DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial);
@@ -59,7 +59,7 @@ private:
 	};
 	GBuffer gBuffer;
 	
-	bool DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId = 0); //returns true if was not culled
+	bool DrawMesh(const MeshRenderer* renderer, const ICamera& camera, bool clearState, bool updateState, int viewId = 0); //returns true if was not culled
 	void UpdateLights(Vector3 poi);
 	
 	bool IsFullScreen();
