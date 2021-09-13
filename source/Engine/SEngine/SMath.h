@@ -118,6 +118,9 @@ public:
 		return a + (b - a) * Clamp01(t);
 	}
 	static Quaternion Lerp(const Quaternion& a, const Quaternion& b, float t) {
+		return Quaternion(Lerp(a.scalar(), b.scalar(), t), Lerp(a.vector(), b.vector(), t));
+	}
+	static Quaternion Slerp(const Quaternion& a, const Quaternion& b, float t) {
 		return Quaternion::Slerp(a, b, Clamp01(t));
 	}
 	static float Lerp(const float& a, const float& b, float t) {

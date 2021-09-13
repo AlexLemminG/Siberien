@@ -51,7 +51,6 @@ public:
 		int parentBoneIdx = -1;
 		Matrix4 offset;
 		Matrix4 initialLocal;
-		Quaternion inverseTPoseRotation;
 	};
 
 	bgfx::VertexBufferHandle vertexBuffer = BGFX_INVALID_HANDLE;

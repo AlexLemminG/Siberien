@@ -129,7 +129,7 @@ static std::vector<RawVertexData> CalcVerticesFromAiMesh(aiMesh* mesh) {
 			vertex.normal.y = aiNormal.y;
 			vertex.normal.z = aiNormal.z;
 		}
-		if(mesh->mTextureCoords[0]){
+		if (mesh->mTextureCoords[0]) {
 			const auto& aiTexCoord = mesh->mTextureCoords[0][i];
 			vertex.uv.x = aiTexCoord.x;
 			vertex.uv.y = aiTexCoord.y;
@@ -138,7 +138,7 @@ static std::vector<RawVertexData> CalcVerticesFromAiMesh(aiMesh* mesh) {
 			vertex.uv.x = 0.f;
 			vertex.uv.y = 0.f;
 		}
-		if(mesh->mTangents){
+		if (mesh->mTangents) {
 			const auto& aiTangent = mesh->mTangents[i];
 			vertex.tangent.x = aiTangent.x;
 			vertex.tangent.y = aiTangent.y;
@@ -391,7 +391,6 @@ public:
 				buffer.Read(mesh->bones[i].parentBoneIdx);
 				buffer.Read(mesh->bones[i].offset);
 				buffer.Read(mesh->bones[i].initialLocal);
-				buffer.Read(mesh->bones[i].inverseTPoseRotation);
 			}
 
 			buffer.Read(mesh->aabb);
@@ -411,9 +410,10 @@ public:
 			for (int i = 0; i < numBones; i++) {
 				std::string boneName;
 				buffer.Read(boneName);
+				animation->channelNames.push_back(boneName);
 				int numKeyframes;
 				buffer.Read(numKeyframes);
-				auto& keyframes = animation->boneNameToKeyframesMapping[boneName];
+				auto& keyframes = animation->channelKeyframes.emplace_back();
 				if (numKeyframes) {
 					ResizeVectorNoInit(keyframes, numKeyframes);
 					buffer.Read((uint8_t*)&keyframes[0], sizeof(decltype(keyframes[0])) * numKeyframes);
@@ -475,7 +475,6 @@ public:
 				buffer.Write(mesh->bones[i].parentBoneIdx);
 				buffer.Write(mesh->bones[i].offset);
 				buffer.Write(mesh->bones[i].initialLocal);
-				buffer.Write(mesh->bones[i].inverseTPoseRotation);
 			}
 
 			buffer.Write(mesh->aabb);
@@ -489,12 +488,12 @@ public:
 			std::string name = animation->name;
 			buffer.Write(name);
 
-			int numBones = animation->boneNameToKeyframesMapping.size();
+			int numBones = animation->channelNames.size();
 			buffer.Write(numBones);
-			for (const auto& it : animation->boneNameToKeyframesMapping) {
-				const std::string& boneName = it.first;
+			for (int iBone = 0; iBone < numBones; iBone++) {
+				const std::string& boneName = animation->channelNames[iBone];
 				buffer.Write(boneName);
-				const auto& keyframes = it.second;
+				const auto& keyframes = animation->channelKeyframes[iBone];
 				int numKeyframes = keyframes.size();
 				buffer.Write(numKeyframes);
 				if (numKeyframes) {
@@ -592,14 +591,6 @@ public:
 				}
 				mesh->bones[iBone].initialLocal = *(Matrix4*)(void*)(&(aiMesh->mBones[iBone]->mNode->mTransformation.a1));
 				mesh->bones[iBone].initialLocal = mesh->bones[iBone].initialLocal.Transpose();
-			}
-
-			auto tPoseAnim = animations["TPose"];
-			for (int iBone = 0; iBone < aiMesh->mNumBones; iBone++) {
-				if (tPoseAnim) {
-					auto transform = tPoseAnim->GetTransform(mesh->bones[iBone].name, 0.f);
-					mesh->bones[iBone].inverseTPoseRotation = GetRot(mesh->bones[iBone].initialLocal) * transform.rotation.Inverse();
-				}
 			}
 
 			PhysicsSystem::Get()->CalcMeshPhysicsDataFromBuffer(mesh);

@@ -58,8 +58,8 @@ public:
 };
 
 
-std::vector<std::shared_ptr<RigidBody>> Physics::OveplapSphere(const Vector3& pos, float radius) {
-	std::vector<std::shared_ptr<RigidBody>> results;
+std::vector<RigidBody*> Physics::OverlapSphere(const Vector3& pos, float radius, int layerMask) {
+	std::vector<RigidBody*> results;
 
 	btSphereShape sphere(radius);
 	btPairCachingGhostObject ghost;
@@ -69,31 +69,24 @@ std::vector<std::shared_ptr<RigidBody>> Physics::OveplapSphere(const Vector3& po
 	ghost.setWorldTransform(xform);
 
 	GetAllContacts_ContactResultCallback cb;
-	//TODO layer as parameter
-	cb.m_collisionFilterGroup = -1;
-	cb.m_collisionFilterMask = -1;
+	cb.m_collisionFilterMask = layerMask;
 	PhysicsSystem::Get()->dynamicsWorld->contactTest(&ghost, cb);
 
 	//TODO may contain doubles 
 
 	for (auto o : cb.objects) {
-		auto* rb = dynamic_cast<btRigidBody*>(o);
+		auto* rb = o;
 		if (rb) {
 			auto ptr = rb->getUserPointer();
-			auto go = (GameObject*)(ptr);
-			if (go) {
-				auto rb = go->GetComponent<RigidBody>();
-				if (rb) {
-					results.push_back(rb);
-				}
-				else {
-					ASSERT(false);
-				}
+			auto rb = (RigidBody*)(ptr);
+			if (rb) {
+				results.push_back(rb);
+			}
+			else {
+				ASSERT(false);
 			}
 		}
 	}
-	PhysicsSystem::Get()->dynamicsWorld->removeCollisionObject(&ghost);
-
 	return results;
 }
 
@@ -105,19 +98,22 @@ void Physics::SetGravity(const Vector3& gravity) {
 	PhysicsSystem::Get()->dynamicsWorld->setGravity(btConvert(gravity));
 }
 
-std::shared_ptr<RigidBody> Physics::GetRigidBody(const btCollisionObject* collisionObject) {
+RigidBody* Physics::GetRigidBody(const btCollisionObject* collisionObject) {
 	if (!collisionObject) {
 		return nullptr;
 	}
-	auto go = (GameObject*)collisionObject->getUserPointer();
-	if (!go) {
-		return nullptr;
-	}
-	return go->GetComponent<RigidBody>();
+	auto rb = (RigidBody*)collisionObject->getUserPointer();
+	return rb;
 }
 int Physics::GetLayerCollisionMask(const std::string& layer) {
 	int group;
 	int mask;
 	PhysicsSystem::Get()->GetGroupAndMask(layer, group, mask);
 	return mask;
+}
+int Physics::GetLayerAsMask(const std::string& layer) {
+	int group;
+	int mask;
+	PhysicsSystem::Get()->GetGroupAndMask(layer, group, mask);
+	return group;
 }

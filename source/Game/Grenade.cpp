@@ -14,7 +14,7 @@ void Grenade::ThrowAt(Vector3 pos) {
 void Grenade::FlyAt(Vector3 pos) {}
 
 void Grenade::OnEnable() {
-	if(explodeOnCollision){
+	if (explodeOnCollision) {
 		explodeTimer = FLT_MAX;
 	}
 	else {
@@ -46,7 +46,7 @@ void Grenade::Update() {
 
 void Grenade::Explode() {
 	auto pos = gameObject()->transform()->GetPosition();
-	auto rbs = Physics::OveplapSphere(pos, radius);
+	auto rbs = Physics::OverlapSphere(pos, radius);
 	auto player = Scene::Get()->FindGameObjectByTag("Player");
 	for (auto rb : rbs) {
 		auto go = rb->gameObject();
