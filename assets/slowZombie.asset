@@ -28,7 +28,7 @@ EnemyCreepController:
   deadAnimation: meshes/zombie.glb$DeadFake
 SphereCollider:
   radius: 0.8
-  center: [0, 0.6, 0]
+  center: [0, 0.8, 0]
 RigidBody:
   isStatic: false
   friction: 0.0
