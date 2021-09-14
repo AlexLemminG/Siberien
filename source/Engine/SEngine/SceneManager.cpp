@@ -71,3 +71,10 @@ void SceneManager::Term() {
 	Update();
 	onSceneLoaded.UnsubscribeAll();
 }
+
+std::shared_ptr<Scene> SceneManager::GetCurrentScene() { return currentScene; }
+
+std::string SceneManager::GetCurrentScenePath() { 
+
+	return currentScene != nullptr ? currentScene->name : "-"; 
+}

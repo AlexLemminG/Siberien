@@ -17,6 +17,7 @@
 #include "Resources.h"
 #include "Dbg.h"
 #include "DbgVars.h"
+#include <windows.h>
 
 
 class DebugDrawer :public duDebugDraw {
@@ -609,13 +610,27 @@ void NavMesh::LoadOrBuild() {
 		Save();
 	}
 }
-
+//TODO remove
+static void EnsureForderForLibraryFileExists(std::string fullPath) {
+	auto firstFolder = fullPath.find_first_of("\\");
+	for (int i = 0; i < fullPath.size(); i++) {
+		if (fullPath[i] == '\\') {
+			auto subpath = fullPath.substr(0, i);
+			CreateDirectoryA(subpath.c_str(), NULL);
+		}
+	}
+}
 void NavMesh::Save() {
 	if (!m_navMesh) {
 		return;
 	}
 	//TODO use database
-	std::string path = "library\\navmesh.bin";
+	auto sceneName = SceneManager::GetCurrentScenePath();
+	std::string path;
+	path += "library\\";
+	path += SceneManager::GetCurrentScenePath();
+	path += "\\navmesh.bin";
+	EnsureForderForLibraryFileExists(path);
 
 	FILE* fp = fopen(path.c_str(), "wb");
 	if (!fp)
@@ -656,7 +671,10 @@ void NavMesh::Save() {
 bool NavMesh::Load() {
 
 	//TODO use database
-	std::string path = "library\\navmesh.bin";
+	std::string path;
+	path += "library\\";
+	path += SceneManager::GetCurrentScenePath();
+	path += "\\navmesh.bin";
 
 	FILE* fp = fopen(path.c_str(), "rb");
 	if (!fp) return 0;

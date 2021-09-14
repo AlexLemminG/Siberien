@@ -15,10 +15,12 @@ public:
 	static void Update();
 	static void Term();
 
-	static std::shared_ptr<Scene> GetCurrentScene() { return currentScene; }
+	static std::shared_ptr<Scene> GetCurrentScene();
+	static std::string GetCurrentScenePath();
 
+	static GameEvent<> onSceneLoaded;
+private:
 	//TODO less static stuff
 	static std::string lastLoadRequest;
 	static std::shared_ptr<Scene> currentScene;
-	static GameEvent<> onSceneLoaded;
 };
