@@ -26,7 +26,11 @@ public:
 	int GetWidth() { return prevWidth; }
 	int GetHeight() { return prevHeight; }
 	bgfx::UniformHandle GetTexColorSampler() { return s_texColor; }
-	bgfx::TextureHandle GetFullScreenTexture() { return m_fullScreenTex; }
+
+	bgfx::TextureHandle GetCurrentFullScreenTexture() const;
+	bgfx::TextureHandle GetNextFullScreenTexture() const;
+	int GetNextFullScreenTextureViewId() const;
+	void FlipFullScreenTextures();
 
 	//The window we'll be rendering to
 	//TODO make non static
@@ -58,6 +62,8 @@ private:
 		bgfx::UniformHandle depthSampler;
 	};
 	GBuffer gBuffer;
+
+	int currentFreeViewId = 0;
 	
 	bool DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId = 0); //returns true if was not culled
 	void UpdateLights(Vector3 poi);
@@ -95,6 +101,9 @@ private:
 
 	bgfx::FrameBufferHandle m_fullScreenBuffer;
 	bgfx::TextureHandle m_fullScreenTex;
+	bgfx::FrameBufferHandle m_fullScreenBuffer2;
+	bgfx::TextureHandle m_fullScreenTex2;
+	int currentFullScreenTextureIdx = 0;
 	
 	static constexpr int maxLightsCount = 8;
 	bgfx::UniformHandle u_lightPosRadius;

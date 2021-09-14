@@ -42,11 +42,13 @@ SDL_Window* Render::window = nullptr;
 
 //TODO deal with viewId ordering from other systems
 constexpr bgfx::ViewId kRenderPassGeometry = 0;
-constexpr bgfx::ViewId kRenderPassClearUav = 1;
+constexpr bgfx::ViewId kRenderPassBlitToScreen = 1;
 constexpr bgfx::ViewId kRenderPassLight = 10;
-constexpr bgfx::ViewId kRenderPassCombine = 11;
 constexpr bgfx::ViewId kRenderPassDebugLights = 12;
 constexpr bgfx::ViewId kRenderPassDebugGBuffer = 13;
+constexpr bgfx::ViewId kRenderPassFullScreen1 = 14;
+constexpr bgfx::ViewId kRenderPassFullScreen2 = 15;
+constexpr bgfx::ViewId kRenderPassFree = 16;
 
 
 bool Render::IsFullScreen() {
@@ -211,8 +213,8 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = false;//TODO cfgvar?
-	initInfo.profile = false;
+	initInfo.debug = true;//TODO cfgvar?
+	initInfo.profile = true;
 	initInfo.type = bgfx::RendererType::Direct3D11;
 #ifdef SE_DBG_OUT
 	initInfo.limits.transientVbSize *= 10;//TODO debug only
@@ -248,6 +250,8 @@ bool Render::Init()
 
 	m_fullScreenTex.idx = bgfx::kInvalidHandle;
 	m_fullScreenBuffer.idx = bgfx::kInvalidHandle;
+	m_fullScreenTex2.idx = bgfx::kInvalidHandle;
+	m_fullScreenBuffer2.idx = bgfx::kInvalidHandle;
 	gBuffer.buffer.idx = bgfx::kInvalidHandle;
 
 	prevWidth = width;
@@ -298,6 +302,9 @@ void Render::Draw(SystemsManager& systems)
 {
 	OPTICK_EVENT();
 
+	currentFreeViewId = kRenderPassFree;
+	currentFullScreenTextureIdx = 0;
+
 	//TODO not on draw!
 
 	//TODO not here
@@ -309,12 +316,15 @@ void Render::Draw(SystemsManager& systems)
 	int height;
 	SDL_GetWindowSize(window, &width, &height);
 
-	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenBuffer)) {
+	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenBuffer) || !bgfx::isValid(m_fullScreenBuffer2)) {
 		prevWidth = width;
 		prevHeight = height;
 		bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
 		if (bgfx::isValid(m_fullScreenBuffer)) {
 			bgfx::destroy(m_fullScreenBuffer);
+		}
+		if (bgfx::isValid(m_fullScreenBuffer2)) {
+			bgfx::destroy(m_fullScreenBuffer2);
 		}
 		if (bgfx::isValid(gBuffer.buffer)) {
 			bgfx::destroy(gBuffer.buffer);
@@ -328,6 +338,8 @@ void Render::Draw(SystemsManager& systems)
 
 		m_fullScreenTex = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
 		m_fullScreenBuffer = bgfx::createFrameBuffer(1, &m_fullScreenTex, true);
+		m_fullScreenTex2 = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
+		m_fullScreenBuffer2 = bgfx::createFrameBuffer(1, &m_fullScreenTex2, true);
 
 		gBuffer.albedoTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
 		gBuffer.normalTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
@@ -361,19 +373,24 @@ void Render::Draw(SystemsManager& systems)
 
 		bgfx::setName(m_fullScreenTex, "fullScreenTex");
 		bgfx::setName(m_fullScreenBuffer, "fullScreenBuffer");
+		bgfx::setName(m_fullScreenTex2, "fullScreenTex2");
+		bgfx::setName(m_fullScreenBuffer2, "fullScreenBuffer2");
 
 		bgfx::setViewFrameBuffer(kRenderPassGeometry, gBuffer.buffer);
-		bgfx::setViewFrameBuffer(kRenderPassCombine, m_fullScreenBuffer);
+		bgfx::setViewFrameBuffer(kRenderPassFullScreen1, m_fullScreenBuffer);
+		bgfx::setViewFrameBuffer(kRenderPassFullScreen2, m_fullScreenBuffer2);
 		bgfx::setViewFrameBuffer(kRenderPassLight, gBuffer.lightBuffer);
-		bgfx::setViewFrameBuffer(1, BGFX_INVALID_HANDLE);//TODO do we need third buffer to go postprocessing?
+		bgfx::setViewFrameBuffer(kRenderPassBlitToScreen, BGFX_INVALID_HANDLE);//TODO do we need third buffer to go postprocessing?
 
 	}
 
 	bgfx::dbgTextClear();
 	bgfx::setViewRect(kRenderPassGeometry, 0, 0, width, height);
 	bgfx::setViewRect(1, 0, 0, width, height);
-	bgfx::setViewRect(kRenderPassCombine, 0, 0, width, height);
 	bgfx::setViewRect(kRenderPassLight, 0, 0, width, height);
+	bgfx::setViewRect(kRenderPassLight, 0, 0, width, height);
+	bgfx::setViewRect(kRenderPassFullScreen1, 0, 0, width, height);
+	bgfx::setViewRect(kRenderPassFullScreen2, 0, 0, width, height);
 
 	const float pixelSize[4] =
 	{
@@ -452,7 +469,7 @@ void Render::Draw(SystemsManager& systems)
 		float proj[16];
 		bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f, 0.0f, caps->homogeneousDepth);
 		bgfx::setViewTransform(kRenderPassLight, &camera->GetViewMatrix()(0, 0), proj);
-		bgfx::setViewTransform(kRenderPassCombine, nullptr, proj);
+		bgfx::setViewTransform(kRenderPassFullScreen1, nullptr, proj);
 
 	}
 
@@ -488,14 +505,14 @@ void Render::Draw(SystemsManager& systems)
 
 		Graphics::Get()->SetScreenSpaceQuadBuffer();
 
-		bgfx::submit(kRenderPassCombine, defferedCombineMaterial->shader->program);
+		bgfx::submit(kRenderPassFullScreen1, defferedCombineMaterial->shader->program);
+		bgfx::setViewFrameBuffer(currentFreeViewId, currentFullScreenTextureIdx == 1 ? m_fullScreenBuffer : m_fullScreenBuffer2);
+		bgfx::setViewRect(currentFreeViewId, 0, 0, prevWidth, prevHeight);
 	}
-
-
-	//Graphics::Get()->Blit(simpleBlitMat, 1);TODO
 
 	RenderEvents::Get()->onSceneRendered.Invoke(*this);
 
+	Graphics::Get()->Blit(simpleBlitMat, kRenderPassBlitToScreen);
 
 	EndFrame();
 }
@@ -553,6 +570,9 @@ void Render::Term()
 	if (bgfx::isValid(m_fullScreenBuffer)) {
 		bgfx::destroy(m_fullScreenBuffer);
 	}
+	if (bgfx::isValid(m_fullScreenBuffer2)) {
+		bgfx::destroy(m_fullScreenBuffer2);
+	}
 	if (bgfx::isValid(gBuffer.buffer)) {
 		bgfx::destroy(gBuffer.buffer);
 	}
@@ -578,6 +598,25 @@ void Render::Term()
 
 	//Quit SDL subsystems
 	SDL_Quit();
+}
+
+bgfx::TextureHandle Render::GetCurrentFullScreenTexture() const {
+	return currentFullScreenTextureIdx == 0 ? m_fullScreenTex : m_fullScreenTex2;
+}
+
+bgfx::TextureHandle Render::GetNextFullScreenTexture() const {
+	return currentFullScreenTextureIdx == 1 ? m_fullScreenTex : m_fullScreenTex2;
+}
+
+void Render::FlipFullScreenTextures() {
+	currentFullScreenTextureIdx = (currentFullScreenTextureIdx + 1) % 2;
+	currentFreeViewId++;
+	bgfx::setViewFrameBuffer(currentFreeViewId, currentFullScreenTextureIdx == 1 ? m_fullScreenBuffer : m_fullScreenBuffer2);
+	bgfx::setViewRect(currentFreeViewId, 0, 0, prevWidth, prevHeight);
+}
+
+int Render::GetNextFullScreenTextureViewId() const {
+	return currentFreeViewId;
 }
 
 void Render::UpdateLights(Vector3 poi) {

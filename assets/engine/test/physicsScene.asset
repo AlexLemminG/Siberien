@@ -1,0 +1,9 @@
+Scene:
+  sphericalHarmonics: harmonics.asset
+  gameObjects:
+    - engine\modelPreview\camera.asset
+    - engine\modelPreview\floor.asset
+    - $cube
+    - engine\modelPreview\light.asset
+    
+GameObject$cube:

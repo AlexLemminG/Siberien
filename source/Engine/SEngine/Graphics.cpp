@@ -32,6 +32,29 @@ bool Graphics::Init() {
 	return true;
 }
 
+void Graphics::Blit(std::shared_ptr<Material> material) {
+	if (!material || !material->shader) {
+		return;
+	}
+
+	render->ApplyMaterialProperties(material.get());
+
+	auto s_tex = render->GetTexColorSampler();
+
+	auto texture = render->GetCurrentFullScreenTexture();
+	bgfx::setTexture(0, s_tex, texture);
+
+	bgfx::setState(0
+		| BGFX_STATE_WRITE_RGB
+		| BGFX_STATE_WRITE_A
+	);
+
+	SetScreenSpaceQuadBuffer();
+
+	bgfx::submit(render->GetNextFullScreenTextureViewId(), material->shader->program);
+	render->FlipFullScreenTextures();
+}
+
 void Graphics::Blit(std::shared_ptr<Material> material, int targetViewId) {
 	if (!material || !material->shader) {
 		return;
@@ -41,7 +64,7 @@ void Graphics::Blit(std::shared_ptr<Material> material, int targetViewId) {
 
 	auto s_tex = render->GetTexColorSampler();
 
-	auto texture = render->GetFullScreenTexture();
+	auto texture = render->GetCurrentFullScreenTexture();
 	bgfx::setTexture(0, s_tex, texture);
 
 	bgfx::setState(0
