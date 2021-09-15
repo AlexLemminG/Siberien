@@ -145,6 +145,11 @@ public:
 	static float Sign(float f) {
 		return f < 0 ? -1.f : 1.f;
 	}
+	static Vector3 MoveTowards(const Vector3& a, const Vector3& b, float maxDistance) {
+		float distance = Vector3::Distance(a, b);
+		float t = Clamp01(maxDistance / distance);
+		return Lerp(a, b, t);
+	}
 
 	static constexpr float pi = 3.14f;//TODO lol
 	static constexpr float pi2 = pi * 2.f;

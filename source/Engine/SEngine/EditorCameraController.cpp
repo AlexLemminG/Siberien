@@ -12,7 +12,7 @@ public:
 
 	virtual void Update() override {
 		if (!Engine::Get()->IsEditorMode()) {
-			return;//TODO dont create camera in first place
+			//return;//TODO dont create camera in first place
 		}
 
 		if (!Input::GetKey(SDL_SCANCODE_Z) && !Input::GetMouseButton(1)) {

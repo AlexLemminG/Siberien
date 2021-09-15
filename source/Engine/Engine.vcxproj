@@ -112,6 +112,7 @@
     <ClCompile Include="SEngine\MeshRenderer.cpp" />
     <ClCompile Include="SEngine\ModelPreview.cpp" />
     <ClCompile Include="SEngine\Navigation.cpp" />
+    <ClCompile Include="SEngine\NavMeshAgent.cpp" />
     <ClCompile Include="SEngine\Object.cpp" />
     <ClCompile Include="SEngine\Physics.cpp" />
     <ClCompile Include="SEngine\PhysicsSystem.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="SEngine\MeshRenderer.h" />
     <ClInclude Include="SEngine\ModelPreview.h" />
     <ClInclude Include="SEngine\Navigation.h" />
+    <ClInclude Include="SEngine\NavMeshAgent.h" />
     <ClInclude Include="SEngine\Object.h" />
     <ClInclude Include="SEngine\Physics.h" />
     <ClInclude Include="SEngine\PhysicsSystem.h" />

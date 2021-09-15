@@ -52,11 +52,16 @@ public:
 	virtual void Term()override;
 
 	virtual void Draw() override;
+
+	dtNavMeshQuery* GetQuery() { return m_navQuery; }
+	dtNavMesh* GetNavMesh() { return m_navMesh; }
 private:
 	void BuildForSingleMesh(const std::shared_ptr<Mesh>& mesh, const Matrix4& transform);
 	bool BuildAllMeshes();
 
 	void LoadOrBuild();
+
+	bool RecreateEmptyNavmesh();
 
 	void Save();
 	bool Load();

@@ -4,6 +4,7 @@
 #include "Input.h"
 
 static std::vector<DbgVarBool*> boolVars;
+static std::vector<DbgVarTrigger*> triggerVars;
 
 REGISTER_SYSTEM(DbgVarsSystem);
 
@@ -12,6 +13,9 @@ static bool dbgVarsShown = false;
 bool DbgVarsSystem::Init() {
 	//TODO disable in retail
 	for (auto var : boolVars) {
+		*var->val = var->defaultValue;
+	}
+	for (auto var : triggerVars) {
 		*var->val = var->defaultValue;
 	}
 	return true;
@@ -33,10 +37,16 @@ void DbgVarsSystem::Update() {
 		for (auto var : boolVars) {
 			ImGui::Checkbox(var->path.c_str(), var->val);
 		}
+		for (auto var : triggerVars) {
+			*var->val = ImGui::Button(var->path.c_str());
+		}
 		ImGui::End();
 	}
 }
 
 void DbgVarsSystem::AddDbgVar(DbgVarBool* dbgvar) {
 	boolVars.push_back(dbgvar);
+}
+void DbgVarsSystem::AddDbgVar(DbgVarTrigger* dbgvar) {
+	triggerVars.push_back(dbgvar);
 }

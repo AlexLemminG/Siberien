@@ -84,7 +84,6 @@ public:
 		LoadAsset(descriptor.assetPath);
 		return std::dynamic_pointer_cast<T>(GetLoaded(descriptor, GetReflectedType<T>()));
 	}
-	//TODO LoadAll
 
 	//TODO where T is Object
 	template<typename T>

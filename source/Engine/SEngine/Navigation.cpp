@@ -457,8 +457,8 @@ bool NavMesh::BuildAllMeshes() {
 		params.ch = m_cfg.ch;
 		params.buildBvTree = true;
 		//HACK
-		params.tileX = bmin[0] / 0.1f;//TODO vars
-		params.tileY = bmin[2] / 0.1f;//TODO vars
+		params.tileX = 0;// bmin[0] / 0.1f;//TODO vars
+		params.tileY = 0;// bmin[2] / 0.1f;//TODO vars
 
 		if (!dtCreateNavMeshData(&params, &navData, &navDataSize))
 		{
@@ -495,6 +495,7 @@ bool NavMesh::BuildAllMeshes() {
 
 void NavMesh::Build() {
 	OPTICK_EVENT();
+	RecreateEmptyNavmesh();
 	vertices.clear();
 	tris.clear();
 	aabb = AABB();
@@ -515,49 +516,8 @@ bool NavMesh::Init() {
 	OPTICK_EVENT();
 	m_ctx = new rcContext();
 
-	if (m_navQuery) {
-		dtFreeNavMeshQuery(m_navQuery);
-		m_navQuery = nullptr;
-	}
-	if (m_navMesh) {
-		dtFreeNavMesh(m_navMesh);
-		m_navMesh = nullptr;
-	}
 
-	m_navMesh = dtAllocNavMesh();
-	if (!m_navMesh)
-	{
-		m_ctx->log(RC_LOG_ERROR, "Could not create Detour navmesh");
-		return false;
-	}
-
-	dtStatus status;
-
-	dtNavMeshParams params;
-	params.maxPolys = 1 << 20;
-	params.maxTiles = 1 << 1;
-	params.orig[0] = 0.f;
-	params.orig[1] = 0.f;
-	params.orig[2] = 0.f;
-	params.tileHeight = 0.1f;
-	params.tileWidth = 0.1f;
-
-
-	status = m_navMesh->init(&params);
-	if (dtStatusFailed(status))
-	{
-		m_ctx->log(RC_LOG_ERROR, "Could not init Detour navmesh");
-		return false;
-	}
-
-
-	m_navQuery = dtAllocNavMeshQuery();
-	status = m_navQuery->init(m_navMesh, 2048);
-	if (dtStatusFailed(status))
-	{
-		m_ctx->log(RC_LOG_ERROR, "Could not init Detour navmesh query");
-		return false;
-	}
+	RecreateEmptyNavmesh();
 
 	debugDrawer = new DebugDrawer();
 
@@ -579,11 +539,16 @@ void NavMesh::Term() {
 }
 
 DBG_VAR_BOOL(dbg_drawNavMesh, "draw nav mesh", false);
+DBG_VAR_TRIGGER(dbg_rebuildNavMesh, "rebuild nav mesh");
 
 void NavMesh::Draw() {
 	OPTICK_EVENT();
 	if (dbg_drawNavMesh) {
 		duDebugDrawNavMesh(debugDrawer, *m_navMesh, -1);
+	}
+	if (dbg_rebuildNavMesh) {
+		Build();
+		Save();
 	}
 }
 
@@ -608,6 +573,52 @@ void NavMesh::LoadOrBuild() {
 	if (!Load()) {
 		Build();
 		Save();
+	}
+}
+bool NavMesh::RecreateEmptyNavmesh() {
+
+	if (m_navQuery) {
+		dtFreeNavMeshQuery(m_navQuery);
+		m_navQuery = nullptr;
+	}
+	if (m_navMesh) {
+		dtFreeNavMesh(m_navMesh);
+		m_navMesh = nullptr;
+	}
+
+	m_navMesh = dtAllocNavMesh();
+	if (!m_navMesh)
+	{
+		m_ctx->log(RC_LOG_ERROR, "Could not create Detour navmesh");
+		return false;
+	}
+
+	dtStatus status;
+
+	dtNavMeshParams params;
+	params.maxPolys = 1 << 20;
+	params.maxTiles = 1 << 1;
+	params.tileHeight = 100000.f;
+	params.tileWidth = 100000.f;
+	params.orig[0] = -params.tileWidth / 2.f;
+	params.orig[1] = 0.f;
+	params.orig[2] = -params.tileHeight / 2.f;
+
+
+	status = m_navMesh->init(&params);
+	if (dtStatusFailed(status))
+	{
+		m_ctx->log(RC_LOG_ERROR, "Could not init Detour navmesh");
+		return false;
+	}
+
+
+	m_navQuery = dtAllocNavMeshQuery();
+	status = m_navQuery->init(m_navMesh, 2048);
+	if (dtStatusFailed(status))
+	{
+		m_ctx->log(RC_LOG_ERROR, "Could not init Detour navmesh query");
+		return false;
 	}
 }
 //TODO remove

@@ -269,7 +269,7 @@ std::shared_ptr<Object> AssetDatabase::DeserializeFromYAMLInternal(const ryml::N
 void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) {
 
 	struct stat result;
-	auto fullPathAsset = this->assetPath;
+	const auto fullPathAsset = database->assetsRootFolder + assetPath;
 
 	if (stat(fullPathAsset.c_str(), &result) == 0)
 	{
@@ -279,7 +279,7 @@ void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(long& assetModi
 		assetModificationTime = 0;
 	}
 
-	auto fullPathMeta = this->assetPath + ".meta";
+	auto fullPathMeta = fullPathAsset + ".meta";
 
 	if (stat(fullPathMeta.c_str(), &result) == 0)
 	{

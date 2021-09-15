@@ -1,0 +1,36 @@
+Scene:
+  sphericalHarmonics: harmonics.asset
+  gameObjects:
+    - engine\modelPreview\light.asset
+    - $cube
+  prefabInstances:
+    - prefab: engine\editorCamera.asset
+      overrides:
+        Transform:
+          pos: [0,10,0]
+    - prefab: engine\test\NavMeshAgent.asset
+      overrides:
+        Transform:
+          pos: [3,-1,13]
+    
+GameObject$cube:
+  tag: Cube
+  components:
+  - $cubeTransform
+  - $cubeRenderer
+  - $cubeShape
+  - $cubeRigidBody
+
+Transform$cubeTransform:
+  pos: [0,0,0]
+
+MeshRenderer$cubeRenderer:
+  mesh: engine\test\navmeshtest.glb$Mesh
+  material: materials\scifi.asset
+
+MeshCollider$cubeShape:
+  mesh: engine\test\navmeshtest.glb$Mesh
+  
+RigidBody$cubeRigidBody:
+  isStatic: true
+  
