@@ -8,6 +8,7 @@ GameObject:
   - $RigidBody
   - $Health
   - $PostProcessingEffect
+  - $GhostBody
 MeshRenderer:
   mesh: meshes\player.glb$Mesh
   material: materials\scifi.asset
@@ -46,3 +47,5 @@ Health:
   amount: 5
 PostProcessingEffect:
   material: materials\playerHealthEffect.asset
+GhostBody:
+  layer: player

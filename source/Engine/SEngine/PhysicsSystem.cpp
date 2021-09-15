@@ -14,6 +14,7 @@
 #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorldMt.h"
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcherMt.h"
 #include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolverMt.h"
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include "Dbg.h"
 #include "DbgVars.h"
 #include "Camera.h"
@@ -78,6 +79,10 @@ bool PhysicsSystem::Init() {
 	solver = new btSequentialImpulseConstraintSolverMt();
 
 	solverPool = new btConstraintSolverPoolMt(4);
+
+	ghostCall = new btGhostPairCallback();
+	overlappingPairCache->getOverlappingPairCache()->setInternalGhostPairCallback(ghostCall);
+
 
 	dynamicsWorld = new btDiscreteDynamicsWorldMt(dispatcher, overlappingPairCache, solverPool, solver, collisionConfiguration);
 
@@ -149,6 +154,8 @@ void PhysicsSystem::Term() {
 	delete dispatcher;
 
 	delete collisionConfiguration;
+
+	delete ghostCall;
 
 	btSetTaskScheduler(nullptr);
 	delete taskScheduler;

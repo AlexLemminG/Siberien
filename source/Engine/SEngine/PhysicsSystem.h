@@ -47,6 +47,7 @@ class btTriangleIndexVertexArray;
 class Mesh;
 class btConstraintSolverPoolMt;
 class btITaskScheduler;
+class btGhostPairCallback;
 
 class MeshPhysicsData {
 public:
@@ -113,6 +114,7 @@ public:
 
 	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
 	btITaskScheduler* taskScheduler = nullptr;
+	btGhostPairCallback* ghostCall = nullptr;
 
 	void GetGroupAndMask(const std::string& groupName, int& group, int& mask);
 

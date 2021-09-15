@@ -3,14 +3,19 @@
 #include "Gun.h"
 #include "GameObject.h"
 
+class GhostBody;
+
 class Pickup : public Component {
 public:
+	void OnEnable();
 	void Update();
 
 	std::shared_ptr<Gun> gun;
 	int grenadesCount = 0;
 
 	bool isPicked = false;
+
+	GhostBody* ghost = nullptr;
 
 	REFLECT_BEGIN(Pickup);
 	REFLECT_VAR(gun);

@@ -41,14 +41,12 @@ void EnemyCreepController::HandleDeath() {
 
 	float radiusScale = 0.9f;
 
-	center.z = -center.y;
-	center.y = 0;
 	rb->layer = "enemyCorpse";
-	collider->center = center * radiusScale;
+	collider->center += Vector3_up * 0.2f;
 	collider->radius *= radiusScale;
 	rb->friction = 0.7f;
 
-	rb->SetCenterOfMassLocal(Vector3(0.f, 0.4f, 0.f));
+	rb->SetCenterOfMassLocal(collider->center + Vector3_forward * 0.5f);
 
 	collider->SetEnabled(true);
 	rb->SetEnabled(true);

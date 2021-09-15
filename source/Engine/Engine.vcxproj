@@ -66,12 +66,8 @@
       <PreprocessorDefinitions>RYML_SHARED;RYML_EXPORTS;BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;SE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <FloatingPointModel>Fast</FloatingPointModel>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
-      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -103,6 +99,7 @@
     <ClCompile Include="SEngine\GameEvents.cpp" />
     <ClCompile Include="SEngine\GameLibrariesManager.cpp" />
     <ClCompile Include="SEngine\GameObject.cpp" />
+    <ClCompile Include="SEngine\GhostBody.cpp" />
     <ClCompile Include="SEngine\Graphics.cpp" />
     <ClCompile Include="SEngine\Input.cpp" />
     <ClCompile Include="SEngine\Inspector.cpp" />
@@ -159,6 +156,7 @@
     <ClInclude Include="SEngine\GameEvents.h" />
     <ClInclude Include="SEngine\GameLibrariesManager.h" />
     <ClInclude Include="SEngine\GameObject.h" />
+    <ClInclude Include="SEngine\GhostBody.h" />
     <ClInclude Include="SEngine\Graphics.h" />
     <ClInclude Include="SEngine\Input.h" />
     <ClInclude Include="SEngine\Light.h" />

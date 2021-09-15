@@ -328,6 +328,7 @@ void PlayerController::OnDeath() {
 	shape->center += Vector3_up * 0.35f;
 
 	shape->SetEnabled(true);
+	rigidBody->SetCenterOfMassLocal(shape->center - Vector3_up * shape->radius * 0.5f);
 	rigidBody->SetEnabled(true);
 
 	rigidBody->SetFriction(0.5f);

@@ -3,6 +3,8 @@ GameObject:
   - $MeshRenderer
   - $Transform
   - $Pickup
+  - $SphereCollider
+  - $GhostBody
 MeshRenderer:
   mesh: meshes\shotgun.glb$Mesh
   material: materials\scifi.asset
@@ -23,3 +25,7 @@ Gun:
   bulletSpeed: 75.0
   bulletColor: 0xff4400ff
   ammo: 32
+SphereCollider:
+  radius: 0.5
+  center: [0,1,0]
+GhostBody: {}

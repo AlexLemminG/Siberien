@@ -3,6 +3,8 @@
 
 class RigidBody;
 class btCollisionObject;
+class PhysicsBody;
+class GameObject;
 
 class SE_CPP_API Physics {
 public:
@@ -32,6 +34,8 @@ public:
 
 	static Vector3 GetGravity();
 	static void SetGravity(const Vector3& gravity);
+	
+	static std::shared_ptr<GameObject> GetGameObject(const btCollisionObject* collisionObject);
 private:
 	static RigidBody* GetRigidBody(const btCollisionObject* collisionObject);
 };

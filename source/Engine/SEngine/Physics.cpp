@@ -77,10 +77,9 @@ std::vector<RigidBody*> Physics::OverlapSphere(const Vector3& pos, float radius,
 	for (auto o : cb.objects) {
 		auto* rb = o;
 		if (rb) {
-			auto ptr = rb->getUserPointer();
-			auto rb = (RigidBody*)(ptr);
-			if (rb) {
-				results.push_back(rb);
+			auto rigidBody = GetRigidBody(rb);
+			if (rigidBody) {
+				results.push_back(rigidBody);
 			}
 			else {
 				ASSERT(false);
@@ -102,8 +101,13 @@ RigidBody* Physics::GetRigidBody(const btCollisionObject* collisionObject) {
 	if (!collisionObject) {
 		return nullptr;
 	}
-	auto rb = (RigidBody*)collisionObject->getUserPointer();
-	return rb;
+	auto rb = (PhysicsBody*)collisionObject->getUserPointer();
+	if (rb) {
+		return rb->AsRigidBody();
+	}
+	else {
+		return nullptr;
+	}
 }
 int Physics::GetLayerCollisionMask(const std::string& layer) {
 	int group;
@@ -116,4 +120,17 @@ int Physics::GetLayerAsMask(const std::string& layer) {
 	int mask;
 	PhysicsSystem::Get()->GetGroupAndMask(layer, group, mask);
 	return group;
+}
+
+std::shared_ptr<GameObject> Physics::GetGameObject(const btCollisionObject* collisionObject) {
+	if (!collisionObject) {
+		return nullptr;
+	}
+	auto rb = (PhysicsBody*)collisionObject->getUserPointer();
+	if (rb) {
+		return rb->gameObject();
+	}
+	else {
+		return nullptr;
+	}
 }

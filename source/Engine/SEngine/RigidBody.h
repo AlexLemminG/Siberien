@@ -4,11 +4,25 @@
 #include "SMath.h"
 
 struct btDefaultMotionState;
+struct btCompoundShape;
 class btRigidBody;
 class Transform;
+class RigidBody;
+class GhostBody;
 
-class SE_CPP_API RigidBody : public Component {
+class SE_CPP_API PhysicsBody : public Component {
 public:
+	RigidBody* AsRigidBody();
+	GhostBody* AsGhostBody();
+	const RigidBody* AsRigidBody()const;
+	const GhostBody* AsGhostBody()const;
+protected:
+	bool isRigidBody = false;
+};
+
+class SE_CPP_API RigidBody : public PhysicsBody {
+public:
+	RigidBody();
 	btRigidBody* GetHandle() { return pBody; }
 	virtual void OnEnable() override;
 	virtual void Update() override;
@@ -72,6 +86,7 @@ private:
 	btDefaultMotionState* pMotionState = nullptr;
 	btRigidBody* pBody = nullptr;
 	Transform* transform = nullptr;
+	std::shared_ptr<btCompoundShape> offsetedShape;
 
 	bool isKinematic = false;
 	float mass = 1.f;

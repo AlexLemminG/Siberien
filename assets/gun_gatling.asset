@@ -4,11 +4,13 @@ GameObject:
   - $Transform
   - $Pickup
   - $PointLight
+  - $SphereCollider
+  - $GhostBody
 MeshRenderer:
   mesh: meshes\gatling.glb$Mesh
   material: materials\scifi.asset
 Transform:
-  pos: [-26.6,4.5,146.0]
+  pos: [-26.6,3.5,146.0]
   euler: [0, 60, 0]
   scale: [1,1,1]
 Pickup:
@@ -28,3 +30,7 @@ PointLight:
   color: 0xff0000ff
   radius: 4
   innerRadius: 0.7
+SphereCollider:
+  radius: 0.5
+  center: [0,1,0]
+GhostBody: {}

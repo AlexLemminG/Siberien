@@ -3,6 +3,8 @@ GameObject:
   - $MeshRenderer
   - $Transform
   - $Pickup
+  - $SphereCollider
+  - $GhostBody
 MeshRenderer:
   mesh: meshes\grenadePickup.glb$Mesh
   material: materials\scifi.asset
@@ -11,3 +13,7 @@ Transform:
   scale: [1, 1, 1]
 Pickup:
     grenadesCount: 2
+SphereCollider:
+  radius: 0.5
+  center: [0,1,0]
+GhostBody: {}

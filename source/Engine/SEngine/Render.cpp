@@ -213,8 +213,8 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = true;//TODO cfgvar?
-	initInfo.profile = true;
+	initInfo.debug = false;//TODO cfgvar?
+	initInfo.profile = false;
 	initInfo.type = bgfx::RendererType::Direct3D11;
 #ifdef SE_DBG_OUT
 	initInfo.limits.transientVbSize *= 10;//TODO debug only

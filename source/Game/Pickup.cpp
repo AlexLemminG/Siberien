@@ -2,41 +2,45 @@
 #include "Scene.h"
 #include "PlayerController.h"
 #include "STime.h"
+#include "GhostBody.h"
+
+void Pickup::OnEnable() {
+	ghost = gameObject()->GetComponent<GhostBody>().get();
+}
 
 void Pickup::Update() {
+	auto trans = gameObject()->transform();
+	trans->SetRotation(Quaternion::FromAngleAxis(Time::time() / Mathf::pi2 * 15.f, Vector3_up));
+
 	if (isPicked) {
 		return;
 	}
-
-	auto player = Scene::Get()->FindGameObjectByTag("Player");
-	if (!player) {
-		return;
-	}
-	auto playerController = player->GetComponent<PlayerController>();
-	if (!playerController) {
+	if (!ghost) {
 		return;
 	}
 
-	auto playerPos = player->transform()->GetPosition();
-	auto pos = gameObject()->transform()->GetPosition();
-
-	Vector2 playerPos2d = Vector2(playerPos.x, playerPos.z);
-	Vector2 pos2d = Vector2(pos.x, pos.z);
-	if (Vector2::Distance(playerPos2d, pos2d) < 1.f) {
-		isPicked = true;
-
-		if (gun) {
-			playerController->AddGun(gun);
+	std::shared_ptr< PlayerController> playerController;
+	for (int i = 0; i < ghost->GetOverlappedCount(); i++) {
+		auto go = ghost->GetOverlappedObject(i);
+		playerController = go->GetComponent<PlayerController>();
+		if (playerController != nullptr) {
+			break;
 		}
-		if (grenadesCount > 0) {
-			playerController->AddGrenades(grenadesCount);
-		}
-
-		Scene::Get()->RemoveGameObject(gameObject());
+	}
+	if (playerController == nullptr) {
+		return;
 	}
 
-	auto trans = gameObject()->transform();
-	trans->SetRotation(Quaternion::FromAngleAxis(Time::time() / Mathf::pi2 * 15.f, Vector3_up));
+	isPicked = true;
+
+	if (gun) {
+		playerController->AddGun(gun);
+	}
+	if (grenadesCount > 0) {
+		playerController->AddGrenades(grenadesCount);
+	}
+
+	Scene::Get()->RemoveGameObject(gameObject());
 }
 
 DECLARE_TEXT_ASSET(Pickup);

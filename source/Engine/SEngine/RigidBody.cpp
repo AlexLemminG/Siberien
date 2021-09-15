@@ -6,11 +6,14 @@
 #include "Collider.h"
 #include "PhysicsSystem.h"
 #include "btBulletDynamicsCommon.h"
+#include "btBulletCollisionCommon.h"
 #include "Common.h"
 #include "Camera.h"
 #include "MeshRenderer.h"
 
 DECLARE_TEXT_ASSET(RigidBody);
+
+RigidBody::RigidBody() { isRigidBody = true; }
 
 void RigidBody::OnEnable() {
 	auto collider = gameObject()->GetComponent<Collider>();
@@ -22,25 +25,29 @@ void RigidBody::OnEnable() {
 	if (!shape) {
 		return;
 	}
-
 	transform = gameObject()->transform().get();
 	if (!transform) {
 		return;
 	}
+	auto scale = transform->GetScale();
+
+	offsetedShape = std::make_shared<btCompoundShape>();
+	offsetedShape->addChildShape(btTransform(btMatrix3x3::getIdentity(), -btConvert(centerOfMass * scale)), shape.get());
+	shape = offsetedShape;
 
 	auto matr = transform->matrix;
 	SetScale(matr, Vector3_one);
 	btTransform groundTransform = btConvert(matr);
 
-
 	btScalar mass = isStatic ? 0.f : Mathf::Max(0.001f, this->mass);
 
 	btVector3 localInertia(0, 0, 0);
+
 	if (!isStatic) {
 		shape->calculateLocalInertia(mass, localInertia);
 	}
 
-	auto offset = btTransform(btMatrix3x3::getIdentity(), -btConvert(centerOfMass));
+	auto offset = btTransform(btMatrix3x3::getIdentity(), -btConvert(centerOfMass * scale));
 	//TODO apply offset to shape
 
 	//using motionstate is optional, it provides interpolation capabilities, and only synchronizes 'active' objects
@@ -84,8 +91,9 @@ void RigidBody::Update() {
 
 void RigidBody::OnDisable() {
 	if (pBody) {
-		PhysicsSystem::Get()->dynamicsWorld->removeCollisionObject(pBody);
+		PhysicsSystem::Get()->dynamicsWorld->removeRigidBody(pBody);
 	}
+	offsetedShape = nullptr;
 	SAFE_DELETE(pMotionState);
 	SAFE_DELETE(pBody)
 }
@@ -123,11 +131,20 @@ void RigidBody::UseWorldGravity() {
 void RigidBody::SetAngularFactor(const Vector3& factor) { pBody->setAngularFactor(btConvert(factor)); }
 
 void RigidBody::SetCenterOfMassLocal(const Vector3& center) {
+	Vector3 deltaPos = (this->centerOfMass - center);
 	this->centerOfMass = center;
+	if (!pBody) {
+		return;
+	}
+	auto scale = transform->GetScale();
+	if (offsetedShape != nullptr) {
+		offsetedShape->updateChildTransform(0, btTransform(btMatrix3x3::getIdentity(), -btConvert(centerOfMass * scale)));
+	}
 	//TODO offset body
 	if (pMotionState) {
-		pMotionState->m_centerOfMassOffset.setOrigin(btConvert(-centerOfMass));
+		pMotionState->m_centerOfMassOffset.setOrigin(btConvert(-centerOfMass * scale));
 	}
+	pBody->translate(btConvert(deltaPos * scale));
 }
 
 Vector3 RigidBody::GetCenterOfMassLocal() const {
@@ -153,3 +170,39 @@ void RigidBody::ApplyLinearImpulse(Vector3 impulse, Vector3 worldPos) {
 }
 
 void RigidBody::Activate() { pBody->activate(); }
+
+RigidBody* PhysicsBody::AsRigidBody() {
+	if (isRigidBody) {
+		return (RigidBody*)this;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+GhostBody* PhysicsBody::AsGhostBody() {
+	if (!isRigidBody) {
+		return (GhostBody*)this;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+const RigidBody* PhysicsBody::AsRigidBody() const {
+	if (isRigidBody) {
+		return (RigidBody*)this;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+const GhostBody* PhysicsBody::AsGhostBody() const {
+	if (!isRigidBody) {
+		return (GhostBody*)this;
+	}
+	else {
+		return nullptr;
+	}
+}
