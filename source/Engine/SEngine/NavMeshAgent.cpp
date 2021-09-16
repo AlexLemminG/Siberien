@@ -46,7 +46,7 @@ static bool getSteerTarget(dtNavMeshQuery* navQuery, const float* startPos, cons
 	float* outPoints = 0, int* outPointCount = 0)
 {
 	// Find steer target.
-	static const int MAX_STEER_POINTS = 3;
+	static const int MAX_STEER_POINTS = 30;
 	float steerPath[MAX_STEER_POINTS * 3];
 	unsigned char steerPathFlags[MAX_STEER_POINTS];
 	dtPolyRef steerPathPolys[MAX_STEER_POINTS];
@@ -110,12 +110,6 @@ std::vector<Vector3> FindPath(Vector3 from, Vector3 to) {
 	result.push_back(m_spos_vec);
 	if (m_startRef && m_endRef)
 	{
-#ifdef DUMP_REQS
-		printf("pi  %f %f %f  %f %f %f  0x%x 0x%x\n",
-			m_spos[0], m_spos[1], m_spos[2], m_epos[0], m_epos[1], m_epos[2],
-			m_filter.getIncludeFlags(), m_filter.getExcludeFlags());
-#endif
-
 		m_navQuery->findPath(m_startRef, m_endRef, m_spos, m_epos, &m_filter, m_polys, &m_npolys, MAX_POLYS);
 
 		m_nsmoothPath = 0;
@@ -131,135 +125,22 @@ std::vector<Vector3> FindPath(Vector3 from, Vector3 to) {
 			m_navQuery->closestPointOnPoly(m_startRef, m_spos, iterPos, 0);
 			m_navQuery->closestPointOnPoly(polys[npolys - 1], m_epos, targetPos, 0);
 
-			for (int iPoly = 0; iPoly < m_npolys; iPoly++) {
-				Vector3 pos;
-				m_navQuery->closestPointOnPoly(m_polys[iPoly], m_epos, &pos.x, nullptr);
-				result.push_back(pos);
-			}
-
-			static const float STEP_SIZE = 0.5f;
-			static const float SLOP = 0.01f;
-
-			m_nsmoothPath = 0;
-
-			dtVcopy(&m_smoothPath[m_nsmoothPath * 3], iterPos);
-			m_nsmoothPath++;
-
-			// Move towards target a small advancement at a time until target reached or
-			// when ran out of memory to store the path.
-			while (npolys && m_nsmoothPath < MAX_SMOOTH)
-			{
-				// Find location to steer towards.
-				float steerPos[3];
-				unsigned char steerPosFlag;
-				dtPolyRef steerPosRef;
-
-				if (!getSteerTarget(m_navQuery, iterPos, targetPos, SLOP,
-					polys, npolys, steerPos, steerPosFlag, steerPosRef))
-					break;
-
-				bool endOfPath = (steerPosFlag & DT_STRAIGHTPATH_END) ? true : false;
-				bool offMeshConnection = (steerPosFlag & DT_STRAIGHTPATH_OFFMESH_CONNECTION) ? true : false;
-
-				// Find movement delta.
-				float delta[3], len;
-				dtVsub(delta, steerPos, iterPos);
-				len = dtMathSqrtf(dtVdot(delta, delta));
-				// If the steer target is end of path or off-mesh link, do not move past the location.
-				if ((endOfPath || offMeshConnection) && len < STEP_SIZE)
-					len = 1;
-				else
-					len = STEP_SIZE / len;
-				float moveTgt[3];
-				dtVmad(moveTgt, iterPos, delta, len);
-
-				// Move
-				float result[3];
-				dtPolyRef visited[16];
-				int nvisited = 0;
-				m_navQuery->moveAlongSurface(polys[0], iterPos, moveTgt, &m_filter,
-					result, visited, &nvisited, 16);
-
-				//npolys = fixupCorridor(polys, npolys, MAX_POLYS, visited, nvisited);
-				//npolys = fixupShortcuts(polys, npolys, m_navQuery);
-
-				float h = 0;
-				m_navQuery->getPolyHeight(polys[0], result, &h);
-				result[1] = h;
-				dtVcopy(iterPos, result);
-
-				// Handle end of path and off-mesh links when close enough.
-				if (endOfPath && inRange(iterPos, steerPos, SLOP, 1.0f))
-				{
-					// Reached end of path.
-					dtVcopy(iterPos, targetPos);
-					if (m_nsmoothPath < MAX_SMOOTH)
-					{
-						dtVcopy(&m_smoothPath[m_nsmoothPath * 3], iterPos);
-						m_nsmoothPath++;
-					}
-					break;
-				}
-				else if (offMeshConnection && inRange(iterPos, steerPos, SLOP, 1.0f))
-				{
-					// Reached off-mesh connection.
-					float startPos[3], endPos[3];
-
-					// Advance the path up to and over the off-mesh connection.
-					dtPolyRef prevRef = 0, polyRef = polys[0];
-					int npos = 0;
-					while (npos < npolys && polyRef != steerPosRef)
-					{
-						prevRef = polyRef;
-						polyRef = polys[npos];
-						npos++;
-					}
-					for (int i = npos; i < npolys; ++i)
-						polys[i - npos] = polys[i];
-					npolys -= npos;
-
-					// Handle the connection.
-					dtStatus status = NavMesh::Get()->GetNavMesh()->getOffMeshConnectionPolyEndPoints(prevRef, polyRef, startPos, endPos);
-					if (dtStatusSucceed(status))
-					{
-						if (m_nsmoothPath < MAX_SMOOTH)
-						{
-							dtVcopy(&m_smoothPath[m_nsmoothPath * 3], startPos);
-							m_nsmoothPath++;
-							// Hack to make the dotted path not visible during off-mesh connection.
-							if (m_nsmoothPath & 1)
-							{
-								dtVcopy(&m_smoothPath[m_nsmoothPath * 3], startPos);
-								m_nsmoothPath++;
-							}
-						}
-						// Move position at the other side of the off-mesh link.
-						dtVcopy(iterPos, endPos);
-						float eh = 0.0f;
-						m_navQuery->getPolyHeight(polys[0], iterPos, &eh);
-						iterPos[1] = eh;
-					}
-				}
-
-				// Store results.
-				if (m_nsmoothPath < MAX_SMOOTH)
-				{
-					dtVcopy(&m_smoothPath[m_nsmoothPath * 3], iterPos);
-					m_nsmoothPath++;
+			static const int MAX_STEER_POINTS = 300;
+			float steerPath[MAX_STEER_POINTS * 3];
+			unsigned char steerPathFlags[MAX_STEER_POINTS];
+			dtPolyRef steerPathPolys[MAX_STEER_POINTS];
+			int nsteerPath = 0;
+			auto res = m_navQuery->findStraightPath(iterPos, targetPos, polys, npolys,
+				steerPath, steerPathFlags, steerPathPolys, &nsteerPath, MAX_STEER_POINTS);
+			if (res == DT_SUCCESS) {
+				for (int iPoly = 0; iPoly < nsteerPath; iPoly++) {
+					result.push_back(Vector3(&steerPath[iPoly * 3]));
 				}
 			}
 		}
-
-	}
-	else
-	{
-		m_npolys = 0;
-		m_nsmoothPath = 0;
 	}
 
-	for (int i = 0; i < m_nsmoothPath; i++) {
-		//result.push_back(Vector3(&m_smoothPath[i * 3]));
-	}
+
 	return result;
 }
 
@@ -283,6 +164,10 @@ void NavMeshAgent::Update() {
 			currentPath = FindPath(currentPos, destination);
 		}
 		auto& path = currentPath;
+		if (path.size() > 0) {
+			Dbg::DrawLine(currentPos, path[0]);
+		}
+
 		for (int i = 0; i < ((int)path.size()) - 1; i++) {
 			Dbg::DrawLine(path[i], path[i + 1]);
 		}
