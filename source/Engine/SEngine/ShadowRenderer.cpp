@@ -435,7 +435,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		return;
 	}
 	//TODO
-	int lightShadowSize = 1024;
+	int lightShadowSize = 1024 * 2;
 	static bool m_stencilPack = false;
 	static float m_fovXAdjust = 1.0f;
 	static float m_fovYAdjust = 1.0f;

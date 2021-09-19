@@ -18,21 +18,22 @@ static char buff[255];
 
 void ModelPreview::OnEnable() {
 	//TODO
-	//allGameObjects = AssetDatabase::Get()->GetAllAssetNames();
+	allGameObjects = AssetDatabase::Get()->GetAllAssetNames();
 	//TODO get rid of std::vector
 	for (int i = (int)allGameObjects.size() - 1; i >= 0; i--) {
 		if (allGameObjects[i].find(".asset") == -1) {
 			allGameObjects.erase(allGameObjects.begin() + i);
+			continue;
 		}
 		auto go = AssetDatabase::Get()->Load<GameObject>(allGameObjects[i]);
 		if (!go) {
 			allGameObjects.erase(allGameObjects.begin() + i);
+			continue;
 		}
 	}
 }
 
 void ModelPreview::Update() {
-	ImGui::ShowDemoWindow();
 	UpdateSelection();
 	UpdateAnimator();
 	UpdateCamera();
@@ -84,7 +85,7 @@ void ModelPreview::UpdateSelection() {
 			std::cout << "selected" << allGameObjects[i] << std::endl;
 		}
 		drawn++;
-		if (drawn >= 10) {
+		if (drawn >= 100) {
 			break;
 		}
 	}
@@ -100,7 +101,7 @@ void ModelPreview::UpdateCamera() {
 			mouseDownRotation = currentRotation;
 		}
 		auto deltaRot = Input::GetMousePosition() - mouseDownPos;
-		currentRotation = mouseDownRotation + deltaRot * 0.05f;
+		currentRotation = mouseDownRotation + deltaRot * 0.15f;
 
 		auto camera = Scene::FindGameObjectByTag("camera");
 		if (camera) {
@@ -127,19 +128,24 @@ void ModelPreview::SelectPrefab(std::shared_ptr<GameObject> prefab) {
 	if (!prefab) {
 		return;
 	}
+
 	currentPrefab = prefab;
 	currentGameObject = Object::Instantiate(prefab);
-	currentGameObject->transform()->SetPosition(Vector3_zero);
-	currentGameObject->transform()->SetRotation(Quaternion::identity);
-	for (int i = currentGameObject->components.size() - 1; i >= 0; i--) {
+	if (currentGameObject->transform() != nullptr) {
+		currentGameObject->transform()->SetPosition(Vector3_zero);
+		currentGameObject->transform()->SetRotation(Quaternion::identity);
+	}
+	/*for (int i = currentGameObject->components.size() - 1; i >= 0; i--) {
 		auto c = currentGameObject->components[i];
+
 		if (std::dynamic_pointer_cast<Transform>(c)
 			|| std::dynamic_pointer_cast<MeshRenderer>(c)
-			|| std::dynamic_pointer_cast<Animator>(c)) {
+			|| std::dynamic_pointer_cast<Animator>(c)
+			) {
 			continue;
 		}
 		currentGameObject->components.erase(currentGameObject->components.begin() + i);
-	}
+	}*/
 
 	auto animator = currentGameObject->GetComponent<Animator>();
 	if (animator) {

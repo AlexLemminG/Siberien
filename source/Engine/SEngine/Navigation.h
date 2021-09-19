@@ -70,19 +70,19 @@ private:
 	void Save();
 	bool Load();
 
-	float m_cellSize = 0.3;
-	float m_cellHeight = 0.1;
+	float m_cellSize = 0.15;
+	float m_cellHeight = 0.15;
 	float m_agentMaxSlope = 30.f;
-	float m_agentHeight = 1.5f;
-	float m_agentMaxClimb = 0.3f;
-	float m_agentRadius = 0.3f;
-	float m_edgeMaxLen = 1.f;
-	float m_edgeMaxError = 0.1f;
-	float m_regionMinSize = 0.1f;
-	float m_regionMergeSize = 0.5f;
+	float m_agentHeight = 2.f;
+	float m_agentMaxClimb = 0.9f;
+	float m_agentRadius = 0.666f;
+	float m_edgeMaxLen = 30.f;
+	float m_edgeMaxError = 1.2f;
+	float m_regionMinSize = 8.0f;
+	float m_regionMergeSize = 20.f;
 	int m_vertsPerPoly = 6;
-	float m_detailSampleDist = 1.05f;
-	float m_detailSampleMaxError = 0.1f;
+	float m_detailSampleDist = 6.f;
+	float m_detailSampleMaxError = 1.f;
 
 
 	bool m_filterLowHangingObstacles = false;

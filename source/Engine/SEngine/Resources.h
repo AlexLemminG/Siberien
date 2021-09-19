@@ -74,6 +74,8 @@ public:
 
 	void UnloadAll();
 
+	std::vector<std::string> GetAllAssetNames();
+
 	template<typename T>
 	std::shared_ptr<T> Load(const std::string& path) {
 		auto descriptor = PathDescriptor(path);

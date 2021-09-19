@@ -44,6 +44,16 @@ void AssetDatabase::UnloadAll() {
 	onAfterUnloaded.Invoke();
 }
 
+std::vector<std::string> AssetDatabase::GetAllAssetNames() {
+	std::string path = assetsRootFolder;
+	std::vector<std::string> result;
+	for (const auto& entry : std::filesystem::recursive_directory_iterator(path)) {
+		auto str = entry.path().string();
+		result.push_back(str.substr(path.length(), str.length() - path.length()));
+	}
+	return result;
+}
+
 std::string AssetDatabase::GetAssetUID(std::shared_ptr<Object> obj) {
 	auto it = objectPaths.find(obj);
 	if (it != objectPaths.end()) {
