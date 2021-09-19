@@ -1,8 +1,8 @@
 Scene:
   sphericalHarmonics: harmonics.asset
   gameObjects:
-    - player.asset
     - gameplayScene_scenario.asset
+    - player.asset
     - camera.asset
     - gun_shotgun.asset
     - gun_gatling.asset

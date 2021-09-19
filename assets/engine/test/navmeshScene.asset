@@ -8,10 +8,14 @@ Scene:
       overrides:
         Transform:
           pos: [0,10,0]
-    - prefab: engine\test\NavMeshAgent.asset
+    - prefab: engine\test\NavMeshAgent_MoveToMouse.asset
       overrides:
         Transform:
           pos: [3,-1,13]
+    - prefab: engine\test\NavMeshAgent_WASD.asset
+      overrides:
+        Transform:
+          pos: [0,-1,0]
     
 GameObject$cube:
   tag: Cube

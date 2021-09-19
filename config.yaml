@@ -1,4 +1,4 @@
-scene: engine\test\navmeshScene #engine\modelPreview\scene #gameplayScene
+scene: gameplayScene #engine\modelPreview\scene #gameplayScene
 maximumDeltaTime: 0.05
 fixedDeltaTime: 0.016666666666
 fullscreen: false
@@ -9,3 +9,4 @@ soundEnabled: false
 showFps: true
 libraries:
   - Game.dll
+  - Test.dll

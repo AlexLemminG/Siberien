@@ -9,6 +9,8 @@
 
 std::string SceneManager::lastLoadRequest;
 std::shared_ptr<Scene> SceneManager::currentScene;
+GameEvent<> SceneManager::onBeforeSceneEnabled;
+GameEvent<> SceneManager::onAfterSceneDisabled;
 GameEvent<> SceneManager::onSceneLoaded;
 void SceneManager::LoadScene(std::string sceneName) {
 	lastLoadRequest = sceneName;
@@ -22,6 +24,7 @@ void SceneManager::Update() {
 
 	if (currentScene) {
 		currentScene->Term();
+		onAfterSceneDisabled.Invoke();
 		currentScene = nullptr;
 	}
 
@@ -59,6 +62,7 @@ void SceneManager::Update() {
 		currentScene = Object::Instantiate(scene);
 		if (currentScene) {
 			currentScene->name = sceneName;
+			onBeforeSceneEnabled.Invoke();
 			currentScene->Init();
 			onSceneLoaded.Invoke();
 		}

@@ -4,6 +4,7 @@ GameObject:
   - $MeshRenderer
   - $Animator
   - $NavMeshAgent
+  - $NavMeshAgentTest_WASD
 MeshRenderer:
   mesh: meshes/zombie.glb$Zombie
   material: enemyMaterial.asset
@@ -15,4 +16,6 @@ Animator:
   speed: 10
   defaultAnimation: meshes/zombie.glb$Walk
 NavMeshAgent:
+  maxAcceleration: inf
+NavMeshAgentTest_WASD:
   

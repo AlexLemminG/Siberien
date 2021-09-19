@@ -112,7 +112,8 @@ void GhostBody::OnEnable() {
 	//add the body to the dynamics world
 	int group;
 	int mask;
-	pBody->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	pBody->setCollisionFlags(Bits::SetMaskTrue(pBody->getCollisionFlags(), btCollisionObject::CF_NO_CONTACT_RESPONSE));
+	pBody->setCollisionFlags(Bits::SetMaskTrue(pBody->getCollisionFlags(), btCollisionObject::CF_KINEMATIC_OBJECT));//TODO static for static
 	PhysicsSystem::Get()->GetGroupAndMask(layer, group, mask);
 	PhysicsSystem::Get()->dynamicsWorld->addCollisionObject(pBody, group, mask);
 }

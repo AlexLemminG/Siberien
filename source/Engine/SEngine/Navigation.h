@@ -15,6 +15,7 @@ class rcPolyMeshDetail;
 class dtNavMesh;
 class dtNavMeshQuery;
 class DebugDrawer;
+class dtCrowd;
 
 enum SamplePartitionType
 {
@@ -49,12 +50,14 @@ public:
 	void Build();
 
 	virtual bool Init() override;
+	virtual void Update() override;
 	virtual void Term()override;
 
 	virtual void Draw() override;
 
 	dtNavMeshQuery* GetQuery() { return m_navQuery; }
 	dtNavMesh* GetNavMesh() { return m_navMesh; }
+	dtCrowd* GetCrowd() { return m_crowd; }
 private:
 	void BuildForSingleMesh(const std::shared_ptr<Mesh>& mesh, const Matrix4& transform);
 	bool BuildAllMeshes();
@@ -62,6 +65,7 @@ private:
 	void LoadOrBuild();
 
 	bool RecreateEmptyNavmesh();
+	void RecreateCrowd();
 
 	void Save();
 	bool Load();
@@ -98,6 +102,7 @@ private:
 	rcPolyMesh* m_pmesh;
 	rcContext* m_ctx;
 	rcPolyMeshDetail* m_dmesh;
+	dtCrowd* m_crowd = nullptr;
 
 	dtNavMesh* m_navMesh;
 	dtNavMeshQuery* m_navQuery;

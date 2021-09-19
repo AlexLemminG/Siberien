@@ -73,7 +73,16 @@ public:
 		return f > b ? b : (f < a ? a : f);
 	}
 	static float Repeat(float t, float period) {
-		return t - ((int)(t / period)) * period;
+		auto res = t - ((int)(t / period)) * period;
+		if (res < 0.f) {
+			res += period;
+		}
+		return res;
+	}
+	static float Repeat(float t, float min, float max) {
+		float dt = t - min;
+		float period = max - min;
+		return Repeat(dt, period) + min;
 	}
 	static int Clamp(int i, int a, int b) {
 		return i > b ? b : (i < a ? a : i);
@@ -151,7 +160,32 @@ public:
 		return Lerp(a, b, t);
 	}
 
-	static constexpr float pi = 3.14f;//TODO lol
+	static float MoveTowardsAngle(const float& a, const float& b, float maxDistance) {
+		float delta = DeltaAngle(a, b);
+		return MoveTowards(a, a + delta, maxDistance);
+
+	}
+	static float MoveTowards(const float& a, const float& b, float maxDistance) {
+		float distance = Mathf::Abs(a - b);
+		float t = Clamp01(maxDistance / distance);
+		return Lerp(a, b, t);
+	}
+	static float Atan2(float y, float x) {
+		return atan2f(y, x);
+	}
+	static float DeltaAngle(float a, float b) {
+		return Mathf::Repeat(b - a, -pi, pi);
+	}
+
+	//[0,2pi)
+	//CCW rotation is positive
+	static float SignedAngle(const Vector2& v1, const Vector2& v2) {
+		float angle1 = Atan2(v1.y, v1.x);
+		float angle2 = Atan2(v2.y, v2.x);
+		return Repeat(angle2 - angle1, Mathf::pi2);
+	}
+
+	static constexpr float pi = 3.14159265358979323846264338f;
 	static constexpr float pi2 = pi * 2.f;
 	static constexpr float epsilon = 0.00001f;
 	static constexpr float phi = 1.61803398875f; // golden ratio

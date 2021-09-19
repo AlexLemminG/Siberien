@@ -66,6 +66,8 @@ class Vector<T, 3> {
 
   inline Vector<T, 2> xy() { return Vector<T, 2>(x, y); }
 
+  inline Vector<T, 2> xz() { return Vector<T, 2>(x, z); }
+
   inline const Vector<T, 2> xy() const { return Vector<T, 2>(x, y); }
 
   inline void Pack(VectorPacked<T, 3>* const vector) const {

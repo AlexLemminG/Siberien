@@ -93,6 +93,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DetourCrowd", "libs\RecastD
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DetourTileCache", "libs\RecastDetour\DetourTileCache\Bin\DetourTileCache.vcxproj", "{BA4490BB-75A9-3057-AF9F-98C31E3A9CA0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{D3E50540-0959-4458-8CBD-109909B6DEAC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D3F02BBF-4568-4D3D-BF09-D89C6FBA7D65} = {D3F02BBF-4568-4D3D-BF09-D89C6FBA7D65}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -465,6 +470,18 @@ Global
 		{BA4490BB-75A9-3057-AF9F-98C31E3A9CA0}.Release|x86.ActiveCfg = Release|x64
 		{BA4490BB-75A9-3057-AF9F-98C31E3A9CA0}.RelWithDebInfo|x64.ActiveCfg = Release|x64
 		{BA4490BB-75A9-3057-AF9F-98C31E3A9CA0}.RelWithDebInfo|x86.ActiveCfg = Debug|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.Debug|x64.ActiveCfg = Debug|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.Debug|x64.Build.0 = Debug|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.Debug|x86.ActiveCfg = Debug|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.MinSizeRel|x64.ActiveCfg = Debug|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.MinSizeRel|x64.Build.0 = Debug|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.MinSizeRel|x86.ActiveCfg = Debug|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.Release|x64.ActiveCfg = Release|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.Release|x64.Build.0 = Release|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.Release|x86.ActiveCfg = Release|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.RelWithDebInfo|x64.ActiveCfg = Release|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.RelWithDebInfo|x64.Build.0 = Release|x64
+		{D3E50540-0959-4458-8CBD-109909B6DEAC}.RelWithDebInfo|x86.ActiveCfg = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

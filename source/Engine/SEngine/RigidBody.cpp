@@ -58,7 +58,7 @@ void RigidBody::OnEnable() {
 	rbInfo.m_restitution = restitution;
 	pBody = new btRigidBody(rbInfo);
 	if (isKinematic) {
-		pBody->forceActivationState(DISABLE_DEACTIVATION);
+		pBody->forceActivationState(DISABLE_DEACTIVATION);//TODO optimize
 		pBody->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
 	}
 
@@ -74,18 +74,19 @@ void RigidBody::OnEnable() {
 }
 
 void RigidBody::Update() {
-	//TODO isStatic means not kinematic!!!
 	if (!isStatic) {
-		auto matr = btConvert(pMotionState->m_graphicsWorldTrans);
-		auto scale = transform->GetScale();
-		SetScale(matr, scale);
-		//TODO not so persistent
-		transform->matrix = matr;
-	}
-	else if (isKinematic) {
-		auto trans = btConvert(transform->matrix);
-		pMotionState->m_graphicsWorldTrans = trans;
-		//pBody->setCenterOfMassTransform(trans);
+		if (!isKinematic) {
+			auto matr = btConvert(pMotionState->m_graphicsWorldTrans);
+			auto scale = transform->GetScale();
+			SetScale(matr, scale);
+			//TODO not so persistent
+			transform->matrix = matr;
+		}
+		else {
+			auto trans = transform->matrix;
+			SetScale(trans, Vector3_one);
+			pMotionState->m_graphicsWorldTrans = btConvert(trans);
+		}
 	}
 }
 

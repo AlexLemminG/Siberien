@@ -19,6 +19,8 @@ public:
 	static std::string GetCurrentScenePath();
 
 	static GameEvent<> onSceneLoaded;
+	static GameEvent<> onBeforeSceneEnabled;
+	static GameEvent<> onAfterSceneDisabled;
 private:
 	//TODO less static stuff
 	static std::string lastLoadRequest;

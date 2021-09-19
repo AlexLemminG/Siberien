@@ -1,0 +1,20 @@
+GameObject:
+  components:
+  - $Transform
+  - $MeshRenderer
+  - $Animator
+  - $NavMeshAgent
+  - $NavMeshAgentTest_MoveToMouse
+MeshRenderer:
+  mesh: meshes/zombie.glb$Zombie
+  material: enemyMaterial.asset
+Transform:
+  pos: [5,0.5,0]
+  euler: [0, 60, 0]
+  scale: [0.7, 0.7, 0.7]
+Animator:
+  speed: 10
+  defaultAnimation: meshes/zombie.glb$Walk
+NavMeshAgent:
+NavMeshAgentTest_MoveToMouse:
+  

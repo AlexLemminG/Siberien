@@ -12,11 +12,13 @@
 #include "DetourNavMesh.h"
 #include "DetourNavMeshBuilder.h"
 #include "DetourNavMeshQuery.h"
+#include "DetourCrowd.h"
 #include "DebugDraw.h"
 #include "DetourDebugDraw.h"
 #include "Resources.h"
 #include "Dbg.h"
 #include "DbgVars.h"
+#include "STime.h"
 #include <windows.h>
 
 
@@ -510,6 +512,7 @@ void NavMesh::Build() {
 	vertices.clear();
 	tris.clear();
 	aabb = AABB();
+	RecreateCrowd();
 }
 
 bool NavMesh::Init() {
@@ -521,13 +524,19 @@ bool NavMesh::Init() {
 
 	debugDrawer = new DebugDrawer();
 
-	onSceneLoadedHandler = SceneManager::onSceneLoaded.Subscribe([this]() {LoadOrBuild(); });
+	onSceneLoadedHandler = SceneManager::onBeforeSceneEnabled.Subscribe([this]() {LoadOrBuild(); });//TODO clear on scene disabled
 
 	return true;
 }
 
+void NavMesh::Update() {
+	if (m_crowd) {
+		m_crowd->update(Time::deltaTime(), nullptr);
+	}
+}
+
 void NavMesh::Term() {
-	SceneManager::onSceneLoaded.Unsubscribe(onSceneLoadedHandler);
+	SceneManager::onBeforeSceneEnabled.Unsubscribe(onSceneLoadedHandler);
 	if (m_navQuery) {
 		dtFreeNavMeshQuery(m_navQuery);
 		m_navQuery = nullptr;
@@ -535,6 +544,10 @@ void NavMesh::Term() {
 	if (m_navMesh) {
 		dtFreeNavMesh(m_navMesh);
 		m_navMesh = nullptr;
+	}
+	if (m_crowd) {
+		dtFreeCrowd(m_crowd);
+		m_crowd = nullptr;
 	}
 }
 
@@ -612,7 +625,6 @@ bool NavMesh::RecreateEmptyNavmesh() {
 		return false;
 	}
 
-
 	m_navQuery = dtAllocNavMeshQuery();
 	status = m_navQuery->init(m_navMesh, 2048);
 	if (dtStatusFailed(status))
@@ -620,6 +632,8 @@ bool NavMesh::RecreateEmptyNavmesh() {
 		m_ctx->log(RC_LOG_ERROR, "Could not init Detour navmesh query");
 		return false;
 	}
+	RecreateCrowd();
+	return true;
 }
 //TODO remove
 static void EnsureForderForLibraryFileExists(std::string fullPath) {
@@ -762,6 +776,7 @@ bool NavMesh::Load() {
 	}
 
 	m_navMesh = mesh;
+	RecreateCrowd();
 	m_navQuery = dtAllocNavMeshQuery();
 	status = m_navQuery->init(m_navMesh, 2048);
 	if (dtStatusFailed(status))
@@ -770,6 +785,33 @@ bool NavMesh::Load() {
 		return false;
 	}
 	return true;
+}
+void NavMesh::RecreateCrowd() {
+	auto prevCrowd = m_crowd;
+
+	m_crowd = dtAllocCrowd();
+	m_crowd->init(1024, 10.f, m_navMesh);//TODO params
+
+
+	if (prevCrowd) {
+		//TODO dont traverse all agents (stop at last active)
+		//TODO restore agents state
+		//adding all and then removing inactive to keep ids
+		for (int i = 0; i < prevCrowd->getAgentCount(); i++) {
+			auto prevAgent = prevCrowd->getAgent(i);
+			m_crowd->addAgent(prevAgent->npos, &prevAgent->params);
+		}
+		for (int i = 0; i < prevCrowd->getAgentCount(); i++) {
+			auto prevAgent = prevCrowd->getAgent(i);
+			if (!prevAgent->active) {
+				m_crowd->removeAgent(i);
+			}
+		}
+
+
+		dtFreeCrowd(prevCrowd);
+		prevCrowd = nullptr;
+	}
 }
 //TODO build only if needed
 REGISTER_SYSTEM(NavMesh);
