@@ -1,5 +1,6 @@
 #define u_ambientPass    u_params0.x
 #define u_lightingPass   u_params0.y
+#define u_hasShadowMap   u_params0.z
 
 #define u_shadowMapBias   u_params1.x
 #define u_shadowMapParam0 u_params1.z
@@ -25,7 +26,7 @@
 #define u_shadowMapHardness        u_shadowMapParam0
 #define u_shadowMapDepthMultiplier u_shadowMapParam1
 
-{
+if(u_hasShadowMap > 0.0){
 	vec3 colorCoverage;
 
 #if SM_CSM
@@ -199,4 +200,7 @@
 	
 	//gl_FragColor.rgb = vec3_splat(visibility);
 	//gl_FragColor.y = v_texcoord3.y;
+}else{
+	//u_hasShadowMap == 0.0
+	visibility = 1.0;
 }

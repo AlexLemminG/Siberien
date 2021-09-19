@@ -504,7 +504,6 @@ void Render::Draw(SystemsManager& systems)
 		);
 
 		Graphics::Get()->SetScreenSpaceQuadBuffer();
-
 		bgfx::submit(kRenderPassFullScreen1, defferedCombineMaterial->shader->program);
 		bgfx::setViewFrameBuffer(currentFreeViewId, currentFullScreenTextureIdx == 1 ? m_fullScreenBuffer : m_fullScreenBuffer2);
 		bgfx::setViewRect(currentFreeViewId, 0, 0, prevWidth, prevHeight);

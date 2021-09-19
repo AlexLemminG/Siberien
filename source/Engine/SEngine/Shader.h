@@ -14,6 +14,8 @@ public:
 	bgfx::ShaderHandle handle = BGFX_INVALID_HANDLE;
 };
 
+//TODO ShaderVariant class for single vs+fs+defines combination
+//TODO Shader is collection of variants + GetProgram(defines) 
 class Shader : public Object {
 public:
 	bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;

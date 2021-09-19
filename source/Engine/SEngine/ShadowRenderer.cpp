@@ -429,7 +429,9 @@ void ShadowRenderer::Term() {
 void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 {
 	OPTICK_EVENT();
+	auto render = Graphics::Get()->render;
 	if (!light->drawShadows) {
+		bgfx::setUniform(render->GetOrCreateVectorUniform("u_params0"), &Vector4(1, 1, 0, 0));
 		return;
 	}
 	//TODO
@@ -1220,7 +1222,6 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		bgfx::setUniform(uniform, m_shadowMapMtx[i]);//TODO set default if no shadow
 	}
 
-	auto render = Graphics::Get()->render;
 	auto& textureUniforms = Graphics::Get()->render->textureUniforms;
 
 	for (uint8_t ii = 0; ii < ShadowMapRenderTargets::Count; ++ii)
@@ -1240,7 +1241,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 
 	Vector4 v;
 
-	v = Vector4(1, 1, 0, 0);
+	v = Vector4(1, 1, 1, 0);
 	bgfx::setUniform(render->GetOrCreateVectorUniform("u_params0"), &v.x);
 
 	v = Vector4(light->shadowBias, 0.001f, 0.7f, 500.0f);

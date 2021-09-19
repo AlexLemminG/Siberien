@@ -6,7 +6,6 @@
 class Light : public Component {
 public:
 	Color color = Colors::white;
-	//TODO fix full everything is in shadow when drawShadows==false
 	//TODO shadows for pointLight
 	bool drawShadows = false;
 	float shadowBias = 0.0012f;

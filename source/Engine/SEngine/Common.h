@@ -96,8 +96,13 @@ private:
 template<typename V>
 void ResizeVectorNoInit(V& v, size_t newSize)
 {
+#if SE_DEBUG
+    //fater in debug
+    v.resize(newSize);
+#else
     struct vt { typename V::value_type v; vt() {} };
     static_assert(sizeof(vt[10]) == sizeof(typename V::value_type[10]), "alignment error");
     typedef std::vector<vt, typename std::allocator_traits<typename V::allocator_type>::template rebind_alloc<vt>> V2;
     reinterpret_cast<V2&>(v).resize(newSize);
+#endif
 }
