@@ -23,7 +23,7 @@ public:
 		if (!databaseHandle.ReadMeta(metaYaml)) {
 			metaYaml = YAML::Node();
 		}
-		bool hasMips = metaYaml["mips"].IsDefined() ? metaYaml["mips"].as<bool>() : false;
+		bool hasMips = metaYaml["mips"].IsDefined() ? metaYaml["mips"].as<bool>() : true;
 		auto formatStr = metaYaml["format"].IsDefined() ? metaYaml["format"].as<std::string>() : "BC1";
 
 		//TODO return default invalid shader
