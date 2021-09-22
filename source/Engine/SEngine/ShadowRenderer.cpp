@@ -409,6 +409,15 @@ private:
 };
 static Uniforms s_uniforms;
 
+bgfx::UniformHandle u_csmFarDistances;
+bgfx::UniformHandle u_params0;
+bgfx::UniformHandle u_params1;
+bgfx::UniformHandle u_params2;
+bgfx::UniformHandle u_smSamplingParams;
+
+bgfx::UniformHandle s_shadowMap[4];
+
+bgfx::UniformHandle u_shadowMapMtx[4];
 
 void ShadowRenderer::Init() {
 	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
@@ -1209,6 +1218,46 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		}
 	}
 
+	static std::string shadowmapMtxNames[]{ "u_shadowMapMtx0","u_shadowMapMtx1","u_shadowMapMtx2","u_shadowMapMtx3" };
+	auto& matrixUniforms = Graphics::Get()->render->matrixUniforms;
+	for (int i = 0; i < _countof(m_shadowMapMtx); i++) {
+		const std::string& name = shadowmapMtxNames[i];
+		auto it = matrixUniforms.find(name);
+		bgfx::UniformHandle uniform;
+		if (it == matrixUniforms.end()) {
+			uniform = bgfx::createUniform(name.c_str(), bgfx::UniformType::Mat4);
+			matrixUniforms[name] = uniform;
+		}
+		else {
+			uniform = it->second;
+		}
+		u_shadowMapMtx[i] = uniform;
+	}
+	static std::string shadowmapNames[]{ "s_shadowMap0","s_shadowMap1","s_shadowMap2","s_shadowMap3" };
+
+	auto& textureUniforms = Graphics::Get()->render->textureUniforms;
+
+	for (uint8_t ii = 0; ii < ShadowMapRenderTargets::Count; ++ii)
+	{
+		const std::string& name = shadowmapNames[ii];
+		auto it = textureUniforms.find(name);
+		bgfx::UniformHandle uniform;
+		if (it == textureUniforms.end()) {
+			uniform = bgfx::createUniform(name.c_str(), bgfx::UniformType::Sampler);
+			textureUniforms[name] = uniform;
+		}
+		else {
+			uniform = it->second;
+		}
+		s_shadowMap[ii] = uniform;
+	}
+
+	u_csmFarDistances = render->GetOrCreateVectorUniform("u_csmFarDistances");
+	u_params0 = render->GetOrCreateVectorUniform("u_params0");
+	u_params1 = render->GetOrCreateVectorUniform("u_params1");
+	u_params2 = render->GetOrCreateVectorUniform("u_params2");
+	u_smSamplingParams = render->GetOrCreateVectorUniform("u_smSamplingParams");
+
 	lastRenderedFrame = Time::frameCount();
 }
 
@@ -1219,56 +1268,28 @@ void ShadowRenderer::ApplyUniforms() {
 	}
 	auto render = Graphics::Get()->render;
 
-	//TODO render->GetOrCreate();
-	auto& matrixUniforms = Graphics::Get()->render->matrixUniforms;
-	for (int i = 0; i < _countof(m_shadowMapMtx); i++) {
-		std::string name = FormatString("u_shadowMapMtx%d", i);
-		auto it = matrixUniforms.find(name);
-		bgfx::UniformHandle uniform;
-		if (it == matrixUniforms.end()) {
-			uniform = bgfx::createUniform(name.c_str(), bgfx::UniformType::Mat4);
-			matrixUniforms[name] = uniform;
-		}
-		else {
-			uniform = it->second;
-		}
-		bgfx::setUniform(uniform, m_shadowMapMtx[i]);//TODO set default if no shadow
-	}
 
-	auto& textureUniforms = Graphics::Get()->render->textureUniforms;
-
-	for (uint8_t ii = 0; ii < ShadowMapRenderTargets::Count; ++ii)
-	{
-		std::string name = FormatString("s_shadowMap%d", ii);
-		auto it = textureUniforms.find(name);
-		bgfx::UniformHandle uniform;
-		if (it == textureUniforms.end()) {
-			uniform = bgfx::createUniform(name.c_str(), bgfx::UniformType::Sampler);
-			textureUniforms[name] = uniform;
-		}
-		else {
-			uniform = it->second;
-		}
-		bgfx::setTexture(6 + ii, uniform, bgfx::getTexture(s_rtShadowMap[ii]));
-	}
-
-
-	bgfx::setUniform(render->GetOrCreateVectorUniform("u_csmFarDistances"), &s_uniforms.m_csmFarDistances);
+	bgfx::setUniform(u_csmFarDistances, &s_uniforms.m_csmFarDistances);
 
 	Vector4 v;
 
 	v = Vector4(1, 1, 1, 0);
-	bgfx::setUniform(render->GetOrCreateVectorUniform("u_params0"), &v.x);
+	bgfx::setUniform(u_params0, &v.x);
 
 	v = Vector4(shadowBias, 0.001f, 0.7f, 500.0f);
-	bgfx::setUniform(render->GetOrCreateVectorUniform("u_params1"), &v.x);
+	bgfx::setUniform(u_params1, &v.x);
 
 	v = Vector4(1, 0, 1.f / m_currentShadowMapSize, 0);
-	bgfx::setUniform(render->GetOrCreateVectorUniform("u_params2"), &v.x);
+	bgfx::setUniform(u_params2, &v.x);
 
 	v = Vector4(2, 2, 0.2f, 0.2f);
-	bgfx::setUniform(render->GetOrCreateVectorUniform("u_smSamplingParams"), &v.x);
+	bgfx::setUniform(u_smSamplingParams, &v.x);
 
-	v = Vector4(2, 2, 0.2f, 0.2f);
+	for (int i = 0; i < _countof(m_shadowMapMtx); i++) {
+		bgfx::setUniform(u_shadowMapMtx[i], m_shadowMapMtx[i]);//TODO set default if no shadow
+	}
 
+	for (uint8_t ii = 0; ii < ShadowMapRenderTargets::Count; ++ii) {
+		bgfx::setTexture(6 + ii, s_shadowMap[ii], bgfx::getTexture(s_rtShadowMap[ii]));
+	}
 }

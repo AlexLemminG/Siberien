@@ -75,6 +75,7 @@ void Render::PrepareLights(const ICamera& camera) {
 		return;
 	}
 	std::vector<PointLight*> pointLights = PointLight::pointLights;
+	std::vector<PointLight*> visiblePointLights;
 
 	for (auto light : pointLights) {
 		if (light->radius <= 0.f) {
@@ -90,7 +91,7 @@ void Render::PrepareLights(const ICamera& camera) {
 		if (!isVisible) {
 			continue;
 		}
-
+		visiblePointLights.push_back(light);
 		//TODO
 		shadowRenderer->Draw(light, camera);
 
@@ -195,6 +196,7 @@ void Render::PrepareLights(const ICamera& camera) {
 	};
 	auto viewProj = camera.GetViewProjectionMatrix();
 	Vector3 clusterScale = Vector3(1.f / clusterWidth, 1.f / clusterHeight, 1.f / clusterDepth);
+	Vector3 clusterScaleInv = 1.f / clusterScale;
 	Vector3 clusterOffsetInitial = Vector3(-1.f + clusterScale.x, -1.f + clusterScale.y, -1.f + clusterScale.z);
 
 	std::vector<ItemData> items;
@@ -204,8 +206,8 @@ void Render::PrepareLights(const ICamera& camera) {
 	std::vector<ClusterData> clusters;
 	clusters.resize(clustersCount);
 	int currentOffset = 0;
-	for (int lightIdx = 0; lightIdx < pointLights.size(); lightIdx++) {
-		auto light = pointLights[lightIdx];
+	for (int lightIdx = 0; lightIdx < visiblePointLights.size(); lightIdx++) {
+		auto light = visiblePointLights[lightIdx];
 		LightData lightData;
 		lightData.pos = light->gameObject()->transform()->GetPosition();
 		lightData.innerRadius = light->innerRadius;
@@ -219,8 +221,18 @@ void Render::PrepareLights(const ICamera& camera) {
 		for (int h = 0; h < clusterHeight; h++) {
 			for (int d = 0; d < clusterDepth; d++) {
 				int offsetBefore = currentOffset;
-				auto extraMat = Matrix4::Transform(clusterOffsetInitial + clusterScale * Vector3(w, h, d) * 2.f, Matrix3::Identity(), clusterScale);
-				extraMat = extraMat.Inverse();
+				Vector3 pos = clusterOffsetInitial + clusterScale * Vector3(w, h, d) * 2.f;
+
+				//inverse of Matrix4::Transform(pos, identity, clusterScale)
+				auto extraMat = Matrix4::Identity();
+				extraMat(0, 0) = clusterScaleInv.x;
+				extraMat(1, 1) = clusterScaleInv.y;
+				extraMat(2, 2) = clusterScaleInv.z;
+				extraMat(0, 3) = -pos.x * clusterScaleInv.x;
+				extraMat(1, 3) = -pos.y * clusterScaleInv.y;
+				extraMat(2, 3) = -pos.z * clusterScaleInv.z;
+
+
 				auto clusterViewProj = extraMat * viewProj;
 
 				int idx = w * clusterDepth * clusterHeight + h * clusterDepth + d;
@@ -231,7 +243,7 @@ void Render::PrepareLights(const ICamera& camera) {
 				//Dbg::Draw(frustum);
 
 				int numLights = 0;
-				for (int lightIdx = 0; lightIdx < pointLights.size(); lightIdx++) {
+				for (int lightIdx = 0; lightIdx < visiblePointLights.size(); lightIdx++) {
 					auto pos = lights[lightIdx].pos;
 					auto sphere = Sphere{ pos, lights[lightIdx].radius };
 					if (frustum.IsOverlapingSphere(sphere)) {
@@ -256,8 +268,8 @@ void Render::PrepareLights(const ICamera& camera) {
 
 	int itemsTexelsTotal = items.size() * texelsPerItem;
 	int itemsWidth = Mathf::Min(itemsTexelsTotal, itemsDiv);
-	int itemsHeight = 1 + (itemsTexelsTotal-1) / itemsDiv;
-	items.resize(itemsHeight* itemsWidth / texelsPerItem);
+	int itemsHeight = 1 + (itemsTexelsTotal - 1) / itemsDiv;
+	items.resize(itemsHeight * itemsWidth / texelsPerItem);
 	bgfx::updateTexture2D(m_itemsListTex, 0, 0, 0, 0, itemsWidth, itemsHeight, bgfx::copy(items.data(), items.size() * sizeof(ItemData)));
 	bgfx::updateTexture2D(m_lightsListTex, 0, 0, 0, 0, lights.size() * texelsPerLight, 1, bgfx::copy(lights.data(), lights.size() * sizeof(LightData)));
 }
@@ -301,8 +313,8 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = true;//TODO cfgvar?
-	initInfo.profile = true;
+	initInfo.debug = false;//TODO cfgvar?
+	initInfo.profile = false;
 	initInfo.type = bgfx::RendererType::Direct3D11;
 #ifdef SE_DBG_OUT
 	//initInfo.limits.transientVbSize *= 10;//TODO debug only

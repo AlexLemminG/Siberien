@@ -106,7 +106,7 @@ bool ICamera::IsVisible(const AABB& aabb) const {
 bool ICamera::IsVisible(const MeshRenderer& renderer) const {
 	//TODO optimize
 	auto sphere = renderer.mesh->boundingSphere;
-	auto scale = GetScale(renderer.m_transform->matrix);
+	auto scale = renderer.m_transform->GetScale();
 	float maxScale = Mathf::Max(Mathf::Max(scale.x, scale.y), scale.z);
 	sphere.radius *= maxScale;
 	sphere.pos = renderer.m_transform->matrix * sphere.pos;

@@ -42,9 +42,9 @@ public:
 	Vector3 GetForward() const {
 		return matrix.GetColumn(2).xyz();
 	}
-
+	const Matrix4 GetMatrix()const { return matrix; }
 public:
-	Matrix4 matrix = Matrix4::Identity();
+	Matrix4 matrix = Matrix4::Identity();//TODO remove direct access to matrix for optimization
 
 
 public:

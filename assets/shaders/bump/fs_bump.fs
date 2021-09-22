@@ -148,6 +148,7 @@ void main()
 	vec3 wnormal = mul(tbn, normal);
 	
 	vec3 albedo = toLinear(texture2D(s_texColor, v_texcoord0)).rgb;
+	vec3 emissive = toLinear(texture2D(s_texEmissive, v_texcoord0)).rgb;
 	vec3 color = vec3(0.0,0.0,0.0);
 
 	ClusterData clusterData = GetClasterData(v_proj);
@@ -159,6 +160,7 @@ void main()
 	color.rgb += dirLight(wnormal, v_wpos);
 	color.rgb += SampleSH(wnormal, u_sphericalHarmonics);
 	color.rgb *= albedo.rgb;
+	color.rgb += emissive;
 	
 	gl_FragData[0].rgb = toGamma(color);
 }
