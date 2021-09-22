@@ -14,6 +14,13 @@ USAMPLER2D(s_texCluster, 3);
 USAMPLER2D(s_texItems, 4);
 SAMPLER2D(s_texLightParams, 5);
 
+//TODO one big shadowmap with different + uvs
+SAMPLER2D(s_shadowMap0, 6);
+SAMPLER2D(s_shadowMap1, 7);
+SAMPLER2D(s_shadowMap2, 8);
+SAMPLER2D(s_shadowMap3, 9);
+
+#include "../deferredDirLight/fs.fs"
 
 uniform vec4 u_sphericalHarmonics[9];
 
@@ -73,7 +80,11 @@ ClusterData GetClasterData(vec4 proj){
 }
 
 ItemData GetItemData(int offset){
-	uvec2 rg = texelFetch(s_texItems, ivec2(offset,0), 0).rg;
+	
+	int itemsDiv = 1024;
+	int x = offset % itemsDiv;
+	int y = offset / itemsDiv;
+	uvec2 rg = texelFetch(s_texItems, ivec2(x,y), 0).rg;
 	
 	ItemData data;
 	data.lightIdx = rg.r;
@@ -145,6 +156,7 @@ void main()
 		LightData light = GetLightData(item.lightIdx);
 		color.rgb += CalcLight(light, tbn, v_wpos, wnormal, view);
 	}
+	color.rgb += dirLight(wnormal, v_wpos);
 	color.rgb += SampleSH(wnormal, u_sphericalHarmonics);
 	color.rgb *= albedo.rgb;
 	

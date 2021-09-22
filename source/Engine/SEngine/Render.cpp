@@ -41,8 +41,8 @@
 SDL_Window* Render::window = nullptr;
 
 //TODO deal with viewId ordering from other systems
-constexpr bgfx::ViewId kRenderPassGeometry = 0;
 constexpr bgfx::ViewId kRenderPassBlitToScreen = 1;
+constexpr bgfx::ViewId kRenderPassGeometry = 11;
 constexpr bgfx::ViewId kRenderPassLight = 10;
 constexpr bgfx::ViewId kRenderPassDebugLights = 12;
 constexpr bgfx::ViewId kRenderPassDebugGBuffer = 13;
@@ -91,51 +91,52 @@ void Render::PrepareLights(const ICamera& camera) {
 			continue;
 		}
 
+		//TODO
 		shadowRenderer->Draw(light, camera);
 
-		auto posRadius = Vector4(pos, light->radius);
-		bgfx::setUniform(u_lightPosRadius, &posRadius, 1);
+		//auto posRadius = Vector4(pos, light->radius);
+		//bgfx::setUniform(u_lightPosRadius, &posRadius, 1);
 
-		auto colorInnerRadius = Vector4(light->color.r, light->color.g, light->color.b, light->innerRadius);
-		bgfx::setUniform(u_lightRgbInnerR, &colorInnerRadius, 1);
+		//auto colorInnerRadius = Vector4(light->color.r, light->color.g, light->color.b, light->innerRadius);
+		//bgfx::setUniform(u_lightRgbInnerR, &colorInnerRadius, 1);
 
-		AABB aabb = sphere.ToAABB();
+		//AABB aabb = sphere.ToAABB();
 
-		const Vector3 box[8] =
-		{
-			{ aabb.min.x, aabb.min.y, aabb.min.z },
-			{ aabb.min.x, aabb.min.y, aabb.max.z },
-			{ aabb.min.x, aabb.max.y, aabb.min.z },
-			{ aabb.min.x, aabb.max.y, aabb.max.z },
-			{ aabb.max.x, aabb.min.y, aabb.min.z },
-			{ aabb.max.x, aabb.min.y, aabb.max.z },
-			{ aabb.max.x, aabb.max.y, aabb.min.z },
-			{ aabb.max.x, aabb.max.y, aabb.max.z },
-		};
+		//const Vector3 box[8] =
+		//{
+		//	{ aabb.min.x, aabb.min.y, aabb.min.z },
+		//	{ aabb.min.x, aabb.min.y, aabb.max.z },
+		//	{ aabb.min.x, aabb.max.y, aabb.min.z },
+		//	{ aabb.min.x, aabb.max.y, aabb.max.z },
+		//	{ aabb.max.x, aabb.min.y, aabb.min.z },
+		//	{ aabb.max.x, aabb.min.y, aabb.max.z },
+		//	{ aabb.max.x, aabb.max.y, aabb.min.z },
+		//	{ aabb.max.x, aabb.max.y, aabb.max.z },
+		//};
 
 
-		Vector3 xyz = multH(camera.GetViewProjectionMatrix(), box[0]);
-		Vector3 min = xyz;
-		Vector3 max = xyz;
+		//Vector3 xyz = multH(camera.GetViewProjectionMatrix(), box[0]);
+		//Vector3 min = xyz;
+		//Vector3 max = xyz;
 
-		for (uint32_t ii = 1; ii < 8; ++ii)
-		{
-			xyz = multH(camera.GetViewProjectionMatrix(), box[ii]);
-			min = Vector3::Min(min, xyz);
-			max = Vector3::Max(max, xyz);
-		}
+		//for (uint32_t ii = 1; ii < 8; ++ii)
+		//{
+		//	xyz = multH(camera.GetViewProjectionMatrix(), box[ii]);
+		//	min = Vector3::Min(min, xyz);
+		//	max = Vector3::Max(max, xyz);
+		//}
 
-		float x0 = Mathf::Clamp((min.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
-		float y0 = Mathf::Clamp((min.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
-		float x1 = Mathf::Clamp((max.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
-		float y1 = Mathf::Clamp((max.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
+		//float x0 = Mathf::Clamp((min.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
+		//float y0 = Mathf::Clamp((min.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
+		//float x1 = Mathf::Clamp((max.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
+		//float y1 = Mathf::Clamp((max.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
 
-		if (aabb.Contains(camera.GetPosition())) {
-			x0 = 0.f;
-			y0 = 0.f;
-			x1 = prevWidth;
-			y1 = prevHeight;
-		}
+		//if (aabb.Contains(camera.GetPosition())) {
+		//	x0 = 0.f;
+		//	y0 = 0.f;
+		//	x1 = prevWidth;
+		//	y1 = prevHeight;
+		//}
 
 		//bgfx::setTexture(0, gBuffer.normalSampler, gBuffer.normalTexture);
 		//bgfx::setTexture(1, gBuffer.depthSampler, gBuffer.depthTexture);
@@ -197,11 +198,11 @@ void Render::PrepareLights(const ICamera& camera) {
 	Vector3 clusterOffsetInitial = Vector3(-1.f + clusterScale.x, -1.f + clusterScale.y, -1.f + clusterScale.z);
 
 	std::vector<ItemData> items;
-	items.resize(512 * 4);//TODO not 4
+	//items.resize(maxItemsCount);
 	std::vector<LightData> lights;
-	lights.resize(512);//TODO not 512
+	//lights.resize(maxLightsCount);
 	std::vector<ClusterData> clusters;
-	clusters.resize(512);
+	clusters.resize(clustersCount);
 	int currentOffset = 0;
 	for (int lightIdx = 0; lightIdx < pointLights.size(); lightIdx++) {
 		auto light = pointLights[lightIdx];
@@ -212,7 +213,7 @@ void Render::PrepareLights(const ICamera& camera) {
 		lightData.color.y = light->color.g;
 		lightData.color.z = light->color.b;
 		lightData.radius = light->radius;
-		lights[lightIdx] = (lightData);
+		lights.push_back(lightData);
 	}
 	for (int w = 0; w < clusterWidth; w++) {
 		for (int h = 0; h < clusterHeight; h++) {
@@ -237,7 +238,7 @@ void Render::PrepareLights(const ICamera& camera) {
 						numLights++;
 						auto data = ItemData();
 						data.lightIdx = lightIdx;
-						items[currentOffset] = (data);
+						items.push_back(data);
 						currentOffset++;
 					}
 				}
@@ -250,10 +251,15 @@ void Render::PrepareLights(const ICamera& camera) {
 			}
 		}
 	}
-	//TODO not 512
-	bgfx::updateTexture2D(m_clusterListTex, 0, 0, 0, 0, 512, 1, bgfx::copy(clusters.data(), clusters.size() * sizeof(ClusterData)));
-	bgfx::updateTexture2D(m_itemsListTex, 0, 0, 0, 0, 512 * 4, 1, bgfx::copy(items.data(), items.size() * sizeof(ItemData)));
-	bgfx::updateTexture2D(m_lightsListTex, 0, 0, 0, 0, 512, 1, bgfx::copy(lights.data(), lights.size() * sizeof(LightData)));
+
+	bgfx::updateTexture2D(m_clusterListTex, 0, 0, 0, 0, clustersCount, 1, bgfx::copy(clusters.data(), clusters.size() * sizeof(ClusterData)));
+
+	int itemsTexelsTotal = items.size() * texelsPerItem;
+	int itemsWidth = Mathf::Min(itemsTexelsTotal, itemsDiv);
+	int itemsHeight = 1 + (itemsTexelsTotal-1) / itemsDiv;
+	items.resize(itemsHeight* itemsWidth / texelsPerItem);
+	bgfx::updateTexture2D(m_itemsListTex, 0, 0, 0, 0, itemsWidth, itemsHeight, bgfx::copy(items.data(), items.size() * sizeof(ItemData)));
+	bgfx::updateTexture2D(m_lightsListTex, 0, 0, 0, 0, lights.size() * texelsPerLight, 1, bgfx::copy(lights.data(), lights.size() * sizeof(LightData)));
 }
 
 
@@ -295,8 +301,8 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = false;//TODO cfgvar?
-	initInfo.profile = false;
+	initInfo.debug = true;//TODO cfgvar?
+	initInfo.profile = true;
 	initInfo.type = bgfx::RendererType::Direct3D11;
 #ifdef SE_DBG_OUT
 	//initInfo.limits.transientVbSize *= 10;//TODO debug only
@@ -305,11 +311,11 @@ bool Render::Init()
 	bgfx::init(initInfo);
 	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
 
-	bgfx::resetView(0);
+	bgfx::resetView(kRenderPassGeometry);
 	bgfx::resetView(1);
 	bgfx::setDebug(BGFX_DEBUG_TEXT /*| BGFX_DEBUG_STATS*/);
 
-	bgfx::setViewRect(0, 0, 0, width, height);
+	bgfx::setViewRect(kRenderPassGeometry, 0, 0, width, height);
 	bgfx::setViewRect(1, 0, 0, width, height);
 
 	u_time = bgfx::createUniform("u_time", bgfx::UniformType::Vec4);
@@ -321,8 +327,8 @@ bool Render::Init()
 	s_texItemsList = bgfx::createUniform("s_texItemsList", bgfx::UniformType::Sampler);
 	s_texLightsList = bgfx::createUniform("s_texLightsList", bgfx::UniformType::Sampler);
 
-	u_lightPosRadius = bgfx::createUniform("u_lightPosRadius", bgfx::UniformType::Vec4, maxLightsCount);
-	u_lightRgbInnerR = bgfx::createUniform("u_lightRgbInnerR", bgfx::UniformType::Vec4, maxLightsCount);
+	//u_lightPosRadius = bgfx::createUniform("u_lightPosRadius", bgfx::UniformType::Vec4, maxLightsCount);
+	//u_lightRgbInnerR = bgfx::createUniform("u_lightRgbInnerR", bgfx::UniformType::Vec4, maxLightsCount);
 	u_viewProjInv = bgfx::createUniform("u_viewProjInv", bgfx::UniformType::Mat4);
 
 	u_sphericalHarmonics = bgfx::createUniform("u_sphericalHarmonics", bgfx::UniformType::Vec4, 9);
@@ -422,9 +428,11 @@ void Render::Draw(SystemsManager& systems)
 			;
 
 		//TODO dont recreate on resize
-		m_clusterListTex = bgfx::createTexture2D(clusterWidth * clusterHeight * clusterDepth, 1, false, 1, bgfx::TextureFormat::RG32U, BGFX_TEXTURE_RT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
-		m_itemsListTex = bgfx::createTexture2D(clusterWidth * clusterHeight * clusterDepth * 4, 1, false, 1, bgfx::TextureFormat::RG16U, BGFX_TEXTURE_RT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
-		m_lightsListTex = bgfx::createTexture2D(clusterWidth * clusterHeight * clusterDepth, 1, false, 1, bgfx::TextureFormat::RGBA32F, BGFX_TEXTURE_RT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
+		m_clusterListTex = bgfx::createTexture2D(clustersCount * texelsPerCluster, 1, false, 1, bgfx::TextureFormat::RG32U, BGFX_TEXTURE_RT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
+		int itemsWidth = itemsDiv;
+		int itemsHeight = (maxItemsCount * texelsPerItem) / itemsWidth + 1;
+		m_itemsListTex = bgfx::createTexture2D(itemsWidth, itemsHeight, false, 1, bgfx::TextureFormat::RG16U, BGFX_TEXTURE_RT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
+		m_lightsListTex = bgfx::createTexture2D(maxLightsCount * texelsPerLight, 1, false, 1, bgfx::TextureFormat::RGBA32F, BGFX_TEXTURE_RT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
 		//TODO they are not same size as clustersCount!!!
 
 		m_fullScreenTex = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
@@ -498,7 +506,7 @@ void Render::Draw(SystemsManager& systems)
 
 	auto camera = Camera::GetMain();
 	if (camera == nullptr) {
-		bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Colors::black.ToIntRGBA(), 1.0f, 0);
+		bgfx::setViewClear(kRenderPassGeometry, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Colors::black.ToIntRGBA(), 1.0f, 0);
 		bgfx::dbgTextPrintf(1, 1, 0x0f, "NO CAMERA");
 		EndFrame();
 		return;
@@ -510,7 +518,7 @@ void Render::Draw(SystemsManager& systems)
 	uint8_t clearOther = 2;
 	bgfx::setPaletteColor(clearAlbedo, camera->GetClearColor().ToIntRGBA());
 	bgfx::setPaletteColor(clearOther, Colors::black.ToIntRGBA());
-	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 1.0f, 0, clearAlbedo, clearOther, clearOther, clearOther, clearOther, clearOther, clearOther, clearOther);
+	bgfx::setViewClear(kRenderPassGeometry, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 1.0f, 0, clearAlbedo, clearOther, clearOther, clearOther, clearOther, clearOther, clearOther, clearOther);
 
 	Vector3 lightsPoi = GetPos(camera->gameObject()->transform()->matrix) + GetRot(camera->gameObject()->transform()->matrix) * Vector3_forward * 15.f;
 
@@ -534,7 +542,7 @@ void Render::Draw(SystemsManager& systems)
 	}
 	{
 		OPTICK_EVENT("bgfx::touch");
-		bgfx::touch(0);//TODO not needed ?
+		bgfx::touch(kRenderPassGeometry);//TODO not needed ?
 	}
 
 	if (CfgGetBool("showFps")) {
@@ -543,14 +551,14 @@ void Render::Draw(SystemsManager& systems)
 
 	if (camera == nullptr) {
 		if (camera == nullptr) {
-			bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Colors::black.ToIntRGBA(), 1.0f, 0);
+			bgfx::setViewClear(kRenderPassGeometry, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, Colors::black.ToIntRGBA(), 1.0f, 0);
 			bgfx::dbgTextPrintf(1, 1, 0x0f, "NO CAMERA");
 		}
 	}
 
 
 	{
-		bgfx::setViewTransform(0, &camera->GetViewMatrix()(0, 0), &camera->GetProjectionMatrix()(0, 0));
+		bgfx::setViewTransform(kRenderPassGeometry, &camera->GetViewMatrix()(0, 0), &camera->GetProjectionMatrix()(0, 0));
 		bgfx::setViewTransform(1, &camera->GetViewMatrix()(0, 0), &camera->GetProjectionMatrix()(0, 0));
 		bgfx::setViewTransform(kRenderPassGeometry, &camera->GetViewMatrix()(0, 0), &camera->GetProjectionMatrix()(0, 0));
 		Vector3 cameraPos = GetPos(camera->GetViewMatrix().Inverse());
@@ -577,7 +585,7 @@ void Render::Draw(SystemsManager& systems)
 
 	systems.Draw();
 
-	DrawAll(0, *camera, nullptr);
+	DrawAll(kRenderPassGeometry, *camera, nullptr);
 
 	// combining gbuffer
 	{
@@ -736,43 +744,43 @@ int Render::GetNextFullScreenTextureViewId() const {
 }
 
 void Render::UpdateLights(Vector3 poi) {
-	std::vector<PointLight*> lights = PointLight::pointLights;
+	//std::vector<PointLight*> lights = PointLight::pointLights;
 
-	Vector4 posRadius[maxLightsCount];
-	Vector4 colorInnerRadius[maxLightsCount];
+	//Vector4 posRadius[maxLightsCount];
+	//Vector4 colorInnerRadius[maxLightsCount];
 
-	for (int i = 0; i < maxLightsCount; i++) {
-		if (lights.size() == 0) {
-			for (int j = i; j < maxLightsCount; j++) {
-				posRadius[j] = Vector4(FLT_MAX, FLT_MAX, FLT_MAX, 0.f);
-				colorInnerRadius[j].x = 0;
-				colorInnerRadius[j].y = 0;
-				colorInnerRadius[j].z = 0;
-				colorInnerRadius[j].w = 0;
-			}
-			break;
-		}
-		int closestLightIdx = 0;
-		float closestDistance = FLT_MAX;
-		for (int lightIdx = 0; lightIdx < lights.size(); lightIdx++) {
-			float distance = Vector3::Distance(poi, lights[lightIdx]->gameObject()->transform()->GetPosition());
-			distance -= lights[lightIdx]->radius;
-			if (distance < closestDistance) {
-				closestDistance = distance;
-				closestLightIdx = lightIdx;
-			}
-		}
+	//for (int i = 0; i < maxLightsCount; i++) {
+	//	if (lights.size() == 0) {
+	//		for (int j = i; j < maxLightsCount; j++) {
+	//			posRadius[j] = Vector4(FLT_MAX, FLT_MAX, FLT_MAX, 0.f);
+	//			colorInnerRadius[j].x = 0;
+	//			colorInnerRadius[j].y = 0;
+	//			colorInnerRadius[j].z = 0;
+	//			colorInnerRadius[j].w = 0;
+	//		}
+	//		break;
+	//	}
+	//	int closestLightIdx = 0;
+	//	float closestDistance = FLT_MAX;
+	//	for (int lightIdx = 0; lightIdx < lights.size(); lightIdx++) {
+	//		float distance = Vector3::Distance(poi, lights[lightIdx]->gameObject()->transform()->GetPosition());
+	//		distance -= lights[lightIdx]->radius;
+	//		if (distance < closestDistance) {
+	//			closestDistance = distance;
+	//			closestLightIdx = lightIdx;
+	//		}
+	//	}
 
-		auto closestLight = lights[closestLightIdx];
-		lights.erase(lights.begin() + closestLightIdx);
+	//	auto closestLight = lights[closestLightIdx];
+	//	lights.erase(lights.begin() + closestLightIdx);
 
-		Vector3 pos = closestLight->gameObject()->transform()->GetPosition();
-		posRadius[i] = Vector4(pos, closestLight->radius);
-		Color color = closestLight->color;
-		colorInnerRadius[i] = Vector4(color.r, color.g, color.b, closestLight->innerRadius);
-	}
-	bgfx::setUniform(u_lightPosRadius, &posRadius, maxLightsCount);
-	bgfx::setUniform(u_lightRgbInnerR, &colorInnerRadius, maxLightsCount);
+	//	Vector3 pos = closestLight->gameObject()->transform()->GetPosition();
+	//	posRadius[i] = Vector4(pos, closestLight->radius);
+	//	Color color = closestLight->color;
+	//	colorInnerRadius[i] = Vector4(color.r, color.g, color.b, closestLight->innerRadius);
+	//}
+	//bgfx::setUniform(u_lightPosRadius, &posRadius, maxLightsCount);
+	//bgfx::setUniform(u_lightRgbInnerR, &colorInnerRadius, maxLightsCount);
 
 	if (Scene::Get()) {
 		if (Scene::Get()->sphericalHarmonics) {
@@ -917,6 +925,8 @@ bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, co
 }
 
 void Render::ApplyMaterialProperties(const Material* material) {
+	shadowRenderer->ApplyUniforms();
+
 	bgfx::setUniform(u_color, &material->color);
 
 	if (material->colorTex) {

@@ -175,7 +175,7 @@ if(u_hasShadowMap > 0.0){
 
 	vec3 v = v_view;
 	vec3 vd = -normalize(v_view);
-	vec3 n = v_normal;
+	vec3 n = w_normal;
 	Light light = evalLight(v, u_lightPosition, u_spotDirection, u_spotInner, u_spotOuter, u_lightAttnParams);
 
 	vec2 lc = lit(light.ld, n, vd, u_materialKs.w) * light.attn;

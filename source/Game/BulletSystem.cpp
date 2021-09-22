@@ -222,8 +222,10 @@ void BulletSystem::DrawBullets(BulletsVector& bulletsVector) {
 	// Set render states.
 	bgfx_set_state(BGFX_STATE_DEFAULT, 0);
 
-	// Submit primitive for rendering to view 0.
-	bgfx_submit(0, *(bgfx_program_handle_t*)(&bulletsVector.settings->renderer->material->shader->program), 0, BGFX_DISCARD_ALL);
+	// Submit primitive for rendering to view kRenderPassGeometry.
+	const int kRenderPassGeometry = 11;//TODO use var from render
+
+	bgfx_submit(kRenderPassGeometry, *(bgfx_program_handle_t*)(&bulletsVector.settings->renderer->material->shader->program), 0, BGFX_DISCARD_ALL);
 }
 
 void BulletSystem::Term() {}

@@ -103,9 +103,19 @@ private:
 	std::unordered_map<std::string, bgfx::UniformHandle> matrixUniforms;
 
 	//TODO separate cluster class to handle all this stuff
-	int clusterWidth = 16;
-	int clusterHeight = 8;
-	int clusterDepth = 4;
+	static constexpr int clusterWidth = 16;
+	static constexpr int clusterHeight = 8;
+	static constexpr int clusterDepth = 4;
+	static constexpr int clustersCount = clusterWidth * clusterHeight * clusterDepth;
+	static constexpr int maxItemsCount = clustersCount * 256;
+	static constexpr int maxLightsCount = 1024;
+	static constexpr int texelsPerCluster = 1;
+	static constexpr int texelsPerItem = 1;
+	static constexpr int texelsPerLight = 2;
+	static constexpr int itemsDiv = 1024;
+
+
+
 	bgfx::TextureHandle m_clusterListTex;
 	bgfx::TextureHandle m_itemsListTex;
 	bgfx::TextureHandle m_lightsListTex;
@@ -117,7 +127,7 @@ private:
 	bgfx::TextureHandle m_fullScreenTex2;
 	int currentFullScreenTextureIdx = 0;
 	
-	static constexpr int maxLightsCount = 8;
+
 	bgfx::UniformHandle u_lightPosRadius;
 	bgfx::UniformHandle u_lightRgbInnerR;
 	bgfx::UniformHandle u_viewProjInv;

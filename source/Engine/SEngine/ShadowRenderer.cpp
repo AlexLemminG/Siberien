@@ -9,6 +9,7 @@
 #include "Render.h"
 #include "Material.h"
 #include "Resources.h"
+#include "STime.h"
 #include "bgfx/bgfx.h"
 #include "bx/bx.h"
 #include "bx/math.h"
@@ -425,6 +426,7 @@ void ShadowRenderer::Term() {
 		}
 	}
 }
+float m_shadowMapMtx[ShadowMapRenderTargets::Count][16];
 
 void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 {
@@ -434,6 +436,8 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		bgfx::setUniform(render->GetOrCreateVectorUniform("u_params0"), &Vector4(1, 1, 0, 0));
 		return;
 	}
+
+	this->shadowBias = light->shadowBias;
 	//TODO
 	int lightShadowSize = 1024 * 2;
 	static bool m_stencilPack = false;
@@ -451,7 +455,6 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	static uint8_t clearStencil = 0;
 	static bool s_flipV = false;
 
-	float m_shadowMapMtx[ShadowMapRenderTargets::Count][16];
 
 
 	static int RENDERVIEW_SHADOWMAP_0_ID = 5;
@@ -1206,6 +1209,16 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		}
 	}
 
+	lastRenderedFrame = Time::frameCount();
+}
+
+void ShadowRenderer::ApplyUniforms() {
+	bool renderedPrevFrame = lastRenderedFrame == Time::frameCount();
+	if (!renderedPrevFrame) {
+		return;
+	}
+	auto render = Graphics::Get()->render;
+
 	//TODO render->GetOrCreate();
 	auto& matrixUniforms = Graphics::Get()->render->matrixUniforms;
 	for (int i = 0; i < _countof(m_shadowMapMtx); i++) {
@@ -1236,23 +1249,26 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		else {
 			uniform = it->second;
 		}
-		bgfx::setTexture(4 + ii, uniform, bgfx::getTexture(s_rtShadowMap[ii]));
+		bgfx::setTexture(6 + ii, uniform, bgfx::getTexture(s_rtShadowMap[ii]));
 	}
+
+
+	bgfx::setUniform(render->GetOrCreateVectorUniform("u_csmFarDistances"), &s_uniforms.m_csmFarDistances);
 
 	Vector4 v;
 
 	v = Vector4(1, 1, 1, 0);
 	bgfx::setUniform(render->GetOrCreateVectorUniform("u_params0"), &v.x);
 
-	v = Vector4(light->shadowBias, 0.001f, 0.7f, 500.0f);
+	v = Vector4(shadowBias, 0.001f, 0.7f, 500.0f);
 	bgfx::setUniform(render->GetOrCreateVectorUniform("u_params1"), &v.x);
 
-	v = Vector4(1, 0, 1.f / shadowMapSize, 0);
+	v = Vector4(1, 0, 1.f / m_currentShadowMapSize, 0);
 	bgfx::setUniform(render->GetOrCreateVectorUniform("u_params2"), &v.x);
 
 	v = Vector4(2, 2, 0.2f, 0.2f);
 	bgfx::setUniform(render->GetOrCreateVectorUniform("u_smSamplingParams"), &v.x);
 
 	v = Vector4(2, 2, 0.2f, 0.2f);
-	bgfx::setUniform(render->GetOrCreateVectorUniform("u_csmFarDistances"), &s_uniforms.m_csmFarDistances);
+
 }

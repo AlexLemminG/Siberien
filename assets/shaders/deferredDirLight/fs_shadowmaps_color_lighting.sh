@@ -29,11 +29,6 @@ uniform vec4 u_tetraNormalBlue;
 uniform vec4 u_tetraNormalRed;
 #endif
 
-SAMPLER2D(s_shadowMap0, 4);
-SAMPLER2D(s_shadowMap1, 5);
-SAMPLER2D(s_shadowMap2, 6);
-SAMPLER2D(s_shadowMap3, 7);
-
 struct Shader
 {
 	vec3 ambi;
