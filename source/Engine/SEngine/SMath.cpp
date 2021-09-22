@@ -5,6 +5,7 @@
 
 void Frustum::SetFromViewProjection(const Matrix4& viewProjection) {
 	bgfx_examples::buildFrustumPlanes((bx::Plane*)frustumPlanes, &viewProjection(0, 0));
+	matrix = viewProjection;
 }
 
 bool Frustum::IsOverlapingSphere(const Sphere& sphere) const
@@ -18,6 +19,8 @@ bool Frustum::IsOverlapingSphere(const Sphere& sphere) const
 	}
 	return res;
 }
+
+Matrix4 Frustum::GetMatrix() const { return matrix; }
 
 bool AABB::Contains(const Vector3 pos) const {
 	return min.x <= pos.x && min.y <= pos.y && min.z <= pos.z && max.x >= pos.x && max.y >= pos.y && max.z >= pos.z;

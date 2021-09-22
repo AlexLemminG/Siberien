@@ -427,7 +427,9 @@ public:
 
 	bool IsOverlapingSphere(const Sphere& sphere)const;
 
+	Matrix4 GetMatrix()const;
 private:
+	Matrix4 matrix;
 	Vector4 frustumPlanes[6];
 };
 

@@ -69,7 +69,8 @@ Vector3 multH(const Matrix4& m, const Vector3& v) {
 	return Vector3(v4[0], v4[1], v4[2]) * t;
 }
 
-void Render::DrawLights(const ICamera& camera) {
+void Render::PrepareLights(const ICamera& camera) {
+	OPTICK_EVENT();
 	if (!deferredLightShader || !deferredDirLightShader) {
 		return;
 	}
@@ -136,18 +137,18 @@ void Render::DrawLights(const ICamera& camera) {
 			y1 = prevHeight;
 		}
 
-		bgfx::setTexture(0, gBuffer.normalSampler, gBuffer.normalTexture);
-		bgfx::setTexture(1, gBuffer.depthSampler, gBuffer.depthTexture);
-		const uint16_t scissorHeight = uint16_t(y1 - y0);
-		//TODO something wrong
-		bgfx::setScissor(uint16_t(x0), uint16_t(prevHeight - scissorHeight - y0), uint16_t(x1 - x0), uint16_t(scissorHeight));
-		bgfx::setState(0
-			| BGFX_STATE_WRITE_RGB
-			| BGFX_STATE_WRITE_A
-			| BGFX_STATE_BLEND_ADD
-		);
-		Graphics::Get()->SetScreenSpaceQuadBuffer();
-		bgfx::submit(kRenderPassLight, deferredLightShader->program);
+		//bgfx::setTexture(0, gBuffer.normalSampler, gBuffer.normalTexture);
+		//bgfx::setTexture(1, gBuffer.depthSampler, gBuffer.depthTexture);
+		//const uint16_t scissorHeight = uint16_t(y1 - y0);
+		////TODO something wrong
+		//bgfx::setScissor(uint16_t(x0), uint16_t(prevHeight - scissorHeight - y0), uint16_t(x1 - x0), uint16_t(scissorHeight));
+		//bgfx::setState(0
+		//	| BGFX_STATE_WRITE_RGB
+		//	| BGFX_STATE_WRITE_A
+		//	| BGFX_STATE_BLEND_ADD
+		//);
+		//Graphics::Get()->SetScreenSpaceQuadBuffer();
+		//bgfx::submit(kRenderPassLight, deferredLightShader->program);
 	}
 
 	std::vector<DirLight*> dirLights = DirLight::dirLights;
@@ -161,17 +162,98 @@ void Render::DrawLights(const ICamera& camera) {
 		bgfx::setUniform(u_dirLightDirHandle, &dir, 1);
 		bgfx::setUniform(u_dirLightColorHandle, &color, 1);
 
-		bgfx::setTexture(0, gBuffer.normalSampler, gBuffer.normalTexture);
-		bgfx::setTexture(1, gBuffer.depthSampler, gBuffer.depthTexture);
-		bgfx::setState(0
-			| BGFX_STATE_WRITE_RGB
-			| BGFX_STATE_WRITE_A
-			| BGFX_STATE_BLEND_ADD
-		);
-		Graphics::Get()->SetScreenSpaceQuadBuffer();
-		bgfx::submit(kRenderPassLight, deferredDirLightShader->program);
+		//bgfx::setTexture(0, gBuffer.normalSampler, gBuffer.normalTexture);
+		//bgfx::setTexture(1, gBuffer.depthSampler, gBuffer.depthTexture);
+		//bgfx::setState(0
+		//	| BGFX_STATE_WRITE_RGB
+		//	| BGFX_STATE_WRITE_A
+		//	| BGFX_STATE_BLEND_ADD
+		//);
+		//Graphics::Get()->SetScreenSpaceQuadBuffer();
+		//bgfx::submit(kRenderPassLight, deferredDirLightShader->program);
 	}
 
+
+	struct ClusterData {
+		uint32_t offset = 0;
+		uint8_t numLights = 0;
+		uint8_t numDecals = 0;
+		uint8_t numProbes = 0;
+		uint8_t padding;
+	};
+	struct ItemData {
+		uint16_t lightIdx;
+		uint16_t dummy;
+	};
+	//TODO adjust for dir light
+	struct LightData {
+		Vector3 pos;
+		float radius;
+		Vector3 color;
+		float innerRadius;
+	};
+	auto viewProj = camera.GetViewProjectionMatrix();
+	Vector3 clusterScale = Vector3(1.f / clusterWidth, 1.f / clusterHeight, 1.f / clusterDepth);
+	Vector3 clusterOffsetInitial = Vector3(-1.f + clusterScale.x, -1.f + clusterScale.y, -1.f + clusterScale.z);
+
+	std::vector<ItemData> items;
+	items.resize(512 * 4);//TODO not 4
+	std::vector<LightData> lights;
+	lights.resize(512);//TODO not 512
+	std::vector<ClusterData> clusters;
+	clusters.resize(512);
+	int currentOffset = 0;
+	for (int lightIdx = 0; lightIdx < pointLights.size(); lightIdx++) {
+		auto light = pointLights[lightIdx];
+		LightData lightData;
+		lightData.pos = light->gameObject()->transform()->GetPosition();
+		lightData.innerRadius = light->innerRadius;
+		lightData.color.x = light->color.r;
+		lightData.color.y = light->color.g;
+		lightData.color.z = light->color.b;
+		lightData.radius = light->radius;
+		lights[lightIdx] = (lightData);
+	}
+	for (int w = 0; w < clusterWidth; w++) {
+		for (int h = 0; h < clusterHeight; h++) {
+			for (int d = 0; d < clusterDepth; d++) {
+				int offsetBefore = currentOffset;
+				auto extraMat = Matrix4::Transform(clusterOffsetInitial + clusterScale * Vector3(w, h, d) * 2.f, Matrix3::Identity(), clusterScale);
+				extraMat = extraMat.Inverse();
+				auto clusterViewProj = extraMat * viewProj;
+
+				int idx = w * clusterDepth * clusterHeight + h * clusterDepth + d;
+
+				Frustum frustum;
+				frustum.SetFromViewProjection(clusterViewProj);
+
+				//Dbg::Draw(frustum);
+
+				int numLights = 0;
+				for (int lightIdx = 0; lightIdx < pointLights.size(); lightIdx++) {
+					auto pos = lights[lightIdx].pos;
+					auto sphere = Sphere{ pos, lights[lightIdx].radius };
+					if (frustum.IsOverlapingSphere(sphere)) {
+						numLights++;
+						auto data = ItemData();
+						data.lightIdx = lightIdx;
+						items[currentOffset] = (data);
+						currentOffset++;
+					}
+				}
+
+				clusters[idx].offset = offsetBefore;
+				clusters[idx].numLights = numLights;
+				clusters[idx].numDecals = 0;
+				clusters[idx].numProbes = 0;
+				clusters[idx].padding = 0;
+			}
+		}
+	}
+	//TODO not 512
+	bgfx::updateTexture2D(m_clusterListTex, 0, 0, 0, 0, 512, 1, bgfx::copy(clusters.data(), clusters.size() * sizeof(ClusterData)));
+	bgfx::updateTexture2D(m_itemsListTex, 0, 0, 0, 0, 512 * 4, 1, bgfx::copy(items.data(), items.size() * sizeof(ItemData)));
+	bgfx::updateTexture2D(m_lightsListTex, 0, 0, 0, 0, 512, 1, bgfx::copy(lights.data(), lights.size() * sizeof(LightData)));
 }
 
 
@@ -213,12 +295,12 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = true;//TODO cfgvar?
-	initInfo.profile = true;
+	initInfo.debug = false;//TODO cfgvar?
+	initInfo.profile = false;
 	initInfo.type = bgfx::RendererType::Direct3D11;
 #ifdef SE_DBG_OUT
-	initInfo.limits.transientVbSize *= 10;//TODO debug only
-	initInfo.limits.transientIbSize *= 10;//TODO debug only
+	//initInfo.limits.transientVbSize *= 10;//TODO debug only
+	//initInfo.limits.transientIbSize *= 10;//TODO debug only
 #endif
 	bgfx::init(initInfo);
 	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
@@ -235,6 +317,9 @@ bool Render::Init()
 	s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 	s_texNormal = bgfx::createUniform("s_texNormal", bgfx::UniformType::Sampler);
 	s_texEmissive = bgfx::createUniform("s_texEmissive", bgfx::UniformType::Sampler);
+	s_texClusterList = bgfx::createUniform("s_texClusterList", bgfx::UniformType::Sampler);
+	s_texItemsList = bgfx::createUniform("s_texItemsList", bgfx::UniformType::Sampler);
+	s_texLightsList = bgfx::createUniform("s_texLightsList", bgfx::UniformType::Sampler);
 
 	u_lightPosRadius = bgfx::createUniform("u_lightPosRadius", bgfx::UniformType::Vec4, maxLightsCount);
 	u_lightRgbInnerR = bgfx::createUniform("u_lightRgbInnerR", bgfx::UniformType::Vec4, maxLightsCount);
@@ -336,39 +421,48 @@ void Render::Draw(SystemsManager& systems)
 			| BGFX_SAMPLER_V_CLAMP
 			;
 
+		//TODO dont recreate on resize
+		m_clusterListTex = bgfx::createTexture2D(clusterWidth * clusterHeight * clusterDepth, 1, false, 1, bgfx::TextureFormat::RG32U, BGFX_TEXTURE_RT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
+		m_itemsListTex = bgfx::createTexture2D(clusterWidth * clusterHeight * clusterDepth * 4, 1, false, 1, bgfx::TextureFormat::RG16U, BGFX_TEXTURE_RT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
+		m_lightsListTex = bgfx::createTexture2D(clusterWidth * clusterHeight * clusterDepth, 1, false, 1, bgfx::TextureFormat::RGBA32F, BGFX_TEXTURE_RT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
+		//TODO they are not same size as clustersCount!!!
+
 		m_fullScreenTex = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
 		m_fullScreenBuffer = bgfx::createFrameBuffer(1, &m_fullScreenTex, true);
 		m_fullScreenTex2 = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
 		m_fullScreenBuffer2 = bgfx::createFrameBuffer(1, &m_fullScreenTex2, true);
 
 		gBuffer.albedoTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
-		gBuffer.normalTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
-		gBuffer.lightTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
-		gBuffer.emissiveTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
+		//gBuffer.normalTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
+		//gBuffer.lightTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
+		//gBuffer.emissiveTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
 		gBuffer.depthTexture = bgfx::createTexture2D(uint16_t(width), uint16_t(height), false, 1, bgfx::TextureFormat::D32F, tsFlags);
 		bgfx::TextureHandle gbufferTex[] =
 		{
 			gBuffer.albedoTexture,
-			gBuffer.normalTexture,
-			gBuffer.lightTexture,
-			gBuffer.emissiveTexture,
+			//gBuffer.normalTexture,
+			//gBuffer.lightTexture,
+			//gBuffer.emissiveTexture,
 			gBuffer.depthTexture
 		};
 		gBuffer.buffer = bgfx::createFrameBuffer(BX_COUNTOF(gbufferTex), gbufferTex, true);
-		gBuffer.lightBuffer = bgfx::createFrameBuffer(1, &gBuffer.lightTexture, true);//TODO delete
+		//gBuffer.lightBuffer = bgfx::createFrameBuffer(1, &gBuffer.lightTexture, true);//TODO delete
 		//TODO destroy
 		gBuffer.albedoSampler = bgfx::createUniform("s_albedo", bgfx::UniformType::Sampler);
-		gBuffer.normalSampler = bgfx::createUniform("s_normals", bgfx::UniformType::Sampler);
-		gBuffer.lightSampler = bgfx::createUniform("s_light", bgfx::UniformType::Sampler);
-		gBuffer.emissiveSampler = bgfx::createUniform("s_emissive", bgfx::UniformType::Sampler);
+		//gBuffer.normalSampler = bgfx::createUniform("s_normals", bgfx::UniformType::Sampler);
+		//gBuffer.lightSampler = bgfx::createUniform("s_light", bgfx::UniformType::Sampler);
+		//gBuffer.emissiveSampler = bgfx::createUniform("s_emissive", bgfx::UniformType::Sampler);
 		gBuffer.depthSampler = bgfx::createUniform("s_depth", bgfx::UniformType::Sampler);
 
 		bgfx::setName(gBuffer.buffer, "gbuffer");
 		bgfx::setName(gBuffer.albedoTexture, "albedo");
-		bgfx::setName(gBuffer.normalTexture, "normal");
-		bgfx::setName(gBuffer.lightTexture, "light");
-		bgfx::setName(gBuffer.lightBuffer, "light");
-		bgfx::setName(gBuffer.emissiveTexture, "emissive");
+		bgfx::setName(m_clusterListTex, "clusterList");
+		bgfx::setName(m_itemsListTex, "itemsList");
+		bgfx::setName(m_lightsListTex, "lightsList");
+		//bgfx::setName(gBuffer.normalTexture, "normal");
+		//bgfx::setName(gBuffer.lightTexture, "light");
+		//bgfx::setName(gBuffer.lightBuffer, "light");
+		//bgfx::setName(gBuffer.emissiveTexture, "emissive");
 		bgfx::setName(gBuffer.depthTexture, "depth");
 
 		bgfx::setName(m_fullScreenTex, "fullScreenTex");
@@ -379,7 +473,7 @@ void Render::Draw(SystemsManager& systems)
 		bgfx::setViewFrameBuffer(kRenderPassGeometry, gBuffer.buffer);
 		bgfx::setViewFrameBuffer(kRenderPassFullScreen1, m_fullScreenBuffer);
 		bgfx::setViewFrameBuffer(kRenderPassFullScreen2, m_fullScreenBuffer2);
-		bgfx::setViewFrameBuffer(kRenderPassLight, gBuffer.lightBuffer);
+		//bgfx::setViewFrameBuffer(kRenderPassLight, gBuffer.lightBuffer);
 		bgfx::setViewFrameBuffer(kRenderPassBlitToScreen, BGFX_INVALID_HANDLE);//TODO do we need third buffer to go postprocessing?
 
 	}
@@ -479,32 +573,43 @@ void Render::Draw(SystemsManager& systems)
 	dbgMeshesDrawn = 0;
 	dbgMeshesCulled = 0;
 
-	DrawAll(0, *camera, nullptr);
+	PrepareLights(*camera);
 
 	systems.Draw();
 
-	DrawLights(*camera);
+	DrawAll(0, *camera, nullptr);
 
 	// combining gbuffer
 	{
-		if (!defferedCombineMaterial || !defferedCombineMaterial->shader) {
-			return;
-		}
-		ApplyMaterialProperties(defferedCombineMaterial.get());
+		//if (!defferedCombineMaterial || !defferedCombineMaterial->shader) {
+		//	return;
+		//}
+		//ApplyMaterialProperties(defferedCombineMaterial.get());
 
+		//bgfx::setTexture(0, gBuffer.albedoSampler, gBuffer.albedoTexture);
+		//bgfx::setTexture(1, gBuffer.normalSampler, gBuffer.normalTexture);
+		//bgfx::setTexture(2, gBuffer.lightSampler, gBuffer.lightTexture);
+		//bgfx::setTexture(3, gBuffer.emissiveSampler, gBuffer.emissiveTexture);
+		//bgfx::setTexture(4, gBuffer.depthSampler, gBuffer.depthTexture);
+
+		//bgfx::setState(0
+		//	| BGFX_STATE_WRITE_RGB
+		//	| BGFX_STATE_WRITE_A
+		//);
+
+		//Graphics::Get()->SetScreenSpaceQuadBuffer();
+		//bgfx::submit(kRenderPassFullScreen1, defferedCombineMaterial->shader->program);
+		//bgfx::setViewFrameBuffer(currentFreeViewId, currentFullScreenTextureIdx == 1 ? m_fullScreenBuffer : m_fullScreenBuffer2);
+		//bgfx::setViewRect(currentFreeViewId, 0, 0, prevWidth, prevHeight);
+	}
+	{
 		bgfx::setTexture(0, gBuffer.albedoSampler, gBuffer.albedoTexture);
-		bgfx::setTexture(1, gBuffer.normalSampler, gBuffer.normalTexture);
-		bgfx::setTexture(2, gBuffer.lightSampler, gBuffer.lightTexture);
-		bgfx::setTexture(3, gBuffer.emissiveSampler, gBuffer.emissiveTexture);
-		bgfx::setTexture(4, gBuffer.depthSampler, gBuffer.depthTexture);
-
 		bgfx::setState(0
 			| BGFX_STATE_WRITE_RGB
 			| BGFX_STATE_WRITE_A
 		);
-
 		Graphics::Get()->SetScreenSpaceQuadBuffer();
-		bgfx::submit(kRenderPassFullScreen1, defferedCombineMaterial->shader->program);
+		bgfx::submit(kRenderPassFullScreen1, simpleBlitMat->shader->program);
 		bgfx::setViewFrameBuffer(currentFreeViewId, currentFullScreenTextureIdx == 1 ? m_fullScreenBuffer : m_fullScreenBuffer2);
 		bgfx::setViewRect(currentFreeViewId, 0, 0, prevWidth, prevHeight);
 	}
@@ -565,6 +670,9 @@ void Render::Term()
 	bgfx::destroy(u_pixelSize);
 	bgfx::destroy(u_dirLightDirHandle);
 	bgfx::destroy(u_dirLightColorHandle);
+	bgfx::destroy(s_texClusterList);
+	bgfx::destroy(s_texItemsList);
+	bgfx::destroy(s_texLightsList);
 
 	if (bgfx::isValid(m_fullScreenBuffer)) {
 		bgfx::destroy(m_fullScreenBuffer);
@@ -574,6 +682,15 @@ void Render::Term()
 	}
 	if (bgfx::isValid(gBuffer.buffer)) {
 		bgfx::destroy(gBuffer.buffer);
+	}
+	if (bgfx::isValid(m_clusterListTex)) {
+		bgfx::destroy(m_clusterListTex);
+	}
+	if (bgfx::isValid(m_itemsListTex)) {
+		bgfx::destroy(m_itemsListTex);
+	}
+	if (bgfx::isValid(m_lightsListTex)) {
+		bgfx::destroy(m_lightsListTex);
 	}
 
 	bgfx::shutdown();
@@ -828,6 +945,9 @@ void Render::ApplyMaterialProperties(const Material* material) {
 			bgfx::setTexture(2, s_texEmissive, defaultEmissiveTexture->handle);
 		}
 	}
+	bgfx::setTexture(3, s_texClusterList, m_clusterListTex);
+	bgfx::setTexture(4, s_texItemsList, m_itemsListTex);
+	bgfx::setTexture(5, s_texLightsList, m_lightsListTex);
 
 	for (const auto& colorProp : material->colors) {
 		auto it = colorUniforms.find(colorProp.name);

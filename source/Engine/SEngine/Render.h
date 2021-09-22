@@ -71,7 +71,7 @@ private:
 	bool IsFullScreen();
 	void SetFullScreen(bool isFullScreen);
 
-	void DrawLights(const ICamera& camera);
+	void PrepareLights(const ICamera& camera);
 	void EndFrame();
 
 	void LoadAssets();
@@ -88,6 +88,9 @@ private:
 	bgfx::UniformHandle s_texColor;
 	bgfx::UniformHandle s_texNormal;
 	bgfx::UniformHandle s_texEmissive;
+	bgfx::UniformHandle s_texClusterList;
+	bgfx::UniformHandle s_texLightsList;
+	bgfx::UniformHandle s_texItemsList;
 	bgfx::UniformHandle u_sphericalHarmonics;
 	bgfx::UniformHandle u_pixelSize;
 	bgfx::UniformHandle s_fullScreen;
@@ -99,6 +102,15 @@ private:
 	std::unordered_map<std::string, bgfx::UniformHandle> textureUniforms;
 	std::unordered_map<std::string, bgfx::UniformHandle> matrixUniforms;
 
+	//TODO separate cluster class to handle all this stuff
+	int clusterWidth = 16;
+	int clusterHeight = 8;
+	int clusterDepth = 4;
+	bgfx::TextureHandle m_clusterListTex;
+	bgfx::TextureHandle m_itemsListTex;
+	bgfx::TextureHandle m_lightsListTex;
+	
+	
 	bgfx::FrameBufferHandle m_fullScreenBuffer;
 	bgfx::TextureHandle m_fullScreenTex;
 	bgfx::FrameBufferHandle m_fullScreenBuffer2;

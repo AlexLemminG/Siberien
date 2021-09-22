@@ -22,6 +22,37 @@ void Dbg::DrawLine(Vector3 from, Vector3 to, Color color) {
 	Draw(::Ray(from, to - from), Vector3::Distance(from, to), color);
 }
 
+void Dbg::Draw(Frustum frustum) {
+	auto inv = frustum.GetMatrix().Inverse();
+
+	Vector3 a1 = inv * Vector3(-1, +1, -1);
+	Vector3 a2 = inv * Vector3(-1, +1, +1);
+	Vector3 a3 = inv * Vector3(+1, +1, -1);
+	Vector3 a4 = inv * Vector3(+1, +1, +1);
+
+	Vector3 a5 = inv * Vector3(-1, -1, -1);
+	Vector3 a6 = inv * Vector3(-1, -1, +1);
+	Vector3 a7 = inv * Vector3(+1, -1, -1);
+	Vector3 a8 = inv * Vector3(+1, -1, +1);
+
+	//top
+	Dbg::DrawLine(a1, a2);
+	Dbg::DrawLine(a2, a3);
+	Dbg::DrawLine(a3, a4);
+	Dbg::DrawLine(a4, a1);
+	
+	//bottom
+	Dbg::DrawLine(a5, a6);
+	Dbg::DrawLine(a6, a7);
+	Dbg::DrawLine(a7, a8);
+	Dbg::DrawLine(a8, a5);
+
+	//sides
+	Dbg::DrawLine(a1, a5);
+	Dbg::DrawLine(a2, a6);
+	Dbg::DrawLine(a3, a7);
+	Dbg::DrawLine(a4, a8);
+}
 
 void Dbg::Draw(const AABB& aabb) {
 	OBB obb = aabb.ToOBB();
