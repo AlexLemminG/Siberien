@@ -1646,9 +1646,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="CMakeLists.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="res\assimp.rc">
       <Filter>Source Files</Filter>
     </ResourceCompile>

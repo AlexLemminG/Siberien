@@ -133,10 +133,10 @@ void Scene::DeactivateGameObjectInternal(std::shared_ptr<GameObject>& gameObject
 
 
 void Scene::SetComponentEnabledInternal(Component* component, bool isEnabled) {
-	if (component->isEnabled == isEnabled) {
+	if (component->IsEnabled() == isEnabled) {
 		return;
 	}
-	component->isEnabled = isEnabled;
+	component->SetFlags(Bits::SetMask(component->GetFlags(), Component::FLAGS::IS_ENABLED, isEnabled));
 	if (Engine::Get()->IsEditorMode() && std::find_if(component->GetType()->attributes.begin(), component->GetType()->attributes.end(),
 		[](const auto& x) {
 			return dynamic_cast<ExecuteInEditModeAttribute*>(x.get()) != nullptr;
@@ -146,15 +146,15 @@ void Scene::SetComponentEnabledInternal(Component* component, bool isEnabled) {
 	}
 	if (isEnabled) {
 		component->OnEnable();
-		if (component->GetType()->HasTag("HasUpdate") && !component->ignoreUpdate) {
+		if (component->GetType()->HasTag("HasUpdate") && !component->HasFlag(Component::FLAGS::IGNORE_UPDATE)) {
 			enabledUpdateComponents.push_back(component);
 		}
-		if (component->GetType()->HasTag("HasFixedUpdate") && !component->ignoreFixedUpdate) {
+		if (component->GetType()->HasTag("HasFixedUpdate") && !component->HasFlag(Component::FLAGS::IGNORE_FIXED_UPDATE)) {
 			enabledFixedUpdateComponents.push_back(component);
 		}
 	}
 	else {
-		if (component->GetType()->HasTag("HasUpdate") && !component->ignoreUpdate) {
+		if (component->GetType()->HasTag("HasUpdate") && !component->HasFlag(Component::FLAGS::IGNORE_UPDATE)) {
 			auto it = std::find(enabledUpdateComponents.begin(), enabledUpdateComponents.end(), component);
 			int idx = it - enabledUpdateComponents.begin();
 			if (currentUpdateIdx < idx) {
@@ -169,7 +169,7 @@ void Scene::SetComponentEnabledInternal(Component* component, bool isEnabled) {
 				enabledUpdateComponents.pop_back();
 			}
 		}
-		if (component->GetType()->HasTag("HasFixedUpdate") && !component->ignoreFixedUpdate) {
+		if (component->GetType()->HasTag("HasFixedUpdate") && !component->HasFlag(Component::FLAGS::IGNORE_FIXED_UPDATE)) {
 			auto it = std::find(enabledFixedUpdateComponents.begin(), enabledFixedUpdateComponents.end(), component);
 			int idx = it - enabledFixedUpdateComponents.begin();
 			if (currentUpdateIdx < idx) {

@@ -71,9 +71,6 @@ Vector3 multH(const Matrix4& m, const Vector3& v) {
 
 void Render::PrepareLights(const ICamera& camera) {
 	OPTICK_EVENT();
-	if (!deferredLightShader || !deferredDirLightShader) {
-		return;
-	}
 	std::vector<PointLight*> pointLights = PointLight::pointLights;
 	std::vector<PointLight*> visiblePointLights;
 
@@ -159,7 +156,7 @@ void Render::PrepareLights(const ICamera& camera) {
 			continue;
 		}
 		shadowRenderer->Draw(light, camera);
-		auto dir = Vector4(GetRot(light->gameObject()->transform()->matrix) * Vector3_forward, 0.f);
+		auto dir = Vector4(light->gameObject()->transform()->GetForward(), 0.f);
 		auto color = Vector4(light->color.r, light->color.g, light->color.b, 0.f);
 		bgfx::setUniform(u_dirLightDirHandle, &dir, 1);
 		bgfx::setUniform(u_dirLightColorHandle, &color, 1);
@@ -313,12 +310,12 @@ bool Render::Init()
 	bgfx::setPlatformData(pd);
 
 	bgfx::Init initInfo{};
-	initInfo.debug = false;//TODO cfgvar?
-	initInfo.profile = false;
 	initInfo.type = bgfx::RendererType::Direct3D11;
-#ifdef SE_DBG_OUT
-	//initInfo.limits.transientVbSize *= 10;//TODO debug only
-	//initInfo.limits.transientIbSize *= 10;//TODO debug only
+#ifdef SE_HAS_DEBUG
+	initInfo.limits.transientVbSize *= 10;
+	initInfo.limits.transientIbSize *= 10;
+	initInfo.debug = true;
+	initInfo.profile = true;
 #endif
 	bgfx::init(initInfo);
 	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
@@ -385,21 +382,14 @@ void Render::LoadAssets() {
 	defaultNormalTexture = database->Load<Texture>("textures\\defaultNormal.png");
 	defaultEmissiveTexture = database->Load<Texture>("textures\\defaultEmissive.png");
 	simpleBlitMat = database->Load<Material>("materials\\simpleBlit.asset");
-	deferredLightShader = database->Load<Shader>("shaders\\deferredLight.asset");
-	deferredDirLightShader = database->Load<Shader>("shaders\\deferredDirLight.asset");
-	defferedCombineMaterial = database->Load<Material>("materials\\deferredCombine.asset");
 }
 
 void Render::UnloadAssets() {
 	//TODO terminate whole database textures, shaders and other stuff on Render::Term()
-
 	whiteTexture = nullptr;
 	defaultNormalTexture = nullptr;
 	defaultEmissiveTexture = nullptr;
 	simpleBlitMat = nullptr;
-	deferredLightShader = nullptr;
-	deferredDirLightShader = nullptr;
-	defferedCombineMaterial = nullptr;
 }
 void Render::Draw(SystemsManager& systems)
 {
@@ -532,7 +522,7 @@ void Render::Draw(SystemsManager& systems)
 	bgfx::setPaletteColor(clearOther, Colors::black.ToIntRGBA());
 	bgfx::setViewClear(kRenderPassGeometry, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 1.0f, 0, clearAlbedo, clearOther, clearOther, clearOther, clearOther, clearOther, clearOther, clearOther);
 
-	Vector3 lightsPoi = GetPos(camera->gameObject()->transform()->matrix) + GetRot(camera->gameObject()->transform()->matrix) * Vector3_forward * 15.f;
+	Vector3 lightsPoi = camera->gameObject()->transform()->GetPosition() + camera->gameObject()->transform()->GetForward() * 15.f;
 
 	static float fps = 0;
 	{
@@ -590,8 +580,8 @@ void Render::Draw(SystemsManager& systems)
 	UpdateLights(lightsPoi);
 
 
-	dbgMeshesDrawn = 0;
-	dbgMeshesCulled = 0;
+	//dbgMeshesDrawn = 0;
+	//dbgMeshesCulled = 0;
 
 	PrepareLights(*camera);
 
@@ -880,15 +870,15 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 }
 
 bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId) {
-	const auto& matrix = renderer->m_transform->matrix;
 	{
 		bool isVisible = camera.IsVisible(*renderer);
 		if (!isVisible) {
-			dbgMeshesCulled++;
+			//dbgMeshesCulled++;
 			return false;
 		}
 	}
-	dbgMeshesDrawn++;
+	const auto& matrix = renderer->m_transform->GetMatrix();
+	//dbgMeshesDrawn++;
 
 	if (renderer->bonesFinalMatrices.size() != 0) {
 		bgfx::setTransform(&renderer->bonesFinalMatrices[0], renderer->bonesFinalMatrices.size());
@@ -923,14 +913,14 @@ bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, co
 	}
 
 	auto discardFlags = BGFX_DISCARD_NONE;
-	if (clearMaterialState) {
-		discardFlags = Bits::SetMaskTrue(discardFlags, BGFX_DISCARD_BINDINGS | BGFX_DISCARD_STATE);
-	}
-	if (clearMeshState) {
-		discardFlags = Bits::SetMaskTrue(discardFlags, BGFX_DISCARD_INDEX_BUFFER | BGFX_DISCARD_VERTEX_STREAMS);
-	}
 	if (clearMaterialState && clearMeshState) {
-		discardFlags = Bits::SetMaskTrue(discardFlags, BGFX_DISCARD_ALL);
+		discardFlags = BGFX_DISCARD_ALL;
+	}
+	else if (clearMeshState) {
+		discardFlags = BGFX_DISCARD_INDEX_BUFFER | BGFX_DISCARD_VERTEX_STREAMS;
+	}
+	else if (clearMaterialState) {
+		discardFlags = BGFX_DISCARD_BINDINGS | BGFX_DISCARD_STATE;
 	}
 	bgfx::submit(viewId, material->shader->program, 0u, discardFlags);
 	return true;

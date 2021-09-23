@@ -108,7 +108,7 @@ void PhysicsSystem::Update() {
 	OPTICK_EVENT();
 	dynamicsWorld->stepSimulation(Time::deltaTime(), 2, Time::fixedDeltaTime());
 
-#ifdef SE_DBG_OUT
+#ifdef SE_HAS_DEBUG
 	auto dbgMode = Bits::SetMask(dynamicsWorld->getDebugDrawer()->getDebugMode(), btIDebugDraw::DBG_DrawWireframe, dbg_drawPhysShapes);
 	dynamicsWorld->getDebugDrawer()->setDebugMode(dbgMode);
 	if (dbg_drawPhysShapes) {

@@ -35,8 +35,8 @@ void RigidBody::OnEnable() {
 	offsetedShape->addChildShape(btTransform(btMatrix3x3::getIdentity(), -btConvert(centerOfMass * scale)), shape.get());
 	shape = offsetedShape;
 
-	auto matr = transform->matrix;
-	SetScale(matr, Vector3_one);
+	auto matr = transform->GetMatrix();
+	SetScale(matr, Vector3_one);//TODO optimize
 	btTransform groundTransform = btConvert(matr);
 
 	btScalar mass = isStatic ? 0.f : Mathf::Max(0.001f, this->mass);
@@ -70,7 +70,7 @@ void RigidBody::OnEnable() {
 	PhysicsSystem::Get()->GetGroupAndMask(layer, group, mask);
 	PhysicsSystem::Get()->dynamicsWorld->addRigidBody(pBody, group, mask);
 
-	ignoreUpdate = isStatic;
+	SetFlags(Bits::SetMask(GetFlags(), FLAGS::IGNORE_UPDATE, isStatic));
 }
 
 void RigidBody::Update() {
@@ -80,11 +80,11 @@ void RigidBody::Update() {
 			auto scale = transform->GetScale();
 			SetScale(matr, scale);
 			//TODO not so persistent
-			transform->matrix = matr;
+			transform->SetMatrix(matr);
 		}
 		else {
-			auto trans = transform->matrix;
-			SetScale(trans, Vector3_one);
+			auto trans = transform->GetMatrix();
+			SetScale(trans, Vector3_one);//TODO optimize
 			pMotionState->m_graphicsWorldTrans = btConvert(trans);
 		}
 	}

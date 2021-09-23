@@ -14,7 +14,7 @@ std::shared_ptr<btCollisionShape> BoxCollider::CreateShape() {
 	auto compound = std::make_shared<btCompoundShape>();
 
 	auto trans = gameObject()->transform();
-	Vector3 scale = GetScale(trans->matrix);
+	Vector3 scale = trans->GetScale();
 	Vector3 realSize = size;
 	realSize = realSize * scale;
 
@@ -34,7 +34,7 @@ std::shared_ptr<btCollisionShape> SphereCollider::CreateShape() {
 	auto compound = std::make_shared<btCompoundShape>();
 
 	auto trans = gameObject()->transform();
-	Vector3 scale = GetScale(trans->matrix);
+	Vector3 scale = trans->GetScale();
 	float realRadius = radius;
 	realRadius = realRadius * Mathf::Max(scale.x, Mathf::Max(scale.y, scale.z));
 

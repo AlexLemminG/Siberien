@@ -35,7 +35,8 @@ void TopDownCameraRig::Update() {
 		Physics::RaycastHit hit;
 
 		float radius = 0.5f;
-		if (Physics::SphereCast(hit, ray, radius, (currentPosWithoutCollision - safePos).Length())) {
+		int layerMask = Physics::GetLayerCollisionMask("staticGeom");
+		if (Physics::SphereCast(hit, ray, radius, (currentPosWithoutCollision - safePos).Length(), layerMask)) {
 			targetPos = hit.GetPoint() + hit.GetNormal() * radius;
 			trans->SetPosition(Mathf::Lerp(trans->GetPosition(), targetPos, Time::deltaTime() * collisionLerpT));
 		}

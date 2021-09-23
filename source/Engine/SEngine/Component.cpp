@@ -6,5 +6,5 @@ void Component::SetEnabled(bool isEnabled) {
 }
 
 bool Component::IsEnabled() const {
-	return isEnabled;
+	return GetFlags() & IS_ENABLED;
 }

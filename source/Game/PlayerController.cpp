@@ -177,8 +177,6 @@ void PlayerController::UpdateMovement() {
 		return;
 	}
 	rigidBody->Activate();
-	Matrix4 matrix = gameObject()->transform()->matrix;
-	auto rotation = GetRot(matrix);
 
 	Vector3 deltaPos = Vector3_zero;
 	if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_W)) {
@@ -226,7 +224,7 @@ void PlayerController::UpdateGrenading() {
 }
 void PlayerController::UpdateShooting() {
 	auto pos = gameObject()->transform()->GetPosition() + Vector3(0, bulletSpawnOffset, 0);
-	auto rot = GetRot(gameObject()->transform()->matrix);
+	auto rot = gameObject()->transform()->GetRotation();
 	auto gunTransform = Matrix4::Transform(pos, rot.ToMatrix(), Vector3_one);
 
 	if (!Input::GetKey(SDL_SCANCODE_Z) && !Input::GetMouseButton(0)) {//TODO
@@ -344,7 +342,7 @@ void PlayerController::SetRandomShootingLight() {
 		return;
 	}
 	auto t = gameObject()->transform();
-	auto lightPos = t->matrix * shootingLightOffset;
+	auto lightPos = t->GetMatrix() * shootingLightOffset;
 	shootingLight->GetComponent<Transform>()->SetPosition(lightPos);
 	auto color = shootingLightPrefab->GetComponent<PointLight>()->color;
 	if (GetCurrentGun()) {

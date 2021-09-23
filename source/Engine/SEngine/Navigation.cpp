@@ -505,7 +505,7 @@ void NavMesh::Build() {
 	for (auto go : Scene::Get()->GetAllGameObjects()) {
 		auto collider = go->GetComponent<MeshCollider>();
 		if (collider != nullptr && collider->mesh != nullptr) {
-			BuildForSingleMesh(collider->mesh, go->transform()->matrix);
+			BuildForSingleMesh(collider->mesh, go->transform()->GetMatrix());
 		}
 	}
 	BuildAllMeshes();

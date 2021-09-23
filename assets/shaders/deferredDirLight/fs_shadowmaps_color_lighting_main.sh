@@ -42,6 +42,8 @@ if(u_hasShadowMap > 0.0){
 	bool selection2 = all(lessThan(texcoord3, vec2_splat(0.99))) && all(greaterThan(texcoord3, vec2_splat(0.01)));
 	bool selection3 = all(lessThan(texcoord4, vec2_splat(0.99))) && all(greaterThan(texcoord4, vec2_splat(0.01)));
 
+	selection0 = true;
+
 	if (selection0)
 	{
 		vec4 shadowcoord = v_texcoord1;

@@ -25,7 +25,7 @@ void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::s
 			gameObject->flags = Bits::SetMaskTrue(gameObject->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR);//TODO !SE_RETAIL
 
 			auto transform = std::make_shared<Transform>();
-			transform->matrix = matrix;
+			transform->SetMatrix(matrix);
 			gameObject->components.push_back(transform);
 
 			auto material = this->material;

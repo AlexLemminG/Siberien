@@ -9,6 +9,10 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Retail|x64">
+      <Configuration>Retail</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -30,6 +34,12 @@
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -42,9 +52,13 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="..\Project.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'" Label="PropertySheets">
+    <Import Project="..\Project.props" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PreprocessorDefinitions>RYML_SHARED;RYML_EXPORTS;BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;_DEBUG;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_WIN64;NDEBUG;_CONSOLE;SE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -71,6 +85,23 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>RYML_SHARED;RYML_EXPORTS;BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;SE_RETAIL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>

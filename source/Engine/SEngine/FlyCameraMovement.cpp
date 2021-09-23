@@ -2,7 +2,7 @@
 
 void FlyCameraMovement::Update() {
 
-	Matrix4 matrix = gameObject()->transform()->matrix;
+	Matrix4 matrix = gameObject()->transform()->GetMatrix();
 	auto rotation = GetRot(matrix);
 
 	Vector3 deltaPos = Vector3_zero;
@@ -37,7 +37,7 @@ void FlyCameraMovement::Update() {
 	SetRot(matrix, rotation);
 	SetPos(matrix, GetPos(matrix) + deltaPos);
 
-	gameObject()->transform()->matrix = matrix;
+	gameObject()->transform()->SetMatrix(matrix);
 }
 
 DECLARE_TEXT_ASSET(FlyCameraMovement);

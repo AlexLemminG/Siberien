@@ -32,10 +32,10 @@ Sphere GetSphere(std::shared_ptr<GameObject> go) {
 	auto renderer = go->GetComponent<MeshRenderer>();
 	if (renderer) {
 		auto meshSphere = renderer->mesh->boundingSphere;
-		auto scale = GetScale(renderer->m_transform->matrix);
+		auto scale = renderer->m_transform->GetScale();
 		float maxScale = Mathf::Max(Mathf::Max(scale.x, scale.y), scale.z);
 		meshSphere.radius *= maxScale;
-		meshSphere.pos = renderer->m_transform->matrix * meshSphere.pos;
+		meshSphere.pos = renderer->m_transform->GetMatrix() * meshSphere.pos;
 
 		hasSphere = true;
 		sphere = meshSphere;
@@ -68,7 +68,7 @@ OBB GetOBB(std::shared_ptr<GameObject> go) {
 	auto renderer = go->GetComponent<MeshRenderer>();
 	if (renderer) {
 		auto aabb = renderer->mesh->aabb;
-		auto obb = renderer->m_transform->matrix * aabb.ToOBB();
+		auto obb = renderer->m_transform->GetMatrix() * aabb.ToOBB();
 		return obb;
 	}
 
@@ -93,8 +93,8 @@ bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray) {
 			if (collider) {
 				auto scaledShape = std::make_shared<btScaledBvhTriangleMeshShape>(collider.get(), btConvert(go->transform()->GetScale()));
 				auto info = btRigidBody::btRigidBodyConstructionInfo(0, nullptr, scaledShape.get());
-				auto matr = go->transform()->matrix;
-				SetScale(matr, Vector3_one);
+				auto matr = go->transform()->GetMatrix();
+				SetScale(matr, Vector3_one);//TODO optimize
 				info.m_startWorldTransform = btConvert(matr);
 				auto* rb = new btRigidBody(info);
 
@@ -361,7 +361,7 @@ public:
 			SetPos(mat, aabb.pos);
 			auto offset = Matrix4::Transform(rot * Vector3_forward * aabb.radius * (-2.f), rot.ToMatrix(), Vector3_one);
 			mat = mat * offset;
-			editorCamera->gameObject()->transform()->matrix = mat;
+			editorCamera->gameObject()->transform()->SetMatrix(mat);
 		}
 
 		auto mousePos = Input::GetMousePosition();
@@ -408,13 +408,12 @@ public:
 				ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 				const auto& view = Camera::GetMain()->GetViewMatrix();
 				const auto& proj = Camera::GetMain()->GetProjectionMatrix();
-				auto& model = go->transform()->matrix;
+				auto model = go->transform()->GetMatrix();
 				auto deltaMatrix = Matrix4::Identity();
 				ImGuizmo::Manipulate(&view(0, 0), &proj(0, 0), mCurrentGizmoOperation, mCurrentGizmoMode, &model(0, 0), &deltaMatrix(0,0));
 				if (deltaMatrix != Matrix4::Identity()) {
+					go->transform()->SetMatrix(model);
 					//TODO undo
-					int i = 0; 
-					i++;
 				}
 			}
 		}

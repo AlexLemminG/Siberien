@@ -436,7 +436,7 @@ void ShadowRenderer::Term() {
 	}
 }
 float m_shadowMapMtx[ShadowMapRenderTargets::Count][16];
-
+static int m_numSplits = 1;
 void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 {
 	OPTICK_EVENT();
@@ -456,7 +456,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	static float m_near = 0.1;//TODO params
 	static float m_far = 22.f;//TODO params
 	static DepthImpl::Enum m_depthImpl = DepthImpl::Linear;
-	static int m_numSplits = 1;
+	m_numSplits = 1;
 	static float m_splitDistribution = 0.6;
 	static bool m_stabilize = true;
 	static uint32_t clearRgba = 0;
@@ -669,7 +669,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	{
 		// Setup light view mtx.
 
-		auto viewMatrix = light->gameObject()->transform()->matrix;
+		auto viewMatrix = light->gameObject()->transform()->GetMatrix();
 		SetScale(viewMatrix, Vector3_one);
 		viewMatrix = viewMatrix.Inverse();
 		memcpy(&(lightView[0][0]), &viewMatrix(0, 0), 16 * sizeof(float));
@@ -915,10 +915,9 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		depthRectX = 0;
 		depthRectY = m_height - depthRectHeight;
 
-		bgfx::setViewRect(RENDERVIEW_SHADOWMAP_1_ID, 0, 0, m_currentShadowMapSize, m_currentShadowMapSize);
-		bgfx::setViewRect(RENDERVIEW_SHADOWMAP_2_ID, 0, 0, m_currentShadowMapSize, m_currentShadowMapSize);
-		bgfx::setViewRect(RENDERVIEW_SHADOWMAP_3_ID, 0, 0, m_currentShadowMapSize, m_currentShadowMapSize);
-		bgfx::setViewRect(RENDERVIEW_SHADOWMAP_4_ID, 0, 0, m_currentShadowMapSize, m_currentShadowMapSize);
+		for (int i = 0; i < m_numSplits; i++) {
+			bgfx::setViewRect(RENDERVIEW_SHADOWMAP_1_ID + i, 0, 0, m_currentShadowMapSize, m_currentShadowMapSize);
+		}
 		//bgfx::setViewRect(RENDERVIEW_VBLUR_0_ID, 0, 0, m_currentShadowMapSize, m_currentShadowMapSize);
 		//bgfx::setViewRect(RENDERVIEW_HBLUR_0_ID, 0, 0, m_currentShadowMapSize, m_currentShadowMapSize);
 		//bgfx::setViewRect(RENDERVIEW_VBLUR_1_ID, 0, 0, m_currentShadowMapSize, m_currentShadowMapSize);
@@ -934,10 +933,9 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		//bgfx::setViewRect(RENDERVIEW_DRAWDEPTH_2_ID, depthRectX + (2 * depthRectWidth), depthRectY, depthRectWidth, depthRectHeight);
 		//bgfx::setViewRect(RENDERVIEW_DRAWDEPTH_3_ID, depthRectX + (3 * depthRectWidth), depthRectY, depthRectWidth, depthRectHeight);
 
-		bgfx::setViewTransform(RENDERVIEW_SHADOWMAP_1_ID, lightView[0], lightProj[0]);
-		bgfx::setViewTransform(RENDERVIEW_SHADOWMAP_2_ID, lightView[0], lightProj[1]);
-		bgfx::setViewTransform(RENDERVIEW_SHADOWMAP_3_ID, lightView[0], lightProj[2]);
-		bgfx::setViewTransform(RENDERVIEW_SHADOWMAP_4_ID, lightView[0], lightProj[3]);
+		for (int i = 0; i < m_numSplits; i++) {
+			bgfx::setViewTransform(RENDERVIEW_SHADOWMAP_1_ID + i, lightView[0], lightProj[0]);
+		}
 		//bgfx::setViewTransform(RENDERVIEW_VBLUR_0_ID, screenView, screenProj);
 		//bgfx::setViewTransform(RENDERVIEW_HBLUR_0_ID, screenView, screenProj);
 		//bgfx::setViewTransform(RENDERVIEW_VBLUR_1_ID, screenView, screenProj);
@@ -952,11 +950,9 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		//bgfx::setViewTransform(RENDERVIEW_DRAWDEPTH_1_ID, screenView, screenProj);
 		//bgfx::setViewTransform(RENDERVIEW_DRAWDEPTH_2_ID, screenView, screenProj);
 		//bgfx::setViewTransform(RENDERVIEW_DRAWDEPTH_3_ID, screenView, screenProj);
-
-		bgfx::setViewFrameBuffer(RENDERVIEW_SHADOWMAP_1_ID, s_rtShadowMap[0]);
-		bgfx::setViewFrameBuffer(RENDERVIEW_SHADOWMAP_2_ID, s_rtShadowMap[1]);
-		bgfx::setViewFrameBuffer(RENDERVIEW_SHADOWMAP_3_ID, s_rtShadowMap[2]);
-		bgfx::setViewFrameBuffer(RENDERVIEW_SHADOWMAP_4_ID, s_rtShadowMap[3]);
+		for (int i = 0; i < m_numSplits; i++) {
+			bgfx::setViewFrameBuffer(RENDERVIEW_SHADOWMAP_1_ID + i, s_rtShadowMap[i]);
+		}
 		//bgfx::setViewFrameBuffer(RENDERVIEW_VBLUR_0_ID, s_rtBlur);         //vblur
 		//bgfx::setViewFrameBuffer(RENDERVIEW_HBLUR_0_ID, s_rtShadowMap[0]); //hblur
 		//bgfx::setViewFrameBuffer(RENDERVIEW_VBLUR_1_ID, s_rtBlur);         //vblur
@@ -987,7 +983,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		: 0
 		;
 
-	for (uint8_t ii = 0; ii < 4; ++ii)
+	for (uint8_t ii = 0; ii < m_numSplits; ++ii)
 	{
 		bgfx::setViewClear(RENDERVIEW_SHADOWMAP_1_ID + ii
 			, flags1
@@ -1289,7 +1285,7 @@ void ShadowRenderer::ApplyUniforms() {
 		bgfx::setUniform(u_shadowMapMtx[i], m_shadowMapMtx[i]);//TODO set default if no shadow
 	}
 
-	for (uint8_t ii = 0; ii < ShadowMapRenderTargets::Count; ++ii) {
+	for (uint8_t ii = 0; ii < ShadowMapRenderTargets::Count && ii < m_numSplits; ++ii) {
 		bgfx::setTexture(6 + ii, s_shadowMap[ii], bgfx::getTexture(s_rtShadowMap[ii]));
 	}
 }

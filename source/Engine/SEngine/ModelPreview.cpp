@@ -107,7 +107,7 @@ void ModelPreview::UpdateCamera() {
 		if (camera) {
 			Matrix4 matr = (Quaternion::FromAngleAxis(Mathf::DegToRad(currentRotation.x), Vector3_up) * Quaternion::FromAngleAxis(Mathf::DegToRad(currentRotation.y), Vector3_right)).ToMatrix4();
 			SetPos(matr, matr * Vector3_forward * (-5.f));
-			camera->transform()->matrix = matr;
+			camera->transform()->SetMatrix(matr);
 		}
 	}
 	else {

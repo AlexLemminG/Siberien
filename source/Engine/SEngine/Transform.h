@@ -26,12 +26,10 @@ public:
 	void SetEulerAngles(const Vector3& euler) {
 		SetRotation(Quaternion::FromEulerAngles(euler));
 	}
-	Vector3 GetScale() const {
-		return ::GetScale(matrix);
+	const Vector3& GetScale() const {
+		return scale;
 	}
-	void SetScale(const Vector3& scale) {
-		return ::SetScale(matrix, scale);
-	}
+	void SetScale(const Vector3& scale);
 
 	Vector3 GetRight() const {
 		return matrix.GetColumn(0).xyz();
@@ -42,10 +40,11 @@ public:
 	Vector3 GetForward() const {
 		return matrix.GetColumn(2).xyz();
 	}
-	const Matrix4 GetMatrix()const { return matrix; }
-public:
+	const Matrix4& GetMatrix()const { return matrix; }
+	void SetMatrix(const Matrix4& matrix);
+private:
+	Vector3 scale;
 	Matrix4 matrix = Matrix4::Identity();//TODO remove direct access to matrix for optimization
-
 
 public:
 	static void Des(const SerializationContext& so, Transform& t);

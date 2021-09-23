@@ -177,7 +177,7 @@ void Animator::UpdateWorldMatrices() {
 			meshRenderer->bonesWorldMatrices[bone.idx] = parentBoneMatrix * meshRenderer->bonesLocalMatrices[bone.idx];
 		}
 		else {
-			const auto& parentBoneMatrix = transform->matrix;
+			const auto& parentBoneMatrix = transform->GetMatrix();
 			meshRenderer->bonesWorldMatrices[bone.idx] = parentBoneMatrix * meshRenderer->bonesLocalMatrices[bone.idx];
 		}
 		meshRenderer->bonesFinalMatrices[bone.idx] = meshRenderer->bonesWorldMatrices[bone.idx] * bone.offset;

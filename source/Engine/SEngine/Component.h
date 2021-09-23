@@ -18,11 +18,18 @@ public:
 	void SetEnabled(bool isEnabled);
 	bool IsEnabled()const;
 
-	bool ignoreUpdate = false;//TODO flag
-	bool ignoreFixedUpdate = false;//TODO flag
+	enum FLAGS :uint32_t {
+		IS_ENABLED = 1 << 0,
+		IGNORE_UPDATE = 1 << 1,
+		IGNORE_FIXED_UPDATE = 1 << 2
+	};
+	bool HasFlag(FLAGS flag) const { return flags & flag; }
+	FLAGS GetFlags() const { return flags; }
+	void SetFlags(const FLAGS flags) { this->flags = flags; }
 private:
+	FLAGS flags = (FLAGS)0;
 	std::weak_ptr<GameObject> m_gameObject;
-	bool isEnabled = false;
+
 };
 
 #include "Serialization.h"

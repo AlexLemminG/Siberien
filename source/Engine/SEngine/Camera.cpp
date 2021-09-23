@@ -61,7 +61,7 @@ Ray Camera::ScreenPointToRay(Vector2 screenPoint) {
 		Mathf::DegToRad(fov * viewPoint.x / 2.f * aspect),
 		0.f);
 
-	auto rot = Matrix4::ToRotationMatrix(gameObject()->transform()->matrix);// *extraRot.ToMatrix();
+	auto rot = gameObject()->transform()->GetRotation();// *extraRot.ToMatrix();
 
 	Ray ray{ gameObject()->transform()->GetPosition(), rot * dir };
 
@@ -71,7 +71,7 @@ Ray Camera::ScreenPointToRay(Vector2 screenPoint) {
 
 void Camera::OnBeforeRender() {
 	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, GetClearColor().ToIntRGBA(), 1.0f, 0);
-	viewMatrix = gameObject()->transform()->matrix;
+	viewMatrix = gameObject()->transform()->GetMatrix();
 	SetScale(viewMatrix, Vector3_one);
 	viewMatrix = viewMatrix.Inverse();
 
@@ -91,7 +91,7 @@ void ICamera::OnBeforeRender() {
 
 	position = GetPos(GetViewMatrix().Inverse());//not good not terrible
 }
-SE_DEBUG_OPTIMIZE_ON
+
 bool ICamera::IsVisible(const Sphere& sphere) const {
 	return frustum.IsOverlapingSphere(sphere);
 }
@@ -106,10 +106,9 @@ bool ICamera::IsVisible(const AABB& aabb) const {
 bool ICamera::IsVisible(const MeshRenderer& renderer) const {
 	//TODO optimize
 	auto sphere = renderer.mesh->boundingSphere;
-	auto scale = renderer.m_transform->GetScale();
+	const auto scale = renderer.m_transform->GetScale();
 	float maxScale = Mathf::Max(Mathf::Max(scale.x, scale.y), scale.z);
 	sphere.radius *= maxScale;
-	sphere.pos = renderer.m_transform->matrix * sphere.pos;
+	sphere.pos = renderer.m_transform->GetMatrix() * sphere.pos;
 	return IsVisible(sphere);
 }
-SE_DEBUG_OPTIMIZE_OFF

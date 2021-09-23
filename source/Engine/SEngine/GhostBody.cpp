@@ -99,8 +99,8 @@ void GhostBody::OnEnable() {
 	if (!transform) {
 		return;
 	}
-	auto matr = transform->matrix;
-	SetScale(matr, Vector3_one);
+	auto matr = transform->GetMatrix();
+	SetScale(matr, Vector3_one);//TODO optimize
 	btTransform groundTransform = btConvert(matr);
 
 	//TODO why pair caching ?
@@ -124,7 +124,7 @@ void GhostBody::FixedUpdate() {
 	if (!pBody) {
 		return;
 	}
-	auto matr = transform->matrix;
+	auto matr = transform->GetMatrix();
 	SetScale(matr, Vector3_one);
 	btTransform groundTransform = btConvert(matr);
 	if (!(pBody->getWorldTransform() == groundTransform)) {

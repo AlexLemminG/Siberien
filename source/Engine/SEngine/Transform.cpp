@@ -4,6 +4,15 @@
 
 DECLARE_TEXT_ASSET(Transform);
 
+void Transform::SetScale(const Vector3& scale) {
+	::SetScale(matrix, scale);
+	this->scale = scale;
+}
+
+void Transform::SetMatrix(const Matrix4& matrix) {
+	this->matrix = matrix; scale = ::GetScale(matrix);
+}
+
 void Transform::Des(const SerializationContext& so, Transform& t) {
 	Vector3 pos = Vector3_zero;
 	Vector3 euler = Vector3_zero;
@@ -14,6 +23,7 @@ void Transform::Des(const SerializationContext& so, Transform& t) {
 	Deserialize(so.Child("scale"), scale);
 
 	t.matrix = Matrix4::Transform(pos, Quaternion::FromEulerAngles(Mathf::DegToRad(euler)).ToMatrix(), scale);
+	t.scale = scale;
 }
 
 void Transform::Ser(SerializationContext& so, const Transform& t) {

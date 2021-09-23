@@ -65,7 +65,7 @@ struct LightData{
 ClusterData GetClasterData(vec4 proj){
 	int clusterWidth = 16;
 	int clusterHeight = 8;
-	int clusterDepth = 4;
+	int clusterDepth = 1;
 	float3 clip;
 	clip.xy = (proj.xy / proj.w + 1.0) / 2.0;
 	clip.z = (proj.z / proj.w);
@@ -161,6 +161,7 @@ void main()
 	color.rgb += SampleSH(wnormal, u_sphericalHarmonics);
 	color.rgb *= albedo.rgb;
 	color.rgb += emissive;
+	
 	
 	gl_FragData[0].rgb = toGamma(color);
 }

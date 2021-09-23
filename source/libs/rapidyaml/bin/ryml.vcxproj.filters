@@ -247,9 +247,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\CMakeLists.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Natvis Include="..\src\ryml.natvis" />
     <Natvis Include="..\ext\c4core\src\c4\c4core.natvis">
       <Filter>c4core\c4</Filter>

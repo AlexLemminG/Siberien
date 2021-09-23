@@ -223,17 +223,17 @@ public:
 
 	template<typename T, typename MASK_T>
 	static T SetMaskTrue(T value, MASK_T mask) {
-		return value | mask;
+		return (T)(value | mask);
 	}
 
 	template<typename T, typename MASK_T>
 	static T SetMaskFalse(T value, MASK_T mask) {
-		return value & (~mask);
+		return (T)(value & (~mask));
 	}
 
 	template<typename T, typename MASK_T>
 	static T SetMask(T original, MASK_T mask, bool value) {
-		return value ? SetMaskTrue(original, mask) : SetMaskFalse(original, mask);
+		return (T)(value ? SetMaskTrue(original, mask) : SetMaskFalse(original, mask));
 	}
 };
 

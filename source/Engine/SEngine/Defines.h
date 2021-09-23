@@ -15,10 +15,6 @@
 #   define SE_CPP_API SE_SHARED_LIB_API
 #endif // defined(__cplusplus)
 
-#ifndef SE_RETAIL
-#define SE_DBG_OUT
-#endif
-
 #if defined(_MSC_VER) && defined(SE_DEBUG)
 //force optimization of this code section in special debug configuration
 #define SE_DEBUG_OPTIMIZE_ON __pragma(optimize("gt", on))    //enable optimizations
@@ -26,4 +22,13 @@
 #else
 #define SE_DEBUG_OPTIMIZE_ON
 #define SE_DEBUG_OPTIMIZE_OFF
+#endif
+
+#ifndef SE_RETAIL
+#define SE_USE_OPTICK
+#define SE_HAS_DEBUG
+#endif
+
+#ifndef SE_BUILD
+#define RYML_SHARED
 #endif

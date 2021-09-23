@@ -105,7 +105,7 @@ private:
 	//TODO separate cluster class to handle all this stuff
 	static constexpr int clusterWidth = 16;
 	static constexpr int clusterHeight = 8;
-	static constexpr int clusterDepth = 4;
+	static constexpr int clusterDepth = 1;
 	static constexpr int clustersCount = clusterWidth * clusterHeight * clusterDepth;
 	static constexpr int maxItemsCount = clustersCount * 256;
 	static constexpr int maxLightsCount = 1024;
@@ -139,11 +139,8 @@ private:
 	std::shared_ptr<Texture> defaultNormalTexture;
 	std::shared_ptr<Texture> defaultEmissiveTexture;
 	std::shared_ptr<Material> simpleBlitMat;
-	std::shared_ptr<Material> defferedCombineMaterial;
-	std::shared_ptr<Shader> deferredLightShader;
-	std::shared_ptr<Shader> deferredDirLightShader;
 
-	int dbgMeshesDrawn = 0;
-	int dbgMeshesCulled = 0;
+	//int dbgMeshesDrawn = 0;
+	//int dbgMeshesCulled = 0;
 	std::shared_ptr<ShadowRenderer> shadowRenderer;
 };

@@ -10,14 +10,14 @@ void Frustum::SetFromViewProjection(const Matrix4& viewProjection) {
 
 bool Frustum::IsOverlapingSphere(const Sphere& sphere) const
 {
-	bool res = true;
 	for (int i = 0; i < 6; i++)
 	{
 		if (frustumPlanes[i].x * sphere.pos.x + frustumPlanes[i].y * sphere.pos.y +
-			frustumPlanes[i].z * sphere.pos.z + frustumPlanes[i].w <= -sphere.radius)
-			res = false;
+			frustumPlanes[i].z * sphere.pos.z + frustumPlanes[i].w <= -sphere.radius) {
+			return false;
+		}
 	}
-	return res;
+	return true;
 }
 
 Matrix4 Frustum::GetMatrix() const { return matrix; }
