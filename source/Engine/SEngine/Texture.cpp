@@ -15,7 +15,7 @@ static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
 
 class TextureImporter : public AssetImporter {
 public:
-	// Inherited via AssetImporter
+
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
 		int importerVersion = 5;
@@ -27,7 +27,7 @@ public:
 		auto formatStr = metaYaml["format"].IsDefined() ? metaYaml["format"].as<std::string>() : "BC1";
 		auto flags = metaYaml["flags"].IsDefined() ? metaYaml["flags"].as<int>() : 0;
 
-		//TODO return default invalid shader
+		//TODO return default invalid texture
 		auto txBin = LoadTexture(importerVersion, databaseHandle, hasMips, formatStr);
 		if (txBin.size() == 0) {
 			return false;
@@ -48,7 +48,6 @@ public:
 		//TODO delete
 		auto imageContainer = *pImageContainer;
 		bimg::imageFree(pImageContainer);
-		//const bgfx::Memory* memory = bgfx::makeRef(&txBin->buffer[0] + imageContainer.m_offset, txBin->buffer.size() - imageContainer.m_offset);
 
 		auto tx = bgfx::createTexture2D(
 			imageContainer.m_width,
@@ -66,8 +65,6 @@ public:
 
 		auto texture = std::make_shared<Texture>();
 		texture->handle = tx;
-		//texture->bin = txBin;
-		//texture->pImageContainer = pImageContainer;
 
 		bgfx::setName(tx, databaseHandle.GetAssetPath().c_str());
 		//TODO keep memeory buffer ?

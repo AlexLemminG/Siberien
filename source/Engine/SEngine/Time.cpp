@@ -8,7 +8,7 @@
 REGISTER_SYSTEM(Time);
 
 bool Time::Init() {
-	m_maxDeltaTime = CfgGetFloat("maximumDeltaTime");//TODO use
+	m_maxDeltaTime = CfgGetFloat("maximumDeltaTime");
 	m_fixedDeltaTime = CfgGetFloat("fixedDeltaTime");
 
 	m_prevTicks = SDL_GetTicks();

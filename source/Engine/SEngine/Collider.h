@@ -12,7 +12,7 @@ public:
 	virtual void OnDisable() override;
 
 protected:
-	virtual std::shared_ptr<btCollisionShape> CreateShape() { return nullptr; }; //TODO = 0;
+	virtual std::shared_ptr<btCollisionShape> CreateShape() = 0;
 
 	REFLECT_BEGIN(Collider);
 	REFLECT_END();

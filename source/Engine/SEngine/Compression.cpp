@@ -5,9 +5,6 @@
 #include "Cmd.h"
 #include <fstream>
 
-//resize vector without initialization
-//TODO to common
-
 //TODO different algo for big files
 bool Compression::Compress(const BinaryBuffer& from, BinaryBuffer& to) {
 	const auto& data = from.GetData();
@@ -17,7 +14,7 @@ bool Compression::Compress(const BinaryBuffer& from, BinaryBuffer& to) {
 	ResizeVectorNoInit(compressBuff, max_dst_size + sizeof(uint64_t));
 	const int compressed_data_size = LZ4_compress_default((const char*)data.data(), (char*)compressBuff.data(), data.size(), max_dst_size);
 	if (compressed_data_size <= 0) {
-		//TODO
+		//TODO message
 		return false;
 	}
 
@@ -41,10 +38,7 @@ bool Compression::Decompress(const BinaryBuffer& from, BinaryBuffer& to) {
 	int final_decompressed_size = LZ4_decompress_safe((const char*)data.data(), (char*)uncopressBuff.data(), data.size() - sizeof(uint64_t), decompressed_size);
 	if (final_decompressed_size < 0)
 	{
-		//TODO
-		//fprintf(stderr, "uncompress(...) failed, res = %d\n", res);
-		//exit(1);
-		ASSERT(false);
+		//TODO message
 		return false;
 	}
 	ASSERT(final_decompressed_size == decompressed_size);
@@ -55,6 +49,7 @@ bool Compression::Decompress(const BinaryBuffer& from, BinaryBuffer& to) {
 bool Compression::Compress(BinaryBuffer& fromTo) {
 	BinaryBuffer to;
 	if (!Compress(fromTo, to)) {
+		//TODO message
 		return false;
 	}
 	fromTo = BinaryBuffer(to.ReleaseData());
@@ -64,6 +59,7 @@ bool Compression::Compress(BinaryBuffer& fromTo) {
 bool Compression::Decompress(BinaryBuffer& fromTo) {
 	BinaryBuffer to;
 	if (!Decompress(fromTo, to)) {
+		//TODO message
 		return false;
 	}
 	fromTo = BinaryBuffer(to.ReleaseData());

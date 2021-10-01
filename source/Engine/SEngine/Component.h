@@ -8,8 +8,8 @@ class Scene;
 class SE_CPP_API Component : public Object {
 	friend class Scene;
 public:
-	virtual void Update() {}//TODO use scheduler instead
-	virtual void FixedUpdate() {}//TODO use scheduler instead
+	virtual void Update() {}
+	virtual void FixedUpdate() {}
 	virtual void OnEnable() {}
 	virtual void OnDisable() {}
 
