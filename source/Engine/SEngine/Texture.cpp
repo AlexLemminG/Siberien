@@ -25,6 +25,7 @@ public:
 		}
 		bool hasMips = metaYaml["mips"].IsDefined() ? metaYaml["mips"].as<bool>() : true;
 		auto formatStr = metaYaml["format"].IsDefined() ? metaYaml["format"].as<std::string>() : "BC1";
+		auto flags = metaYaml["flags"].IsDefined() ? metaYaml["flags"].as<int>() : 0;
 
 		//TODO return default invalid shader
 		auto txBin = LoadTexture(importerVersion, databaseHandle, hasMips, formatStr);
@@ -48,13 +49,14 @@ public:
 		auto imageContainer = *pImageContainer;
 		bimg::imageFree(pImageContainer);
 		//const bgfx::Memory* memory = bgfx::makeRef(&txBin->buffer[0] + imageContainer.m_offset, txBin->buffer.size() - imageContainer.m_offset);
+
 		auto tx = bgfx::createTexture2D(
 			imageContainer.m_width,
 			imageContainer.m_height,
 			imageContainer.m_numMips > 1,
 			imageContainer.m_numLayers,
 			bgfx::TextureFormat::Enum(imageContainer.m_format),
-			BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE,
+			flags,
 			mem);
 
 		if (!bgfx::isValid(tx)) {

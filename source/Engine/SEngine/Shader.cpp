@@ -50,6 +50,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 	}
 
 	bool LoadShader(std::vector<uint8_t>& buffer, AssetDatabase_BinaryImporterHandle& databaseHandle, bool isVertex) {
+		//TODO propper fix for loading without sources + check other assets for same mistakes
 		std::string textAssetPath = databaseHandle.GetAssetPath();
 		std::string binAssetPathId = "";
 
@@ -90,7 +91,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 		}
 		else {
 			long lastChangeRecorded = meta["lastChange"].as<long>();
-			if (lastFileChange != lastChangeRecorded) {
+			if (lastFileChange != lastChangeRecorded && lastFileChange != 0) {
 				needRebuild = true;
 			}
 		}

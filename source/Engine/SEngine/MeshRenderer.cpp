@@ -34,6 +34,9 @@ void MeshRenderer::OnEnable() {
 	addedToRenderers = material != nullptr && mesh != nullptr;
 	if (addedToRenderers) {
 		enabledMeshRenderers.push_back(this);
+		if (castsShadows) {
+			enabledShadowCasters.push_back(this);
+		}
 	}
 	if (mesh && mesh->bones.size() > 0) {
 		bonesWorldMatrices.resize(mesh->bones.size());
@@ -51,7 +54,13 @@ void MeshRenderer::OnDisable() {
 		auto it = std::find(enabledMeshRenderers.begin(), enabledMeshRenderers.end(), this);
 		enabledMeshRenderers[it - enabledMeshRenderers.begin()] = enabledMeshRenderers.back();
 		enabledMeshRenderers.pop_back();
+		if (castsShadows) {
+			auto it2 = std::find(enabledShadowCasters.begin(), enabledShadowCasters.end(), this);
+			enabledShadowCasters[it2 - enabledShadowCasters.begin()] = enabledShadowCasters.back();
+			enabledShadowCasters.pop_back();
+		}
 		addedToRenderers = false;
 	}
 }
 std::vector<MeshRenderer*> MeshRenderer::enabledMeshRenderers;
+std::vector<MeshRenderer*> MeshRenderer::enabledShadowCasters;

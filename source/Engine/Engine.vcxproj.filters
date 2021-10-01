@@ -185,6 +185,9 @@
     <ClCompile Include="SEngine\NavMeshAgent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="SEngine\Cmd.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SEngine\Animation.h">
@@ -345,6 +348,12 @@
     </ClInclude>
     <ClInclude Include="SEngine\NavMeshAgent.h">
       <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="SEngine\AlignedAllocator.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="SEngine\Cmd.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

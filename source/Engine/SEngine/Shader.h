@@ -26,8 +26,10 @@ public:
 	REFLECT_BEGIN(Shader);
 	REFLECT_VAR(fs);
 	REFLECT_VAR(vs);
+	REFLECT_VAR(isAlphaBlending);
 	REFLECT_END();
 	std::string name;
+	bool isAlphaBlending = false;
 
 	virtual void OnAfterDeserializeCallback(const SerializationContext& context);
 };

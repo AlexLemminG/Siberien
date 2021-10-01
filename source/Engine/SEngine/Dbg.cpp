@@ -112,7 +112,7 @@ void Dbg::Term() {
 void Dbg::DrawAll() {
 	OPTICK_EVENT();
 	bgfx_examples::DebugDrawEncoder dde;
-	dde.begin(0);
+	dde.begin(1);
 
 	dde.setState(false, false, true);
 

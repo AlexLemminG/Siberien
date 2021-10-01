@@ -55,6 +55,7 @@ public:
 	void OnEnable() override;
 
 	void SetAnimation(std::shared_ptr<MeshAnimation> animation) { currentAnimation = animation; }
+	void ResetTime() { currentTime = 0.f; }
 
 	REFLECT_BEGIN(Animator);
 	REFLECT_VAR(speed);

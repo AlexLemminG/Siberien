@@ -263,12 +263,15 @@ void Render::PrepareLights(const ICamera& camera) {
 
 	bgfx::updateTexture2D(m_clusterListTex, 0, 0, 0, 0, clustersCount, 1, bgfx::copy(clusters.data(), clusters.size() * sizeof(ClusterData)));
 
-	int itemsTexelsTotal = items.size() * texelsPerItem;
-	int itemsWidth = Mathf::Min(itemsTexelsTotal, itemsDiv);
-	int itemsHeight = 1 + (itemsTexelsTotal - 1) / itemsDiv;
-	items.resize(itemsHeight * itemsWidth / texelsPerItem);
-	bgfx::updateTexture2D(m_itemsListTex, 0, 0, 0, 0, itemsWidth, itemsHeight, bgfx::copy(items.data(), items.size() * sizeof(ItemData)));
-	bgfx::updateTexture2D(m_lightsListTex, 0, 0, 0, 0, lights.size() * texelsPerLight, 1, bgfx::copy(lights.data(), lights.size() * sizeof(LightData)));
+	if (items.size() > 0) {
+
+		int itemsTexelsTotal = items.size() * texelsPerItem;
+		int itemsWidth = Mathf::Min(itemsTexelsTotal, itemsDiv);
+		int itemsHeight = 1 + (itemsTexelsTotal - 1) / itemsDiv;
+		items.resize(itemsHeight* itemsWidth / texelsPerItem);
+		bgfx::updateTexture2D(m_itemsListTex, 0, 0, 0, 0, itemsWidth, itemsHeight, bgfx::copy(items.data(), items.size() * sizeof(ItemData)));
+		bgfx::updateTexture2D(m_lightsListTex, 0, 0, 0, 0, lights.size()* texelsPerLight, 1, bgfx::copy(lights.data(), lights.size() * sizeof(LightData)));
+	}
 }
 
 
@@ -673,8 +676,8 @@ void Render::Term()
 	bgfx::destroy(s_texColor);
 	bgfx::destroy(s_texNormal);
 	bgfx::destroy(s_texEmissive);
-	bgfx::destroy(u_lightPosRadius);
-	bgfx::destroy(u_lightRgbInnerR);
+	//bgfx::destroy(u_lightPosRadius);
+	//bgfx::destroy(u_lightRgbInnerR);
 	bgfx::destroy(u_viewProjInv);
 	bgfx::destroy(u_sphericalHarmonics);
 	bgfx::destroy(u_pixelSize);
@@ -791,9 +794,11 @@ void Render::UpdateLights(Vector3 poi) {
 	}
 }
 
-void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial) {
+void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial, const std::vector<MeshRenderer*>* ptrRenderers) {
 	//TODO setup camera
 	OPTICK_EVENT();
+
+	auto renderers = ptrRenderers != nullptr ? *ptrRenderers : MeshRenderer::enabledMeshRenderers;
 
 	if (!overrideMaterial) {
 		auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
@@ -801,6 +806,9 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 				return true;
 			}
 			else if (r1->mesh.get() > r2->mesh.get()) {
+				return false;
+			}
+			else if (r1->material.get() > r2->material.get()) {
 				return false;
 			}
 			if (r1->material.get() < r2->material.get()) {
@@ -821,16 +829,16 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 		OPTICK_EVENT("DrawRenderers");
 		bool prevEq = false;
 		//TODO get rid of std::vector / std::string
-		for (int i = 0; i < ((int)MeshRenderer::enabledMeshRenderers.size() - 1); i++) {
-			const auto& mesh = MeshRenderer::enabledMeshRenderers[i];
-			const auto& meshNext = MeshRenderer::enabledMeshRenderers[i + 1];
+		for (int i = 0; i < ((int)renderers.size() - 1); i++) {
+			const auto& mesh = renderers[i];
+			const auto& meshNext = renderers[i + 1];
 			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
 			bool drawn = DrawMesh(mesh, mesh->material.get(), camera, !nextEq, !nextEq, !prevEq, !prevEq, viewId);
 			prevEq = nextEq && drawn;
 		}
 		//TODO do we really need this ?
-		if (MeshRenderer::enabledMeshRenderers.size() > 0) {
-			const auto& mesh = MeshRenderer::enabledMeshRenderers[MeshRenderer::enabledMeshRenderers.size() - 1];
+		if (renderers.size() > 0) {
+			const auto& mesh = renderers[renderers.size() - 1];
 			DrawMesh(mesh, mesh->material.get(), camera, true, true, !prevEq, !prevEq, viewId);
 		}
 	}
@@ -853,17 +861,17 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 		bool prevEq = false;
 		bool materialApplied = false;//TODO dsplit drawMesh into bind material / bind mesh / submit / clear
 		//TODO get rid of std::vector / std::string
-		for (int i = 0; i < ((int)MeshRenderer::enabledMeshRenderers.size() - 1); i++) {
-			const auto& mesh = MeshRenderer::enabledMeshRenderers[i];
-			const auto& meshNext = MeshRenderer::enabledMeshRenderers[i + 1];
+		for (int i = 0; i < ((int)renderers.size() - 1); i++) {
+			const auto& mesh = renderers[i];
+			const auto& meshNext = renderers[i + 1];
 			//TODO optimize
 			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
 			bool drawn = DrawMesh(mesh, overrideMaterial.get(), camera, false, !nextEq, !materialApplied, !prevEq, viewId);
 			prevEq = nextEq && drawn;
 			materialApplied |= drawn;
 		}
-		if (MeshRenderer::enabledMeshRenderers.size() > 0) {
-			const auto& mesh = MeshRenderer::enabledMeshRenderers[MeshRenderer::enabledMeshRenderers.size() - 1];
+		if (renderers.size() > 0) {
+			const auto& mesh = renderers[renderers.size() - 1];
 			DrawMesh(mesh, overrideMaterial.get(), camera, true, true, !materialApplied, !prevEq, viewId);
 		}
 	}
@@ -905,6 +913,9 @@ bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, co
 			| BGFX_STATE_DEPTH_TEST_LESS
 			| BGFX_STATE_CULL_CCW
 			;
+		if (material->shader->isAlphaBlending) {
+			state |= BGFX_STATE_BLEND_ALPHA;
+		}
 		bgfx::setState(state);
 	}
 	if (updateMeshState) {

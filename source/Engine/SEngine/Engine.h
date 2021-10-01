@@ -10,6 +10,10 @@ public:
 
 	std::string GetExeName();
 	bool IsEditorMode() const;
+	bool IsQuitPending() const;
+	void Quit();
+private:
+	bool isQuitPending = false;
 };
 
 

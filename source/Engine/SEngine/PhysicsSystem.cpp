@@ -18,6 +18,7 @@
 #include "Dbg.h"
 #include "DbgVars.h"
 #include "Camera.h"
+#include "AlignedAllocator.h"
 
 
 DBG_VAR_BOOL(dbg_drawPhysShapes, "draw phys shapes", false);
@@ -86,7 +87,7 @@ bool PhysicsSystem::Init() {
 
 	dynamicsWorld = new btDiscreteDynamicsWorldMt(dispatcher, overlappingPairCache, solverPool, solver, collisionConfiguration);
 
-	dynamicsWorld->setGravity(btConvert(GetGravity()));
+	dynamicsWorld->setGravity(btConvert(settings->gravity));
 
 	dynamicsWorld->setInternalTickCallback(OnPhysicsTick);
 
@@ -162,7 +163,7 @@ void PhysicsSystem::Term() {
 }
 
 Vector3 PhysicsSystem::GetGravity() const {
-	return Vector3(0, -10, 0);
+	return btConvert(dynamicsWorld->getGravity());
 }
 
 void PhysicsSystem::GetGroupAndMask(const std::string& groupName, int& group, int& mask) {
@@ -170,7 +171,7 @@ void PhysicsSystem::GetGroupAndMask(const std::string& groupName, int& group, in
 }
 
 void PhysicsSystem::SerializeMeshPhysicsDataToBuffer(std::vector<std::shared_ptr<Mesh>>& meshes, BinaryBuffer& buffer) {
-	std::vector<uint8_t> tempBuffer; //TODO need for aligning only (and not realy correct)
+	std::vector<uint8_t, aligned_allocator<uint8_t, 16>> tempBuffer; //need for aligning only
 	for (const auto& mesh : meshes) {
 		bool hasData = mesh->physicsData != nullptr;
 		buffer.Write(hasData);

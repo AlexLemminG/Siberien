@@ -172,7 +172,7 @@ void Scene::SetComponentEnabledInternal(Component* component, bool isEnabled) {
 		if (component->GetType()->HasTag("HasFixedUpdate") && !component->HasFlag(Component::FLAGS::IGNORE_FIXED_UPDATE)) {
 			auto it = std::find(enabledFixedUpdateComponents.begin(), enabledFixedUpdateComponents.end(), component);
 			int idx = it - enabledFixedUpdateComponents.begin();
-			if (currentUpdateIdx < idx) {
+			if (currentFixedUpdateIdx < idx) {
 				enabledFixedUpdateComponents[idx] = enabledFixedUpdateComponents.back();//cache shuffled
 				enabledFixedUpdateComponents.pop_back();
 			}

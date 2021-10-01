@@ -170,6 +170,8 @@ void RigidBody::ApplyLinearImpulse(Vector3 impulse, Vector3 worldPos) {
 	pBody->activate();
 }
 
+float RigidBody::GetMass() const { return pBody->getMass(); }
+
 void RigidBody::Activate() { pBody->activate(); }
 
 RigidBody* PhysicsBody::AsRigidBody() {

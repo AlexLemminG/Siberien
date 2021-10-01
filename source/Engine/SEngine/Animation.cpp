@@ -115,7 +115,7 @@ void MeshAnimation::DeserializeFromAssimp(aiAnimation* anim) {
 AnimationTransform AnimationTransform::Lerp(const AnimationTransform& a, const AnimationTransform& b, float t) {
 	AnimationTransform l;
 	l.position = Mathf::Lerp(a.position, b.position, t);
-	l.rotation = Mathf::Lerp(a.rotation, b.rotation, t);
+	l.rotation = Mathf::Slerp(a.rotation, b.rotation, t);
 	l.scale = Mathf::Lerp(a.scale, b.scale, t);
 	return l;
 }

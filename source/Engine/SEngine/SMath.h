@@ -84,6 +84,18 @@ public:
 		float period = max - min;
 		return Repeat(dt, period) + min;
 	}
+	static float PingPong(float t, float period) {
+		float r = Repeat(t, period * 2.f);
+		if (r > period) {
+			r = period * 2.f - r;
+		}
+		return r;
+	}
+	static float PingPong(float t, float min, float max) {
+		float dt = t - min;
+		float period = max - min;
+		return PingPong(dt, period) + min;
+	}
 	static int Clamp(int i, int a, int b) {
 		return i > b ? b : (i < a ? a : i);
 	}
@@ -169,6 +181,9 @@ public:
 		float distance = Mathf::Abs(a - b);
 		float t = Clamp01(maxDistance / distance);
 		return Lerp(a, b, t);
+	}
+	static float Acos(float x) {
+		return acosf(x);
 	}
 	static float Atan2(float y, float x) {
 		return atan2f(y, x);

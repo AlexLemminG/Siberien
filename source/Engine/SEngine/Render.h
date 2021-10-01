@@ -39,7 +39,7 @@ public:
 	void ApplyMaterialProperties(const Material* material);
 	
 	//TODO move viewId to camera
-	void DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial);
+	void DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial, const std::vector<MeshRenderer*>* renderers = nullptr);
 
 	bgfx::UniformHandle GetOrCreateVectorUniform(const std::string& name);
 

@@ -24,6 +24,7 @@
 #include "Config.h"
 #include "imgui/imgui.h"
 #include "GameLibrariesManager.h"
+#include "Cmd.h"
 #include <dear-imgui/imgui_impl_sdl.h>
 
 std::string GetFirstSceneName() {
@@ -40,6 +41,7 @@ Engine* Engine::Get() {
 
 int main(int argc, char* argv[]) {
 	//TODO no sins here please
+
 start:
 	bool needReload = false;
 
@@ -81,6 +83,8 @@ start:
 
 		SceneManager::Init();
 
+		Cmd::Get()->ProcessCommands(argc, argv);
+
 		SceneManager::LoadScene(GetFirstSceneName());
 
 		SceneManager::Update();
@@ -106,7 +110,7 @@ start:
 
 		render.Draw(systemsManager);
 
-		quit |= Input::GetQuit();
+		quit |= Input::GetQuit() | Engine::Get()->IsQuitPending();
 		if (CfgGetBool("godMode")) {
 			if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F5)) {
 				quit = true;

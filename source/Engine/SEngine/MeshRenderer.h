@@ -23,15 +23,16 @@ public:
 	std::shared_ptr<Mesh> mesh;
 	std::shared_ptr<Material> material;
 	static std::vector<MeshRenderer*> enabledMeshRenderers;
+	static std::vector<MeshRenderer*> enabledShadowCasters;
 
 	void OnEnable() override;
-
 	void OnDisable() override;
 
 	REFLECT_BEGIN(MeshRenderer, Component);
 	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_VAR(mesh);
 	REFLECT_VAR(material);
+	REFLECT_VAR(castsShadows);
 	REFLECT_END();
 
 	std::vector<Matrix4> bonesFinalMatrices;
@@ -41,5 +42,6 @@ public:
 	int randomColorTextureIdx = 0;//TODO no sins
 
 private:
+	bool castsShadows = true;
 	bool addedToRenderers = false;
 };

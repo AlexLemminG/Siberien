@@ -516,6 +516,7 @@ void NavMesh::Build() {
 }
 
 bool NavMesh::Init() {
+	return true;
 	OPTICK_EVENT();
 	m_ctx = new rcContext();
 
@@ -536,6 +537,7 @@ void NavMesh::Update() {
 }
 
 void NavMesh::Term() {
+	return;
 	SceneManager::onBeforeSceneEnabled.Unsubscribe(onSceneLoadedHandler);
 	if (m_navQuery) {
 		dtFreeNavMeshQuery(m_navQuery);

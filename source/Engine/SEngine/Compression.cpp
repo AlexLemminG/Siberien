@@ -1,6 +1,9 @@
 #include "Compression.h"
 #include "zlib.h"
 #include "lz4.h"
+#include "System.h"
+#include "Cmd.h"
+#include <fstream>
 
 //resize vector without initialization
 //TODO to common
@@ -66,3 +69,67 @@ bool Compression::Decompress(BinaryBuffer& fromTo) {
 	fromTo = BinaryBuffer(to.ReleaseData());
 	return true;
 }
+
+
+class CompressionSystem : public System<CompressionSystem> {
+	class Handler : public Cmd::Handler {
+		// Inherited via Handler
+		virtual void Handle(std::string command, const std::vector<std::string>& args) override
+		{
+			bool decompress = command == "decompress";
+
+			if (args.size() < 2) {
+				return;//TODO error
+			}
+
+
+			std::ifstream in(args[0], std::ios::binary | std::ios::ate);
+			std::ofstream out(args[1], std::ios::binary);
+
+			if (!in) {
+				return;//TOOD error
+			}
+			if (!out) {
+				return;//TOOD error
+			}
+			std::vector<uint8_t> charBuffer;
+
+
+			std::streamsize size = in.tellg();
+			in.seekg(0, std::ios::beg);
+
+			ResizeVectorNoInit(charBuffer, size);
+			if (!in.read((char*)charBuffer.data(), size))
+			{
+				//TODO error
+				return;
+			}
+
+			BinaryBuffer buffer{ std::move(charBuffer) };
+			bool ok = false;
+			if (decompress) {
+				ok = Compression::Decompress(buffer);
+			}
+			else {
+				ok = Compression::Compress(buffer);
+			}
+			if (!ok) {
+				//TODO error
+				return;
+			}
+			charBuffer = buffer.ReleaseData();
+			if (charBuffer.size() > 0) {
+				out.write((char*)&charBuffer[0], charBuffer.size());
+			}
+		}
+	};
+
+	bool Init() {
+		auto handler = std::make_shared<Handler>();
+		Cmd::Get()->AddHandler("decompress", handler);
+		Cmd::Get()->AddHandler("compress", handler);
+		return true;
+	}
+};
+
+REGISTER_SYSTEM(CompressionSystem);

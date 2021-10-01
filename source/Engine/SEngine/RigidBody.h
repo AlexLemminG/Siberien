@@ -64,6 +64,8 @@ public:
 	void ApplyLinearImpulse(Vector3 impulse);
 	void ApplyLinearImpulse(Vector3 impulse, Vector3 worldPos);
 
+	float GetMass()const;
+
 	//Vector3 GetCurrentPosition() const { 
 	//	return btConvert((pBody->getCenterOfMassTransform() * pMotionState->m_centerOfMassOffset).getOrigin()); 
 	//}

@@ -29,6 +29,14 @@ std::string Engine::GetExeName() {
 
 bool Engine::IsEditorMode() const { return false; }
 
+bool Engine::IsQuitPending() const {
+	return isQuitPending;
+}
+
+void Engine::Quit() {
+	isQuitPending = true;
+}
+
 //void LoadDelayed(char* exeName) {
 
 //}

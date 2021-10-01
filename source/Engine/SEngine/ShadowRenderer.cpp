@@ -9,6 +9,7 @@
 #include "Render.h"
 #include "Material.h"
 #include "Resources.h"
+#include "MeshRenderer.h"
 #include "STime.h"
 #include "bgfx/bgfx.h"
 #include "bx/bx.h"
@@ -1086,7 +1087,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 			virtualCamera.projectionMatrix = Matrix4(lightProj[ii]);
 			virtualCamera.OnBeforeRender();
 			//virtualCamera.OnBeforeRender();
-			Graphics::Get()->render->DrawAll(viewId, virtualCamera, shadowCasterMaterial);
+			Graphics::Get()->render->DrawAll(viewId, virtualCamera, shadowCasterMaterial, &MeshRenderer::enabledShadowCasters);
 		}
 
 

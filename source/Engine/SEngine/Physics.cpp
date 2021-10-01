@@ -82,7 +82,8 @@ std::vector<RigidBody*> Physics::OverlapSphere(const Vector3& pos, float radius,
 				results.push_back(rigidBody);
 			}
 			else {
-				ASSERT(false);
+				//TODO return not rigidbodies but gameObjects or colliders
+				//ASSERT(false);
 			}
 		}
 	}

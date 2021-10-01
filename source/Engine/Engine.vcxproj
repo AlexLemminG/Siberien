@@ -61,7 +61,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>RYML_SHARED;RYML_EXPORTS;BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;_DEBUG;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_WIN64;NDEBUG;_CONSOLE;SE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;_DEBUG;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_WIN64;NDEBUG;_CONSOLE;SE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -77,7 +77,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>RYML_SHARED;RYML_EXPORTS;BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;SE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;SE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile>
@@ -94,7 +94,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>RYML_SHARED;RYML_EXPORTS;BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;SE_RETAIL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;SE_RETAIL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile>
@@ -117,6 +117,7 @@
     <ClCompile Include="SEngine\BlenderSceneLoader.cpp" />
     <ClCompile Include="SEngine\BoxCollider.cpp" />
     <ClCompile Include="SEngine\Camera.cpp" />
+    <ClCompile Include="SEngine\Cmd.cpp" />
     <ClCompile Include="SEngine\Collider.cpp" />
     <ClCompile Include="SEngine\Common.cpp" />
     <ClCompile Include="SEngine\Component.cpp" />
@@ -169,11 +170,13 @@
     <ClCompile Include="SEngine\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SEngine\AlignedAllocator.h" />
     <ClInclude Include="SEngine\Animation.h" />
     <ClInclude Include="SEngine\Asserts.h" />
     <ClInclude Include="SEngine\BlenderSceneLoader.h" />
     <ClInclude Include="SEngine\BoxCollider.h" />
     <ClInclude Include="SEngine\Camera.h" />
+    <ClInclude Include="SEngine\Cmd.h" />
     <ClInclude Include="SEngine\Collider.h" />
     <ClInclude Include="SEngine\Common.h" />
     <ClInclude Include="SEngine\Component.h" />

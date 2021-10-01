@@ -5,6 +5,7 @@
 #include "LinearMath/btVector3.h"
 #include "LinearMath/btMatrix3x3.h"
 #include "LinearMath/btTransform.h"
+#include "AlignedAllocator.h"
 
 inline Vector3 btConvert(btVector3 vec) {
 	return Vector3(vec.x(), vec.y(), vec.z());
@@ -53,7 +54,7 @@ class MeshPhysicsData {
 public:
 	std::shared_ptr<btBvhTriangleMeshShape> triangleShape;
 	std::shared_ptr<btTriangleIndexVertexArray> triangles;
-	std::vector<uint8_t> triangleShapeBuffer;
+	std::vector<uint8_t, aligned_allocator<uint8_t, 16>> triangleShapeBuffer;
 };
 
 class btDefaultCollisionConfiguration;
@@ -68,6 +69,7 @@ class BinaryBuffer;
 class PhysicsSettings : public Object{
 public:
 	void GetGroupAndMask(const std::string& groupName, int& group, int& mask);
+	Vector3 gravity{ 0.f, -9.8f, 0.f };
 private:
 	class Layer {
 	public:
@@ -87,6 +89,7 @@ private:
 	std::vector<Layer> layers;
 	REFLECT_BEGIN(PhysicsSettings);
 	REFLECT_VAR(layers);
+	REFLECT_VAR(gravity);
 	REFLECT_END();
 
 	std::unordered_map<std::string, Layer> layersMap;
