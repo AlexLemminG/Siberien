@@ -157,7 +157,7 @@ void Render::PrepareLights(const ICamera& camera) {
 		}
 		shadowRenderer->Draw(light, camera);
 		auto dir = Vector4(light->gameObject()->transform()->GetForward(), 0.f);
-		auto color = Vector4(light->color.r, light->color.g, light->color.b, 0.f);
+		auto color = Vector4(light->color.r, light->color.g, light->color.b, 0.f) * light->intensity;
 		bgfx::setUniform(u_dirLightDirHandle, &dir, 1);
 		bgfx::setUniform(u_dirLightColorHandle, &color, 1);
 
@@ -208,9 +208,9 @@ void Render::PrepareLights(const ICamera& camera) {
 		LightData lightData;
 		lightData.pos = light->gameObject()->transform()->GetPosition();
 		lightData.innerRadius = light->innerRadius;
-		lightData.color.x = light->color.r;
-		lightData.color.y = light->color.g;
-		lightData.color.z = light->color.b;
+		lightData.color.x = light->color.r * light->intensity;
+		lightData.color.y = light->color.g * light->intensity;
+		lightData.color.z = light->color.b * light->intensity;
 		lightData.radius = light->radius;
 		lights.push_back(lightData);
 	}
@@ -335,6 +335,8 @@ bool Render::Init()
 	s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 	s_texNormal = bgfx::createUniform("s_texNormal", bgfx::UniformType::Sampler);
 	s_texEmissive = bgfx::createUniform("s_texEmissive", bgfx::UniformType::Sampler);
+	s_texMetalic = bgfx::createUniform("s_texMetalic", bgfx::UniformType::Sampler);
+	s_texRoughness = bgfx::createUniform("s_texRoughness", bgfx::UniformType::Sampler);
 	s_texClusterList = bgfx::createUniform("s_texClusterList", bgfx::UniformType::Sampler);
 	s_texItemsList = bgfx::createUniform("s_texItemsList", bgfx::UniformType::Sampler);
 	s_texLightsList = bgfx::createUniform("s_texLightsList", bgfx::UniformType::Sampler);
@@ -680,8 +682,8 @@ void Render::Term()
 	bgfx::destroy(s_texColor);
 	bgfx::destroy(s_texNormal);
 	bgfx::destroy(s_texEmissive);
-	//bgfx::destroy(u_lightPosRadius);
-	//bgfx::destroy(u_lightRgbInnerR);
+	bgfx::destroy(s_texMetalic);
+	bgfx::destroy(s_texRoughness);
 	bgfx::destroy(u_viewProjInv);
 	bgfx::destroy(u_sphericalHarmonics);
 	bgfx::destroy(u_pixelSize);
@@ -975,9 +977,27 @@ void Render::ApplyMaterialProperties(const Material* material) {
 			bgfx::setTexture(2, s_texEmissive, defaultEmissiveTexture->handle);
 		}
 	}
-	bgfx::setTexture(3, s_texClusterList, m_clusterListTex);
-	bgfx::setTexture(4, s_texItemsList, m_itemsListTex);
-	bgfx::setTexture(5, s_texLightsList, m_lightsListTex);
+	if (material->metalicTex) {
+		bgfx::setTexture(3, s_texMetalic, material->metalicTex->handle);
+	}
+	else {
+		if (defaultEmissiveTexture) {
+			bgfx::setTexture(3, s_texMetalic, defaultEmissiveTexture->handle);
+		}
+	}
+	if (material->roughnessTex) {
+		bgfx::setTexture(4, s_texRoughness, material->roughnessTex->handle);
+	}
+	else {
+		if (whiteTexture) {
+			bgfx::setTexture(4, s_texRoughness, whiteTexture->handle);
+		}
+	}
+
+
+	bgfx::setTexture(5, s_texClusterList, m_clusterListTex);
+	bgfx::setTexture(6, s_texItemsList, m_itemsListTex);
+	bgfx::setTexture(7, s_texLightsList, m_lightsListTex);
 
 	for (const auto& colorProp : material->colors) {
 		auto it = colorUniforms.find(colorProp.name);

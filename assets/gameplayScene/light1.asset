@@ -5,6 +5,7 @@ GameObject:
   - $PointLight
 PointLight:
   color: 0x33ff99ff
+  intensity: 20.0
   radius: 20
   innerRadius: 0.0
 Transform:

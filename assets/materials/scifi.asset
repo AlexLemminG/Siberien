@@ -3,3 +3,6 @@ Material:
   colorTex: textures\scifi\PolygonScifi_01_A.png
   normalTex: textures\scifi\PolygonSciFiCity_Texture_Normal.png
   emissiveTex: textures\scifi\PolygonScifi_Emissive_01.png
+  colors:
+    - name: u_emissiveColor
+      value: [1.0,1.0,1.0]

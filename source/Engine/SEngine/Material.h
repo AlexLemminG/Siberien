@@ -41,11 +41,14 @@ public:
 	std::vector<MaterialProperty_Color> colors;
 	std::vector<MaterialProperty_Texture> textures;
 
+	//TODO remove and use above vectors
 	Color color = Colors::white;
 	std::shared_ptr<Shader> shader;
 	std::shared_ptr<Texture> colorTex;
 	std::shared_ptr<Texture> normalTex;
 	std::shared_ptr<Texture> emissiveTex;
+	std::shared_ptr<Texture> metalicTex;
+	std::shared_ptr<Texture> roughnessTex;
 	std::vector<std::shared_ptr<Texture>> randomColorTextures;
 
 	REFLECT_BEGIN(Material);
@@ -55,6 +58,8 @@ public:
 	REFLECT_VAR(colorTex);
 	REFLECT_VAR(normalTex);
 	REFLECT_VAR(emissiveTex);
+	REFLECT_VAR(metalicTex);
+	REFLECT_VAR(roughnessTex);
 	REFLECT_VAR(color);
 	REFLECT_VAR(shader);
 	REFLECT_VAR(randomColorTextures);

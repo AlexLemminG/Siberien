@@ -10,6 +10,12 @@ void Color::Deserialize(const SerializationContext& context, Color& color) {
 		::Deserialize(context.Child("b"), color.b);
 		::Deserialize(context.Child("a"), color.a);
 	}
+	else if (context.IsSequence()) {
+		int size = Mathf::Min(4, context.Size());
+		for (int i = 0; i < size; i++) {
+			::Deserialize(context.Child(i), *(&color.r + i));
+		}
+	}
 	else {
 		unsigned int i;
 		context >> i;

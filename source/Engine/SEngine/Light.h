@@ -6,12 +6,14 @@
 class Light : public Component {
 public:
 	Color color = Colors::white;
+	float intensity = 1.0f;
 	//TODO shadows for pointLight
 	bool drawShadows = false;
 	float shadowBias = 0.0012f;
 	REFLECT_BEGIN(Light, Component);
 	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_VAR(color);
+	REFLECT_VAR(intensity);
 	REFLECT_VAR(shadowBias);
 	REFLECT_VAR(drawShadows);
 	REFLECT_END();

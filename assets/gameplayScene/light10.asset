@@ -7,5 +7,6 @@ PointLight:
   color: 0x00ffffff
   radius: 12
   innerRadius: 0.0
+  intensity: 12.0
 Transform:
   pos: [14.8,6.6,144]

@@ -144,7 +144,7 @@ public:
 		std::vector<char> paramsBuffer(params.begin(), params.end());
 		paramsBuffer.push_back(0);
 		LPSTR ccc = &paramsBuffer[0];
-
+		
 		auto result = CreateProcessA(
 			databaseHandle.GetToolPath("texturec.exe").c_str()
 			, &paramsBuffer[0]

@@ -88,6 +88,8 @@ private:
 	bgfx::UniformHandle s_texColor;
 	bgfx::UniformHandle s_texNormal;
 	bgfx::UniformHandle s_texEmissive;
+	bgfx::UniformHandle s_texMetalic;
+	bgfx::UniformHandle s_texRoughness;
 	bgfx::UniformHandle s_texClusterList;
 	bgfx::UniformHandle s_texLightsList;
 	bgfx::UniformHandle s_texItemsList;

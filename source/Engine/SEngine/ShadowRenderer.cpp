@@ -1286,7 +1286,8 @@ void ShadowRenderer::ApplyUniforms() {
 		bgfx::setUniform(u_shadowMapMtx[i], m_shadowMapMtx[i]);//TODO set default if no shadow
 	}
 
+	int texShaderIdx = 8;
 	for (uint8_t ii = 0; ii < ShadowMapRenderTargets::Count && ii < m_numSplits; ++ii) {
-		bgfx::setTexture(6 + ii, s_shadowMap[ii], bgfx::getTexture(s_rtShadowMap[ii]));
+		bgfx::setTexture(texShaderIdx + ii, s_shadowMap[ii], bgfx::getTexture(s_rtShadowMap[ii]));
 	}
 }

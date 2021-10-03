@@ -2,3 +2,6 @@ Material:
   shader: shaders\main.asset
   colorTex: textures\scifi\Signs.png
   emissiveTex: textures\scifi\Signs.png
+  colors:
+    - name: u_emissiveColor
+      value: [1.0,1.0,1.0]

@@ -2,3 +2,6 @@ Material:
   shader: shaders\main.asset
   colorTex: textures\scifi\NeonSigns.png
   emissiveTex: textures\scifi\NeonSigns.png
+  colors:
+    - name: u_emissiveColor
+      value: [1.0,1.0,1.0]

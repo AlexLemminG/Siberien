@@ -117,7 +117,7 @@ void BulletSystem::UpdateBullets(BulletsVector& bulletsVector) {
 					auto light = go->GetComponent<PointLight>();
 					lights.push_back(go);
 					light->innerRadius = 0.0f;
-					light->radius = 1.5f;
+					light->radius = 5.0f;
 					Scene::Get()->AddGameObject(lights[i]);
 				}
 				addedLightsCount++;
