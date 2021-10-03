@@ -46,16 +46,17 @@ public:
 	void WriteToLibraryFile(const std::string& id, const std::vector<uint8_t>& buffer);
 	bool ReadFromLibraryFile(const std::string& id, YAML::Node& node);
 	bool ReadFromLibraryFile(const std::string& id, std::vector<uint8_t>& buffer);
-	std::string GetToolPath(std::string toolName);
+	std::string GetToolPath(std::string toolName) const;
 
-	void GetLastModificationTime(long& assetModificationTime, long& metaModificationTime);
+	void GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) const;
 
-	std::string GetAssetPath();
-	std::string GetFileExtension();
+	std::string GetAssetPath() const;
+	std::string GetAssetFileName() const;
+	std::string GetFileExtension() const;
 	void EnsureForderForLibraryFileExists(std::string id);
 
-	std::string GetLibraryPathFromId(const std::string& id);
-	
+	std::string GetLibraryPathFromId(const std::string& id) const;
+
 
 private:
 	bool ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer);

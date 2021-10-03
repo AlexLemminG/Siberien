@@ -276,7 +276,7 @@ std::shared_ptr<Object> AssetDatabase::DeserializeFromYAMLInternal(const ryml::N
 	return main;
 }
 
-void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) {
+void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) const {
 
 	struct stat result;
 	const auto fullPathAsset = database->assetsRootFolder + assetPath;
@@ -346,8 +346,9 @@ bool AssetDatabase_BinaryImporterHandle::ReadMeta(YAML::Node& node) {
 	return ReadYAML(fullPath, node);
 }
 
-std::string AssetDatabase_BinaryImporterHandle::GetAssetPath() { return database->assetsRootFolder + assetPath; }
-std::string AssetDatabase_BinaryImporterHandle::GetFileExtension() { return database->GetFileExtension(assetPath); }
+std::string AssetDatabase_BinaryImporterHandle::GetAssetPath() const { return database->assetsRootFolder + assetPath; }
+std::string AssetDatabase_BinaryImporterHandle::GetAssetFileName() const { return database->GetFileName(assetPath); }
+std::string AssetDatabase_BinaryImporterHandle::GetFileExtension() const { return database->GetFileExtension(assetPath); }
 void AssetDatabase_BinaryImporterHandle::EnsureForderForLibraryFileExists(std::string id) {
 	auto fullPath = GetLibraryPathFromId(id);
 	auto firstFolder = fullPath.find_first_of("\\");
@@ -359,7 +360,7 @@ void AssetDatabase_BinaryImporterHandle::EnsureForderForLibraryFileExists(std::s
 	}
 }
 
-std::string AssetDatabase_BinaryImporterHandle::GetLibraryPathFromId(const std::string& id) {
+std::string AssetDatabase_BinaryImporterHandle::GetLibraryPathFromId(const std::string& id) const {
 	return database->libraryRootFolder + assetPath + "\\" + id;
 }
 
@@ -404,7 +405,7 @@ bool AssetDatabase_BinaryImporterHandle::ReadFromLibraryFile(const std::string& 
 	return ReadBinary(GetLibraryPathFromId(id), buffer);
 }
 
-std::string AssetDatabase_BinaryImporterHandle::GetToolPath(std::string toolName) { return "tools\\" + toolName; }
+std::string AssetDatabase_BinaryImporterHandle::GetToolPath(std::string toolName) const { return "tools\\" + toolName; }
 
 bool AssetDatabase_BinaryImporterHandle::ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer)
 {

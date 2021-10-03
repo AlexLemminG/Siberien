@@ -10,31 +10,48 @@
 #include "bimg/decode.h"
 #include "yaml-cpp/yaml.h"
 #include "Compression.h"
+#include "DbgVars.h"
 
 static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
+
+DBG_VAR_BOOL(dbg_lowTextures, "low res textures", false);
 
 class TextureImporter : public AssetImporter {
 public:
 
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
-		int importerVersion = 5;
+		int importerVersion = 9;
 		YAML::Node metaYaml;
 		if (!databaseHandle.ReadMeta(metaYaml)) {
 			metaYaml = YAML::Node();
 		}
+		//TODO is normal
+		//TODO is linear
 		bool hasMips = metaYaml["mips"].IsDefined() ? metaYaml["mips"].as<bool>() : true;
 		auto formatStr = metaYaml["format"].IsDefined() ? metaYaml["format"].as<std::string>() : "BC1";
 		auto flags = metaYaml["flags"].IsDefined() ? metaYaml["flags"].as<int>() : 0;
 
+		bool isNormalMap;
+		if (metaYaml["isNormal"].IsDefined()) {
+			isNormalMap = metaYaml["isNormal"].as<bool>();
+		}
+		else {
+			auto name = databaseHandle.GetAssetFileName();
+			std::transform(name.begin(), name.end(), name.begin(),
+				[](unsigned char c) { return std::tolower(c); });
+
+			isNormalMap = name.find("normal") != std::string::npos;
+		}
+
 		//TODO return default invalid texture
-		auto txBin = LoadTexture(importerVersion, databaseHandle, hasMips, formatStr);
+		auto txBin = LoadTexture(importerVersion, databaseHandle, hasMips, formatStr, isNormalMap, dbg_lowTextures);
 		if (txBin.size() == 0) {
 			return false;
 		}
 
 		auto pImageContainer = bimg::imageParse(&s_bxAllocator, &txBin[0], txBin.size());
-		
+
 		if (!pImageContainer) {
 			return false;
 		}
@@ -74,10 +91,9 @@ public:
 		return true;
 	}
 
-	std::vector<uint8_t> LoadTexture(int importerVersion, AssetDatabase_BinaryImporterHandle& databaseHandle, bool mips, std::string format) {
+	std::vector<uint8_t> LoadTexture(int importerVersion, AssetDatabase_BinaryImporterHandle& databaseHandle, bool mips, std::string format, bool isNormalMap, bool loadLow) {
 		//std::string assetPath = databaseHandle.;
 		//std::string metaAssetPath = databaseHandle.GetLibraryPathFromId("meta");
-		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("texture");
 		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");
 
 
@@ -103,10 +119,12 @@ public:
 			needRebuild = false;
 		}
 
+		std::string libraryFileName = loadLow ? "texture_low" : "texture";
+
 		std::vector<uint8_t> buffer;
 		bool bufferLoaded = false;
 		if (!needRebuild) {
-			bufferLoaded = databaseHandle.ReadFromLibraryFile("texture", buffer);
+			bufferLoaded = databaseHandle.ReadFromLibraryFile(libraryFileName, buffer);
 			if (bufferLoaded) {
 				BinaryBuffer from(std::move(buffer));
 				BinaryBuffer to;
@@ -123,11 +141,64 @@ public:
 
 		databaseHandle.EnsureForderForLibraryFileExists("texture");
 
+		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("texture");
+		std::string convertedAssetPathLow = databaseHandle.GetLibraryPathFromId("texture_low");
+
+		bool converted = ConvertTextureFile(databaseHandle, databaseHandle.GetAssetPath(), convertedAssetPath, mips, format, isNormalMap, 0);
+		bool convertedLow = ConvertTextureFile(databaseHandle, databaseHandle.GetAssetPath(), convertedAssetPathLow, mips, format, isNormalMap, 4);
+
+		if (!converted || !convertedLow) {
+			return buffer;
+		}
+
+		auto metaNode = YAML::Node();
+		metaNode["lastChange"] = lastChange;
+		metaNode["lastMetaChange"] = lastChangeMeta;
+		metaNode["importerVersion"] = importerVersion;
+
+		databaseHandle.WriteToLibraryFile("meta", metaNode);
+
+		BinaryBuffer binBuffer;
+
+		std::vector<uint8_t> tempBuffer;
+		databaseHandle.ReadFromLibraryFile("texture", tempBuffer);
+
+		std::vector<uint8_t> tempBuffer2;
+		databaseHandle.ReadFromLibraryFile("texture_low", tempBuffer2);
+
+		buffer = loadLow ? tempBuffer2 : tempBuffer;
+
+		binBuffer = BinaryBuffer(std::move(tempBuffer));
+		Compression::Compress(binBuffer);
+		databaseHandle.WriteToLibraryFile("texture", binBuffer.GetData());
+
+
+		binBuffer = BinaryBuffer(std::move(tempBuffer2));
+		Compression::Compress(binBuffer);
+		databaseHandle.WriteToLibraryFile("texture_low", binBuffer.GetData());
+
+
+		return buffer;
+	}
+
+	bool ConvertTextureFile(AssetDatabase_BinaryImporterHandle& databaseHandle,
+		const std::string& inFile,
+		const std::string& outFile,
+		bool isMips,
+		const std::string& format,
+		bool isNormalMap,
+		int skippedMips)
+	{
 		std::string params = "";
-		params += " -f " + databaseHandle.GetAssetPath();
-		params += " -o " + convertedAssetPath;
+		params += " -f " + inFile;
+		params += " -o " + outFile;
 		params += " --mips ";
-		params += (mips ? "true" : "false");
+		params += (isMips ? "true" : "false");
+		params += " --mipskip ";
+		params += FormatString("%d", skippedMips);
+		if (isNormalMap) {
+			params += " --normalmap ";
+		}
 		params += " -t ";
 		params += format;
 		params += " --as ";
@@ -144,7 +215,7 @@ public:
 		std::vector<char> paramsBuffer(params.begin(), params.end());
 		paramsBuffer.push_back(0);
 		LPSTR ccc = &paramsBuffer[0];
-		
+
 		auto result = CreateProcessA(
 			databaseHandle.GetToolPath("texturec.exe").c_str()
 			, &paramsBuffer[0]
@@ -156,12 +227,12 @@ public:
 			, NULL
 			, &si
 			, &pi);
-		//TODO error checks
+
 
 		if (!result)
 		{
 			LogError("Failed to compile texure '%s'", databaseHandle.GetAssetPath().c_str());
-			return buffer;
+			return false;
 		}
 		else
 		{
@@ -173,21 +244,7 @@ public:
 			CloseHandle(pi.hThread);
 		}
 
-		auto metaNode = YAML::Node();
-		metaNode["lastChange"] = lastChange;
-		metaNode["lastMetaChange"] = lastChangeMeta;
-		metaNode["importerVersion"] = importerVersion;
-
-		databaseHandle.WriteToLibraryFile("meta", metaNode);
-		databaseHandle.ReadFromLibraryFile("texture", buffer);
-		{
-			auto from = BinaryBuffer(std::move(buffer));
-			BinaryBuffer to;
-			Compression::Compress(from, to);
-			databaseHandle.WriteToLibraryFile("texture", to.ReleaseData());
-			buffer = from.ReleaseData();
-		}
-		return buffer;
+		return true;
 	}
 
 };

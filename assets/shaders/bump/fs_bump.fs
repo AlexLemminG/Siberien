@@ -1,4 +1,4 @@
-$input v_wpos, v_view, v_proj, v_normal, v_tangent, v_bitangent, v_texcoord0// in...
+$input v_wpos, v_normal, v_tangent, v_bitangent, v_texcoord0// in...
 
 /*
  * Copyright 2011-2021 Branimir Karadzic. All rights reserved.
@@ -71,7 +71,8 @@ struct Surface{
 	vec3 albedo;
 	float alpha;
 	vec3 emissive;
-	vec3 localNormal;//TODO change to worldNormal and add worldPos
+	vec3 normal;
+	vec3 pos;
 	float metalic;
 	float roughness;
 	vec3 reflectionAtZeroIncidence;
@@ -118,37 +119,6 @@ LightData GetLightData(int offset){
 	return data;
 }
 
-vec2 blinn(vec3 _lightDir, vec3 _normal, vec3 _viewDir)
-{
-	float ndotl = dot(_normal, _lightDir);
-	//vec3 reflected = _lightDir - 2.0*ndotl*_normal; // reflect(_lightDir, _normal);
-	vec3 reflected = 2.0*ndotl*_normal - _lightDir;
-	float rdotv = dot(reflected, _viewDir);
-	return vec2(ndotl, rdotv);
-}
-
-vec4 lit(float _ndotl, float _rdotv, float _m)
-{
-	float diff = max(0.0, _ndotl);
-	float spec = step(0.0, _ndotl) * max(0.0, _rdotv * _m);
-	return vec4(1.0, diff, spec, 1.0);
-}
-
-vec3 CalcLight(LightData light, mat3 tbn, vec3 worldPos, vec3 worldNormal, vec3 view){
-	
-	vec3 lp = light.pos - worldPos;
-	if(dot(lp,lp) > light.radius * light.radius){
-		return vec3(0.0,0.0,0.0);
-	}
-	float attn = 1.0 - smoothstep(light.innerRadius, 1.0, length(lp) / light.radius);
-	vec3 lightDir = mul( normalize(lp), tbn );
-	vec2 bln = blinn(normalize(lp), worldNormal, view);
-	vec4 lc = lit(bln.x, bln.y, 1.0);
-	vec3 rgb = light.color * saturate(lc.y) * attn;
-	
-	return rgb;
-}
-
 #define PI 3.14159265359
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -175,6 +145,7 @@ float GeometrySchlickGGX(float NdotV, float roughness)
 	
     return num / denom;
 }
+
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
     float NdotV = max(dot(N, V), 0.0);
@@ -191,20 +162,14 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-
-float BDRF(vec3 viewDir, vec3 worldNormal, float roughness) {
-	return 1.0;
-}
-
-
-vec3 CalcLightPBR(vec3 lightRadiance, vec3 lightDir, Surface surface, vec3 worldNormal, vec3 worldPos, vec3 viewDir){
+vec3 CalcLightPBR(vec3 lightRadiance, vec3 lightDir, Surface surface, vec3 viewDir){
 	vec3 halfDir = normalize(lightDir + viewDir);
 	vec3 F = fresnelSchlick(max(0.0, dot(halfDir, viewDir)), surface.reflectionAtZeroIncidence);
-	float NDF = DistributionGGX(worldNormal, halfDir, surface.roughness);       
-	float G   = GeometrySmith(worldNormal, viewDir, lightDir, surface.roughness); 
+	float NDF = DistributionGGX(surface.normal, halfDir, surface.roughness);       
+	float G   = GeometrySmith(surface.normal, viewDir, lightDir, surface.roughness); 
 	
 	vec3 numerator    = NDF * G * F;
-	float denominator = 4.0 * max(dot(worldNormal, viewDir), 0.0) * max(dot(worldNormal, lightDir), 0.0)  + 0.0001;
+	float denominator = 4.0 * max(dot(surface.normal, viewDir), 0.0) * max(dot(surface.normal, lightDir), 0.0)  + 0.0001;
 	vec3 specular     = numerator / denominator;  
 	
 	vec3 kS = F;
@@ -212,25 +177,24 @@ vec3 CalcLightPBR(vec3 lightRadiance, vec3 lightDir, Surface surface, vec3 world
 	  
 	kD *= 1.0 - surface.metalic;
 	
-	float NdotL = max(dot(worldNormal, lightDir), 0.0);        
+	float NdotL = max(dot(surface.normal, lightDir), 0.0);        
 	return (kD * surface.albedo / PI + specular) * lightRadiance * NdotL;
 }
 
-
-vec3 CalcPointLightPBR(LightData light, Surface surface, vec3 worldNormal, vec3 worldPos, vec3 viewDir){
-	float distance    = length(light.pos - worldPos);
+vec3 CalcPointLightPBR(LightData light, Surface surface, vec3 viewDir){
+	float distance    = length(light.pos - surface.pos);
 	float attenuation = 1.0 / (distance * distance);
 	//attenuation *= light.radius / 4.0; //asuming bigger radius = bigger light intensity
 	attenuation *= pow(saturate(1.0 - pow(saturate(distance / light.radius), 4)), 2);
 	vec3 lightRadiance     = light.color * attenuation;
-	vec3 lightDir = normalize(light.pos - worldPos);
+	vec3 lightDir = normalize(light.pos - surface.pos);
 	
-	return CalcLightPBR(lightRadiance, lightDir, surface, worldNormal, worldPos, viewDir);
+	return CalcLightPBR(lightRadiance, lightDir, surface, viewDir);
 }
 
 //TODO more than 1 light
-vec3 CalcDirLightPBR(Surface surface, vec3 worldNormal, vec3 worldPos, vec3 viewDir){
-	float visibility = dirLightVisibility(worldPos);
+vec3 CalcDirLightPBR(Surface surface, vec3 viewDir){
+	float visibility = dirLightVisibility(surface.pos);
 	if(visibility <= 0.0){
 		return vec3_splat(0.0);
 	}
@@ -238,30 +202,27 @@ vec3 CalcDirLightPBR(Surface surface, vec3 worldNormal, vec3 worldPos, vec3 view
 	vec3 lightDir = -u_lightDir[0].xyz; //CalcLightPBR expects inverted
 	vec3 lightRadiance = u_lightColor[0].rgb;
 	
-	return CalcLightPBR(lightRadiance, lightDir, surface, worldNormal, worldPos, viewDir);
+	return CalcLightPBR(lightRadiance, lightDir, surface, viewDir);
 }
 
-vec4 CalcPBR(Surface surface, mat3 tbn, vec3 worldPos){
-	vec4 proj = mul(u_viewProj, vec4(worldPos, 1.0) );
-	vec3 viewDir = normalize(u_cameraPos.xyz - worldPos);
-	vec3 worldNormal = mul(tbn, surface.localNormal);
+vec4 CalcPBR(Surface surface){
+	vec4 proj = mul(u_viewProj, vec4(surface.pos, 1.0) );
+	vec3 viewDir = normalize(u_cameraPos.xyz - surface.pos);
 	
 	vec4 color = vec4_splat(0.0);
-	
-	
 	
 	ClusterData clusterData = GetClasterData(proj);
 	for(uint i = 0; i < clusterData.lightsCount; i++){
 		ItemData item = GetItemData(i + clusterData.offset);
 		LightData light = GetLightData(item.lightIdx);
 		
-		color.rgb += CalcPointLightPBR(light, surface, worldNormal, worldPos, viewDir);
+		color.rgb += CalcPointLightPBR(light, surface, viewDir);
 	}
-	color.rgb += CalcDirLightPBR(surface, worldNormal, worldPos, viewDir);
+	color.rgb += CalcDirLightPBR(surface, viewDir);
 	
 	//TODO IBL
 	
-	color.rgb += SampleSH(worldNormal, u_sphericalHarmonics) * surface.albedo.rgb; //TODO PBR
+	color.rgb += SampleSH(surface.normal, u_sphericalHarmonics) * surface.albedo.rgb; //TODO PBR
 	
 	color.rgb += surface.emissive.rgb;
 	
@@ -273,43 +234,31 @@ void main()
 {
 	mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
 
-	vec3 normal;
-	normal.xy = texture2D(s_texNormal, v_texcoord0).xy * 2.0 - 1.0;
-	normal.z = sqrt(1.0 - dot(normal.xy, normal.xy) );
+	vec3 localNormal;
+	localNormal.xy = texture2D(s_texNormal, v_texcoord0).xy * 2.0 - 1.0;
+	localNormal.z = sqrt(1.0 - dot(localNormal.xy, localNormal.xy) );
 	
-	
-	
-	vec3 view = normalize(v_view);
-
-	vec3 wnormal = mul(tbn, normal);
-	
-	vec4 albedo = toLinear(texture2D(s_texColor, v_texcoord0));
+	vec4 albedoAlpha = toLinear(texture2D(s_texColor, v_texcoord0));
 	vec3 emissive = toLinear(texture2D(s_texEmissive, v_texcoord0)).rgb;
 	
 	float metalic = texture2D(s_texMetalic, v_texcoord0).r;
 	float roughness = texture2D(s_texRoughness, v_texcoord0).r;
 	
-	
-	vec3 F0 = vec3_splat(0.04); 
-	F0      = mix(F0, albedo.rgb, metalic);
-	
 	Surface surface;
-	surface.albedo = albedo.rgb;
-	surface.alpha = albedo.a;
+	surface.albedo = albedoAlpha.rgb;
+	surface.alpha = albedoAlpha.a;
 	surface.emissive = emissive.rgb * u_emissiveColor;
-	surface.localNormal = normal;
+	surface.normal = mul(tbn, localNormal);
+	surface.pos = v_wpos;
 	surface.metalic = metalic;
 	surface.roughness = roughness;
-	surface.reflectionAtZeroIncidence = F0;
+	surface.reflectionAtZeroIncidence = mix(vec3_splat(0.04), albedoAlpha.rgb, metalic);
 	
-	vec4 color = CalcPBR(surface, tbn, v_wpos);
+	vec4 color = CalcPBR(surface);
 	
 	gl_FragData[0].rgb = toGamma(color);
 	
-	//gl_FragData[0].rgb = color;
-	
-	
 #if TRANSPARENT
-	gl_FragData[0].a = albedo.a;
+	gl_FragData[0].a = albedoAlpha.a;
 #endif
 }
