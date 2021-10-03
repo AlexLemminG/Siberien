@@ -415,7 +415,11 @@ void Render::Draw(SystemsManager& systems)
 	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenBuffer) || !bgfx::isValid(m_fullScreenBuffer2)) {
 		prevWidth = width;
 		prevHeight = height;
-		bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
+		auto flags = BGFX_RESET_NONE;
+		if (CfgGetBool("vsync")) {
+			flags |= BGFX_RESET_VSYNC;
+		}
+		bgfx::reset(width, height, flags);
 		if (bgfx::isValid(m_fullScreenBuffer)) {
 			bgfx::destroy(m_fullScreenBuffer);
 		}
@@ -909,12 +913,15 @@ bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, co
 			| BGFX_STATE_WRITE_G
 			| BGFX_STATE_WRITE_B
 			| BGFX_STATE_WRITE_A
-			| BGFX_STATE_WRITE_Z
 			| BGFX_STATE_DEPTH_TEST_LESS
 			| BGFX_STATE_CULL_CCW
 			;
 		if (material->shader->isAlphaBlending) {
 			state |= BGFX_STATE_BLEND_ALPHA;
+		}
+		else {
+			//TODO separate shader var for this
+			state |= BGFX_STATE_WRITE_Z;
 		}
 		bgfx::setState(state);
 	}

@@ -147,7 +147,7 @@ void main()
 
 	vec3 wnormal = mul(tbn, normal);
 	
-	vec3 albedo = toLinear(texture2D(s_texColor, v_texcoord0)).rgb;
+	vec4 albedo = toLinear(texture2D(s_texColor, v_texcoord0));
 	vec3 emissive = toLinear(texture2D(s_texEmissive, v_texcoord0)).rgb;
 	vec3 color = vec3(0.0,0.0,0.0);
 
@@ -164,4 +164,9 @@ void main()
 	
 	
 	gl_FragData[0].rgb = toGamma(color);
+	
+	
+#if TRANSPARENT
+	gl_FragData[0].a = albedo.a;
+#endif
 }

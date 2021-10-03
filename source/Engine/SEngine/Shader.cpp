@@ -95,6 +95,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 				needRebuild = true;
 			}
 		}
+		//TODO check modification of all included ones
 
 		bool hasBinary = false;
 		if (!needRebuild) {
