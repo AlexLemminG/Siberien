@@ -7,6 +7,7 @@ vsync: false
 godMode: true
 soundEnabled: false
 showFps: true
+msaa: 2
 libraries:
   - Game.dll
   - Test.dll

@@ -51,6 +51,17 @@ constexpr bgfx::ViewId kRenderPassFullScreen2 = 15;
 constexpr bgfx::ViewId kRenderPassFree = 16;
 
 
+static int GetMsaaOffset() {
+	int msaa = CfgGetInt("msaa");
+	//TODO mathf func
+	int offset = 0;
+	while (msaa > 0) {
+		offset++;
+		msaa /= 2;
+	}
+	return Mathf::Clamp(offset-1, 0, 4);
+}
+
 bool Render::IsFullScreen() {
 	auto flags = SDL_GetWindowFlags(window);
 	return flags & SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -268,9 +279,9 @@ void Render::PrepareLights(const ICamera& camera) {
 		int itemsTexelsTotal = items.size() * texelsPerItem;
 		int itemsWidth = Mathf::Min(itemsTexelsTotal, itemsDiv);
 		int itemsHeight = 1 + (itemsTexelsTotal - 1) / itemsDiv;
-		items.resize(itemsHeight* itemsWidth / texelsPerItem);
+		items.resize(itemsHeight * itemsWidth / texelsPerItem);
 		bgfx::updateTexture2D(m_itemsListTex, 0, 0, 0, 0, itemsWidth, itemsHeight, bgfx::copy(items.data(), items.size() * sizeof(ItemData)));
-		bgfx::updateTexture2D(m_lightsListTex, 0, 0, 0, 0, lights.size()* texelsPerLight, 1, bgfx::copy(lights.data(), lights.size() * sizeof(LightData)));
+		bgfx::updateTexture2D(m_lightsListTex, 0, 0, 0, 0, lights.size() * texelsPerLight, 1, bgfx::copy(lights.data(), lights.size() * sizeof(LightData)));
 	}
 }
 
@@ -415,11 +426,15 @@ void Render::Draw(SystemsManager& systems)
 	SDL_GetWindowSize(window, &width, &height);
 
 	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenBuffer) || !bgfx::isValid(m_fullScreenBuffer2)) {
+		auto msaaOffset = GetMsaaOffset();
 		prevWidth = width;
 		prevHeight = height;
-		auto flags = BGFX_RESET_NONE;
+		auto flags = BGFX_RESET_NONE | BGFX_RESET_MAXANISOTROPY;
 		if (CfgGetBool("vsync")) {
 			flags |= BGFX_RESET_VSYNC;
+		}
+		if (msaaOffset > 0) {
+			flags |= msaaOffset << BGFX_RESET_MSAA_SHIFT;
 		}
 		bgfx::reset(width, height, flags);
 		if (bgfx::isValid(m_fullScreenBuffer)) {
@@ -438,6 +453,13 @@ void Render::Draw(SystemsManager& systems)
 			| BGFX_SAMPLER_V_CLAMP
 			;
 
+		uint64_t tsFlagsWithMsaa = tsFlags;
+		if (msaaOffset > 0) {
+			tsFlagsWithMsaa = Bits::SetMaskFalse(tsFlagsWithMsaa, BGFX_TEXTURE_RT);
+			tsFlagsWithMsaa |= uint64_t(msaaOffset+1) << BGFX_TEXTURE_RT_MSAA_SHIFT;
+		}
+
+
 		//TODO dont recreate on resize
 		m_clusterListTex = bgfx::createTexture2D(clustersCount * texelsPerCluster, 1, false, 1, bgfx::TextureFormat::RG32U, BGFX_TEXTURE_RT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
 		int itemsWidth = itemsDiv;
@@ -451,11 +473,11 @@ void Render::Draw(SystemsManager& systems)
 		m_fullScreenTex2 = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
 		m_fullScreenBuffer2 = bgfx::createFrameBuffer(1, &m_fullScreenTex2, true);
 
-		gBuffer.albedoTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
+		gBuffer.albedoTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlagsWithMsaa);
 		//gBuffer.normalTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
 		//gBuffer.lightTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
 		//gBuffer.emissiveTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
-		gBuffer.depthTexture = bgfx::createTexture2D(uint16_t(width), uint16_t(height), false, 1, bgfx::TextureFormat::D32F, tsFlags);
+		gBuffer.depthTexture = bgfx::createTexture2D(uint16_t(width), uint16_t(height), false, 1, bgfx::TextureFormat::D32F, tsFlagsWithMsaa);
 		bgfx::TextureHandle gbufferTex[] =
 		{
 			gBuffer.albedoTexture,
@@ -917,6 +939,7 @@ bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, co
 			| BGFX_STATE_WRITE_A
 			| BGFX_STATE_DEPTH_TEST_LESS
 			| BGFX_STATE_CULL_CCW
+			| BGFX_STATE_MSAA //TODO not in shadows
 			;
 		if (material->shader->isAlphaBlending) {
 			state |= BGFX_STATE_BLEND_ALPHA;

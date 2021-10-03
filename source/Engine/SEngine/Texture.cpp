@@ -31,7 +31,7 @@ public:
 		//TODO is linear
 		bool hasMips = metaYaml["mips"].IsDefined() ? metaYaml["mips"].as<bool>() : true;
 		auto formatStr = metaYaml["format"].IsDefined() ? metaYaml["format"].as<std::string>() : "BC1";
-		auto flags = metaYaml["flags"].IsDefined() ? metaYaml["flags"].as<int>() : 0;
+		auto flags = metaYaml["flags"].IsDefined() ? metaYaml["flags"].as<int>() : BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_MIN_ANISOTROPIC;
 
 		bool isNormalMap;
 		if (metaYaml["isNormal"].IsDefined()) {
@@ -66,6 +66,7 @@ public:
 		//TODO delete
 		auto imageContainer = *pImageContainer;
 		bimg::imageFree(pImageContainer);
+
 
 		auto tx = bgfx::createTexture2D(
 			imageContainer.m_width,
