@@ -14,6 +14,7 @@
 
 static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
 
+//TODO streaming
 DBG_VAR_BOOL(dbg_lowTextures, "low res textures", false);
 
 class TextureImporter : public AssetImporter {
@@ -145,6 +146,8 @@ public:
 		std::string convertedAssetPathLow = databaseHandle.GetLibraryPathFromId("texture_low");
 
 		bool converted = ConvertTextureFile(databaseHandle, databaseHandle.GetAssetPath(), convertedAssetPath, mips, format, isNormalMap, 0);
+
+		//TODO just load mip from full size texture
 		bool convertedLow = ConvertTextureFile(databaseHandle, databaseHandle.GetAssetPath(), convertedAssetPathLow, mips, format, isNormalMap, 4);
 
 		if (!converted || !convertedLow) {
