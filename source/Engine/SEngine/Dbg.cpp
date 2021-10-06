@@ -12,11 +12,13 @@ void Dbg::Draw(::Ray ray, float length, Color color) {
 	rays.push_back(Ray{ ray, length, color });
 }
 
-void Dbg::Draw(Vector3 point, float radius) {
-	points.push_back(Point{ point, radius });
+Dbg::DrawHandle& Dbg::Draw(Vector3 point, float radius) {
+	Point p = Point{ point, radius };
+	points.push_back(p);
+	return points.back();
 }
-void Dbg::Draw(const Sphere& sphere) {
-	Draw(sphere.pos, sphere.radius);
+Dbg::DrawHandle& Dbg::Draw(const Sphere& sphere) {
+	return Draw(sphere.pos, sphere.radius);
 }
 void Dbg::DrawLine(Vector3 from, Vector3 to, Color color) {
 	Draw(::Ray(from, to - from), Vector3::Distance(from, to), color);
@@ -124,9 +126,20 @@ void Dbg::DrawAll() {
 	}
 	dde.setColor(Colors::white.ToIntARGB());
 
+	dde.setWireframe(true);
 	for (const auto& point : points) {
-		dde.drawOrb(point.pos.x, point.pos.y, point.pos.z, point.radius);
+		dde.setColor(point.color.ToIntARGB());
+
+		float weight = 0.f;
+		dde.drawCircle(bx::Vec3(0, 0, 1), bx::Vec3(point.pos.x, point.pos.y, point.pos.z), point.radius, weight);
+
+		dde.drawCircle(bx::Vec3(0, 1, 0), bx::Vec3(point.pos.x, point.pos.y, point.pos.z), point.radius, weight);
+
+		dde.drawCircle(bx::Vec3(1, 0, 0), bx::Vec3(point.pos.x, point.pos.y, point.pos.z), point.radius, weight);
+		//dde.drawOrb(point.pos.x, point.pos.y, point.pos.z, point.radius);
 	}
+	dde.setWireframe(false);
+	dde.setColor(Colors::white.ToIntARGB());
 
 	int yTextOffset = 3;
 	for (int i = 0; i < texts.size(); i++) {
@@ -136,4 +149,9 @@ void Dbg::DrawAll() {
 	ClearAll();
 
 	dde.end();
+}
+
+Dbg::DrawHandle& Dbg::DrawHandle::SetColor(const Color& color) {
+	this->color = color;
+	return *this;
 }

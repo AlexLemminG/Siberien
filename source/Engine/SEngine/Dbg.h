@@ -8,10 +8,18 @@
 
 class SE_CPP_API Dbg {
 public:
+	class DrawHandle {
+	public:
+		DrawHandle() {};
+		DrawHandle& SetColor(const Color& color);
+
+		Color color = Colors::white;
+	};
+
 	static void Draw(Ray ray, float length = 1.f, Color color = Colors::white);
-	static void Draw(Vector3 point, float radius = 0.1f);
+	static DrawHandle& Draw(Vector3 point, float radius = 0.1f);
 	static void DrawLine(Vector3 from, Vector3 to, Color color = Colors::white);
-	static void Draw(const Sphere& sphere);
+	static DrawHandle& Draw(const Sphere& sphere);
 	static void Draw(const AABB& aabb);
 	static void Draw(const OBB& obb);
 	static void Draw(Frustum aabb);
@@ -32,8 +40,10 @@ public:
 	static void DrawAll();
 
 public:
-	class Point {
+	class Point : public DrawHandle {
 	public:
+		Point(Vector3 pos, float radius) :DrawHandle(), pos(pos), radius(radius) {}
+
 		Vector3 pos;
 		float radius;
 	};

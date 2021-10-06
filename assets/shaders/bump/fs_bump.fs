@@ -121,11 +121,12 @@ LightData GetLightData(int offset){
 
 #define PI 3.14159265359
 
-float DistributionGGX(vec3 N, vec3 H, float roughness)
+float DistributionGGX(vec3 N, vec3 H, float extraCos, float roughness)
 {
+	roughness = clamp(roughness, 0.1, 0.9);
     float a      = roughness*roughness;
     float a2     = a*a;
-    float NdotH  = max(dot(N, H), 0.0);
+    float NdotH  = saturate(dot(N, H) + pow(extraCos, 2.0));
     float NdotH2 = NdotH*NdotH;
 	
     float num   = a2;
@@ -146,10 +147,10 @@ float GeometrySchlickGGX(float NdotV, float roughness)
     return num / denom;
 }
 
-float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float extraCos, float roughness)
 {
     float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
+    float NdotL = saturate(dot(N, L) + extraCos);
     float ggx2  = GeometrySchlickGGX(NdotV, roughness);
     float ggx1  = GeometrySchlickGGX(NdotL, roughness);
 	
@@ -162,14 +163,15 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-vec3 CalcLightPBR(vec3 lightRadiance, vec3 lightDir, Surface surface, vec3 viewDir){
+vec3 CalcLightPBR(vec3 lightRadiance, vec3 lightDir, float extraCos, float extraCosReflection, Surface surface, vec3 viewDir){
 	vec3 halfDir = normalize(lightDir + viewDir);
-	vec3 F = fresnelSchlick(max(0.0, dot(halfDir, viewDir)), surface.reflectionAtZeroIncidence);
-	float NDF = DistributionGGX(surface.normal, halfDir, surface.roughness);       
-	float G   = GeometrySmith(surface.normal, viewDir, lightDir, surface.roughness); 
+	float lightDotView = saturate(dot(halfDir, viewDir) + extraCos);
+	vec3 F = fresnelSchlick(lightDotView, surface.reflectionAtZeroIncidence);
+	float NDF = DistributionGGX(surface.normal, halfDir, extraCosReflection, surface.roughness);       
+	float G   = GeometrySmith(surface.normal, viewDir, lightDir, extraCos, surface.roughness); 
 	
 	vec3 numerator    = NDF * G * F;
-	float denominator = 4.0 * max(dot(surface.normal, viewDir), 0.0) * max(dot(surface.normal, lightDir), 0.0)  + 0.0001;
+	float denominator = 4.0 * max(dot(surface.normal, viewDir), 0.0) * saturate(dot(surface.normal, lightDir) + extraCos)  + 0.0001;
 	vec3 specular     = numerator / denominator;  
 	
 	vec3 kS = F;
@@ -177,7 +179,8 @@ vec3 CalcLightPBR(vec3 lightRadiance, vec3 lightDir, Surface surface, vec3 viewD
 	  
 	kD *= 1.0 - surface.metalic;
 	
-	float NdotL = max(dot(surface.normal, lightDir), 0.0);        
+	float NdotL = saturate(dot(surface.normal, lightDir)+extraCos);       
+	
 	return (kD * surface.albedo / PI + specular) * lightRadiance * NdotL;
 }
 
@@ -189,7 +192,14 @@ vec3 CalcPointLightPBR(LightData light, Surface surface, vec3 viewDir){
 	vec3 lightRadiance     = light.color * attenuation;
 	vec3 lightDir = normalize(light.pos - surface.pos);
 	
-	return CalcLightPBR(lightRadiance, lightDir, surface, viewDir);
+	float extraCos = sin(min(PI * 0.5, atan(light.innerRadius / distance)));
+	
+	vec3 lightPosReflected = light.pos - surface.normal * dot(surface.normal,light.pos - surface.pos) * 2.0;
+	
+	float distanceFromView = length(lightPosReflected - u_cameraPos.xyz);
+	float extraCosReflection = sin(min(PI * 0.5, atan(light.innerRadius / distanceFromView)));
+
+	return CalcLightPBR(lightRadiance, lightDir, extraCos, extraCosReflection, surface, viewDir);
 }
 
 //TODO more than 1 light
@@ -202,7 +212,7 @@ vec3 CalcDirLightPBR(Surface surface, vec3 viewDir){
 	vec3 lightDir = -u_lightDir[0].xyz; //CalcLightPBR expects inverted
 	vec3 lightRadiance = u_lightColor[0].rgb;
 	
-	return CalcLightPBR(lightRadiance, lightDir, surface, viewDir);
+	return CalcLightPBR(lightRadiance, lightDir, 0.0, 0.0, surface, viewDir);
 }
 
 vec4 CalcPBR(Surface surface){
@@ -256,7 +266,9 @@ void main()
 	
 	vec4 color = CalcPBR(surface);
 	
-	gl_FragData[0].rgb = toGamma(color);
+	color.rgb = color.rgb / (vec4_splat(1.0) + color.rgb); // Reinhard tone mapping
+	color.rgb = toGamma(color.rgb); // gamma correction
+	gl_FragData[0].rgb = color;
 	
 #if TRANSPARENT
 	gl_FragData[0].a = albedoAlpha.a;

@@ -1,0 +1,6 @@
+Material:
+  color: 0xffffffff
+  shader: shaders\main.asset
+  colorTex: textures\white.png
+  metalicTex: textures\white.png
+  roughnessTex: textures\white.png

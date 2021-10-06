@@ -10,6 +10,7 @@
 #include <array>
 
 typedef mathfu::Vector<float, 2> Vector2;
+typedef mathfu::Vector<int, 2> Vector2Int;
 typedef mathfu::Vector<float, 3> Vector3;
 typedef mathfu::Vector<float, 4> Vector4;
 typedef mathfu::Matrix<float, 4, 4> Matrix4;

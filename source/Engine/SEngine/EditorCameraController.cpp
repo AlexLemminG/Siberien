@@ -3,6 +3,7 @@
 #include "GameObject.h"
 #include "STime.h"
 #include "SDL.h"
+#include "Camera.h"
 
 class EditorCameraController : public Component {
 public:
@@ -10,9 +11,23 @@ public:
 	int mouseXBeforeHide = 0;
 	int mouseYBeforeHide = 0;
 
+	bool hasPos = false;
+
 	virtual void Update() override {
 		if (!Engine::Get()->IsEditorMode()) {
-			//return;//TODO dont create camera in first place
+			return;//TODO dont create camera in first place
+		}
+		if (!hasPos) {
+			Camera* camera = nullptr;
+			for (auto c : Camera::cameras) {
+				if (c != gameObject()->GetComponent<Camera>().get()) {
+					camera = c;
+				}
+			}
+			if (camera) {
+				hasPos = true;
+			}
+			gameObject()->transform()->SetMatrix(camera->gameObject()->transform()->GetMatrix());
 		}
 
 		if (!Input::GetKey(SDL_SCANCODE_Z) && !Input::GetMouseButton(1)) {

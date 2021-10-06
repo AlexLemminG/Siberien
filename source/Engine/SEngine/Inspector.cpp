@@ -12,6 +12,7 @@
 #include "Resources.h"
 #include "Camera.h"
 #include "Input.h"
+#include "Graphics.h"
 #include "MeshRenderer.h"
 #include "Mesh.h"
 #include "Light.h"
@@ -63,6 +64,7 @@ Sphere GetSphere(std::shared_ptr<GameObject> go) {
 		return Sphere(go->transform()->GetPosition(), 0.f);
 	}
 }
+
 
 OBB GetOBB(std::shared_ptr<GameObject> go) {
 	auto renderer = go->GetComponent<MeshRenderer>();
@@ -301,6 +303,52 @@ public:
 		DrawInspector((((char*)&object)), "", typeBase);
 	}
 
+	void DrawOutliner() {
+		auto scene = Scene::Get();
+		static std::string filter;
+		//TODO some wrapper for imgui string input
+		char buff[256];
+		strncpy(buff, filter.c_str(), Mathf::Min(filter.size() + 1, 256));
+		if (ImGui::InputText("filter", buff, 256)) {
+			filter = std::string(buff);
+		}
+
+		auto& gameObjects = scene->GetAllGameObjects();
+		ImGui::BeginChild("left pane", ImVec2(150, 0), true);
+		for (int i = 0; i < gameObjects.size(); i++)
+		{
+			auto go = gameObjects[i];
+			std::string name = go->tag.size() > 0 ? go->tag.c_str() : "-";
+			if (filter.size() > 0) {
+				if (name.find(filter) == -1) {
+					continue;//TODO ignoreCase
+				}
+			}
+			if (Bits::IsMaskTrue(go->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR)) {
+				continue;
+			}
+
+			ImGui::PushID(i);
+			if (ImGui::Selectable(name.c_str(), selectedObject == gameObjects[i])) {
+				selectedObject = gameObjects[i];
+			}
+			ImGui::PopID();
+		}
+		ImGui::EndChild();
+	}
+
+	void DrawGizmosSelected(std::shared_ptr<GameObject> go) {
+		for (auto c : go->components) {
+			auto pl = std::dynamic_pointer_cast<PointLight>(c);
+			if (pl) {
+				auto sphereInner = Sphere{ pl->gameObject()->transform()->GetPosition(), pl->innerRadius };
+				auto sphereOuter = Sphere{ pl->gameObject()->transform()->GetPosition(), pl->radius };
+				Dbg::Draw(sphereInner).SetColor(Color(1, 1, 1, 1));
+				Dbg::Draw(sphereOuter).SetColor(Color(1, 1, 1, 0.1f));
+			}
+		}
+	}
+
 	void Update() {
 		if (!Engine::Get()->IsEditorMode()) {
 			return;//TODO draw but only in pause
@@ -309,47 +357,20 @@ public:
 		if (!scene) {
 			return;
 		}
+		auto screenSize = Graphics::Get()->GetScreenSize();
+		ImGui::SetNextWindowPos(ImVec2(screenSize.x, 0), ImGuiCond_Once, ImVec2(1.0, 0.0));
+		ImGui::SetNextWindowSize(ImVec2(500, 700), ImGuiCond_Once);
+
 		ImGui::Begin("Inspector");
 
-		static std::string filter;
-		{
-			//TODO some wrapper for imgui string input
-			char buff[256];
-			strncpy(buff, filter.c_str(), Mathf::Min(filter.size() + 1, 256));
-			if (ImGui::InputText("filter", buff, 256)) {
-				filter = std::string(buff);
-			}
-
-			auto& gameObjects = scene->GetAllGameObjects();
-			ImGui::BeginChild("left pane", ImVec2(150, 0), true);
-			for (int i = 0; i < gameObjects.size(); i++)
-			{
-				auto go = gameObjects[i];
-				std::string name = go->tag.size() > 0 ? go->tag.c_str() : "-";
-				if (filter.size() > 0) {
-					if (name.find(filter) == -1) {
-						continue;//TODO ignoreCase
-					}
-				}
-				if (Bits::IsMaskTrue(go->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR)) {
-					continue;
-				}
-
-				ImGui::PushID(i);
-				if (ImGui::Selectable(name.c_str(), selectedObject == gameObjects[i])) {
-					selectedObject = gameObjects[i];
-				}
-				ImGui::PopID();
-			}
-			ImGui::EndChild();
-		}
+		DrawOutliner();
 		ImGui::SameLine();
 
-		ImGui::BeginGroup();
+		ImGui::BeginChild("right pane", ImVec2(0, 0), true);
 		if (selectedObject != nullptr) {
 			DrawInspector(*selectedObject);
 		}
-		ImGui::EndGroup();
+		ImGui::EndChild();
 		ImGui::End();
 
 		//TODO refactor
@@ -402,16 +423,20 @@ public:
 			auto go = std::dynamic_pointer_cast<GameObject>(selectedObject);
 			auto box = GetOBB(go);
 			Dbg::Draw(box);
+			DrawGizmosSelected(go);
 
-			if(!gizmoDisabled){
+			if (!gizmoDisabled) {
 				ImGuiIO& io = ImGui::GetIO();
 				ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 				const auto& view = Camera::GetMain()->GetViewMatrix();
 				const auto& proj = Camera::GetMain()->GetProjectionMatrix();
 				auto model = go->transform()->GetMatrix();
 				auto deltaMatrix = Matrix4::Identity();
-				ImGuizmo::Manipulate(&view(0, 0), &proj(0, 0), mCurrentGizmoOperation, mCurrentGizmoMode, &model(0, 0), &deltaMatrix(0,0));
+				ImGuizmo::Manipulate(&view(0, 0), &proj(0, 0), mCurrentGizmoOperation, mCurrentGizmoMode, &model(0, 0), &deltaMatrix(0, 0));
 				if (deltaMatrix != Matrix4::Identity()) {
+					if (mCurrentGizmoMode == ImGuizmo::MODE::WORLD && mCurrentGizmoOperation == ImGuizmo::OPERATION::SCALE) {
+						SetRot(model, go->transform()->GetRotation());//BUGFIX
+					}
 					go->transform()->SetMatrix(model);
 					//TODO undo
 				}

@@ -84,6 +84,8 @@ int Graphics::GetScreenWidth() const { return render->GetWidth(); }
 
 int Graphics::GetScreenHeight() const { return render->GetHeight(); }
 
+Vector2Int Graphics::GetScreenSize() const { return Vector2Int(GetScreenWidth(), GetScreenHeight()); }
+
 void Graphics::SetScreenSpaceQuadBuffer() {
 	float textureWidth = render->GetWidth();
 	float textureHeight = render->GetHeight();

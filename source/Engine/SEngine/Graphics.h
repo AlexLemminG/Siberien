@@ -1,5 +1,6 @@
 #pragma once
 #include "System.h"
+#include "SMath.h"
 
 class Render;
 class Material;
@@ -15,6 +16,7 @@ public:
 
 	int GetScreenWidth() const;
 	int GetScreenHeight() const;
+	Vector2Int GetScreenSize() const;
 private:
 	void SetScreenSpaceQuadBuffer();
 	Render* render = nullptr;
