@@ -220,6 +220,7 @@ public:
 		paramsBuffer.push_back(0);
 		LPSTR ccc = &paramsBuffer[0];
 
+		//TODO use compressonator and multiple threads if needed
 		auto result = CreateProcessA(
 			databaseHandle.GetToolPath("texturec.exe").c_str()
 			, &paramsBuffer[0]
