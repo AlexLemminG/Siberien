@@ -11,8 +11,13 @@
 #include "yaml-cpp/yaml.h"
 #include "Compression.h"
 #include "DbgVars.h"
+#include "Compressonator.h"
+#include <bx\file.h>
+#include "SMath.h"
 
 static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
+static constexpr bool compressTextures = false;
+static constexpr int skippedMipsForLow = 4;
 
 //TODO streaming
 DBG_VAR_BOOL(dbg_lowTextures, "low res textures", false);
@@ -22,7 +27,7 @@ public:
 
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
-		int importerVersion = 9;
+		int importerVersion = 10;
 		YAML::Node metaYaml;
 		if (!databaseHandle.ReadMeta(metaYaml)) {
 			metaYaml = YAML::Node();
@@ -121,13 +126,13 @@ public:
 			needRebuild = false;
 		}
 
-		std::string libraryFileName = loadLow ? "texture_low" : "texture";
+		std::string libraryFileName = loadLow ? "texture_low.dds" : "texture.dds";
 
 		std::vector<uint8_t> buffer;
 		bool bufferLoaded = false;
 		if (!needRebuild) {
 			bufferLoaded = databaseHandle.ReadFromLibraryFile(libraryFileName, buffer);
-			if (bufferLoaded) {
+			if (bufferLoaded && compressTextures) {
 				BinaryBuffer from(std::move(buffer));
 				BinaryBuffer to;
 				bool decompressed = Compression::Decompress(from, to);
@@ -143,13 +148,14 @@ public:
 
 		databaseHandle.EnsureForderForLibraryFileExists("texture");
 
-		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("texture");
-		std::string convertedAssetPathLow = databaseHandle.GetLibraryPathFromId("texture_low");
+		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("texture.dds");
+		std::string convertedAssetPathLow = databaseHandle.GetLibraryPathFromId("texture_low.dds");
 
-		bool converted = ConvertTextureFile(databaseHandle, databaseHandle.GetAssetPath(), convertedAssetPath, mips, format, isNormalMap, 0);
+		bool converted = ConvertTextureFile(databaseHandle, databaseHandle.GetAssetPath(), convertedAssetPath, convertedAssetPathLow, mips, format, isNormalMap, skippedMipsForLow);
 
+		//TODO
 		//TODO just load mip from full size texture
-		bool convertedLow = ConvertTextureFile(databaseHandle, databaseHandle.GetAssetPath(), convertedAssetPathLow, mips, format, isNormalMap, 4);
+		bool convertedLow = converted;// ConvertTextureFile(databaseHandle, databaseHandle.GetAssetPath(), convertedAssetPathLow, mips, format, isNormalMap, 4);
 
 		if (!converted || !convertedLow) {
 			return buffer;
@@ -165,21 +171,25 @@ public:
 		BinaryBuffer binBuffer;
 
 		std::vector<uint8_t> tempBuffer;
-		databaseHandle.ReadFromLibraryFile("texture", tempBuffer);
+		databaseHandle.ReadFromLibraryFile("texture.dds", tempBuffer);
 
 		std::vector<uint8_t> tempBuffer2;
-		databaseHandle.ReadFromLibraryFile("texture_low", tempBuffer2);
+		databaseHandle.ReadFromLibraryFile("texture_low.dds", tempBuffer2);
 
-		buffer = loadLow ? tempBuffer2 : tempBuffer;
+		buffer = tempBuffer;// loadLow ? tempBuffer2 : tempBuffer;
 
 		binBuffer = BinaryBuffer(std::move(tempBuffer));
-		Compression::Compress(binBuffer);
-		databaseHandle.WriteToLibraryFile("texture", binBuffer.GetData());
+		if (compressTextures) {
+			Compression::Compress(binBuffer);
+		}
+		databaseHandle.WriteToLibraryFile("texture.dds", binBuffer.GetData());
 
 
 		binBuffer = BinaryBuffer(std::move(tempBuffer2));
-		Compression::Compress(binBuffer);
-		databaseHandle.WriteToLibraryFile("texture_low", binBuffer.GetData());
+		if (compressTextures) {
+			Compression::Compress(binBuffer);
+		}
+		databaseHandle.WriteToLibraryFile("texture_low.dds", binBuffer.GetData());
 
 
 		return buffer;
@@ -188,18 +198,110 @@ public:
 	bool ConvertTextureFile(AssetDatabase_BinaryImporterHandle& databaseHandle,
 		const std::string& inFile,
 		const std::string& outFile,
+		const std::string& outFileLow,
 		bool isMips,
 		const std::string& format,
 		bool isNormalMap,
-		int skippedMips)
+		int lowSkippedMips)
 	{
+		//TODO convert in memory
+		//TODO formats suppoert
+		//TODO is normal map
+		//TODO isMips
+
+		CMP_MipSet srcTexture;
+
+		if (CMP_LoadTexture(inFile.c_str(), &srcTexture) != CMP_ERROR::CMP_OK) {
+			return false;
+		}
+
+		CMP_MipSet destTexture;
+
+		CMP_CompressOptions options = { 0 };
+		options.dwSize = sizeof(options);
+		options.fquality = 0.05f;
+		options.DestFormat = CMP_ParseFormat((char*)format.c_str());//TODO check error
+		options.dwnumThreads = 0;
+
+
+		if (CMP_GenerateMIPLevels(&srcTexture, CMP_CalcMinMipSize(srcTexture.m_nWidth, srcTexture.m_nHeight, 4)) != CMP_ERROR::CMP_OK) {
+			return false;
+		}
+
+		CMP_Feedback_Proc p = nullptr;
+		if (CMP_ConvertMipTexture(&srcTexture, &destTexture, &options, p) != CMP_ERROR::CMP_OK) {
+			return false;
+		}
+		CMP_SaveTexture(outFile.c_str(), &destTexture);
+		CMP_FreeMipSet(&destTexture);
+
+		auto srcTexture2 = srcTexture;
+		CMP_MipLevel* tempLevels[32];
+		lowSkippedMips = Mathf::Min(lowSkippedMips, srcTexture.m_nMipLevels - 1);
+		if (lowSkippedMips > 0) {
+			for (int i = 0; i < srcTexture.m_nMipLevels - lowSkippedMips; i++) {
+				tempLevels[i] = srcTexture.m_pMipLevelTable[i];
+				srcTexture.m_pMipLevelTable[i] = srcTexture.m_pMipLevelTable[i + lowSkippedMips];
+			}
+			srcTexture.m_nWidth = srcTexture.m_pMipLevelTable[0]->m_nWidth;
+			srcTexture.m_nHeight = srcTexture.m_pMipLevelTable[0]->m_nHeight;
+		}
+		srcTexture.m_nMipLevels = srcTexture.m_nMipLevels - lowSkippedMips;
+
+		if (CMP_ConvertMipTexture(&srcTexture, &destTexture, &options, p) != CMP_ERROR::CMP_OK) {
+			return false;
+		}
+		CMP_SaveTexture(outFileLow.c_str(), &destTexture);
+
+		if (lowSkippedMips > 0) {
+			srcTexture.m_nMipLevels = srcTexture2.m_nMipLevels;
+			srcTexture.m_nHeight = srcTexture2.m_nHeight;
+			srcTexture.m_nWidth = srcTexture2.m_nWidth;
+
+			for (int i = 0; i < srcTexture.m_nMipLevels - lowSkippedMips; i++) {
+				srcTexture.m_pMipLevelTable[i] = tempLevels[i];
+			}
+		}
+
+		CMP_FreeMipSet(&destTexture);
+		CMP_FreeMipSet(&srcTexture);
+
+		return true;
+
+		//bimg::imageWriteDds()
+
+
+		bx::FileWriter fr;
+		bx::Error err;
+		if (!fr.open(bx::FilePath(outFile.c_str()), false, &err)) {
+			return false;
+		}
+		bimg::ImageContainer imageContainer{};
+		imageContainer.m_width = destTexture.m_nWidth;
+		imageContainer.m_height = destTexture.m_nHeight;
+		imageContainer.m_format = bimg::TextureFormat::Enum::BC1;
+		imageContainer.m_numMips = destTexture.m_nMipLevels;
+		imageContainer.m_offset = 0;
+		imageContainer.m_allocator = nullptr;
+		imageContainer.m_depth = destTexture.m_nDepth;
+		imageContainer.m_numLayers = 1;
+		imageContainer.m_hasAlpha = destTexture.m_nChannels == 4;
+		imageContainer.m_srgb = true;
+
+		if (!bimg::imageWriteDds(&fr, imageContainer, destTexture.pData, destTexture.dwDataSize, &err)) {
+			return false;
+		}
+
+		return true;
+
+
 		std::string params = "";
 		params += " -f " + inFile;
 		params += " -o " + outFile;
 		params += " --mips ";
 		params += (isMips ? "true" : "false");
 		params += " --mipskip ";
-		params += FormatString("%d", skippedMips);
+		params += FormatString("%d", lowSkippedMips);
 		if (isNormalMap) {
 			params += " --normalmap ";
 		}
