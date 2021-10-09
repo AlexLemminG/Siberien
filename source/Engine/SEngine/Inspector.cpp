@@ -126,6 +126,15 @@ bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray) {
 			return true;
 		}
 	}
+	//TODO not only spot light
+	auto spotLight = go->GetComponent<SpotLight>();
+	if (spotLight) {
+		auto center = spotLight->gameObject()->transform()->GetPosition();
+		auto radius = spotLight->radius;
+		if (IsOverlapping(Sphere(center, radius), ray)) {
+			return true;
+		}
+	}
 	return false;
 }
 
@@ -338,14 +347,41 @@ public:
 	}
 
 	void DrawGizmosSelected(std::shared_ptr<GameObject> go) {
+		bool hasGizmos = false;
+		Color innerLightColor = Color(1, 1, 1, 1);
+		Color outerLightColor = Color(1, 1, 1, 0.1f);
 		for (auto c : go->components) {
 			auto pl = std::dynamic_pointer_cast<PointLight>(c);
 			if (pl) {
-				auto sphereInner = Sphere{ pl->gameObject()->transform()->GetPosition(), pl->innerRadius };
-				auto sphereOuter = Sphere{ pl->gameObject()->transform()->GetPosition(), pl->radius };
-				Dbg::Draw(sphereInner).SetColor(Color(1, 1, 1, 1));
-				Dbg::Draw(sphereOuter).SetColor(Color(1, 1, 1, 0.1f));
+				auto sphereInner = Sphere{ go->transform()->GetPosition(), pl->innerRadius };
+				auto sphereOuter = Sphere{ go->transform()->GetPosition(), pl->radius };
+				Dbg::Draw(sphereInner).SetColor(innerLightColor);
+				Dbg::Draw(sphereOuter).SetColor(outerLightColor);
+				hasGizmos = true;
 			}
+
+			auto sl = std::dynamic_pointer_cast<SpotLight>(c);
+			if (sl) {
+				float radius = sl->radius;
+				float innerRadius = sl->innerRadius;
+				float angle = Mathf::DegToRad(sl->outerAngle / 2.f);
+				float innerAngle = Mathf::DegToRad(sl->innerAngle / 2.f);
+				Vector3 pos = go->transform()->GetPosition();
+				Vector3 dir = go->transform()->GetForward();
+
+				float dirMultInner = Mathf::Cos(innerAngle);
+				float dirMultOuter = Mathf::Cos(angle);
+				float radiusMultInner = Mathf::Sin(innerAngle);
+				float radiusMultOuter = Mathf::Sin(angle);
+				Dbg::DrawCone(pos, pos + dir * radius * dirMultOuter, radius * radiusMultOuter).SetColor(outerLightColor);
+				Dbg::DrawCone(pos, pos + dir * radius * dirMultInner, radius * radiusMultInner).SetColor(innerLightColor);
+				Dbg::DrawCone(pos, pos + dir * innerRadius * dirMultOuter, innerRadius * radiusMultOuter).SetColor(innerLightColor);
+				hasGizmos = true;
+			}
+		}
+		if (!hasGizmos) {
+			auto box = GetOBB(go);
+			Dbg::Draw(box);
 		}
 	}
 
@@ -421,8 +457,6 @@ public:
 
 		if (selectedObject) {
 			auto go = std::dynamic_pointer_cast<GameObject>(selectedObject);
-			auto box = GetOBB(go);
-			Dbg::Draw(box);
 			DrawGizmosSelected(go);
 
 			if (!gizmoDisabled) {

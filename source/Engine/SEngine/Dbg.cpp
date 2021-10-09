@@ -5,6 +5,7 @@
 
 static std::vector<Dbg::Ray> rays;
 static std::vector<Dbg::Point> points;
+static std::vector<Dbg::Cone> cones;
 static std::vector<Dbg::Axes> axes;
 static std::vector<std::string> texts;
 
@@ -22,6 +23,13 @@ Dbg::DrawHandle& Dbg::Draw(const Sphere& sphere) {
 }
 void Dbg::DrawLine(Vector3 from, Vector3 to, Color color) {
 	Draw(::Ray(from, to - from), Vector3::Distance(from, to), color);
+}
+
+
+Dbg::DrawHandle& Dbg::DrawCone(Vector3 from, Vector3 to, float radius) {
+	Cone c = Cone{ from, to, radius };
+	cones.push_back(c);
+	return cones.back();
 }
 
 void Dbg::Draw(Frustum frustum) {
@@ -104,6 +112,7 @@ void Dbg::ClearAll() {
 	points.clear();
 	texts.clear();
 	axes.clear();
+	cones.clear();
 }
 void Dbg::Term() {
 	ClearAll();
@@ -136,11 +145,18 @@ void Dbg::DrawAll() {
 		dde.drawCircle(bx::Vec3(0, 1, 0), bx::Vec3(point.pos.x, point.pos.y, point.pos.z), point.radius, weight);
 
 		dde.drawCircle(bx::Vec3(1, 0, 0), bx::Vec3(point.pos.x, point.pos.y, point.pos.z), point.radius, weight);
-		//dde.drawOrb(point.pos.x, point.pos.y, point.pos.z, point.radius);
 	}
-	dde.setWireframe(false);
+
+	dde.setLod(3);
+	for (const auto& cone : cones) {
+		dde.setColor(cone.color.ToIntARGB());
+		dde.drawCone(bx::Vec3(cone.to.x, cone.to.y, cone.to.z), bx::Vec3(cone.from.x, cone.from.y, cone.from.z), cone.radius);
+	}
+	dde.setLod(0);
+
 	dde.setColor(Colors::white.ToIntARGB());
 
+	dde.setWireframe(false);
 	int yTextOffset = 3;
 	for (int i = 0; i < texts.size(); i++) {
 		bgfx::dbgTextPrintf(1, yTextOffset + i, 0x0f, texts[i].c_str());

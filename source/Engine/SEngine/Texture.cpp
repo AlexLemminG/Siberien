@@ -18,6 +18,7 @@
 static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
 static constexpr bool compressTextures = false;
 static constexpr int skippedMipsForLow = 4;
+static constexpr int importerVersion = 11;
 
 //TODO streaming
 DBG_VAR_BOOL(dbg_lowTextures, "low res textures", false);
@@ -27,7 +28,6 @@ public:
 
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
-		int importerVersion = 10;
 		YAML::Node metaYaml;
 		if (!databaseHandle.ReadMeta(metaYaml)) {
 			metaYaml = YAML::Node();
@@ -219,12 +219,12 @@ public:
 
 		CMP_CompressOptions options = { 0 };
 		options.dwSize = sizeof(options);
-		options.fquality = 0.05f;
+		options.fquality = 1.0f;
 		options.DestFormat = CMP_ParseFormat((char*)format.c_str());//TODO check error
 		options.dwnumThreads = 0;
 
 
-		if (CMP_GenerateMIPLevels(&srcTexture, CMP_CalcMinMipSize(srcTexture.m_nWidth, srcTexture.m_nHeight, 4)) != CMP_ERROR::CMP_OK) {
+		if (CMP_GenerateMIPLevels(&srcTexture, CMP_CalcMinMipSize(srcTexture.m_nWidth, srcTexture.m_nHeight, srcTexture.m_nMaxMipLevels)) != CMP_ERROR::CMP_OK) {
 			return false;
 		}
 
@@ -232,6 +232,7 @@ public:
 		if (CMP_ConvertMipTexture(&srcTexture, &destTexture, &options, p) != CMP_ERROR::CMP_OK) {
 			return false;
 		}
+		Log("coverting texture '%s'", inFile.c_str());
 		CMP_SaveTexture(outFile.c_str(), &destTexture);
 		CMP_FreeMipSet(&destTexture);
 

@@ -23,6 +23,17 @@ void DirLight::OnDisable() {
 	dirLights.erase(std::find(dirLights.begin(), dirLights.end(), this));
 }
 
+std::vector<SpotLight*> SpotLight::spotLights;
+
+void SpotLight::OnEnable() {
+	spotLights.push_back(this);
+}
+
+void SpotLight::OnDisable() {
+	spotLights.erase(std::find(spotLights.begin(), spotLights.end(), this));
+}
+
 
 DECLARE_TEXT_ASSET(DirLight);
 DECLARE_TEXT_ASSET(PointLight);
+DECLARE_TEXT_ASSET(SpotLight);

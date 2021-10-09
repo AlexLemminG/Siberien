@@ -82,8 +82,26 @@ Vector3 multH(const Matrix4& m, const Vector3& v) {
 
 void Render::PrepareLights(const ICamera& camera) {
 	OPTICK_EVENT();
-	std::vector<PointLight*> pointLights = PointLight::pointLights;
-	std::vector<PointLight*> visiblePointLights;
+
+	//TODO adjust for dir light
+	struct LightData {
+		Vector3 pos;
+		float radius;
+		Vector3 color;
+		float innerRadius;
+		//TODO maybe different structure for spot lights
+		//TODO pack minAngle in dir ?
+		Vector3 dir;
+		float halfInnerAngle;
+		float halfDeltaAngleInv;
+		float padding1;
+		float padding2;
+		float padding3;
+	};
+	std::vector<LightData> lights;
+
+	const std::vector<PointLight*>& pointLights = PointLight::pointLights;
+	const std::vector<SpotLight*>& spotLights = SpotLight::spotLights;
 
 	for (auto light : pointLights) {
 		if (light->radius <= 0.f) {
@@ -99,66 +117,52 @@ void Render::PrepareLights(const ICamera& camera) {
 		if (!isVisible) {
 			continue;
 		}
-		visiblePointLights.push_back(light);
+
+		LightData lightData;
+		lightData.pos = light->gameObject()->transform()->GetPosition();
+		lightData.innerRadius = light->innerRadius;
+		lightData.color.x = light->color.r * light->intensity;
+		lightData.color.y = light->color.g * light->intensity;
+		lightData.color.z = light->color.b * light->intensity;
+		lightData.radius = light->radius;
+		lightData.dir = light->gameObject()->transform()->GetForward();
+		lightData.halfInnerAngle = Mathf::pi;
+		lightData.halfDeltaAngleInv = Mathf::pi;
+		lights.push_back(lightData);
+
 		//TODO
-		shadowRenderer->Draw(light, camera);
+		//shadowRenderer->Draw(light, camera);
+	}
 
-		//auto posRadius = Vector4(pos, light->radius);
-		//bgfx::setUniform(u_lightPosRadius, &posRadius, 1);
+	for (auto light : spotLights) {
+		if (light->radius <= 0.f) {
+			continue;
+		}
+		if (light->color.r <= 0.f && light->color.g <= 0.f && light->color.b <= 0.f) {
+			continue;
+		}
 
-		//auto colorInnerRadius = Vector4(light->color.r, light->color.g, light->color.b, light->innerRadius);
-		//bgfx::setUniform(u_lightRgbInnerR, &colorInnerRadius, 1);
+		auto pos = light->gameObject()->transform()->GetPosition();
+		auto sphere = Sphere{ pos, light->radius };
+		bool isVisible = camera.IsVisible(sphere);
+		if (!isVisible) {
+			continue;
+		}
 
-		//AABB aabb = sphere.ToAABB();
+		LightData lightData;
+		lightData.pos = light->gameObject()->transform()->GetPosition();
+		lightData.innerRadius = light->innerRadius;
+		lightData.color.x = light->color.r * light->intensity;
+		lightData.color.y = light->color.g * light->intensity;
+		lightData.color.z = light->color.b * light->intensity;
+		lightData.radius = light->radius;
+		lightData.dir = light->gameObject()->transform()->GetForward();
+		lightData.halfInnerAngle = Mathf::DegToRad(light->innerAngle / 2.f);
+		lightData.halfDeltaAngleInv = 1.f / Mathf::Max(0.001f, Mathf::DegToRad(light->outerAngle / 2.f) - lightData.halfInnerAngle);
+		lights.push_back(lightData);
 
-		//const Vector3 box[8] =
-		//{
-		//	{ aabb.min.x, aabb.min.y, aabb.min.z },
-		//	{ aabb.min.x, aabb.min.y, aabb.max.z },
-		//	{ aabb.min.x, aabb.max.y, aabb.min.z },
-		//	{ aabb.min.x, aabb.max.y, aabb.max.z },
-		//	{ aabb.max.x, aabb.min.y, aabb.min.z },
-		//	{ aabb.max.x, aabb.min.y, aabb.max.z },
-		//	{ aabb.max.x, aabb.max.y, aabb.min.z },
-		//	{ aabb.max.x, aabb.max.y, aabb.max.z },
-		//};
-
-
-		//Vector3 xyz = multH(camera.GetViewProjectionMatrix(), box[0]);
-		//Vector3 min = xyz;
-		//Vector3 max = xyz;
-
-		//for (uint32_t ii = 1; ii < 8; ++ii)
-		//{
-		//	xyz = multH(camera.GetViewProjectionMatrix(), box[ii]);
-		//	min = Vector3::Min(min, xyz);
-		//	max = Vector3::Max(max, xyz);
-		//}
-
-		//float x0 = Mathf::Clamp((min.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
-		//float y0 = Mathf::Clamp((min.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
-		//float x1 = Mathf::Clamp((max.x * 0.5f + 0.5f) * prevWidth, 0.0f, (float)prevWidth);
-		//float y1 = Mathf::Clamp((max.y * 0.5f + 0.5f) * prevHeight, 0.0f, (float)prevHeight);
-
-		//if (aabb.Contains(camera.GetPosition())) {
-		//	x0 = 0.f;
-		//	y0 = 0.f;
-		//	x1 = prevWidth;
-		//	y1 = prevHeight;
-		//}
-
-		//bgfx::setTexture(0, gBuffer.normalSampler, gBuffer.normalTexture);
-		//bgfx::setTexture(1, gBuffer.depthSampler, gBuffer.depthTexture);
-		//const uint16_t scissorHeight = uint16_t(y1 - y0);
-		////TODO something wrong
-		//bgfx::setScissor(uint16_t(x0), uint16_t(prevHeight - scissorHeight - y0), uint16_t(x1 - x0), uint16_t(scissorHeight));
-		//bgfx::setState(0
-		//	| BGFX_STATE_WRITE_RGB
-		//	| BGFX_STATE_WRITE_A
-		//	| BGFX_STATE_BLEND_ADD
-		//);
-		//Graphics::Get()->SetScreenSpaceQuadBuffer();
-		//bgfx::submit(kRenderPassLight, deferredLightShader->program);
+		//TODO
+		//shadowRenderer->Draw(light, camera);
 	}
 
 	std::vector<DirLight*> dirLights = DirLight::dirLights;
@@ -171,16 +175,6 @@ void Render::PrepareLights(const ICamera& camera) {
 		auto color = Vector4(light->color.r, light->color.g, light->color.b, 0.f) * light->intensity;
 		bgfx::setUniform(u_dirLightDirHandle, &dir, 1);
 		bgfx::setUniform(u_dirLightColorHandle, &color, 1);
-
-		//bgfx::setTexture(0, gBuffer.normalSampler, gBuffer.normalTexture);
-		//bgfx::setTexture(1, gBuffer.depthSampler, gBuffer.depthTexture);
-		//bgfx::setState(0
-		//	| BGFX_STATE_WRITE_RGB
-		//	| BGFX_STATE_WRITE_A
-		//	| BGFX_STATE_BLEND_ADD
-		//);
-		//Graphics::Get()->SetScreenSpaceQuadBuffer();
-		//bgfx::submit(kRenderPassLight, deferredDirLightShader->program);
 	}
 
 
@@ -195,13 +189,6 @@ void Render::PrepareLights(const ICamera& camera) {
 		uint16_t lightIdx;
 		uint16_t dummy;
 	};
-	//TODO adjust for dir light
-	struct LightData {
-		Vector3 pos;
-		float radius;
-		Vector3 color;
-		float innerRadius;
-	};
 	auto viewProj = camera.GetViewProjectionMatrix();
 	Vector3 clusterScale = Vector3(1.f / clusterWidth, 1.f / clusterHeight, 1.f / clusterDepth);
 	Vector3 clusterScaleInv = 1.f / clusterScale;
@@ -209,22 +196,11 @@ void Render::PrepareLights(const ICamera& camera) {
 
 	std::vector<ItemData> items;
 	//items.resize(maxItemsCount);
-	std::vector<LightData> lights;
 	//lights.resize(maxLightsCount);
 	std::vector<ClusterData> clusters;
 	clusters.resize(clustersCount);
 	int currentOffset = 0;
-	for (int lightIdx = 0; lightIdx < visiblePointLights.size(); lightIdx++) {
-		auto light = visiblePointLights[lightIdx];
-		LightData lightData;
-		lightData.pos = light->gameObject()->transform()->GetPosition();
-		lightData.innerRadius = light->innerRadius;
-		lightData.color.x = light->color.r * light->intensity;
-		lightData.color.y = light->color.g * light->intensity;
-		lightData.color.z = light->color.b * light->intensity;
-		lightData.radius = light->radius;
-		lights.push_back(lightData);
-	}
+
 	for (int w = 0; w < clusterWidth; w++) {
 		for (int h = 0; h < clusterHeight; h++) {
 			for (int d = 0; d < clusterDepth; d++) {
@@ -251,7 +227,7 @@ void Render::PrepareLights(const ICamera& camera) {
 				//Dbg::Draw(frustum);
 
 				int numLights = 0;
-				for (int lightIdx = 0; lightIdx < visiblePointLights.size(); lightIdx++) {
+				for (int lightIdx = 0; lightIdx < lights.size(); lightIdx++) {
 					auto pos = lights[lightIdx].pos;
 					auto sphere = Sphere{ pos, lights[lightIdx].radius };
 					if (frustum.IsOverlapingSphere(sphere)) {

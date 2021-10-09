@@ -113,7 +113,7 @@ private:
 	static constexpr int maxLightsCount = 1024;
 	static constexpr int texelsPerCluster = 1;
 	static constexpr int texelsPerItem = 1;
-	static constexpr int texelsPerLight = 2;
+	static constexpr int texelsPerLight = 4;
 	static constexpr int itemsDiv = 1024;
 
 

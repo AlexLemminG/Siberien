@@ -65,6 +65,10 @@ struct LightData{
 	float radius;
 	vec3 color;
 	float innerRadius;
+	vec3 dir;
+	float halfInnerAngle;
+	float halfDeltaAngleInv;
+	vec3 padding;
 };
 
 struct Surface{
@@ -108,14 +112,20 @@ ItemData GetItemData(int offset){
 }
 
 LightData GetLightData(int offset){
-	vec4 raw1 = texelFetch(s_texLightParams, ivec2(offset*2,0), 0).rgba;
-	vec4 raw2 = texelFetch(s_texLightParams, ivec2(offset*2+1,0), 0).rgba;
+	vec4 raw1 = texelFetch(s_texLightParams, ivec2(offset*4,0), 0).rgba;
+	vec4 raw2 = texelFetch(s_texLightParams, ivec2(offset*4+1,0), 0).rgba;
+	vec4 raw3 = texelFetch(s_texLightParams, ivec2(offset*4+2,0), 0).rgba;
+	vec4 raw4 = texelFetch(s_texLightParams, ivec2(offset*4+3,0), 0).rgba;
 	
 	LightData data;
 	data.pos = raw1.xyz;
 	data.radius = raw1.w;
 	data.color = raw2.xyz;
 	data.innerRadius = raw2.w;
+	data.dir = raw3.xyz;
+	data.halfInnerAngle = raw3.w;
+	data.halfDeltaAngleInv = raw4.x;
+	
 	return data;
 }
 
@@ -185,19 +195,28 @@ vec3 CalcLightPBR(vec3 lightRadiance, vec3 lightDir, float extraCos, float extra
 }
 
 vec3 CalcPointLightPBR(LightData light, Surface surface, vec3 viewDir){
-	float distance    = length(light.pos - surface.pos);
+	float distance    = max(0.01,length(light.pos - surface.pos) - light.innerRadius);
 	float attenuation = 1.0 / (distance * distance);
 	//attenuation *= light.radius / 4.0; //asuming bigger radius = bigger light intensity
-	attenuation *= pow(saturate(1.0 - pow(saturate(distance / light.radius), 4)), 2);
-	vec3 lightRadiance     = light.color * attenuation;
+	attenuation *= pow(saturate(1.0 - pow(saturate((distance+light.innerRadius) / light.radius), 4)), 2);
+		
 	vec3 lightDir = normalize(light.pos - surface.pos);
+	float angle = acos(dot(light.dir, -lightDir));
+	float attenuationFromSpotAngle = mix(1.f, 0.f, max(0.0, angle - light.halfInnerAngle) * light.halfDeltaAngleInv);
+	attenuationFromSpotAngle = saturate(attenuationFromSpotAngle);
+	attenuationFromSpotAngle = attenuationFromSpotAngle * attenuationFromSpotAngle;
+	attenuation *= attenuationFromSpotAngle;
 	
-	float extraCos = sin(min(PI * 0.5, atan(light.innerRadius / distance)));
+	vec3 lightRadiance     = light.color * attenuation;
+	
+	float extraCos = sin(min(PI * 0.5, atan(light.innerRadius / (distance+light.innerRadius))));
 	
 	vec3 lightPosReflected = light.pos - surface.normal * dot(surface.normal,light.pos - surface.pos) * 2.0;
 	
 	float distanceFromView = length(lightPosReflected - u_cameraPos.xyz);
 	float extraCosReflection = sin(min(PI * 0.5, atan(light.innerRadius / distanceFromView)));
+	
+	//return vec3_splat(attenuationFromSpotAngle);
 
 	return CalcLightPBR(lightRadiance, lightDir, extraCos, extraCosReflection, surface, viewDir);
 }

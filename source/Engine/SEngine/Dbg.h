@@ -22,6 +22,8 @@ public:
 	static DrawHandle& Draw(const Sphere& sphere);
 	static void Draw(const AABB& aabb);
 	static void Draw(const OBB& obb);
+	//TODO cone as math primitive
+	static Dbg::DrawHandle& DrawCone(Vector3 from, Vector3 to, float radius);
 	static void Draw(Frustum aabb);
 	static void Draw(Matrix4 axes, float length = 1.0f);
 	static void Text(std::string text);
@@ -45,6 +47,13 @@ public:
 		Point(Vector3 pos, float radius) :DrawHandle(), pos(pos), radius(radius) {}
 
 		Vector3 pos;
+		float radius;
+	};
+	class Cone : public DrawHandle {
+	public:
+		Cone(Vector3 from, Vector3 to, float radius) :DrawHandle(), from(from), to(to), radius(radius) {}
+		Vector3 from;
+		Vector3 to;
 		float radius;
 	};
 	class Axes {

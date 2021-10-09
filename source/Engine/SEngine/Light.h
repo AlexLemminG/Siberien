@@ -46,3 +46,23 @@ public:
 	REFLECT_VAR(innerRadius);
 	REFLECT_END();
 };
+
+class SE_CPP_API SpotLight : public Light {
+public:
+	void OnEnable();
+	void OnDisable();
+
+	static std::vector<SpotLight*> spotLights;
+
+	float radius = 5.f;
+	float innerRadius = 0.f;
+	float innerAngle = 15.f;
+	float outerAngle = 30.f;
+
+	REFLECT_BEGIN(SpotLight, Light);
+	REFLECT_VAR(radius);
+	REFLECT_VAR(innerRadius);
+	REFLECT_VAR(innerAngle);
+	REFLECT_VAR(outerAngle);
+	REFLECT_END();
+};
