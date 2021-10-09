@@ -59,7 +59,7 @@ static int GetMsaaOffset() {
 		offset++;
 		msaa /= 2;
 	}
-	return Mathf::Clamp(offset-1, 0, 4);
+	return Mathf::Clamp(offset - 1, 0, 4);
 }
 
 bool Render::IsFullScreen() {
@@ -432,7 +432,7 @@ void Render::Draw(SystemsManager& systems)
 		uint64_t tsFlagsWithMsaa = tsFlags;
 		if (msaaOffset > 0) {
 			tsFlagsWithMsaa = Bits::SetMaskFalse(tsFlagsWithMsaa, BGFX_TEXTURE_RT);
-			tsFlagsWithMsaa |= uint64_t(msaaOffset+1) << BGFX_TEXTURE_RT_MSAA_SHIFT;
+			tsFlagsWithMsaa |= uint64_t(msaaOffset + 1) << BGFX_TEXTURE_RT_MSAA_SHIFT;
 		}
 
 
@@ -453,7 +453,7 @@ void Render::Draw(SystemsManager& systems)
 		//gBuffer.normalTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
 		//gBuffer.lightTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
 		//gBuffer.emissiveTexture = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, tsFlags);
-		gBuffer.depthTexture = bgfx::createTexture2D(uint16_t(width), uint16_t(height), false, 1, bgfx::TextureFormat::D32F, tsFlagsWithMsaa);
+		gBuffer.depthTexture = bgfx::createTexture2D(uint16_t(width), uint16_t(height), false, 1, bgfx::TextureFormat::D32F, tsFlagsWithMsaa | BGFX_TEXTURE_RT_WRITE_ONLY);
 		bgfx::TextureHandle gbufferTex[] =
 		{
 			gBuffer.albedoTexture,
