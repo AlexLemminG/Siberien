@@ -188,6 +188,9 @@
     <ClCompile Include="SEngine\Cmd.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="SEngine\pch.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SEngine\Animation.h">

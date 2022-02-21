@@ -68,6 +68,7 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'" Label="PropertySheets">
     <Import Project="..\Project.props" />
+    <Import Project="..\ProjectRetail.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
@@ -117,8 +118,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\Release\</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -178,11 +178,17 @@
     <ClCompile Include="SEngine\Navigation.cpp" />
     <ClCompile Include="SEngine\NavMeshAgent.cpp" />
     <ClCompile Include="SEngine\Object.cpp" />
+    <ClCompile Include="SEngine\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugNoLibs|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SEngine\Physics.cpp" />
     <ClCompile Include="SEngine\PhysicsSystem.cpp" />
     <ClCompile Include="SEngine\Prefab.cpp" />
     <ClCompile Include="SEngine\Reflect.cpp" />
-    <ClCompile Include="SEngine\Render.cpp" />
+    <ClCompile Include="SEngine\Render.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugNoLibs|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugNoLibs|x64'">pch.h</PrecompiledHeaderFile>
+    </ClCompile>
     <ClCompile Include="SEngine\RenderEvents.cpp" />
     <ClCompile Include="SEngine\Resources.cpp" />
     <ClCompile Include="SEngine\RigidBody.cpp" />

@@ -1,4 +1,4 @@
-
+#include "pch.h"
 
 #include "Render.h"
 
@@ -299,13 +299,14 @@ bool Render::Init()
 	pd.backBufferDS = NULL;
 	bgfx::setPlatformData(pd);
 
+
 	bgfx::Init initInfo{};
 	initInfo.type = bgfx::RendererType::Direct3D11;
 #ifdef SE_HAS_DEBUG
 	initInfo.limits.transientVbSize *= 10;
 	initInfo.limits.transientIbSize *= 10;
-	initInfo.debug = true;
-	initInfo.profile = true;
+	initInfo.debug = CfgGetBool("debugGraphics");
+	initInfo.profile = CfgGetBool("debugGraphics");
 #endif
 	bgfx::init(initInfo);
 	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);

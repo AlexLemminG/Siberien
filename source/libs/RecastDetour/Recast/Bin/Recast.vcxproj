@@ -52,6 +52,7 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'" Label="PropertySheets">
     <Import Project="..\..\..\..\Project.props" />
+    <Import Project="..\..\..\..\ProjectRetail.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="..\..\..\..\Project.props" />
