@@ -1,4 +1,5 @@
-scene: engine\test\viviModel\scene #engine\modelPreview\scene #gameplayScene
+# scene: engine\test\viviModel\scene #engine\modelPreview\scene #gameplayScene
+scene: gameplayScene
 maximumDeltaTime: 0.05
 fixedDeltaTime: 0.016666666666
 fullscreen: false
