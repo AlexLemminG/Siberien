@@ -486,9 +486,13 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	const float projHeight = bx::tan(bx::toRad(camFovy) * 0.5f);
 	const float projWidth = projHeight * camAspect;
 
-	std::shared_ptr<Material> shadowCasterMaterial = AssetDatabase::Get()->Load<Material>("materials\\shadowCaster.asset");
+	std::shared_ptr<Material> shadowCasterMaterial = AssetDatabase::Get()->Load<Material>("materials\\shadowCaster.asset");//TODO no hardcode
 	if (!shadowCasterMaterial) {
-		return;
+		shadowCasterMaterial = AssetDatabase::Get()->Load<Material>("engine\\materials\\shadowCaster.asset");//TODO no hardcode
+		if (!shadowCasterMaterial) {
+			//TODO error
+			return;
+		}
 	}
 
 	Vector3 lightPosition = light->gameObject()->transform()->GetPosition();

@@ -400,6 +400,14 @@ public:
 		distance = projDst / projRayDir;
 		return distance > 0.f;
 	}
+
+	Vector3 ProjectVector(const Vector3& vec) const {
+		return vec - Vector3::DotProduct(vec, normal);
+	}
+
+	Vector3 ProjectPoint(const Vector3& vec) const {
+		return ProjectVector(vec - origin) + origin;
+	}
 };
 
 inline void SerializeVector(SerializationContext& context, const Vector3& src) {

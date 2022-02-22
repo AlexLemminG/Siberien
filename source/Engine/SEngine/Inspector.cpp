@@ -31,7 +31,7 @@ Sphere GetSphere(std::shared_ptr<GameObject> go) {
 	bool hasSphere = false;
 	Sphere sphere;
 	auto renderer = go->GetComponent<MeshRenderer>();
-	if (renderer) {
+	if (renderer && renderer->mesh) {
 		auto meshSphere = renderer->mesh->boundingSphere;
 		auto scale = renderer->m_transform->GetScale();
 		float maxScale = Mathf::Max(Mathf::Max(scale.x, scale.y), scale.z);
@@ -68,7 +68,7 @@ Sphere GetSphere(std::shared_ptr<GameObject> go) {
 
 OBB GetOBB(std::shared_ptr<GameObject> go) {
 	auto renderer = go->GetComponent<MeshRenderer>();
-	if (renderer) {
+	if (renderer && renderer->mesh) {
 		auto aabb = renderer->mesh->aabb;
 		auto obb = renderer->m_transform->GetMatrix() * aabb.ToOBB();
 		return obb;

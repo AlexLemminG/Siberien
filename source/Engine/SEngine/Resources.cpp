@@ -410,7 +410,10 @@ bool AssetDatabase_BinaryImporterHandle::ReadFromLibraryFile(const std::string& 
 	return ReadBinary(GetLibraryPathFromId(id), buffer);
 }
 
-std::string AssetDatabase_BinaryImporterHandle::GetToolPath(std::string toolName) const { return "tools\\" + toolName; }
+std::string AssetDatabase_BinaryImporterHandle::GetToolPath(std::string toolName) const {
+	//TODO less hardcoded
+	return "engine\\tools\\" + toolName;
+}
 
 bool AssetDatabase_BinaryImporterHandle::ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer)
 {

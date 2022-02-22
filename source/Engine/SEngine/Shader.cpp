@@ -113,7 +113,8 @@ class BasicShaderAssetImporter : public AssetImporter {
 		params += (isVertex ? "v" : "f");
 		params += " --platform ";
 		params += "windows";
-		params += " -i assets\\shaders\\include";
+		params += " -i assets\\shaders\\include";//TODO not like this
+		params += " -i assets\\engine\\shaders\\include";//TODO not like this
 		params += " -p ";
 		params += compilerProfile;
 

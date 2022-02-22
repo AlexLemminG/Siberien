@@ -371,10 +371,10 @@ void Render::LoadAssets() {
 	if (database == nullptr) {
 		return;;//HACK for terminated app
 	}
-	whiteTexture = database->Load<Texture>("textures\\white.png");
-	defaultNormalTexture = database->Load<Texture>("textures\\defaultNormal.png");
-	defaultEmissiveTexture = database->Load<Texture>("textures\\defaultEmissive.png");
-	simpleBlitMat = database->Load<Material>("materials\\simpleBlit.asset");
+	whiteTexture = database->Load<Texture>("engine\\textures\\white.png");
+	defaultNormalTexture = database->Load<Texture>("engine\\textures\\defaultNormal.png");
+	defaultEmissiveTexture = database->Load<Texture>("engine\\textures\\defaultEmissive.png");
+	simpleBlitMat = database->Load<Material>("engine\\materials\\simpleBlit.asset");
 }
 
 void Render::UnloadAssets() {
