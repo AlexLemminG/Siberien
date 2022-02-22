@@ -136,58 +136,63 @@ void AssetDatabase::ProcessLoadingQueue() {
 			}
 		}
 		else if (extention == "asset") {
-			auto fileName = assetsRootFolder + path;
-			std::ifstream input(fileName, std::ios::binary | std::ios::ate);
-			if (input) {
-				//TODO
-				//LogError("Failed to load '%s': file not found", fullPath.c_str());
-				std::vector<char> buffer;
-				std::streamsize size = input.tellg();
-				input.seekg(0, std::ios::beg);
+			if (assets.find(path) == assets.end()) {
+				auto fileName = assetsRootFolder + path;
+				std::ifstream input(fileName, std::ios::binary | std::ios::ate);
+				if (input) {
+					//TODO
+					//LogError("Failed to load '%s': file not found", fullPath.c_str());
+					std::vector<char> buffer;
+					std::streamsize size = input.tellg();
+					input.seekg(0, std::ios::beg);
 
-				ResizeVectorNoInit(buffer, size);
-				input.read((char*)buffer.data(), size);
+					ResizeVectorNoInit(buffer, size);
+					input.read((char*)buffer.data(), size);
 
-				auto treePtr = std::make_shared<ryml::Tree>(ryml::parse(c4::csubstr(&buffer[0], buffer.size())));
-				ryml::Tree& tree = *treePtr;
-				ryml::NodeRef node = tree;
-				assets[path].originalTree = treePtr;
-				if (!node.empty()) {
-					for (const auto& kv : node) {
-						auto key = kv.key();
-						PathDescriptor descriptor{ std::string(key.str, key.len) };
-						std::string type = descriptor.assetPath;
-						std::string id = descriptor.assetId.size() > 0 ? descriptor.assetId : descriptor.assetPath;
+					auto treePtr = std::make_shared<ryml::Tree>(ryml::parse(c4::csubstr(&buffer[0], buffer.size())));
+					ryml::Tree& tree = *treePtr;
+					ryml::NodeRef node = tree;
+					assets[path].originalTree = treePtr;
+					if (!node.empty()) {
+						for (const auto& kv : node) {
+							auto key = kv.key();
+							PathDescriptor descriptor{ std::string(key.str, key.len) };
+							std::string type = descriptor.assetPath;
+							std::string id = descriptor.assetId.size() > 0 ? descriptor.assetId : descriptor.assetPath;
 
-						auto subnode = kv;
+							auto subnode = kv;
 
-						auto& importer = GetSerialiationInfoStorage().GetTextImporter(type);
-						if (importer) {
-							AssetDatabase_TextImporterHandle handle{ this, subnode };
-							auto object = importer->Import(handle);//TODO rename to deserializer->Deserialize or something
+							auto& importer = GetSerialiationInfoStorage().GetTextImporter(type);
+							if (importer) {
+								AssetDatabase_TextImporterHandle handle{ this, subnode };
+								auto object = importer->Import(handle);//TODO rename to deserializer->Deserialize or something
 
-							if (object != nullptr) {
-								loadedObjects.push_back(object);
-								auto& asset = assets[path];
-								asset.Add(id, object);
-								objectPaths[object] = AssetDatabase::PathDescriptor(path, id).ToFullPath();
+								if (object != nullptr) {
+									loadedObjects.push_back(object);
+									auto& asset = assets[path];
+									asset.Add(id, object);
+									objectPaths[object] = AssetDatabase::PathDescriptor(path, id).ToFullPath();
+								}
+								else {
+									//TODO LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
+								}
 							}
 							else {
-								//TODO LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
+								ASSERT(false);
+								//TODO error
 							}
 						}
-						else {
-							ASSERT(false);
-							//TODO error
-						}
+					}
+					else {
+						//TODO error
 					}
 				}
 				else {
-					//TODO error
+					//TORO error
 				}
 			}
 			else {
-				//TORO error
+				//TODO error
 			}
 		}
 		else {

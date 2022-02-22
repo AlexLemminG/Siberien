@@ -9,5 +9,5 @@ Camera:
   nearPlane: 0.01
   farPlane: 1000
 Transform:
-  pos: [15, 8.3, 18.7]
+  pos: [15, 7.9, 18.7]
   euler: [-180, -66, -180]

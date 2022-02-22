@@ -9,7 +9,7 @@ vsync: true
 godMode: true
 soundEnabled: false
 showFps: true
-msaa: 16
+msaa: 2
 debugGraphics: false
 libraries:
   - Game.dll

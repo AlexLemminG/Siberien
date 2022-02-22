@@ -156,6 +156,7 @@
     <ClCompile Include="SEngine\Compression.cpp" />
     <ClCompile Include="SEngine\Config.cpp" />
     <ClCompile Include="SEngine\Dbg.cpp" />
+    <ClCompile Include="SEngine\DbgSceneSelectionScreen.cpp" />
     <ClCompile Include="SEngine\DbgVars.cpp" />
     <ClCompile Include="SEngine\EditorCameraController.cpp" />
     <ClCompile Include="SEngine\Engine.cpp" />
