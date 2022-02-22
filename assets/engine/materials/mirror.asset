@@ -3,4 +3,4 @@ Material:
   shader: shaders\main.asset
   colorTex: textures\white.png
   metalicTex: textures\white.png
-  roughnessTex: textures\white.png
+  roughnessTex: textures\black.png

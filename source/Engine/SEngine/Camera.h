@@ -30,7 +30,7 @@ private:
 	Vector3 position;
 };
 
-class ManualCamera :public ICamera{
+class ManualCamera :public ICamera {
 public:
 	virtual Color GetClearColor() const override { return color; }
 
@@ -49,6 +49,7 @@ public:
 	float GetFov() { return fov; }
 	void SetFov(float fov) { this->fov = fov; }
 	virtual Color GetClearColor() const override { return clearColor; }
+	void SetClearColor(const Color& color) { clearColor = color; }
 
 	static Camera* GetMain();
 

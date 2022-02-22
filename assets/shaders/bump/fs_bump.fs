@@ -195,10 +195,10 @@ vec3 CalcLightPBR(vec3 lightRadiance, vec3 lightDir, float extraCos, float extra
 }
 
 vec3 CalcPointLightPBR(LightData light, Surface surface, vec3 viewDir){
-	float distance    = max(0.01,length(light.pos - surface.pos) - light.innerRadius);
+	float distance    = max(light.innerRadius + 0.01, length(light.pos - surface.pos));
 	float attenuation = 1.0 / (distance * distance);
 	//attenuation *= light.radius / 4.0; //asuming bigger radius = bigger light intensity
-	attenuation *= pow(saturate(1.0 - pow(saturate((distance+light.innerRadius) / light.radius), 4)), 2);
+	attenuation *= pow(saturate(1.0 - pow(saturate(distance / light.radius), 4)), 2);
 		
 	vec3 lightDir = normalize(light.pos - surface.pos);
 	float angle = acos(dot(light.dir, -lightDir));
@@ -209,7 +209,7 @@ vec3 CalcPointLightPBR(LightData light, Surface surface, vec3 viewDir){
 	
 	vec3 lightRadiance     = light.color * attenuation;
 	
-	float extraCos = sin(min(PI * 0.5, atan(light.innerRadius / (distance+light.innerRadius))));
+	float extraCos = sin(min(PI * 0.5, atan(light.innerRadius / distance)));
 	
 	vec3 lightPosReflected = light.pos - surface.normal * dot(surface.normal,light.pos - surface.pos) * 2.0;
 	
@@ -277,7 +277,7 @@ void main()
 	surface.albedo = albedoAlpha.rgb;
 	surface.alpha = albedoAlpha.a;
 	surface.emissive = emissive.rgb * u_emissiveColor;
-	surface.normal = mul(tbn, localNormal);
+	surface.normal = normalize(mul(tbn, localNormal));
 	surface.pos = v_wpos;
 	surface.metalic = metalic;
 	surface.roughness = roughness;

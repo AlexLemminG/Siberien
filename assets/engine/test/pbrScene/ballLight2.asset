@@ -1,0 +1,12 @@
+GameObject:
+  tag: Light
+  components:
+  - $Transform
+  - $PointLight
+PointLight:
+  color: 0xFF6A00FF
+  radius: 30.4
+  intensity: 500
+  innerRadius: 1
+Transform:
+  pos: [17,17.5,17.5]

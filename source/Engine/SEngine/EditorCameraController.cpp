@@ -11,13 +11,15 @@ public:
 	int mouseXBeforeHide = 0;
 	int mouseYBeforeHide = 0;
 
-	bool hasPos = false;
+	bool copyPos = true;
 
 	virtual void Update() override {
 		if (!Engine::Get()->IsEditorMode()) {
 			return;//TODO dont create camera in first place
 		}
-		if (!hasPos) {
+
+		{
+			// updating fov
 			Camera* camera = nullptr;
 			for (auto c : Camera::cameras) {
 				if (c != gameObject()->GetComponent<Camera>().get()) {
@@ -25,9 +27,13 @@ public:
 				}
 			}
 			if (camera) {
-				hasPos = true;
+				auto thisCamera = gameObject()->GetComponent<Camera>();
+				thisCamera->SetFov(camera->GetFov());
+				thisCamera->SetClearColor(camera->GetClearColor());
+				if (copyPos) {
+					gameObject()->transform()->SetMatrix(camera->gameObject()->transform()->GetMatrix());
+				}
 			}
-			gameObject()->transform()->SetMatrix(camera->gameObject()->transform()->GetMatrix());
 		}
 
 		if (!Input::GetKey(SDL_SCANCODE_Z) && !Input::GetMouseButton(1)) {
@@ -38,6 +44,7 @@ public:
 			}
 			return;
 		}
+		copyPos = false;
 		if (!isMouseHidden) {
 			isMouseHidden = true;
 			SDL_GetGlobalMouseState(&mouseXBeforeHide, &mouseYBeforeHide);
@@ -69,14 +76,14 @@ public:
 			vel += -transform->GetRight();
 		}
 		transform->SetPosition(transform->GetPosition() + vel * Time::deltaTime() * moveSpeed);
-	
-	
+
+
 		auto rotation = transform->GetRotation();
 		auto r1 = Quaternion::FromAngleAxis(Mathf::DegToRad(Time::deltaTime() * rotateSpeed) * Input::GetMouseDeltaPosition().x, Vector3_up);
 		auto r2 = Quaternion::FromAngleAxis(Mathf::DegToRad(Time::deltaTime() * rotateSpeed) * Input::GetMouseDeltaPosition().y, transform->GetRight());
 		transform->SetRotation(r1 * r2 * rotation);
-	
-	
+
+
 	}
 
 	REFLECT_BEGIN(EditorCameraController, Component);

@@ -1,0 +1,20 @@
+GameObject:
+  components:
+  - $Transform
+  - $1
+  - $2
+Transform:
+  euler: [0,0,0]
+  
+MeshRenderer$1:
+  mesh: engine\test\pbrScene\pbrBalls.glb$Spheres
+  material: $M1
+MeshRenderer$2:
+  mesh: engine\test\pbrScene\pbrBalls.glb$SpheresText
+  material: $M1
+  
+Material$M1:
+  shader: shaders\main.asset
+  colorTex: textures\white.png
+  metalicTex: textures\blackToWhiteGradientBottonToTop.png
+  roughnessTex: textures\blackToWhiteGradientRightToLeft.png

@@ -1,14 +1,15 @@
 # scene: engine\test\viviModel\scene #engine\modelPreview\scene #gameplayScene
-scene: gameplayScene
+scene: engine\test\pbrScene\scene #engine\modelPreview\scene #gameplayScene
+# scene: gameplayScene
 maximumDeltaTime: 0.05
 fixedDeltaTime: 0.016666666666
 fullscreen: false
 debugSceneLoading: false
-vsync: false
+vsync: true
 godMode: true
 soundEnabled: false
 showFps: true
-msaa: 1
+msaa: 16
 debugGraphics: false
 libraries:
   - Game.dll

@@ -6,6 +6,7 @@ Scene:
     - camera.asset
     - gun_shotgun.asset
     - gun_gatling.asset
+    - engine\test\pbrScene\pbrBalls.asset
     - gameplayScene\dirLight.asset
     - gameplayScene\indoorHidePlane.asset
     - gameplayScene\static.asset

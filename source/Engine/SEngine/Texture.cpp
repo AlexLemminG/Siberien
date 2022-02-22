@@ -25,7 +25,21 @@ DBG_VAR_BOOL(dbg_lowTextures, "low res textures", false);
 
 class TextureImporter : public AssetImporter {
 public:
-
+	static int WrapModeStrToFlags(std::string& str) {
+		if (str == "repeat") {
+			return 0;
+		}
+		else if (str == "clamp") {
+			return BGFX_SAMPLER_UVW_CLAMP;
+		}
+		else if (str == "mirror") {
+			return BGFX_SAMPLER_UVW_MIRROR;
+		}
+		else {
+			LogError("Unknown wrapMode '%s'", str.c_str()); //TODO texture file path
+			return 0;
+		}
+	}
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
 		YAML::Node metaYaml;
@@ -36,7 +50,9 @@ public:
 		//TODO is linear
 		bool hasMips = metaYaml["mips"].IsDefined() ? metaYaml["mips"].as<bool>() : true;
 		auto formatStr = metaYaml["format"].IsDefined() ? metaYaml["format"].as<std::string>() : "BC1";
+		auto wrapModeStr = metaYaml["wrapMode"].IsDefined() ? metaYaml["wrapMode"].as<std::string>() : "repeat";
 		auto flags = metaYaml["flags"].IsDefined() ? metaYaml["flags"].as<int>() : BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_MIN_ANISOTROPIC;
+		flags |= WrapModeStrToFlags(wrapModeStr);
 
 		bool isNormalMap;
 		if (metaYaml["isNormal"].IsDefined()) {
