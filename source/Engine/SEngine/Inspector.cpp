@@ -24,7 +24,12 @@
 #include "MeshCollider.h"
 #include "PhysicsSystem.h"
 #include "Physics.h"
+#include "Editor.h"
 #include "dear-imgui/widgets/gizmo.h"
+#include "DbgVars.h"
+
+DBG_VAR_BOOL(dbg_showInspector, "Inspector", false);
+
 
 //TODO to utils
 Sphere GetSphere(std::shared_ptr<GameObject> go) {
@@ -196,12 +201,14 @@ public:
 		ryml::NodeRef yaml = ryml::NodeRef();
 		ryml::NodeRef root = ryml::NodeRef();
 		std::vector<std::string> path;
+		std::shared_ptr<Object> rootObj;
 
 		VarInfo Child(std::string name) const {
 			VarInfo child;
 			child.path = path;
 			child.path.push_back(name);
 			child.root = root;
+			child.rootObj = rootObj;
 			if (yaml.valid() && yaml.is_map()) {
 				child.yaml = yaml.find_child(c4::csubstr(name.c_str(), name.length()));
 			}
@@ -213,6 +220,7 @@ public:
 			child.path = path;
 			child.path.push_back(name);
 			child.root = root;
+			child.rootObj = rootObj;
 			if (yaml.valid() && yaml.is_seq()) {
 				child.yaml = yaml.child(i);
 			}
@@ -243,6 +251,7 @@ public:
 					context = context.Child(name);
 				}
 			}
+			Editor::SetDirty(rootObj);
 			type->Serialize(context, val);
 			std::ofstream fout("out.yaml");
 			fout << root.tree()->rootref();
@@ -267,7 +276,10 @@ public:
 		needToPopEditedVarStyle.pop_back();
 	}
 
-	void DrawInspector(char* object, std::string name, ReflectedTypeBase* type, VarInfo& varInfo, bool isRoot = false) {
+	void DrawInspector(char* object, std::string name, ReflectedTypeBase* type, VarInfo& varInfo, bool expanded = false) {
+		if (expanded) {
+			ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+		}
 		if (type->GetName() == ::GetReflectedType<float>()->GetName()) {
 			float* f = (float*)(object);
 			BeginInspector(varInfo);
@@ -371,7 +383,8 @@ public:
 					VarInfo childInfo;
 					childInfo.yaml = AssetDatabase::Get()->GetOriginalSerializedAsset(c);
 					childInfo.root = childInfo.yaml;
-					DrawInspector((char*)c.get(), c->GetType()->GetName(), c->GetType(), childInfo);
+					childInfo.rootObj = c;
+					DrawInspector((char*)c.get(), c->GetType()->GetName(), c->GetType(), childInfo, true);
 					ImGui::PopID();
 				}
 			}
@@ -402,15 +415,13 @@ public:
 		else {
 			auto typeNonBase = dynamic_cast<ReflectedTypeNonTemplated*>(type);
 			if (typeNonBase) {
-				if (isRoot || ImGui::TreeNode(name.c_str())) {
+				if (ImGui::TreeNode(name.c_str())) {
 					for (const auto& field : typeNonBase->fields) {
 						char* var = object + field.offset;
 						auto childInfo = varInfo.Child(field.name);
 						DrawInspector(var, field.name, field.type, childInfo);
 					}
-					if (!isRoot) {
-						ImGui::TreePop();
-					}
+					ImGui::TreePop();
 				}
 			}
 			else {
@@ -501,7 +512,7 @@ public:
 	}
 
 	void Update() {
-		if (!Engine::Get()->IsEditorMode()) {
+		if (!dbg_showInspector && !Editor::Get()->IsInEditMode()) {
 			return;//TODO draw but only in pause
 		}
 		auto scene = Scene::Get();
@@ -525,6 +536,7 @@ public:
 			VarInfo varInfo;
 			varInfo.yaml = AssetDatabase::Get()->GetOriginalSerializedAsset(selectedObject);
 			varInfo.root = varInfo.yaml;
+			varInfo.rootObj = selectedObject;
 			DrawInspector(*selectedObject, varInfo);
 		}
 		ImGui::EndChild();
@@ -594,7 +606,17 @@ public:
 						if (mCurrentGizmoMode == ImGuizmo::MODE::WORLD && mCurrentGizmoOperation == ImGuizmo::OPERATION::SCALE) {
 							SetRot(model, go->transform()->GetRotation());//BUGFIX
 						}
+
 						go->transform()->SetMatrix(model);
+
+
+						VarInfo varInfo;
+						varInfo.yaml = AssetDatabase::Get()->GetOriginalSerializedAsset(go->transform());
+						varInfo.root = varInfo.yaml;
+						varInfo.rootObj = go->transform();
+						if (varInfo.yaml.valid()) {
+							varInfo.SetValue(go->transform().get());
+						}
 						//TODO undo
 					}
 				}

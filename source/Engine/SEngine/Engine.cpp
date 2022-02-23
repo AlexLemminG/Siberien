@@ -3,14 +3,13 @@
 //#include "delayimp.h"
 #include <iostream>
 #include "DbgVars.h"
+#include "Editor.h"
 
 //extern "C"
 //FARPROC WINAPI __delayLoadHelper2(
 //	PCImgDelayDescr pidd,
 //	FARPROC * ppfnIATEntry
 //);
-
-DBG_VAR_BOOL(dbg_EditorMode, "Editor mode", false);
 
 GameLibrary::GameLibrary() {}
 GameLibrary::~GameLibrary() {}
@@ -30,7 +29,7 @@ std::string Engine::GetExeName() {
 	return "Engine2.exe";
 }
 
-bool Engine::IsEditorMode() const { return dbg_EditorMode; }
+bool Engine::IsEditorMode() const { return Editor::Get()->IsInEditMode(); }
 
 bool Engine::IsQuitPending() const {
 	return isQuitPending;

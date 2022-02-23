@@ -6,11 +6,13 @@
 #include "SceneManager.h"
 #include "Common.h"
 #include "Prefab.h"
+#include "Resources.h"
 
 DECLARE_TEXT_ASSET(Scene);
 
-void Scene::Init() {
+void Scene::Init(bool isEditMode) {
 	OPTICK_EVENT();
+	this->isEditMode = isEditMode;
 	for (const auto& pi : prefabInstances) {
 		auto go = pi.CreateGameObject();
 		ASSERT(go);
@@ -104,6 +106,17 @@ void Scene::Term() {
 	for (auto& go : gameObjects) {
 		DeactivateGameObjectInternal(go);
 	}
+	if (isEditMode) {
+		//cleaning up created prefabs
+		//TODO cleaner solution
+		for (int i = gameObjects.size() - 1; i >= 0; i--) {
+			auto go = gameObjects[i];
+			if (AssetDatabase::Get()->GetAssetUID(go).empty()) {
+				//not an asset, must be instantiated prefab or some other garbage
+				gameObjects.erase(gameObjects.begin() + i);
+			}
+		}
+	}
 	isInited = false;
 }
 
@@ -137,7 +150,7 @@ void Scene::SetComponentEnabledInternal(Component* component, bool isEnabled) {
 		return;
 	}
 	component->SetFlags(Bits::SetMask(component->GetFlags(), Component::FLAGS::IS_ENABLED, isEnabled));
-	if (Engine::Get()->IsEditorMode() && std::find_if(component->GetType()->attributes.begin(), component->GetType()->attributes.end(),
+	if (isEditMode && std::find_if(component->GetType()->attributes.begin(), component->GetType()->attributes.end(),
 		[](const auto& x) {
 			return dynamic_cast<ExecuteInEditModeAttribute*>(x.get()) != nullptr;
 		}

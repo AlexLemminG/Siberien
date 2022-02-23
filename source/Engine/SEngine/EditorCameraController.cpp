@@ -5,19 +5,29 @@
 #include "SDL.h"
 #include "Camera.h"
 
+//TODO not static so f5 works
+static bool copyPos = true;
+static Matrix4 editorTransformMatrix = Matrix4::Identity();
 class EditorCameraController : public Component {
 public:
 	bool isMouseHidden = false;//TODO move to Engine class or something
 	int mouseXBeforeHide = 0;
 	int mouseYBeforeHide = 0;
 
-	bool copyPos = true;
+	bool initedCameraTransform = false;
 
 	virtual void Update() override {
 		if (!Engine::Get()->IsEditorMode()) {
 			return;//TODO dont create camera in first place
 		}
-
+		auto transform = gameObject()->transform();
+		if (initedCameraTransform) {
+			//camera moved outside (probably by inspector) so stop to copying
+			//TODO less hacky
+			if (transform->GetPosition() == GetPos(editorTransformMatrix)) {
+				copyPos = false;
+			}
+		}
 		{
 			// updating fov
 			Camera* camera = nullptr;
@@ -31,9 +41,14 @@ public:
 				thisCamera->SetFov(camera->GetFov());
 				thisCamera->SetClearColor(camera->GetClearColor());
 				if (copyPos) {
+					editorTransformMatrix = camera->gameObject()->transform()->GetMatrix();
 					gameObject()->transform()->SetMatrix(camera->gameObject()->transform()->GetMatrix());
 				}
 			}
+		}
+		if (!initedCameraTransform) {
+			initedCameraTransform = true;
+			transform->SetMatrix(editorTransformMatrix);
 		}
 
 		if (!Input::GetKey(SDL_SCANCODE_Z) && !Input::GetMouseButton(1)) {
@@ -61,7 +76,6 @@ public:
 		}
 
 
-		auto transform = gameObject()->transform();
 		Vector3 vel = Vector3_zero;
 		if (Input::GetKey(SDL_SCANCODE_W)) {
 			vel += transform->GetForward();
@@ -82,8 +96,7 @@ public:
 		auto r1 = Quaternion::FromAngleAxis(Mathf::DegToRad(Time::deltaTime() * rotateSpeed) * Input::GetMouseDeltaPosition().x, Vector3_up);
 		auto r2 = Quaternion::FromAngleAxis(Mathf::DegToRad(Time::deltaTime() * rotateSpeed) * Input::GetMouseDeltaPosition().y, transform->GetRight());
 		transform->SetRotation(r1 * r2 * rotation);
-
-
+		editorTransformMatrix = transform->GetMatrix();
 	}
 
 	REFLECT_BEGIN(EditorCameraController, Component);

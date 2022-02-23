@@ -13,7 +13,7 @@ class SE_CPP_API Scene : public Object {
 public:
 	std::string name;
 
-	void Init();
+	void Init(bool isEditMode);
 	void Update();
 	void FixedUpdate();
 	void Term();
@@ -28,6 +28,8 @@ public:
 
 	const std::vector<std::shared_ptr<GameObject>>& GetAllGameObjects() { return gameObjects; }
 
+	bool IsInEditMode()const { return isEditMode; }
+
 	std::shared_ptr<SphericalHarmonics> sphericalHarmonics; //TODO not here
 private:
 	std::vector<std::shared_ptr<GameObject>> gameObjects; //all gameObjects
@@ -36,6 +38,7 @@ private:
 	std::vector<std::shared_ptr<GameObject>> activeGameObjects;
 
 	bool isInited = false;
+	bool isEditMode = false;
 
 	std::vector<std::shared_ptr<GameObject>> addedGameObjects;
 	std::vector<std::shared_ptr<GameObject>> removedGameObjects;

@@ -76,7 +76,7 @@ void SceneManager::Update() {
 		if (currentScene) {
 			currentScene->name = sceneName;
 			onBeforeSceneEnabled.Invoke();
-			currentScene->Init();
+			currentScene->Init(lastLoadRequestIsForEditing);
 			onSceneLoaded.Invoke();
 		}
 	}
