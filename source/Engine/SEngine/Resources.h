@@ -101,6 +101,7 @@ public:
 	std::string GetAssetPath(std::shared_ptr<Object> obj);
 
 	const std::shared_ptr<ryml::Tree> GetOriginalSerializedAsset(const std::string& assetPath);
+	const ryml::NodeRef GetOriginalSerializedAsset(const std::shared_ptr<Object>& obj);
 
 	static AssetDatabase* Get();
 

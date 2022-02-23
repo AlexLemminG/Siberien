@@ -188,34 +188,139 @@ public:
 		SceneManager::onSceneLoaded.Unsubscribe(onSceneLoadedHandle);
 	}
 
-	void DrawInspector(char* object, std::string name, ReflectedTypeBase* type) {
+	bool IsChanged(std::string fullPath) {
+		return false;
+	}
+
+	struct VarInfo {
+		ryml::NodeRef yaml = ryml::NodeRef();
+		ryml::NodeRef root = ryml::NodeRef();
+		std::vector<std::string> path;
+
+		VarInfo Child(std::string name) const {
+			VarInfo child;
+			child.path = path;
+			child.path.push_back(name);
+			child.root = root;
+			if (yaml.valid() && yaml.is_map()) {
+				child.yaml = yaml.find_child(c4::csubstr(name.c_str(), name.length()));
+			}
+			return child;
+		}
+		VarInfo Child(int i) const {
+			auto name = (std::to_string(i));
+			VarInfo child;
+			child.path = path;
+			child.path.push_back(name);
+			child.root = root;
+			if (yaml.valid() && yaml.is_seq()) {
+				child.yaml = yaml.child(i);
+			}
+			return child;
+		}
+		bool Exist() const {
+			return yaml.valid();
+		}
+		template<typename T>
+		void SetValue(const T* t) {
+			SetValue(GetReflectedType(t), (void*)t);
+		}
+		void SetValue(ReflectedTypeBase* type, void* val) {
+			if (root == nullptr) {
+				return;
+			}
+			SerializationContext rootContext{ root };
+			SerializationContext context = rootContext;
+			for (auto& name : path) {
+				if (name.size() > 0 && name[0] >= '0' && name[1] <= '9') {
+					int idx = std::stoi(name);
+					for (int i = 0; i < idx; i++) {
+						context.Child(i);//creating empty children
+					}
+					context = context.Child(idx);
+				}
+				else {
+					context = context.Child(name);
+				}
+			}
+			type->Serialize(context, val);
+			std::ofstream fout("out.yaml");
+			fout << root.tree()->rootref();
+		}
+	};
+
+	std::vector<bool> needToPopEditedVarStyle;
+	void BeginInspector(VarInfo& varInfo) {
+		if (varInfo.Exist()) {
+			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
+			needToPopEditedVarStyle.push_back(true);
+		}
+		else {
+			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 128));
+			needToPopEditedVarStyle.push_back(true);
+		}
+	}
+	void EndInspector(VarInfo& varInfo) {
+		if (needToPopEditedVarStyle.back()) {
+			ImGui::PopStyleColor();
+		}
+		needToPopEditedVarStyle.pop_back();
+	}
+
+	void DrawInspector(char* object, std::string name, ReflectedTypeBase* type, VarInfo& varInfo, bool isRoot = false) {
 		if (type->GetName() == ::GetReflectedType<float>()->GetName()) {
 			float* f = (float*)(object);
-			ImGui::DragFloat(name.c_str(), f, 0.1f, 0.f, 0.f, "%.5f", ImGuiSliderFlags_NoRoundToFormat);
+			BeginInspector(varInfo);
+			//needed for logarithmic for some reason
+			float speed = Mathf::Max(Mathf::Abs(*f) / 100.f, 0.01f);
+			if (ImGui::DragFloat(name.c_str(), f, speed, 0.f, 0.f, "%.5f", ImGuiSliderFlags_NoRoundToFormat)) {
+				varInfo.SetValue(f);
+			}
+			EndInspector(varInfo);
 		}
 		else if (type->GetName() == ::GetReflectedType<int>()->GetName()) {
 			int* i = (int*)(object);
-			ImGui::DragInt(name.c_str(), i);
+			BeginInspector(varInfo);
+			if (ImGui::DragInt(name.c_str(), i, 1.f, 0, 0, "%d", ImGuiSliderFlags_Logarithmic)) {
+				varInfo.SetValue(i);
+			}
+			EndInspector(varInfo);
 		}
 		else if (type->GetName() == ::GetReflectedType<bool>()->GetName()) {
 			bool* b = (bool*)(object);
-			ImGui::Checkbox(name.c_str(), b);
+			BeginInspector(varInfo);
+			if (ImGui::Checkbox(name.c_str(), b)) {
+				varInfo.SetValue(b);
+			}
+			EndInspector(varInfo);
 		}
 		else if (type->GetName() == ::GetReflectedType<std::string>()->GetName()) {
 			std::string* str = (std::string*)(object);
 			char buff[256];
 			strncpy(buff, str->c_str(), Mathf::Min(str->size() + 1, 256));//TODO more than 256
+			BeginInspector(varInfo);
 			if (ImGui::InputText(name.c_str(), buff, 256)) {
 				*str = std::string(buff);
+				varInfo.SetValue(str);
 			}
+			EndInspector(varInfo);
 		}
 		else if (type->GetName() == ::GetReflectedType<Color>()->GetName()) {
 			Color* c = (Color*)(object);
-			ImGui::ColorEdit4(name.c_str(), &c->r, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaPreviewHalf);
+			BeginInspector(varInfo);
+			if (ImGui::ColorEdit4(name.c_str(), &c->r, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaPreviewHalf)) {
+				varInfo.SetValue(c);
+			}
+			EndInspector(varInfo);
 		}
 		else if (type->GetName() == ::GetReflectedType<Vector3>()->GetName()) {
 			Vector3* v = (Vector3*)(object);
-			ImGui::DragFloat3(name.c_str(), &v->x);
+			BeginInspector(varInfo);
+			float speed = Mathf::Max(Mathf::Max(Mathf::Abs(v->x), Mathf::Max(v->y, v->z)) / 100.f, 0.01f);
+			if (ImGui::DragFloat3(name.c_str(), &v->x, speed)) {
+				varInfo.SetValue(v);
+			}
+			EndInspector(varInfo);
 		}
 		else if (type->GetName() == ::GetReflectedType<Transform>()->GetName()) {
 			Transform* transform = (Transform*)(object);
@@ -224,22 +329,25 @@ public:
 			auto scale = transform->GetScale();
 			if (ImGui::TreeNode(name.c_str())) {
 				//TODO store exact values somewhere
-				if (ImGui::DragFloat3("position", &pos.x, 0.1f)) {
-					transform->SetPosition(pos);
-				}
-				if (ImGui::DragFloat3("euler", &euler.x)) {
-					transform->SetEulerAngles(Mathf::DegToRad(euler));
-				}
-				if (ImGui::DragFloat3("scale", &scale.x, 0.1f)) {
-					transform->SetScale(scale);
-				}
+				DrawInspector((char*)&pos.x, "position", GetReflectedType<Vector3>(), varInfo.Child("pos"));
+				DrawInspector((char*)&euler.x, "euler", GetReflectedType<Vector3>(), varInfo.Child("euler"));//TODO fix shown to user euler changed after applied to matrix and back
+				DrawInspector((char*)&scale.x, "scale", GetReflectedType<Vector3>(), varInfo.Child("scale"));
+
+				//TODO if changed
+				transform->SetPosition(pos);
+				transform->SetEulerAngles(Mathf::DegToRad(euler));
+				transform->SetScale(scale);
+
 				ImGui::TreePop();
 			}
 		}
 		else if (dynamic_cast<ReflectedTypeSharedPtrBase*>(type)) {
 			std::shared_ptr<Object>* v = (std::shared_ptr<Object>*)(object);
 			if (v->get()) {
-				ImGui::LabelText(name.c_str(), "non null ref");
+				//TODO selection
+				if (ImGui::Button(name.c_str())) {
+					selectedObject = *v;
+				}
 			}
 			else {
 				ImGui::LabelText(name.c_str(), "nullptr");
@@ -247,11 +355,7 @@ public:
 		}
 		else if (type->GetName() == ::GetReflectedType<GameObject>()->GetName()) {
 			GameObject* go = (GameObject*)(object);
-			char buff[256];
-			strncpy(buff, go->tag.c_str(), Mathf::Min(go->tag.size() + 1, 256));
-			if (ImGui::InputText("tag", buff, 256)) {
-				go->tag = std::string(buff);
-			}
+			DrawInspector((char*)&go->tag, "tag", GetReflectedType<std::string>(), varInfo.Child("tag"));
 			for (auto c : go->components) {
 				if (c == nullptr) {
 					ASSERT(false);
@@ -263,7 +367,11 @@ public:
 						c->SetEnabled(isEnabled);
 					}
 					ImGui::SameLine();
-					DrawInspector((char*)c.get(), c->GetType()->GetName(), c->GetType());
+
+					VarInfo childInfo;
+					childInfo.yaml = AssetDatabase::Get()->GetOriginalSerializedAsset(c);
+					childInfo.root = childInfo.yaml;
+					DrawInspector((char*)c.get(), c->GetType()->GetName(), c->GetType(), childInfo);
 					ImGui::PopID();
 				}
 			}
@@ -276,13 +384,17 @@ public:
 			std::vector<char>& v = *(std::vector<char>*)(object); //TODO D - DANGARAS
 			int size = v.size() / elementSize;//TODO add sizeOf to ReflectedTypeBase
 			if (ImGui::TreeNode(name.c_str())) {
+				BeginInspector(varInfo);
 				if (ImGui::InputInt("size", &size)) {
 					size = Mathf::Max(size, 0);
 					//TODO default constructor to ReflectedTypeBase
 					v.resize(size * elementSize);//D - DANGARAS (no constructors/destructors and stuff are called)
+					varInfo.SetValue(type, object);
 				}
+				EndInspector(varInfo);
 				for (int i = 0; i < size; i++) {
-					DrawInspector(&v[i * elementSize], FormatString("%d", i), elementType);
+					auto childInfo = varInfo.Child(i);
+					DrawInspector(&v[i * elementSize], FormatString("%d", i), elementType, childInfo);//TODO apply changes to whole yaml arrray if one element is changed
 				}
 				ImGui::TreePop();
 			}
@@ -290,12 +402,15 @@ public:
 		else {
 			auto typeNonBase = dynamic_cast<ReflectedTypeNonTemplated*>(type);
 			if (typeNonBase) {
-				if (ImGui::TreeNode(name.c_str())) {
+				if (isRoot || ImGui::TreeNode(name.c_str())) {
 					for (const auto& field : typeNonBase->fields) {
 						char* var = object + field.offset;
-						DrawInspector(var, field.name, field.type);
+						auto childInfo = varInfo.Child(field.name);
+						DrawInspector(var, field.name, field.type, childInfo);
 					}
-					ImGui::TreePop();
+					if (!isRoot) {
+						ImGui::TreePop();
+					}
 				}
 			}
 			else {
@@ -307,9 +422,9 @@ public:
 	}
 
 	template<typename T>
-	void DrawInspector(T& object) {
+	void DrawInspector(T& object, VarInfo& varInfo) {
 		auto typeBase = object.GetType();
-		DrawInspector((((char*)&object)), "", typeBase);
+		DrawInspector((((char*)&object)), "", typeBase, varInfo, true);
 	}
 
 	void DrawOutliner() {
@@ -403,8 +518,14 @@ public:
 		ImGui::SameLine();
 
 		ImGui::BeginChild("right pane", ImVec2(0, 0), true);
+		if (selectedObject == nullptr) {
+			selectedObject = Scene::Get();
+		}
 		if (selectedObject != nullptr) {
-			DrawInspector(*selectedObject);
+			VarInfo varInfo;
+			varInfo.yaml = AssetDatabase::Get()->GetOriginalSerializedAsset(selectedObject);
+			varInfo.root = varInfo.yaml;
+			DrawInspector(*selectedObject, varInfo);
 		}
 		ImGui::EndChild();
 		ImGui::End();
@@ -457,22 +578,25 @@ public:
 
 		if (selectedObject) {
 			auto go = std::dynamic_pointer_cast<GameObject>(selectedObject);
-			DrawGizmosSelected(go);
 
-			if (!gizmoDisabled) {
-				ImGuiIO& io = ImGui::GetIO();
-				ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-				const auto& view = Camera::GetMain()->GetViewMatrix();
-				const auto& proj = Camera::GetMain()->GetProjectionMatrix();
-				auto model = go->transform()->GetMatrix();
-				auto deltaMatrix = Matrix4::Identity();
-				ImGuizmo::Manipulate(&view(0, 0), &proj(0, 0), mCurrentGizmoOperation, mCurrentGizmoMode, &model(0, 0), &deltaMatrix(0, 0));
-				if (deltaMatrix != Matrix4::Identity()) {
-					if (mCurrentGizmoMode == ImGuizmo::MODE::WORLD && mCurrentGizmoOperation == ImGuizmo::OPERATION::SCALE) {
-						SetRot(model, go->transform()->GetRotation());//BUGFIX
+			if (go != nullptr) {
+				DrawGizmosSelected(go);
+
+				if (!gizmoDisabled) {
+					ImGuiIO& io = ImGui::GetIO();
+					ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+					const auto& view = Camera::GetMain()->GetViewMatrix();
+					const auto& proj = Camera::GetMain()->GetProjectionMatrix();
+					auto model = go->transform()->GetMatrix();
+					auto deltaMatrix = Matrix4::Identity();
+					ImGuizmo::Manipulate(&view(0, 0), &proj(0, 0), mCurrentGizmoOperation, mCurrentGizmoMode, &model(0, 0), &deltaMatrix(0, 0));
+					if (deltaMatrix != Matrix4::Identity()) {
+						if (mCurrentGizmoMode == ImGuizmo::MODE::WORLD && mCurrentGizmoOperation == ImGuizmo::OPERATION::SCALE) {
+							SetRot(model, go->transform()->GetRotation());//BUGFIX
+						}
+						go->transform()->SetMatrix(model);
+						//TODO undo
 					}
-					go->transform()->SetMatrix(model);
-					//TODO undo
 				}
 			}
 		}

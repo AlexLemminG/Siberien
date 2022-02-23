@@ -57,7 +57,9 @@ const SerializationContext SerializationContext::Child(const std::string& name) 
 }
 
 SerializationContext SerializationContext::Child(const std::string& name) {
-	GetYamlNode() |= ryml::MAP;
+	ryml::NodeType_e type = GetYamlNode().type();
+	type = (ryml::NodeType_e)(type & (-1 ^ ryml::VAL) | ryml::MAP);
+	GetYamlNode().set_type(type);
 	auto cname = c4::csubstr(name.c_str(), name.length());
 	ryml::NodeRef child;
 	if (GetYamlNode().has_child(cname)) {
@@ -143,7 +145,7 @@ void SerializationContext::FlushRequiestedToSerialize() {
 	for (auto it : objectsRequestedToSerializeRequesters) {
 		std::string path = objectPaths[it.first];
 		for (auto& node : it.second) {
-			(*(ryml::NodeRef*)& node) << c4::csubstr(path.c_str(), path.length());
+			(*(ryml::NodeRef*)&node) << c4::csubstr(path.c_str(), path.length());
 		}
 	}
 }
@@ -156,7 +158,7 @@ void SerializationContext::FinishDeserialization() {
 }
 
 ryml::NodeRef& SerializationContext::GetYamlNode() { return *(ryml::NodeRef*)&yamlNode; }
-const ryml::NodeRef& SerializationContext::GetYamlNode() const{ return *(ryml::NodeRef*)&yamlNode; }
+const ryml::NodeRef& SerializationContext::GetYamlNode() const { return *(ryml::NodeRef*)&yamlNode; }
 
 SerializationContext::SerializationContext(ryml::NodeRef yamlNode, const SerializationContext& parent)
 	:yamlNode(*(RymlNodeRefDummy*)&(yamlNode))

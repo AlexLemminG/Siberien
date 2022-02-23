@@ -10,6 +10,7 @@ class Scene;
 class SE_CPP_API SceneManager {
 public:
 	static void LoadScene(std::string sceneName);
+	static void LoadSceneForEditing(std::string sceneName);
 
 	static bool Init() { return true; }
 	static void Update();

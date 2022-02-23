@@ -12,8 +12,16 @@ std::shared_ptr<Scene> SceneManager::currentScene;
 GameEvent<> SceneManager::onBeforeSceneEnabled;
 GameEvent<> SceneManager::onAfterSceneDisabled;
 GameEvent<> SceneManager::onSceneLoaded;
+bool lastLoadRequestIsForEditing = false;
+
 void SceneManager::LoadScene(std::string sceneName) {
 	lastLoadRequest = sceneName;
+	lastLoadRequestIsForEditing = false;
+}
+
+void SceneManager::LoadSceneForEditing(std::string sceneName) {
+	lastLoadRequest = sceneName;
+	lastLoadRequestIsForEditing = true;
 }
 
 void SceneManager::Update() {
@@ -59,7 +67,12 @@ void SceneManager::Update() {
 	}
 	{
 		OPTICK_EVENT("Instantiate Scene");
-		currentScene = Object::Instantiate(scene);
+		if (lastLoadRequestIsForEditing) {
+			currentScene = scene;
+		}
+		else {
+			currentScene = Object::Instantiate(scene);
+		}
 		if (currentScene) {
 			currentScene->name = sceneName;
 			onBeforeSceneEnabled.Invoke();
@@ -78,7 +91,7 @@ void SceneManager::Term() {
 
 std::shared_ptr<Scene> SceneManager::GetCurrentScene() { return currentScene; }
 
-std::string SceneManager::GetCurrentScenePath() { 
+std::string SceneManager::GetCurrentScenePath() {
 
-	return currentScene != nullptr ? currentScene->name : "-"; 
+	return currentScene != nullptr ? currentScene->name : "-";
 }
