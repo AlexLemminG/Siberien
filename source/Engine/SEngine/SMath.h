@@ -11,6 +11,7 @@
 
 typedef mathfu::Vector<float, 2> Vector2;
 typedef mathfu::Vector<int, 2> Vector2Int;
+typedef mathfu::Vector<int, 3> Vector3Int;
 typedef mathfu::Vector<float, 3> Vector3;
 typedef mathfu::Vector<float, 4> Vector4;
 typedef mathfu::Matrix<float, 4, 4> Matrix4;
@@ -53,10 +54,54 @@ inline Quaternion LookRotation(const Vector3& forward, const Vector3& up) {
 	return Quaternion::FromMatrix(lookAtMatr.Transpose());
 }
 
+//TODO cleanup, optimize test and stuff
 class SE_CPP_API Mathf {
 public:
-	static int Round(float f) {
+	static float Floor(float a)
+	{
+		if (a < 0.0f)
+		{
+			const float fr = Fract(-a);
+			const float result = -a - fr;
+
+			return -(0.0f != fr
+				? result + 1.0f
+				: result)
+				;
+		}
+
+		return a - Fract(a);
+	}
+
+	static float Trunc(float a)
+	{
+		return float(int(a));
+	}
+
+	static float Fract(float a)
+	{
+		return a - Trunc(a);
+	}
+
+	static float Ceil(float a)
+	{
+		return -Floor(-a);
+	}
+
+	static float Round(float f)
+	{
+		return Floor(f + 0.5f);
+	}
+
+	static int RoundToInt(float f)
+	{
 		return (int)(f + 0.5f - (f < 0));
+	}
+	static int FloorToInt(float f) {
+		return RoundToInt(Floor(f));
+	}
+	static int CeilToInt(float f) {
+		return RoundToInt(Ceil(f));
 	}
 	static float Max(float a, float b) {
 		return a > b ? a : b;
@@ -104,7 +149,7 @@ public:
 		return Clamp(f, 0.f, 1.f);
 	}
 	static int NormalizedFloatToByte(float f) {
-		return Clamp(Round(f * 255.f), 0, 255);
+		return Clamp(RoundToInt(f * 255.f), 0, 255);
 	}
 	static float ByteToNormalizedFloat(int byte) {
 		return Clamp(byte, 0, 255) / 255.f;
