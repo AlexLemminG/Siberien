@@ -140,26 +140,24 @@ void PhysicsSystem::Update() {
 
 void PhysicsSystem::Term() {
 
-	//delete dynamics world
-	delete dynamicsWorld;
+	SAFE_DELETE(dynamicsWorld);
 
-	//delete solver
-	delete solver;
+	SAFE_DELETE(solver);
 
-	delete solverPool;
+	SAFE_DELETE(solverPool);
 
 	//delete broadphase
-	delete overlappingPairCache;
+	SAFE_DELETE(overlappingPairCache);
 
 	//delete dispatcher
-	delete dispatcher;
+	SAFE_DELETE(dispatcher);
 
-	delete collisionConfiguration;
+	SAFE_DELETE(collisionConfiguration);
 
-	delete ghostCall;
+	SAFE_DELETE(ghostCall);
 
 	btSetTaskScheduler(nullptr);
-	delete taskScheduler;
+	SAFE_DELETE(taskScheduler);
 }
 
 Vector3 PhysicsSystem::GetGravity() const {

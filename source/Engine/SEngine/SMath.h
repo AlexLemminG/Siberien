@@ -402,7 +402,7 @@ public:
 	}
 
 	Vector3 ProjectVector(const Vector3& vec) const {
-		return vec - Vector3::DotProduct(vec, normal);
+		return vec - Vector3::DotProduct(vec, normal) * normal;
 	}
 
 	Vector3 ProjectPoint(const Vector3& vec) const {
