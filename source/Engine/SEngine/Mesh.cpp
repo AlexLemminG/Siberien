@@ -11,7 +11,8 @@
 #include "PhysicsSystem.h"//TODO looks weird
 #include "yaml-cpp/yaml.h"
 #include "Compression.h"
-
+#include "shlwapi.h"
+#include <filesystem>
 
 
 MeshVertexLayout& MeshVertexLayout::Begin() {
@@ -262,6 +263,71 @@ public:
 		return true;
 	}
 
+	bool ConvertBlendToGlb(AssetDatabase_BinaryImporterHandle& databaseHandle, const std::string& inFile, const std::string& outFile) {
+		DWORD blenderLocSize = 255;
+		char blenderLoc[255];
+		memset(blenderLoc, 0, 255);
+		auto findBlendResult = AssocQueryStringA(ASSOCF_VERIFY, ASSOCSTR_EXECUTABLE, ".blend", nullptr, blenderLoc, &blenderLocSize);
+		if (findBlendResult != 0) {
+			//TODO log error
+			return false;
+		}
+		std::string blenderApp = blenderLoc;
+		int launcherStrIdx = blenderApp.find("blender-launcher.exe");
+		if (launcherStrIdx != -1) {
+			blenderApp.replace(launcherStrIdx, strlen("blender-launcher.exe"), "blender.exe"); // *-launcher.exe does not wait
+		}
+
+		//TODO less hardcode
+		auto pythonConverterScript = databaseHandle.GetToolPath("BlenderToGlb.py");//TODO make sure file exist
+		std::string params = " ";
+		params += inFile;
+		params += " -b";
+		params += " --python \"" + pythonConverterScript + "\"";
+
+		//TODO move to platform independent stuff
+		STARTUPINFOA si;
+		memset(&si, 0, sizeof(STARTUPINFOA));
+		si.cb = sizeof(STARTUPINFOA);
+
+		PROCESS_INFORMATION pi;
+		memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+
+		std::vector<char> paramsBuffer(params.begin(), params.end());
+		paramsBuffer.push_back(0);
+		LPSTR ccc = &paramsBuffer[0];
+
+		auto result = CreateProcessA(
+			blenderApp.c_str()
+			, &paramsBuffer[0]
+			, NULL
+			, NULL
+			, false
+			, 0
+			, NULL
+			, NULL
+			, &si
+			, &pi);
+
+
+		if (!result)
+		{
+			LogError("Failed to open blender for exporting '%s'", databaseHandle.GetAssetPath().c_str());
+			return false;
+		}
+		else
+		{
+			// Successfully created the process.  Wait for it to finish.
+			WaitForSingleObject(pi.hProcess, INFINITE);
+
+			// Close the handles.
+			CloseHandle(pi.hProcess);
+			CloseHandle(pi.hThread);
+		}
+
+		return true;
+	}
+
 	std::shared_ptr<FullMeshAsset> Import(AssetDatabase_BinaryImporterHandle& databaseHandle) {
 		int importerVersion = 0;//TODO move somewhere
 		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("MeshAsset");
@@ -306,7 +372,21 @@ public:
 			auto meshAsset = DeserializeFromBuffer(buffer);
 			return meshAsset;
 		}
-		auto meshAsset = ImportUsingAssimp(databaseHandle.GetAssetPath());
+		//TODO some pipelining for blender
+		auto originalAssetPath = databaseHandle.GetAssetPath();
+		bool isBlendFile = databaseHandle.GetFileExtension() == "blend";
+
+		if (isBlendFile) {
+			//TODO less hardcode
+			databaseHandle.EnsureForderForTempFileExists("blenderToGlb.glb");
+			std::string tempFile = databaseHandle.GetTempPathFromFileName("blenderToGlb.glb");
+			if (!ConvertBlendToGlb(databaseHandle, originalAssetPath, tempFile)) {
+				return false;
+			}
+			originalAssetPath = tempFile;
+		}
+
+		auto meshAsset = ImportUsingAssimp(originalAssetPath);
 		if (!meshAsset) {
 			return false;
 		}

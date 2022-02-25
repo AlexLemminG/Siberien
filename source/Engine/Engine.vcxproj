@@ -86,7 +86,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
@@ -103,7 +103,7 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
@@ -119,7 +119,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
-      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\Release\</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
@@ -136,7 +136,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>

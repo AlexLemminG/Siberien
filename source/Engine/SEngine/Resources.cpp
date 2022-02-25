@@ -147,19 +147,19 @@ void AssetDatabase::ProcessLoadingQueue() {
 		if (extention == "png") {
 			auto& importer = GetAssetImporter("Texture");
 			if (importer) {
-				importer->ImportAll(AssetDatabase_BinaryImporterHandle(this, path));
+				importer->ImportAll(AssetDatabase_BinaryImporterHandle(this, path));//TODO mark path as failed on error
 			}
 		}
 		else if (extention == "fbx" || extention == "glb" || extention == "blend") {
 			auto& importer = GetAssetImporter("Mesh");
 			if (importer) {
-				importer->ImportAll(AssetDatabase_BinaryImporterHandle(this, path));
+				importer->ImportAll(AssetDatabase_BinaryImporterHandle(this, path));//TODO mark path as failed on error
 			}
 		}
 		else if (extention == "fs" || extention == "vs") {
 			auto& importer = GetAssetImporter("Shader");
 			if (importer) {
-				importer->ImportAll(AssetDatabase_BinaryImporterHandle(this, path));
+				importer->ImportAll(AssetDatabase_BinaryImporterHandle(this, path));//TODO mark path as failed on error
 			}
 		}
 		else if (extention == "asset") {
@@ -343,6 +343,7 @@ std::string AssetDatabase::GetFileName(std::string path) {
 	}
 }
 std::string AssetDatabase::GetFileExtension(std::string path) {
+	//TODO make always lower case
 	auto name = GetFileName(path);
 	if (name == "") {
 		return "";
@@ -381,6 +382,18 @@ bool AssetDatabase_BinaryImporterHandle::ReadMeta(YAML::Node& node) {
 std::string AssetDatabase_BinaryImporterHandle::GetAssetPath() const { return database->assetsRootFolder + assetPath; }
 std::string AssetDatabase_BinaryImporterHandle::GetAssetFileName() const { return database->GetFileName(assetPath); }
 std::string AssetDatabase_BinaryImporterHandle::GetFileExtension() const { return database->GetFileExtension(assetPath); }
+
+void AssetDatabase_BinaryImporterHandle::EnsureForderForTempFileExists(std::string filePath) {
+	auto fullPath = GetTempPathFromFileName(filePath);
+	auto firstFolder = fullPath.find_first_of("\\");
+	for (int i = 0; i < fullPath.size(); i++) {
+		if (fullPath[i] == '\\') {
+			auto subpath = fullPath.substr(0, i);
+			CreateDirectoryA(subpath.c_str(), NULL);
+		}
+	}
+}
+
 void AssetDatabase_BinaryImporterHandle::EnsureForderForLibraryFileExists(std::string id) {
 	auto fullPath = GetLibraryPathFromId(id);
 	auto firstFolder = fullPath.find_first_of("\\");
@@ -390,6 +403,10 @@ void AssetDatabase_BinaryImporterHandle::EnsureForderForLibraryFileExists(std::s
 			CreateDirectoryA(subpath.c_str(), NULL);
 		}
 	}
+}
+
+std::string AssetDatabase_BinaryImporterHandle::GetTempPathFromFileName(const std::string& fileName) const {
+	return database->tempFolder + fileName;
 }
 
 std::string AssetDatabase_BinaryImporterHandle::GetLibraryPathFromId(const std::string& id) const {

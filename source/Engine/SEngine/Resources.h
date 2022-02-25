@@ -54,8 +54,10 @@ public:
 	std::string GetAssetFileName() const;
 	std::string GetFileExtension() const;
 	void EnsureForderForLibraryFileExists(std::string id);
+	void EnsureForderForTempFileExists(std::string filename);//TODO quite inconsistent to have filename here and id in 'EnsureForderForLibraryFileExists'
 
 	std::string GetLibraryPathFromId(const std::string& id) const;
+	std::string GetTempPathFromFileName(const std::string& fileName) const;
 
 
 private:
@@ -198,6 +200,7 @@ private:
 
 	std::string assetsRootFolder = "assets\\";
 	std::string libraryRootFolder = "library\\assets\\";
+	std::string tempFolder = "temp\\";
 
 	static AssetDatabase* mainDatabase;
 };
