@@ -166,14 +166,23 @@ void Render::PrepareLights(const ICamera& camera) {
 	}
 
 	std::vector<DirLight*> dirLights = DirLight::dirLights;
+	bool hasDirLights = false;
 	for (auto light : dirLights) {
 		if (light->color.r <= 0.f && light->color.g <= 0.f && light->color.b <= 0.f) {
 			continue;
 		}
+		hasDirLights = true;
 		shadowRenderer->Draw(light, camera);
 		auto dir = Vector4(light->gameObject()->transform()->GetForward(), 0.f);
+		//TODO Color to Vector4 func
 		auto color = Vector4(light->color.r, light->color.g, light->color.b, 0.f) * light->intensity;
+		//TODO support more than 1 dir light
 		bgfx::setUniform(u_dirLightDirHandle, &dir, 1);
+		bgfx::setUniform(u_dirLightColorHandle, &color, 1);
+	}
+	if (!hasDirLights) {
+		//no dir lights
+		Vector4 color = Vector4(0, 0, 0, 0);
 		bgfx::setUniform(u_dirLightColorHandle, &color, 1);
 	}
 
