@@ -20,6 +20,7 @@
 #include "DbgVars.h"
 #include "STime.h"
 #include <windows.h>
+#include "BoxCollider.h"
 
 
 class DebugDrawer :public duDebugDraw {
@@ -101,6 +102,24 @@ class DebugDrawer :public duDebugDraw {
 	}
 };
 
+
+void NavMesh::BuildForSingleOBB(const OBB& obb){
+	int vertexIndexOffset = vertices.size();
+	auto boxVertices = obb.GetVertices();
+	ResizeVectorNoInit(vertices, vertexIndexOffset + boxVertices.size());
+	memcpy(&vertices[vertexIndexOffset], &boxVertices[0], sizeof(boxVertices));
+
+	int trisIndexOffset = tris.size();
+	auto boxIndices = obb.GetTriangleIndices();
+	ResizeVectorNoInit(tris, trisIndexOffset + boxIndices.size());
+	for (int i = 0; i < boxIndices.size(); i++) {
+		tris[i + trisIndexOffset] = boxIndices[i] + vertexIndexOffset;
+	}
+
+	this->aabb.Expand(obb.ToAABB());
+}
+
+
 void NavMesh::BuildForSingleMesh(const std::shared_ptr<Mesh>& mesh, const Matrix4& transform) {
 
 	auto aabb = mesh->aabb;
@@ -118,9 +137,7 @@ void NavMesh::BuildForSingleMesh(const std::shared_ptr<Mesh>& mesh, const Matrix
 		tris[i + trisIndexOffset] = mesh->rawIndices[i] + vertexIndexOffset;
 	}
 
-	//TODO combine aabb func
-	this->aabb.Expand(aabb.min);
-	this->aabb.Expand(aabb.max);
+	this->aabb.Expand(aabb);
 }
 
 
@@ -494,7 +511,6 @@ bool NavMesh::BuildAllMeshes() {
 	return true;
 }
 
-
 void NavMesh::Build() {
 	OPTICK_EVENT();
 	RecreateEmptyNavmesh();
@@ -503,9 +519,14 @@ void NavMesh::Build() {
 	aabb = AABB();
 
 	for (auto go : Scene::Get()->GetAllGameObjects()) {
-		auto collider = go->GetComponent<MeshCollider>();
-		if (collider != nullptr && collider->mesh != nullptr) {
-			BuildForSingleMesh(collider->mesh, go->transform()->GetMatrix());
+		// PERF use findObjectsOfType
+		auto meshCollider = go->GetComponent<MeshCollider>();
+		if (meshCollider != nullptr && meshCollider->mesh != nullptr) {
+			BuildForSingleMesh(meshCollider->mesh, go->transform()->GetMatrix());
+		}
+		auto boxCollider = go->GetComponent<BoxCollider>();
+		if (boxCollider != nullptr) {
+			BuildForSingleOBB(go->transform()->GetMatrix() * boxCollider->GetAABBWithoutTransform());
 		}
 	}
 	BuildAllMeshes();
@@ -516,7 +537,6 @@ void NavMesh::Build() {
 }
 
 bool NavMesh::Init() {
-	return true;
 	OPTICK_EVENT();
 	m_ctx = new rcContext();
 
@@ -537,7 +557,6 @@ void NavMesh::Update() {
 }
 
 void NavMesh::Term() {
-	return;
 	SceneManager::onBeforeSceneEnabled.Unsubscribe(onSceneLoadedHandler);
 	if (m_navQuery) {
 		dtFreeNavMeshQuery(m_navQuery);

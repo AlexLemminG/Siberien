@@ -10,6 +10,8 @@ class btTriangleIndexVertexArray;
 class Mesh;
 
 class BoxCollider : public Collider {
+public:
+	AABB GetAABBWithoutTransform() const;
 protected:
 	virtual std::shared_ptr<btCollisionShape> CreateShape() override;
 

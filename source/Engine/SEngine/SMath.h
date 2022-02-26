@@ -363,15 +363,8 @@ public:
 	Vector3 min = Vector3_max;
 	Vector3 max = -Vector3_max;
 
-	void Expand(Vector3 pos) {
-		min.x = Mathf::Min(min.x, pos.x);
-		min.y = Mathf::Min(min.y, pos.y);
-		min.z = Mathf::Min(min.z, pos.z);
-
-		max.x = Mathf::Max(max.x, pos.x);
-		max.y = Mathf::Max(max.y, pos.y);
-		max.z = Mathf::Max(max.z, pos.z);
-	}
+	void Expand(Vector3 pos);
+	void Expand(AABB box);
 
 	Vector3 GetSize() const {
 		return max - min;
@@ -382,6 +375,9 @@ public:
 	}
 
 	bool Contains(const Vector3 pos) const;
+
+	std::array<Vector3, 8> GetVertices()const;
+	std::array<int, 48> GetTriangleIndices()const; //CW order
 
 	OBB ToOBB()const;
 
@@ -396,6 +392,7 @@ public:
 	AABB ToAABB()const;
 
 	std::array<Vector3, 8> GetVertices()const;
+	static std::array<int, 48> GetTriangleIndices(); //CW order
 
 	Matrix4 GetCenterMatrix() const;
 	Vector3 GetSize() const;

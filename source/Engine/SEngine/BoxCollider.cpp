@@ -10,6 +10,10 @@
 DECLARE_TEXT_ASSET(BoxCollider);
 DECLARE_TEXT_ASSET(SphereCollider);
 
+AABB BoxCollider::GetAABBWithoutTransform() const {
+	return AABB(center - size / 2.f, center + size / 2.f);
+}
+
 std::shared_ptr<btCollisionShape> BoxCollider::CreateShape() {
 	auto compound = std::make_shared<btCompoundShape>();
 

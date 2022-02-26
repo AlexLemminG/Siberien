@@ -22,6 +22,22 @@ bool Frustum::IsOverlapingSphere(const Sphere& sphere) const
 
 Matrix4 Frustum::GetMatrix() const { return matrix; }
 
+void AABB::Expand(AABB box) {
+	Expand(box.min);
+	Expand(box.max);
+}
+
+
+void AABB::Expand(Vector3 pos) {
+	min.x = Mathf::Min(min.x, pos.x);
+	min.y = Mathf::Min(min.y, pos.y);
+	min.z = Mathf::Min(min.z, pos.z);
+
+	max.x = Mathf::Max(max.x, pos.x);
+	max.y = Mathf::Max(max.y, pos.y);
+	max.z = Mathf::Max(max.z, pos.z);
+}
+
 bool AABB::Contains(const Vector3 pos) const {
 	return min.x <= pos.x && min.y <= pos.y && min.z <= pos.z && max.x >= pos.x && max.y >= pos.y && max.z >= pos.z;
 }
@@ -45,18 +61,52 @@ OBB::OBB(const Matrix4& center, const Vector3& size)
 {
 
 }
+std::array<int, 48> AABB::GetTriangleIndices()const {
+	return OBB::GetTriangleIndices();
+}
+
+std::array<Vector3, 8> AABB::GetVertices()const {
+	std::array<Vector3, 8> result{
+		Vector3{ min.x, max.y, max.z },
+		Vector3{ min.x, min.y, max.z },
+		Vector3{ max.x, min.y, max.z },
+		Vector3{ max.x, max.y, max.z },
+		Vector3{ max.x, max.y, min.z },
+		Vector3{ max.x, min.y, min.z },
+		Vector3{ min.x, min.y, min.z },
+		Vector3{ min.x, max.y, min.z }
+	};
+
+	return result;
+}
 std::array<Vector3, 8> OBB::GetVertices()const {
-	std::array<Vector3, 8> result;
-
-	result[0] = center * Vector3{ halfSize.x, halfSize.y, halfSize.z };
-	result[1] = center * Vector3{ -halfSize.x, halfSize.y, halfSize.z };
-	result[2] = center * Vector3{ halfSize.x, -halfSize.y, halfSize.z };
-	result[3] = center * Vector3{ halfSize.x, halfSize.y, -halfSize.z };
-	result[4] = center * Vector3{ halfSize.x, -halfSize.y, -halfSize.z };
-	result[5] = center * Vector3{ -halfSize.x, halfSize.y, -halfSize.z };
-	result[6] = center * Vector3{ -halfSize.x, -halfSize.y, halfSize.z };
-	result[7] = center * Vector3{ -halfSize.x, -halfSize.y, -halfSize.z };
-
+	std::array<Vector3, 8> result{
+		center * Vector3{ -halfSize.x, halfSize.y, halfSize.z },
+		center * Vector3{ -halfSize.x, -halfSize.y, halfSize.z },
+		center * Vector3{ halfSize.x, -halfSize.y, halfSize.z },
+		center * Vector3{ halfSize.x, halfSize.y, halfSize.z },
+		center * Vector3{ halfSize.x, halfSize.y, -halfSize.z },
+		center * Vector3{ halfSize.x, -halfSize.y, -halfSize.z },
+		center * Vector3{ -halfSize.x, -halfSize.y, -halfSize.z },
+		center * Vector3{ -halfSize.x, halfSize.y, -halfSize.z }
+	};
+	return result;
+}
+std::array<int, 48> OBB::GetTriangleIndices() {
+	std::array<int, 48> result{
+		0, 1, 2,//front
+		0, 2, 3,
+		4, 5, 6,//back
+		4, 6, 7,
+		3, 2, 5,//right
+		3, 5, 4,
+		6, 1, 0,//left
+		6, 0, 7,
+		0, 3, 4,//top
+		0, 4, 7,
+		2, 1, 5,//bottom
+		5, 1, 6
+	};
 	return result;
 }
 
