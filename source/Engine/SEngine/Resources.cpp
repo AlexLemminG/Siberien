@@ -115,9 +115,7 @@ std::shared_ptr<AssetImporter>& AssetDatabase::GetAssetImporter(const std::strin
 std::shared_ptr<Object> AssetDatabase::GetLoaded(const PathDescriptor& descriptor, ReflectedTypeBase* type) {
 	auto it = assets.find(descriptor.assetPath);
 	if (it != assets.end()) {
-		//TODO
-		//return assets[descriptor.assetPath].Get(GetReflectedType<T>(), descriptor.assetPath);
-		return it->second.Get(descriptor.assetId);
+		return it->second.Get(type, descriptor.assetId);
 	}
 	else {
 		return nullptr;
@@ -227,7 +225,7 @@ void AssetDatabase::ProcessLoadingQueue() {
 		}
 
 
-		loaded = GetLoaded(request.descriptor, nullptr);
+		loaded = GetLoaded(request.descriptor, nullptr);//PERF not the best way to check if asset was loaded
 		if (loaded) {
 			if (request.target) {
 				*(std::shared_ptr<Object>*)(request.target) = loaded;

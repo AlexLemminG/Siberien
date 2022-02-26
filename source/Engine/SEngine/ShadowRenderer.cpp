@@ -14,6 +14,19 @@
 #include "bgfx/bgfx.h"
 #include "bx/bx.h"
 #include "bx/math.h"
+#include "Reflect.h"
+
+class ShadowSettings : public Object {
+public:
+	int resolution = 1024 * 2;
+	int numSplits = 1; //TODO way of clamping by ui and by force
+
+	REFLECT_BEGIN(ShadowSettings);
+	REFLECT_VAR(resolution);
+	REFLECT_VAR(numSplits);
+	REFLECT_END();
+};
+DECLARE_TEXT_ASSET(ShadowSettings);
 
 ShadowRenderer::ShadowRenderer() {}
 
@@ -425,6 +438,11 @@ void ShadowRenderer::Init() {
 	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
 	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
 	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
+
+	settings = AssetDatabase::Get()->Load<ShadowSettings>("settings.asset");
+	if (settings == nullptr) {
+		settings = std::make_shared<ShadowSettings>();
+	}
 }
 
 void ShadowRenderer::Term() {
@@ -438,9 +456,11 @@ void ShadowRenderer::Term() {
 }
 float m_shadowMapMtx[ShadowMapRenderTargets::Count][16];
 static int m_numSplits = 1;
+const uint8_t maxNumSplits = 4;
 void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 {
 	OPTICK_EVENT();
+
 	auto render = Graphics::Get()->render;
 	if (!light->drawShadows) {
 		bgfx::setUniform(render->GetOrCreateVectorUniform("u_params0"), &Vector4(1, 1, 0, 0));
@@ -449,7 +469,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 
 	this->shadowBias = light->shadowBias;
 	//TODO
-	int lightShadowSize = 1024 * 2;
+	int lightShadowSize = settings->resolution;// 1024 * 2;
 	static bool m_stencilPack = false;
 	static float m_fovXAdjust = 1.0f;
 	static float m_fovYAdjust = 1.0f;
@@ -457,7 +477,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	static float m_near = 0.1;//TODO params
 	static float m_far = 22.f;//TODO params
 	static DepthImpl::Enum m_depthImpl = DepthImpl::Linear;
-	m_numSplits = 1;
+	m_numSplits = Mathf::Clamp(settings->numSplits, 1, maxNumSplits);
 	static float m_splitDistribution = 0.6;
 	static bool m_stabilize = true;
 	static uint32_t clearRgba = 0;
@@ -543,6 +563,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 				bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D24S8, BGFX_TEXTURE_RT),
 			};
 			s_rtShadowMap[0] = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
+			bgfx::setName(s_rtShadowMap[0], "s_rtShadowMap");
 		}
 
 		if (isDirectional)
@@ -560,6 +581,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D24S8, BGFX_TEXTURE_RT),
 					};
 					s_rtShadowMap[ii] = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
+					bgfx::setName(s_rtShadowMap[ii], "s_rtShadowMap" + ('0' + ii));
 				}
 			}
 		}
@@ -690,8 +712,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		bx::mtxInverse(mtxViewInv, &camera.GetViewMatrix()(0, 0));
 
 		// Compute split distances.
-		const uint8_t maxNumSplits = 4;
-		BX_ASSERT(maxNumSplits >= settings.m_numSplits, "Error! Max num splits.");
+		BX_ASSERT(maxNumSplits >= numSplits, "Error! Max num splits.");
 
 		float splitSlices[maxNumSplits * 2];
 		splitFrustum(splitSlices
@@ -939,7 +960,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		//bgfx::setViewRect(RENDERVIEW_DRAWDEPTH_3_ID, depthRectX + (3 * depthRectWidth), depthRectY, depthRectWidth, depthRectHeight);
 
 		for (int i = 0; i < m_numSplits; i++) {
-			bgfx::setViewTransform(RENDERVIEW_SHADOWMAP_1_ID + i, lightView[0], lightProj[0]);
+			bgfx::setViewTransform(RENDERVIEW_SHADOWMAP_1_ID + i, lightView[i], lightProj[i]);
 		}
 		//bgfx::setViewTransform(RENDERVIEW_VBLUR_0_ID, screenView, screenProj);
 		//bgfx::setViewTransform(RENDERVIEW_HBLUR_0_ID, screenView, screenProj);
@@ -1214,7 +1235,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 				float mtxTmp[16];
 
 				bx::mtxMul(mtxTmp, lightProj[ii], mtxBias);
-				bx::mtxMul(m_shadowMapMtx[ii], lightView[0], mtxTmp); //lViewProjCropBias
+				bx::mtxMul(m_shadowMapMtx[ii], lightView[ii], mtxTmp); //lViewProjCropBias
 			}
 		}
 	}

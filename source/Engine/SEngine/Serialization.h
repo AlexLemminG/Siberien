@@ -15,7 +15,7 @@ class AssetDatabase_TextImporterHandle;
 
 class TextAssetImporter {
 public:
-	virtual std::shared_ptr<Object> Import (AssetDatabase_TextImporterHandle& databaseHandle) = 0; // return false on error and true otherwise (even if no assets are imported)
+	virtual std::shared_ptr<Object> Import(AssetDatabase_TextImporterHandle& databaseHandle) = 0; // return false on error and true otherwise (even if no assets are imported)
 };
 
 class AssetImporter {
@@ -140,5 +140,6 @@ private:
 #define DECLARE_BINARY_ASSET(className, importerClassName) \
 static BinaryAssetImporterRegistrator<##importerClassName> BinaryAssetImporterRegistrator_##className{#className};
 
+//TODO maybe DEFINE_... or REGISTER_...?
 #define DECLARE_TEXT_ASSET(className) \
 static TextAssetImporterRegistrator<SerializedObjectImporter<##className>> TextAssetImporterRegistrator_##className{#className};

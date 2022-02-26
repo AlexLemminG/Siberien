@@ -52,7 +52,7 @@ constexpr bgfx::ViewId kRenderPassFree = 16;
 
 
 static int GetMsaaOffset() {
-	int msaa = CfgGetInt("msaa");
+	int msaa = CfgGetInt("msaa"); // TODO move to some RenderSettings class and load it as ordinary asset
 	//TODO mathf func
 	int offset = 0;
 	while (msaa > 0) {
@@ -293,7 +293,7 @@ bool Render::Init()
 		printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
 		return false;
 	}
-	SetFullScreen(CfgGetBool("fullscreen"));
+	SetFullScreen(CfgGetBool("fullscreen")); // TODO move to some RenderSettings class and load it as ordinary asset
 	SDL_SysWMinfo wmi;
 	SDL_VERSION(&wmi.version);
 	if (!SDL_GetWindowWMInfo(window, &wmi)) {
@@ -311,14 +311,15 @@ bool Render::Init()
 
 	bgfx::Init initInfo{};
 	initInfo.type = bgfx::RendererType::Direct3D11;
+	//TODO preload renderdoc.dll from tools folder
 #ifdef SE_HAS_DEBUG
 	initInfo.limits.transientVbSize *= 10;
 	initInfo.limits.transientIbSize *= 10;
-	initInfo.debug = CfgGetBool("debugGraphics");
-	initInfo.profile = CfgGetBool("debugGraphics");
+	initInfo.debug = CfgGetBool("debugGraphics"); // TODO move to some RenderSettings class and load it as ordinary asset
+	initInfo.profile = CfgGetBool("debugGraphics"); // TODO move to some RenderSettings class and load it as ordinary asset
 #endif
 	bgfx::init(initInfo);
-	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
+	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE); // TODO move to some RenderSettings class and load it as ordinary asset
 
 	bgfx::resetView(kRenderPassGeometry);
 	bgfx::resetView(1);
@@ -416,7 +417,7 @@ void Render::Draw(SystemsManager& systems)
 		prevWidth = width;
 		prevHeight = height;
 		auto flags = BGFX_RESET_NONE | BGFX_RESET_MAXANISOTROPY;
-		if (CfgGetBool("vsync")) {
+		if (CfgGetBool("vsync")) { // TODO move to some RenderSettings class and load it as ordinary asset
 			flags |= BGFX_RESET_VSYNC;
 		}
 		if (msaaOffset > 0) {
@@ -564,7 +565,7 @@ void Render::Draw(SystemsManager& systems)
 		bgfx::touch(kRenderPassGeometry);//TODO not needed ?
 	}
 
-	if (CfgGetBool("showFps")) {
+	if (CfgGetBool("showFps")) { // TODO move to some RenderSettings class and load it as ordinary asset
 		bgfx::dbgTextPrintf(1, 2, 0x0f, "FPS: %.1f", fps);
 	}
 

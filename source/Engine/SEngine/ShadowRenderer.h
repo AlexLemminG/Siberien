@@ -5,6 +5,7 @@
 
 class ICamera;
 class Light;
+class ShadowSettings;
 
 class ShadowRenderer {
 public:
@@ -17,6 +18,7 @@ public:
 
 	void ApplyUniforms();
 private:
+	std::shared_ptr<ShadowSettings> settings;
 	std::vector<bgfx::FrameBufferHandle> s_rtShadowMap;
 	int m_currentShadowMapSize = 0;
 	int lastRenderedFrame = -1;

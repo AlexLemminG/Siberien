@@ -283,7 +283,6 @@ public:
 		if (type->GetName() == ::GetReflectedType<float>()->GetName()) {
 			float* f = (float*)(object);
 			BeginInspector(varInfo);
-			//needed for logarithmic for some reason
 			float speed = Mathf::Max(Mathf::Abs(*f) / 100.f, 0.01f);
 			if (ImGui::DragFloat(name.c_str(), f, speed, 0.f, 0.f, "%.5f", ImGuiSliderFlags_NoRoundToFormat)) {
 				varInfo.SetValue(f);
@@ -293,7 +292,8 @@ public:
 		else if (type->GetName() == ::GetReflectedType<int>()->GetName()) {
 			int* i = (int*)(object);
 			BeginInspector(varInfo);
-			if (ImGui::DragInt(name.c_str(), i, 1.f, 0, 0, "%d", ImGuiSliderFlags_Logarithmic)) {
+			float speed = Mathf::Max(float(Mathf::Abs(*i)) / 100.f, 1.f);
+			if (ImGui::DragInt(name.c_str(), i, speed)) {
 				varInfo.SetValue(i);
 			}
 			EndInspector(varInfo);
@@ -441,6 +441,12 @@ public:
 	void DrawOutliner() {
 		auto scene = Scene::Get();
 		static std::string filter;
+
+		//TODO move to some other place
+		if (ImGui::Button("ShadowSettings")) {
+			selectedObject = AssetDatabase::Get()->Load("settings.asset$ShadowSettings");
+		}
+
 		//TODO some wrapper for imgui string input
 		char buff[256];
 		strncpy(buff, filter.c_str(), Mathf::Min(filter.size() + 1, 256));

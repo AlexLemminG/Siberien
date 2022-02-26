@@ -82,12 +82,24 @@ public:
 	template<typename T>
 	std::shared_ptr<T> Load(const std::string& path) {
 		auto descriptor = PathDescriptor(path);
-		auto loaded = std::dynamic_pointer_cast<T>(GetLoaded(descriptor, GetReflectedType<T>()));
-		if (loaded) {
-			return loaded;
+		auto loaded = GetLoaded(descriptor, GetReflectedType<T>());
+		if (!loaded) {
+			//TODO don't try to load assset if previous attempt failed
+			LoadAsset(descriptor.assetPath);
+			loaded = GetLoaded(descriptor, GetReflectedType<T>());
 		}
-		LoadAsset(descriptor.assetPath);
-		return std::dynamic_pointer_cast<T>(GetLoaded(descriptor, GetReflectedType<T>()));
+		return std::dynamic_pointer_cast<T>(loaded);
+	}
+
+	std::shared_ptr<Object> Load(const std::string& path) {
+		auto descriptor = PathDescriptor(path);
+		auto loaded = GetLoaded(descriptor, nullptr);
+		if (!loaded) {
+			//TODO don't try to load assset if previous attempt failed
+			LoadAsset(descriptor.assetPath);
+			loaded = GetLoaded(descriptor, nullptr);
+		}
+		return loaded;
 	}
 
 	//TODO where T is Object
@@ -121,7 +133,7 @@ private:
 			return objects.size() > 0 ? objects[0].obj : std::shared_ptr<Object>();
 		}
 		std::shared_ptr<Object> Get(const std::string& id) {
-			if (id.size() == 0) {
+			if (id.empty()) {
 				return GetMain();
 			}
 			for (const auto& so : objects) {
@@ -141,7 +153,7 @@ private:
 		}
 		std::shared_ptr<Object> Get(const ReflectedTypeBase* type, const std::string& id) {
 			for (const auto& so : objects) {
-				if (so.obj->GetType() == type && so.id == id) {
+				if ((so.obj->GetType() == type || type == nullptr) && (id.empty() || so.id == id)) {
 					return so.obj;
 				}
 			}

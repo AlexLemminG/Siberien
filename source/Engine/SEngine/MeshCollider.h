@@ -16,7 +16,7 @@ public:
 	std::shared_ptr<Mesh> mesh;
 private:
 	REFLECT_BEGIN(MeshCollider);
-	REFLECT_VAR(mesh);
+	REFLECT_VAR(mesh);//TODO read from mesh renderer if not specified
 	REFLECT_END();
 };
 

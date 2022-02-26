@@ -55,7 +55,7 @@ class DebugDraw : public btIDebugDraw {
 bool PhysicsSystem::Init() {
 	settings = AssetDatabase::Get()->Load<PhysicsSettings>("settings.asset");
 	if (settings == nullptr) {
-		settings = std::make_shared<PhysicsSettings>();
+		settings = std::make_shared<PhysicsSettings>();//TODO probably need better default settings
 	}
 	///-----includes_end-----
 
