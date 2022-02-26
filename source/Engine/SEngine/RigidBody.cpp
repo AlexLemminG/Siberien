@@ -10,6 +10,7 @@
 #include "Common.h"
 #include "Camera.h"
 #include "MeshRenderer.h"
+#include "Editor.h"
 
 DECLARE_TEXT_ASSET(RigidBody);
 
@@ -70,24 +71,37 @@ void RigidBody::OnEnable() {
 	PhysicsSystem::Get()->GetGroupAndMask(layer, group, mask);
 	PhysicsSystem::Get()->dynamicsWorld->addRigidBody(pBody, group, mask);
 
-	SetFlags(Bits::SetMask(GetFlags(), FLAGS::IGNORE_UPDATE, isStatic));
+	bool isEditMode = Editor::Get()->IsInEditMode(); // PERF always either true or false
+	SetFlags(Bits::SetMask(GetFlags(), FLAGS::IGNORE_UPDATE, isStatic && !isEditMode));
 }
 
 void RigidBody::Update() {
-	if (!isStatic) {
-		if (!isKinematic) {
-			auto matr = btConvert(pMotionState->m_graphicsWorldTrans);
-			auto scale = transform->GetScale();
-			SetScale(matr, scale);
-			//TODO not so persistent
-			transform->SetMatrix(matr);
-		}
-		else {
-			auto trans = transform->GetMatrix();
-			SetScale(trans, Vector3_one);//TODO optimize
-			pMotionState->m_graphicsWorldTrans = btConvert(trans);
-		}
+	if (pBody == nullptr) { // PERF required only because pBody can become nullptr after disable/enable
+		return;
 	}
+	bool isEditMode = Editor::Get()->IsInEditMode(); // PERF called every frame!!!
+	if (isEditMode) {
+		auto trans = transform->GetMatrix();
+		SetScale(trans, Vector3_one);//TODO optimize
+		pBody->setWorldTransform(btConvert(trans));
+		return;
+	}
+	if (isStatic) {
+		return;
+	}
+	if (isKinematic) {
+		auto trans = transform->GetMatrix();
+		SetScale(trans, Vector3_one);//TODO optimize
+		pMotionState->m_graphicsWorldTrans = btConvert(trans);
+	}
+	else {
+		auto matr = btConvert(pMotionState->m_graphicsWorldTrans);
+		auto scale = transform->GetScale();
+		SetScale(matr, scale);
+		//TODO not so persistent
+		transform->SetMatrix(matr);
+	}
+
 }
 
 void RigidBody::OnDisable() {
@@ -97,6 +111,22 @@ void RigidBody::OnDisable() {
 	offsetedShape = nullptr;
 	SAFE_DELETE(pMotionState);
 	SAFE_DELETE(pBody)
+}
+
+void PhysicsBody::OnValidate() {
+	if (!IsEnabled()) {
+		return;
+	}
+	OnDisable();
+	OnEnable();
+}
+
+void RigidBody::OnDrawGizmos()
+{
+	if (pBody == nullptr || PhysicsSystem::Get()->dynamicsWorld == nullptr) {
+		return;
+	}
+	PhysicsSystem::Get()->dynamicsWorld->debugDrawObject(pBody->getWorldTransform(), pBody->getCollisionShape(), btVector3(1, 1, 1));
 }
 
 Vector3 RigidBody::GetLinearVelocity() const { return btConvert(pBody->getLinearVelocity()); }

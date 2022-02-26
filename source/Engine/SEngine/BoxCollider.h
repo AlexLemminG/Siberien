@@ -20,7 +20,7 @@ protected:
 
 private:
 	std::shared_ptr<btBoxShape> boxShape;
-	REFLECT_BEGIN(BoxCollider);
+	REFLECT_BEGIN(BoxCollider, Collider);
 	REFLECT_VAR(size);
 	REFLECT_VAR(center);
 	REFLECT_END();
@@ -35,7 +35,7 @@ public:
 
 private:
 	std::shared_ptr<btSphereShape> sphereShape;
-	REFLECT_BEGIN(SphereCollider);
+	REFLECT_BEGIN(SphereCollider, Collider);
 	REFLECT_VAR(radius);
 	REFLECT_VAR(center);
 	REFLECT_END();

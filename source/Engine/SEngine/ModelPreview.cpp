@@ -11,6 +11,7 @@
 #include "Animation.h"
 #include "Mesh.h"
 #include "Input.h"
+#include "Editor.h"
 
 DECLARE_TEXT_ASSET(ModelPreview);
 static int current = 0;
@@ -129,6 +130,7 @@ void ModelPreview::SelectPrefab(std::shared_ptr<GameObject> prefab) {
 		return;
 	}
 
+	Editor::Get()->selectedObject = prefab;
 	currentPrefab = prefab;
 	currentGameObject = Object::Instantiate(prefab);
 	if (currentGameObject->transform() != nullptr) {

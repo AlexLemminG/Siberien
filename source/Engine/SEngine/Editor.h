@@ -14,6 +14,7 @@ public:
 
 	bool IsInEditMode() const;
 
+	std::shared_ptr<Object> selectedObject;
 private:
 	bool autoSaveEveryFrame = true;
 

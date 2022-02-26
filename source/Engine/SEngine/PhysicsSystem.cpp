@@ -107,12 +107,23 @@ bool PhysicsSystem::Init() {
 
 void PhysicsSystem::Update() {
 	OPTICK_EVENT();
-	dynamicsWorld->stepSimulation(Time::deltaTime(), 2, Time::fixedDeltaTime());
+	if (Scene::Get()) {
+		if (Scene::Get()->IsInEditMode()) {
+			auto wasSyncAll = dynamicsWorld->getSynchronizeAllMotionStates();
+			dynamicsWorld->setSynchronizeAllMotionStates(true);
+			dynamicsWorld->synchronizeMotionStates();
+			dynamicsWorld->setSynchronizeAllMotionStates(wasSyncAll);
+		}
+		else {
+			dynamicsWorld->stepSimulation(Time::deltaTime(), 2, Time::fixedDeltaTime());
+		}
+	}
 
 #ifdef SE_HAS_DEBUG
 	auto dbgMode = Bits::SetMask(dynamicsWorld->getDebugDrawer()->getDebugMode(), btIDebugDraw::DBG_DrawWireframe, dbg_drawPhysShapes);
 	dynamicsWorld->getDebugDrawer()->setDebugMode(dbgMode);
 	if (dbg_drawPhysShapes) {
+		//manual culling
 		auto collisionObjects = dynamicsWorld->getCollisionObjectArray();
 		for (int i = 0; i < collisionObjects.size(); i++) {
 			auto& pBody = collisionObjects.at(i);
@@ -250,9 +261,16 @@ void PhysicsSettings::GetGroupAndMask(const std::string& groupName, int& group, 
 		mask = it->second.mask;
 	}
 }
+std::string PhysicsSystem::reservedLayerName = "engineReservedLayerName";
 
 void PhysicsSettings::OnAfterDeserializeCallback(const SerializationContext& context) {
 	int firstLayerGroup = 1; //reserve 1 for collide with everything group (usefull for queries)
+
+	auto reservedLayer = PhysicsSettings::Layer();
+	reservedLayer.name = PhysicsSystem::reservedLayerName;
+	reservedLayer.collideWith.push_back(PhysicsSystem::reservedLayerName);
+	layers.push_back(reservedLayer);
+
 	for (int i = 0; i < layers.size(); i++) {
 		layers[i].group = 1 << (i + firstLayerGroup);
 		layersMap[layers[i].name] = layers[i];

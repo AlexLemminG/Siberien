@@ -23,8 +23,8 @@ public:
 private:
 	btPairCachingGhostObject* pBody = nullptr;
 	Transform* transform = nullptr;
-	
-	REFLECT_BEGIN(GhostBody);
+
+	REFLECT_BEGIN(GhostBody, PhysicsBody);
 	REFLECT_VAR(layer);
 	REFLECT_END();
 };

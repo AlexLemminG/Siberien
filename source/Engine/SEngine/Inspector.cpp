@@ -86,8 +86,10 @@ OBB GetOBB(std::shared_ptr<GameObject> go) {
 AABB GetAABB(std::shared_ptr<GameObject> go) {
 	return GetOBB(go).ToAABB();
 }
-
-bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray) {
+static bool IsInScene(std::shared_ptr<GameObject> go) {
+	return Scene::Get() != nullptr && std::find(Scene::Get()->GetAllGameObjects().begin(), Scene::Get()->GetAllGameObjects().end(), go) != Scene::Get()->GetAllGameObjects().end();
+}
+bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray, float& distance) {
 	float maxDistance = 100000.f;
 	if (!IsOverlapping(GetSphere(go), ray)) {
 		return false;
@@ -98,25 +100,33 @@ bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray) {
 		if (mesh) {
 			auto collider = MeshColliderStorageSystem::Get()->GetStored(mesh);
 			if (collider) {
-				auto scaledShape = std::make_shared<btScaledBvhTriangleMeshShape>(collider.get(), btConvert(go->transform()->GetScale()));
+				auto scaledShape = std::make_unique<btScaledBvhTriangleMeshShape>(collider.get(), btConvert(go->transform()->GetScale()));
 				auto info = btRigidBody::btRigidBodyConstructionInfo(0, nullptr, scaledShape.get());
 				auto matr = go->transform()->GetMatrix();
 				SetScale(matr, Vector3_one);//TODO optimize
 				info.m_startWorldTransform = btConvert(matr);
 				auto* rb = new btRigidBody(info);
 
-				PhysicsSystem::Get()->dynamicsWorld->addRigidBody(rb);
+				const std::string& layer = PhysicsSystem::reservedLayerName;
+				int group;
+				int mask;
+				PhysicsSystem::Get()->GetGroupAndMask(layer, group, mask);
+				PhysicsSystem::Get()->dynamicsWorld->addRigidBody(rb, group, mask);
 
 				Physics::RaycastHit hit;
 				bool overlapping = false;
-				if (Physics::Raycast(hit, ray, maxDistance)) {
+
+				if (Physics::Raycast(hit, ray, maxDistance, mask)) {
 					overlapping = true;
 				}
 
 				PhysicsSystem::Get()->dynamicsWorld->removeRigidBody(rb);
 
+				//PhysicsSystem::Get()->dynamicsWorld->debugDrawObject(btConvert(matr), scaledShape.get(), btVector3(1, 1, 1));
+
 				delete rb;
 				if (overlapping) {
+					distance = Vector3::Distance(hit.GetPoint(), ray.origin);
 					return true;
 				}
 			}
@@ -128,7 +138,10 @@ bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray) {
 		auto center = pointLight->gameObject()->transform()->GetPosition();
 		auto radius = pointLight->radius;
 		if (IsOverlapping(Sphere(center, radius), ray)) {
-			return true;
+			distance = Vector3::DotProduct(center - ray.origin, ray.dir);
+			if (distance > 0) {
+				return true;
+			}
 		}
 	}
 	//TODO not only spot light
@@ -137,7 +150,10 @@ bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray) {
 		auto center = spotLight->gameObject()->transform()->GetPosition();
 		auto radius = spotLight->radius;
 		if (IsOverlapping(Sphere(center, radius), ray)) {
-			return true;
+			distance = Vector3::DotProduct(center - ray.origin, ray.dir);
+			if (distance > 0) {
+				return true;
+			}
 		}
 	}
 	return false;
@@ -146,29 +162,66 @@ bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray) {
 std::vector<std::shared_ptr<GameObject>> GetObjectsUnderCursor() {
 	float maxDistance = 1000.f;
 	auto mouseRay = Camera::GetMain()->ScreenPointToRay(Input::GetMousePosition());
-	std::vector<std::shared_ptr<GameObject>> result;
+	std::vector<std::pair<std::shared_ptr<GameObject>, float>> resultWithDistance;
 	for (auto obj : Scene::Get()->GetAllGameObjects()) {
 		if (Bits::IsMaskTrue(obj->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR)) {
 			continue;
 		}
-		if (RaycastExact(obj, mouseRay)) {
-			result.push_back(obj);
+		float distance;
+		if (RaycastExact(obj, mouseRay, distance)) {
+			resultWithDistance.push_back(std::pair<std::shared_ptr<GameObject>, float>(obj, distance));
 		}
 	}
 	Vector3 cameraPos = mouseRay.origin;
-	std::sort(result.begin(), result.end(), [cameraPos](std::shared_ptr<GameObject> x, std::shared_ptr<GameObject> y) {
-		auto xPos = GetOBB(x).GetCenter();
-		auto yPos = GetOBB(y).GetCenter();
-		//TODO exact raycast hit results
-		return (cameraPos - xPos).LengthSquared() < (cameraPos - yPos).LengthSquared();
+	std::sort(resultWithDistance.begin(), resultWithDistance.end(), [cameraPos](std::pair<std::shared_ptr<GameObject>, float> x, std::pair<std::shared_ptr<GameObject>, float> y) {
+		if (x.first->GetComponent<MeshRenderer>() != nullptr && y.first->GetComponent<MeshRenderer>() == nullptr) {
+			return true;
+		}
+		else if (x.first->GetComponent<MeshRenderer>() == nullptr && y.first->GetComponent<MeshRenderer>() != nullptr) {
+			return false;
+		}
+		return x.second < y.second;
 		});
+
+
+	std::vector<std::shared_ptr<GameObject>> result;
+	for (auto obj : resultWithDistance) {
+		result.push_back(obj.first);
+	}
 	return std::move(result);
 }
+
+
+static std::shared_ptr<GameObject> GetGameObject(std::shared_ptr<Object> object) {
+	if (std::dynamic_pointer_cast<Component>(object)) {
+		return std::dynamic_pointer_cast<Component>(object)->gameObject();
+	}
+	else {
+		return std::dynamic_pointer_cast<GameObject>(object);
+	}
+}
+static void CallOnValidate(std::shared_ptr<Object> object) {
+	auto go = GetGameObject(object);
+	if (go && IsInScene(go)) {
+		for (auto c : go->components) {
+			c->OnValidate();
+		}
+	}
+}
+static void CallOnDrawGizmos(std::shared_ptr<Object> object) {
+	auto go = GetGameObject(object);
+	if (go && IsInScene(go)) {
+		for (auto c : go->components) {
+			c->OnDrawGizmos();
+		}
+	}
+}
+
 
 class InspectorWindow : public System<InspectorWindow> {
 	GameEventHandle onSceneLoadedHandle;
 
-	std::shared_ptr<Object> selectedObject;
+	//std::shared_ptr<Object> selectedObject;
 
 	int nextSelectedObjectIndex = 0;
 	Vector2 prevMousePos;
@@ -201,30 +254,32 @@ public:
 		ryml::NodeRef yaml = ryml::NodeRef();
 		ryml::NodeRef root = ryml::NodeRef();
 		std::vector<std::string> path;
-		std::shared_ptr<Object> rootObj;
+		std::shared_ptr<Object> rootObjToSave; // root object of asset to save after editing
+		std::shared_ptr<Object> rootObjToCallValidate; // last Object up in hierarchy
 
 	private:
 		VarInfo() {
 		}
 	public:
 
-		VarInfo (std::shared_ptr<Object> obj) {
+		VarInfo(std::shared_ptr<Object> obj) {
 			auto uid = AssetDatabase::Get()->GetAssetUID(obj);
 			if (!uid.empty()) {
 				//it's an asset
 				yaml = AssetDatabase::Get()->GetOriginalSerializedAsset(obj);
 				root = yaml;
-				rootObj = obj;
+				rootObjToCallValidate = obj;
+				rootObjToSave = obj;
 			}
 			else {
 				yaml = nullptr;
 				root = nullptr;
-				rootObj = obj;
+				rootObjToCallValidate = obj;
 				auto currentScene = Scene::Get();
 				if (currentScene) {
 					auto go = std::dynamic_pointer_cast<GameObject>(obj);
 					auto component = std::dynamic_pointer_cast<Component>(obj);
-					if(component){
+					if (component) {
 						go = component->gameObject();
 					}
 					int idx = currentScene->GetInstantiatedPrefabIdx(go);
@@ -233,7 +288,7 @@ public:
 						real = real.Child("prefabInstances");
 						real = real.Child(idx);
 						real = real.Child("overrides");
-						rootObj = currentScene;
+						rootObjToSave = currentScene;
 						if (component) {
 							real = real.Child(component->GetType()->GetName());//TODO not always right
 						}
@@ -253,7 +308,8 @@ public:
 			child.path = path;
 			child.path.push_back(name);
 			child.root = root;
-			child.rootObj = rootObj;
+			child.rootObjToSave = rootObjToSave;
+			child.rootObjToCallValidate = rootObjToCallValidate;
 			if (yaml.valid() && yaml.is_map()) {
 				child.yaml = yaml.find_child(c4::csubstr(name.c_str(), name.length()));
 			}
@@ -265,7 +321,8 @@ public:
 			child.path = path;
 			child.path.push_back(name);
 			child.root = root;
-			child.rootObj = rootObj;
+			child.rootObjToSave = rootObjToSave;
+			child.rootObjToCallValidate = rootObjToCallValidate;
 			if (yaml.valid() && yaml.is_seq()) {
 				child.yaml = yaml.child(i);
 			}
@@ -296,10 +353,10 @@ public:
 					context = context.Child(name);
 				}
 			}
-			Editor::SetDirty(rootObj);
+			Editor::SetDirty(rootObjToSave);
 			type->Serialize(context, val);
-			std::ofstream fout("out.yaml");
-			fout << root.tree()->rootref();
+
+			CallOnValidate(rootObjToCallValidate);
 		}
 	};
 
@@ -320,8 +377,9 @@ public:
 		}
 		needToPopEditedVarStyle.pop_back();
 	}
-
-	void DrawInspector(char* object, std::string name, ReflectedTypeBase* type, VarInfo& varInfo, bool expanded = false) {
+	//returns true if value changed
+	bool DrawInspector(char* object, std::string name, ReflectedTypeBase* type, VarInfo& varInfo, bool expanded = false) {
+		bool changed = false;
 		if (expanded) {
 			ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		}
@@ -331,6 +389,7 @@ public:
 			float speed = Mathf::Max(Mathf::Abs(*f) / 100.f, 0.01f);
 			if (ImGui::DragFloat(name.c_str(), f, speed, 0.f, 0.f, "%.5f", ImGuiSliderFlags_NoRoundToFormat)) {
 				varInfo.SetValue(f);
+				changed = true;
 			}
 			EndInspector(varInfo);
 		}
@@ -340,6 +399,7 @@ public:
 			float speed = Mathf::Max(float(Mathf::Abs(*i)) / 100.f, 1.f);
 			if (ImGui::DragInt(name.c_str(), i, speed)) {
 				varInfo.SetValue(i);
+				changed = true;
 			}
 			EndInspector(varInfo);
 		}
@@ -348,6 +408,7 @@ public:
 			BeginInspector(varInfo);
 			if (ImGui::Checkbox(name.c_str(), b)) {
 				varInfo.SetValue(b);
+				changed = true;
 			}
 			EndInspector(varInfo);
 		}
@@ -359,6 +420,7 @@ public:
 			if (ImGui::InputText(name.c_str(), buff, 256)) {
 				*str = std::string(buff);
 				varInfo.SetValue(str);
+				changed = true;
 			}
 			EndInspector(varInfo);
 		}
@@ -367,6 +429,7 @@ public:
 			BeginInspector(varInfo);
 			if (ImGui::ColorEdit4(name.c_str(), &c->r, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaPreviewHalf)) {
 				varInfo.SetValue(c);
+				changed = true;
 			}
 			EndInspector(varInfo);
 		}
@@ -376,6 +439,7 @@ public:
 			float speed = Mathf::Max(Mathf::Max(Mathf::Abs(v->x), Mathf::Max(v->y, v->z)) / 100.f, 0.01f);
 			if (ImGui::DragFloat3(name.c_str(), &v->x, speed)) {
 				varInfo.SetValue(v);
+				changed = true;
 			}
 			EndInspector(varInfo);
 		}
@@ -386,14 +450,17 @@ public:
 			auto scale = transform->GetScale();
 			if (ImGui::TreeNode(name.c_str())) {
 				//TODO store exact values somewhere
-				DrawInspector((char*)&pos.x, "position", GetReflectedType<Vector3>(), varInfo.Child("pos"));
-				DrawInspector((char*)&euler.x, "euler", GetReflectedType<Vector3>(), varInfo.Child("euler"));//TODO fix shown to user euler changed after applied to matrix and back
-				DrawInspector((char*)&scale.x, "scale", GetReflectedType<Vector3>(), varInfo.Child("scale"));
+				changed |= DrawInspector((char*)&pos.x, "position", GetReflectedType<Vector3>(), varInfo.Child("pos"));
+				changed |= DrawInspector((char*)&euler.x, "euler", GetReflectedType<Vector3>(), varInfo.Child("euler"));//TODO fix shown to user euler changed after applied to matrix and back
+				changed |= DrawInspector((char*)&scale.x, "scale", GetReflectedType<Vector3>(), varInfo.Child("scale"));
 
-				//TODO if changed
-				transform->SetPosition(pos);
-				transform->SetEulerAngles(Mathf::DegToRad(euler));
-				transform->SetScale(scale);
+				if (changed) {
+					//TODO bugfix zero scale can break euler angles
+					transform->SetPosition(pos);
+					transform->SetEulerAngles(Mathf::DegToRad(euler));
+					transform->SetScale(scale);
+					CallOnValidate(varInfo.rootObjToCallValidate);
+				}
 
 				ImGui::TreePop();
 			}
@@ -403,7 +470,7 @@ public:
 			if (v->get()) {
 				//TODO selection
 				if (ImGui::Button(name.c_str())) {
-					selectedObject = *v;
+					Editor::Get()->selectedObject = *v;
 				}
 			}
 			else {
@@ -422,11 +489,14 @@ public:
 					bool isEnabled = c->IsEnabled();
 					if (ImGui::Checkbox("", &isEnabled)) {
 						c->SetEnabled(isEnabled);
+						CallOnValidate(c);
+						changed = true;
+						//TODO support saving
 					}
 					ImGui::SameLine();
 
 					VarInfo childInfo{ c };
-					DrawInspector((char*)c.get(), c->GetType()->GetName(), c->GetType(), childInfo, true);
+					changed |= DrawInspector((char*)c.get(), c->GetType()->GetName(), c->GetType(), childInfo, true);
 					ImGui::PopID();
 				}
 			}
@@ -445,11 +515,12 @@ public:
 					//TODO default constructor to ReflectedTypeBase
 					v.resize(size * elementSize);//D - DANGARAS (no constructors/destructors and stuff are called)
 					varInfo.SetValue(type, object);
+					changed = true;
 				}
 				EndInspector(varInfo);
 				for (int i = 0; i < size; i++) {
 					auto childInfo = varInfo.Child(i);
-					DrawInspector(&v[i * elementSize], FormatString("%d", i), elementType, childInfo);//TODO apply changes to whole yaml arrray if one element is changed
+					changed |= DrawInspector(&v[i * elementSize], FormatString("%d", i), elementType, childInfo);//TODO apply changes to whole yaml arrray if one element is changed
 				}
 				ImGui::TreePop();
 			}
@@ -461,7 +532,7 @@ public:
 					for (const auto& field : typeNonBase->fields) {
 						char* var = object + field.offset;
 						auto childInfo = varInfo.Child(field.name);
-						DrawInspector(var, field.name, field.type, childInfo);
+						changed |= DrawInspector(var, field.name, field.type, childInfo);
 					}
 					ImGui::TreePop();
 				}
@@ -469,9 +540,9 @@ public:
 			else {
 				//TODO error
 				ImGui::LabelText(name.c_str(), "???");
-				return;
 			}
 		}
+		return changed;
 	}
 
 	template<typename T>
@@ -486,7 +557,7 @@ public:
 
 		//TODO move to some other place
 		if (ImGui::Button("ShadowSettings")) {
-			selectedObject = AssetDatabase::Get()->Load("settings.asset$ShadowSettings");
+			Editor::Get()->selectedObject = AssetDatabase::Get()->Load("settings.asset$ShadowSettings");
 		}
 
 		//TODO some wrapper for imgui string input
@@ -512,8 +583,8 @@ public:
 			}
 
 			ImGui::PushID(i);
-			if (ImGui::Selectable(name.c_str(), selectedObject == gameObjects[i])) {
-				selectedObject = gameObjects[i];
+			if (ImGui::Selectable(name.c_str(), Editor::Get()->selectedObject == gameObjects[i])) {
+				Editor::Get()->selectedObject = gameObjects[i];
 			}
 			ImGui::PopID();
 		}
@@ -553,6 +624,7 @@ public:
 				hasGizmos = true;
 			}
 		}
+		CallOnDrawGizmos(go);
 		if (!hasGizmos) {
 			auto box = GetOBB(go);
 			Dbg::Draw(box);
@@ -577,19 +649,19 @@ public:
 		ImGui::SameLine();
 
 		ImGui::BeginChild("right pane", ImVec2(0, 0), true);
-		if (selectedObject == nullptr) {
-			selectedObject = Scene::Get();
+		if (Editor::Get()->selectedObject == nullptr) {
+			Editor::Get()->selectedObject = Scene::Get();
 		}
-		if (selectedObject != nullptr) {
-			VarInfo varInfo{ selectedObject };
-			DrawInspector(*selectedObject, varInfo);
+		if (Editor::Get()->selectedObject != nullptr) {
+			VarInfo varInfo{ Editor::Get()->selectedObject };
+			DrawInspector(*Editor::Get()->selectedObject, varInfo);
 		}
 		ImGui::EndChild();
 		ImGui::End();
 
 		//TODO refactor
-		if (editorCamera != nullptr && Input::GetKeyDown(SDL_SCANCODE_F) && selectedObject != nullptr) {
-			auto selectedGameObject = std::dynamic_pointer_cast<GameObject>(selectedObject);
+		if (editorCamera != nullptr && Input::GetKeyDown(SDL_SCANCODE_F) && Editor::Get()->selectedObject != nullptr) {
+			auto selectedGameObject = std::dynamic_pointer_cast<GameObject>(Editor::Get()->selectedObject);
 			Matrix4 mat = Matrix4::Identity();
 			auto rot = editorCamera->gameObject()->transform()->GetRotation();
 			auto aabb = GetSphere(selectedGameObject);
@@ -633,10 +705,11 @@ public:
 			}
 		}
 
-		if (selectedObject) {
-			auto go = std::dynamic_pointer_cast<GameObject>(selectedObject);
+		if (Editor::Get()->selectedObject) {
+			//gizmos stuff
+			auto go = std::dynamic_pointer_cast<GameObject>(Editor::Get()->selectedObject);
 
-			if (go != nullptr) {
+			if (go != nullptr && IsInScene(go)) {
 				DrawGizmosSelected(go);
 
 				if (!gizmoDisabled) {
@@ -669,7 +742,7 @@ public:
 			auto objectsUnderCursor = GetObjectsUnderCursor();
 			if (objectsUnderCursor.size() > 0) {
 				auto idx = nextSelectedObjectIndex % objectsUnderCursor.size();
-				selectedObject = objectsUnderCursor[idx];
+				Editor::Get()->selectedObject = objectsUnderCursor[idx];
 			}
 			nextSelectedObjectIndex++;
 		}

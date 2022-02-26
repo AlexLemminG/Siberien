@@ -10,10 +10,12 @@ public:
 
 	virtual void OnEnable() override;
 	virtual void OnDisable() override;
+	virtual void OnValidate() override;
 
 protected:
 	virtual std::shared_ptr<btCollisionShape> CreateShape() = 0;
 
 	REFLECT_BEGIN(Collider);
+	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_END();
 };

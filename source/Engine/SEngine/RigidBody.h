@@ -16,6 +16,11 @@ public:
 	GhostBody* AsGhostBody();
 	const RigidBody* AsRigidBody()const;
 	const GhostBody* AsGhostBody()const;
+	virtual void OnValidate() override;
+
+	REFLECT_BEGIN(PhysicsBody);
+	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
+	REFLECT_END();
 protected:
 	bool isRigidBody = false;
 };
@@ -27,6 +32,7 @@ public:
 	virtual void OnEnable() override;
 	virtual void Update() override;
 	virtual void OnDisable() override;
+	virtual void OnDrawGizmos() override;
 
 	std::string layer;
 	float friction = 0.5f;
@@ -93,7 +99,7 @@ private:
 	bool isKinematic = false;
 	float mass = 1.f;
 	float restitution = 0.f;
-	REFLECT_BEGIN(RigidBody);
+	REFLECT_BEGIN(RigidBody, PhysicsBody);
 	REFLECT_VAR(mass);
 	REFLECT_VAR(isStatic);
 	REFLECT_VAR(isKinematic);

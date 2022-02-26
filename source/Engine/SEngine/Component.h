@@ -12,9 +12,11 @@ public:
 	virtual void FixedUpdate() {}
 	virtual void OnEnable() {}
 	virtual void OnDisable() {}
+	virtual void OnValidate() {}
+	virtual void OnDrawGizmos() {}
 
 	std::shared_ptr<GameObject> gameObject() { return m_gameObject.lock(); }
-	std::shared_ptr<GameObject> gameObject() const{ return m_gameObject.lock(); }
+	std::shared_ptr<GameObject> gameObject() const { return m_gameObject.lock(); }
 
 	void SetEnabled(bool isEnabled);
 	bool IsEnabled()const;

@@ -66,7 +66,7 @@ class btDynamicsWorld;
 class GameObject;
 class BinaryBuffer;
 
-class PhysicsSettings : public Object{
+class PhysicsSettings : public Object {
 public:
 	void GetGroupAndMask(const std::string& groupName, int& group, int& mask);
 	Vector3 gravity{ 0.f, -9.8f, 0.f };
@@ -124,6 +124,8 @@ public:
 	void SerializeMeshPhysicsDataToBuffer(std::vector<std::shared_ptr<Mesh>>& meshes, BinaryBuffer& buffer);
 	void DeserializeMeshPhysicsDataFromBuffer(std::vector<std::shared_ptr<Mesh>>& meshes, BinaryBuffer& buffer);
 	void CalcMeshPhysicsDataFromBuffer(std::shared_ptr<Mesh> mesh);
+
+	static std::string reservedLayerName;
 private:
 	static void OnPhysicsTick(btDynamicsWorld* world, btScalar timeStep);
 
