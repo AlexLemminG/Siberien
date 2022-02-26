@@ -36,6 +36,20 @@ void AssetDatabase::Term() {
 	onBeforeUnloaded.UnsubscribeAll();
 }
 
+
+//TODO currently only required for scene editing hack. consider removing
+
+void AssetDatabase::Unload(const std::string& path) {
+	auto it = assets.find(path);
+	if (it == assets.end()) {
+		return;
+	}
+	for (const auto& obj : it->second.objects) {
+		objectPaths.erase(obj.obj);
+	}
+	assets.erase(path);
+}
+
 void AssetDatabase::UnloadAll() {
 	OPTICK_EVENT();
 	onBeforeUnloaded.Invoke();

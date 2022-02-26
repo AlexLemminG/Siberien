@@ -33,6 +33,14 @@ void SceneManager::Update() {
 	if (currentScene) {
 		currentScene->Term();
 		onAfterSceneDisabled.Invoke();
+
+		if (currentScene->IsInEditMode()) {
+			//HACK to reload prefab yaml nodes
+			auto path = AssetDatabase::Get()->GetAssetPath(currentScene);
+			if (!path.empty()) {
+				AssetDatabase::Get()->Unload(path);
+			}
+		}
 		currentScene = nullptr;
 	}
 

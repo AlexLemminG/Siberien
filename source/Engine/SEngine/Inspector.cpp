@@ -203,6 +203,51 @@ public:
 		std::vector<std::string> path;
 		std::shared_ptr<Object> rootObj;
 
+	private:
+		VarInfo() {
+		}
+	public:
+
+		VarInfo (std::shared_ptr<Object> obj) {
+			auto uid = AssetDatabase::Get()->GetAssetUID(obj);
+			if (!uid.empty()) {
+				//it's an asset
+				yaml = AssetDatabase::Get()->GetOriginalSerializedAsset(obj);
+				root = yaml;
+				rootObj = obj;
+			}
+			else {
+				yaml = nullptr;
+				root = nullptr;
+				rootObj = obj;
+				auto currentScene = Scene::Get();
+				if (currentScene) {
+					auto go = std::dynamic_pointer_cast<GameObject>(obj);
+					auto component = std::dynamic_pointer_cast<Component>(obj);
+					if(component){
+						go = component->gameObject();
+					}
+					int idx = currentScene->GetInstantiatedPrefabIdx(go);
+					if (idx != -1) {
+						VarInfo real{ currentScene }; //TODO pray for it to not to be instantiated scene
+						real = real.Child("prefabInstances");
+						real = real.Child(idx);
+						real = real.Child("overrides");
+						rootObj = currentScene;
+						if (component) {
+							real = real.Child(component->GetType()->GetName());//TODO not always right
+						}
+						else {
+							real = real.Child("GameObject");
+						}
+						path = real.path;
+						yaml = real.yaml;
+						root = real.root;
+					}
+				}
+			}
+		}
+
 		VarInfo Child(std::string name) const {
 			VarInfo child;
 			child.path = path;
@@ -380,10 +425,7 @@ public:
 					}
 					ImGui::SameLine();
 
-					VarInfo childInfo;
-					childInfo.yaml = AssetDatabase::Get()->GetOriginalSerializedAsset(c);
-					childInfo.root = childInfo.yaml;
-					childInfo.rootObj = c;
+					VarInfo childInfo{ c };
 					DrawInspector((char*)c.get(), c->GetType()->GetName(), c->GetType(), childInfo, true);
 					ImGui::PopID();
 				}
@@ -539,10 +581,7 @@ public:
 			selectedObject = Scene::Get();
 		}
 		if (selectedObject != nullptr) {
-			VarInfo varInfo;
-			varInfo.yaml = AssetDatabase::Get()->GetOriginalSerializedAsset(selectedObject);
-			varInfo.root = varInfo.yaml;
-			varInfo.rootObj = selectedObject;
+			VarInfo varInfo{ selectedObject };
 			DrawInspector(*selectedObject, varInfo);
 		}
 		ImGui::EndChild();
@@ -616,10 +655,7 @@ public:
 						go->transform()->SetMatrix(model);
 
 
-						VarInfo varInfo;
-						varInfo.yaml = AssetDatabase::Get()->GetOriginalSerializedAsset(go->transform());
-						varInfo.root = varInfo.yaml;
-						varInfo.rootObj = go->transform();
+						VarInfo varInfo{ go->transform() };
 						if (varInfo.yaml.valid()) {
 							varInfo.SetValue(go->transform().get());
 						}

@@ -18,6 +18,12 @@ void Scene::Init(bool isEditMode) {
 		ASSERT(go);
 		gameObjects.push_back(go);
 	}
+	if (isEditMode) {
+		//TODO handle failed to create prefabs
+		for (int i = gameObjects.size() - prefabInstances.size(); i < gameObjects.size(); i++) {
+			instantiatedPrefabs.push_back(gameObjects[i]);
+		}
+	}
 
 	//TOOD remove nullptr components here ?
 	for (int iG = gameObjects.size() - 1; iG >= 0; iG--) {
@@ -101,6 +107,18 @@ void Scene::ProcessRemovedGameObjects() {
 	removedGameObjects.clear();
 }
 
+int Scene::GetInstantiatedPrefabIdx(std::shared_ptr<GameObject> gameObject)const {
+	if (!isEditMode) {
+		return -1;
+	}
+	for (int i = 0; i < instantiatedPrefabs.size(); i++) {
+		if (instantiatedPrefabs[i] == gameObject) {
+			return i;
+		}
+	}
+	return -1;
+}
+
 void Scene::Term() {
 	OPTICK_EVENT();
 	for (auto& go : gameObjects) {
@@ -116,6 +134,7 @@ void Scene::Term() {
 				gameObjects.erase(gameObjects.begin() + i);
 			}
 		}
+		instantiatedPrefabs.clear();
 	}
 	isInited = false;
 }

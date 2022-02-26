@@ -29,6 +29,7 @@ public:
 	const std::vector<std::shared_ptr<GameObject>>& GetAllGameObjects() { return gameObjects; }
 
 	bool IsInEditMode()const { return isEditMode; }
+	int GetInstantiatedPrefabIdx(std::shared_ptr<GameObject> gameObject)const;//TODO strange name
 
 	std::shared_ptr<SphericalHarmonics> sphericalHarmonics; //TODO not here
 private:
@@ -46,6 +47,8 @@ private:
 	//WOW you love danger!
 	std::vector<Component*> enabledUpdateComponents;
 	std::vector<Component*> enabledFixedUpdateComponents;
+
+	std::vector<std::shared_ptr<GameObject>> instantiatedPrefabs;
 
 	int currentUpdateIdx = -1;//not really efficient
 	int currentFixedUpdateIdx = -1;

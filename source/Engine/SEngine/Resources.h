@@ -75,6 +75,9 @@ public:
 
 	void Term();
 
+	//TODO currently only required for scene editing hack. consider removing
+	void Unload(const std::string& path);
+
 	void UnloadAll();
 
 	std::vector<std::string> GetAllAssetNames();
@@ -160,12 +163,12 @@ private:
 			return nullptr;
 		}
 	private:
+	public://HACK currently 'public' is only needed for hack
 		class SingleObject {
 		public:
 			std::shared_ptr<Object> obj;
 			std::string id;
 		};
-
 		std::vector<SingleObject> objects;
 	};
 	class PathDescriptor {
