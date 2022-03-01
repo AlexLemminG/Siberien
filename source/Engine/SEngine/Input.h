@@ -20,6 +20,7 @@ public:
 
 	static bool GetMouseButton(int button);
 	static bool GetMouseButtonDown(int button);
+	static float GetMouseScrollY();
 
 	static Vector2 GetMousePosition();
 	static Vector2 GetMouseDeltaPosition();
@@ -36,4 +37,5 @@ private:
 	static Vector2 mouseDeltaPos;
 	static Uint32 mouseState;
 	static Uint32 prevMouseState;
+	static float mouseScrollY;
 };

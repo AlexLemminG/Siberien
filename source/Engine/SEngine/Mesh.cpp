@@ -9,11 +9,23 @@
 #include "System.h"
 #include "Animation.h"
 #include "PhysicsSystem.h"//TODO looks weird
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
 #include "Compression.h"
 #include "shlwapi.h"
 #include <filesystem>
 
+
+class LibraryMeshMeta :public Object {
+public:
+	long lastAssetChangeTime;
+	long lastMetaChangeTime;
+	int importerVersion;
+	REFLECT_BEGIN(LibraryMeshMeta);
+	REFLECT_VAR(lastAssetChangeTime);
+	REFLECT_VAR(lastMetaChangeTime);
+	REFLECT_VAR(importerVersion);
+	REFLECT_END();
+};
 
 MeshVertexLayout& MeshVertexLayout::Begin() {
 	attributes.clear();
@@ -334,25 +346,22 @@ public:
 		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");
 
 
-		bool needRebuild = false;
-		YAML::Node libraryMeta;
-		databaseHandle.ReadFromLibraryFile("meta", libraryMeta);
-		long lastChangeMeta;
-		long lastChange;
-		databaseHandle.GetLastModificationTime(lastChange, lastChangeMeta);
-		if (!libraryMeta.IsDefined()) {
-			needRebuild = true;
-		}
-		else {
-			long lastChangeRecorded = libraryMeta["lastChange"].as<long>();
-			long lastMetaChangeRecorded = libraryMeta["lastMetaChange"].as<long>();
-			long importerVersionRecorded = libraryMeta["importerVersion"].IsDefined() ? libraryMeta["importerVersion"].as<long>() : -1;
-			if (lastChange != lastChangeRecorded || lastMetaChangeRecorded != lastChangeMeta || importerVersionRecorded != importerVersion) {
-				needRebuild = true;
+		bool needRebuild = true;
+		LibraryMeshMeta expectedMeta;
+		expectedMeta.importerVersion = importerVersion;
+		databaseHandle.GetLastModificationTime(expectedMeta.lastAssetChangeTime, expectedMeta.lastMetaChangeTime);
+
+		std::unique_ptr<ryml::Tree> libraryMetaYaml;
+		databaseHandle.ReadFromLibraryFile("meta", libraryMetaYaml);
+		if (libraryMetaYaml) {
+			LibraryMeshMeta meta;
+			SerializationContext c{ libraryMetaYaml->rootref() };
+			::Deserialize(c, meta);
+			if (meta.lastAssetChangeTime == expectedMeta.lastAssetChangeTime &&
+				meta.lastMetaChangeTime == expectedMeta.lastMetaChangeTime &&
+				meta.importerVersion == expectedMeta.importerVersion) {
+				needRebuild = false;
 			}
-		}
-		if (lastChange == 0) {
-			needRebuild = false;
 		}
 
 		std::vector<uint8_t> buffer;
@@ -392,16 +401,13 @@ public:
 		}
 
 		buffer = SerializeToBuffer(meshAsset);
-
-		auto metaNode = YAML::Node();
-		metaNode["lastChange"] = lastChange;
-		metaNode["lastMetaChange"] = lastChangeMeta;
-		metaNode["importerVersion"] = importerVersion;
+		SerializationContext c{};
+		::Serialize(c, expectedMeta);
 
 		databaseHandle.EnsureForderForLibraryFileExists("meta");
 		databaseHandle.EnsureForderForLibraryFileExists("MeshAsset");
 
-		databaseHandle.WriteToLibraryFile("meta", metaNode);
+		databaseHandle.WriteToLibraryFile("meta", c.GetYamlNode());
 
 		{
 			BinaryBuffer from = BinaryBuffer(std::move(buffer));
@@ -410,6 +416,7 @@ public:
 			ASSERT(compressed);
 			databaseHandle.WriteToLibraryFile("MeshAsset", to.GetData());
 		}
+		Log("Converted mesh '%s'", databaseHandle.GetAssetPath().c_str());
 		return meshAsset;
 	}
 

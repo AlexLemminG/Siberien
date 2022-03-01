@@ -28,9 +28,6 @@
 //does this make bone asset ?
 //maybe yes and we need to rename it to Object
 
-namespace YAML {
-	class Node;
-}
 
 class SE_CPP_API AssetDatabase_BinaryImporterHandle {
 	friend class AssetDatabase;
@@ -39,15 +36,16 @@ public:
 	void AddAssetToLoaded(std::string id, std::shared_ptr<Object> object);
 
 	bool ReadAssetAsBinary(std::vector<uint8_t>& buffer);
-	bool ReadAssetAsYAML(YAML::Node& node);
-	bool ReadMeta(YAML::Node& node);
+	bool ReadAssetAsYAML(std::unique_ptr<ryml::Tree>& node);
+	bool ReadMeta(std::unique_ptr<ryml::Tree>& node);
 
-	void WriteToLibraryFile(const std::string& id, const YAML::Node& node);
+	void WriteToLibraryFile(const std::string& id, const ryml::NodeRef& node);
 	void WriteToLibraryFile(const std::string& id, const std::vector<uint8_t>& buffer);
-	bool ReadFromLibraryFile(const std::string& id, YAML::Node& node);
+	bool ReadFromLibraryFile(const std::string& id, std::unique_ptr<ryml::Tree>& node);
 	bool ReadFromLibraryFile(const std::string& id, std::vector<uint8_t>& buffer);
 	std::string GetToolPath(std::string toolName) const;
 
+	void GetLastModificationTime(const std::string& assetPath, long& assetModificationTime, long& metaModificationTime) const;
 	void GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) const;
 
 	std::string GetAssetPath() const;
@@ -62,7 +60,7 @@ public:
 
 private:
 	bool ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer);
-	bool ReadYAML(const std::string& fullPath, YAML::Node& node);
+	bool ReadYAML(const std::string& fullPath, std::unique_ptr<ryml::Tree>& node);
 	std::string assetPath;
 	AssetDatabase* database = nullptr;
 };

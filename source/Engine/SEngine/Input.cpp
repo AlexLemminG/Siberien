@@ -11,6 +11,7 @@ Uint32 Input::mouseState = 0;
 Uint32 Input::prevMouseState = 0;
 Vector2 Input::mousePos = Vector2{ 0,0 };
 Vector2 Input::mouseDeltaPos = Vector2{ 0,0 };
+float Input::mouseScrollY = 0.f;
 
 bool Input::Init() {
 	OPTICK_EVENT();
@@ -35,6 +36,7 @@ void Input::Update() {
 	quitPressed = false;
 	justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 	justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+	mouseScrollY = 0.f;
 
 	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0) {
@@ -43,10 +45,15 @@ void Input::Update() {
 		{
 			quitPressed = true;
 		}
-		if (e.type == SDL_MOUSEMOTION) {
-			mouseDeltaPos.x += e.motion.xrel;
-			mouseDeltaPos.y += e.motion.yrel;
-		}
+		else
+			if (e.type == SDL_MOUSEMOTION) {
+				mouseDeltaPos.x += e.motion.xrel;
+				mouseDeltaPos.y += e.motion.yrel;
+			}
+			else if (e.type == SDL_MOUSEWHEEL) {
+				mouseScrollY += e.wheel.y;
+			}
+
 	}
 
 	auto keyboardState = SDL_GetKeyboardState(NULL);
@@ -71,6 +78,7 @@ void Input::Update() {
 	int mouseY;
 	prevMouseState = mouseState;
 	mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+
 	auto prevMousePos = mousePos;
 	mousePos.x = mouseX;
 	mousePos.y = mouseY;
@@ -99,6 +107,10 @@ bool Input::GetMouseButton(int button) {
 	default:
 		return false;
 	}
+}
+
+float Input::GetMouseScrollY() {
+	return Input::mouseScrollY;
 }
 
 bool Input::GetMouseButtonDown(int button) {

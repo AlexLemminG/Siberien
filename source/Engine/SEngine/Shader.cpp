@@ -2,10 +2,37 @@
 
 #include "Shader.h"
 #include "Resources.h"
-#include <windows.h>
 #include "Serialization.h"
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
+#include <windows.h>
 
+constexpr int importerVersion = 1;
+
+class AssetWithModificationDate {
+public:
+	std::string assetPath;
+	long modificationDate;
+
+	AssetWithModificationDate() :assetPath(""), modificationDate(0) {
+
+	}
+
+	AssetWithModificationDate(const std::string& assetPath, long modificationDate) :assetPath(assetPath), modificationDate(modificationDate) {
+	}
+
+	REFLECT_BEGIN(AssetWithModificationDate);
+	REFLECT_VAR(assetPath);
+	REFLECT_VAR(modificationDate);
+	REFLECT_END();
+};
+class ShaderLibraryMeta : public Object {
+public:
+	std::vector<AssetWithModificationDate> modificationDates;
+
+	REFLECT_BEGIN(ShaderLibraryMeta);
+	REFLECT_VAR(modificationDates);
+	REFLECT_END();
+};
 
 class BasicShaderAssetImporter : public AssetImporter {
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
@@ -81,20 +108,27 @@ class BasicShaderAssetImporter : public AssetImporter {
 		std::string metaId = binAssetPathId + ".meta";
 
 		bool needRebuild = false;
-		YAML::Node meta;
-		bool hasMeta = databaseHandle.ReadFromLibraryFile(metaId, meta);
-		long lastFileChange;
-		long lastMetaChange;
-		databaseHandle.GetLastModificationTime(lastFileChange, lastMetaChange);
+		std::unique_ptr<ryml::Tree> metaYaml;
+		bool hasMeta = databaseHandle.ReadFromLibraryFile(metaId, metaYaml);
 		if (!hasMeta) {
 			needRebuild = true;
 		}
 		else {
-			long lastChangeRecorded = meta["lastChange"].as<long>();
-			if (lastFileChange != lastChangeRecorded && lastFileChange != 0) {
-				needRebuild = true;
+			ShaderLibraryMeta meta;
+			SerializationContext c = SerializationContext(metaYaml->rootref());
+			::Deserialize(c, meta);
+			long lastFileChange;
+			long lastMetaChange;
+
+			for (auto& record : meta.modificationDates) {
+				databaseHandle.GetLastModificationTime(record.assetPath, lastFileChange, lastMetaChange);
+				if (lastFileChange != record.modificationDate && lastFileChange != 0) {
+					needRebuild = true;
+					break;
+				}
 			}
 		}
+		std::string dependenciesAssetPathId = binAssetPathId + ".d";
 		//TODO check modification of all included ones
 
 		bool hasBinary = false;
@@ -105,7 +139,6 @@ class BasicShaderAssetImporter : public AssetImporter {
 		if (hasBinary) {
 			return true;
 		}
-
 		std::string params = "";
 		params += " -f " + databaseHandle.GetAssetPath();
 		params += " -o " + databaseHandle.GetLibraryPathFromId(binAssetPathId);
@@ -117,6 +150,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 		params += " -i assets\\engine\\shaders\\include";//TODO not like this
 		params += " -p ";
 		params += compilerProfile;
+		params += " --depends ";
 
 		STARTUPINFOA si;
 		memset(&si, 0, sizeof(STARTUPINFOA));
@@ -159,16 +193,50 @@ class BasicShaderAssetImporter : public AssetImporter {
 			CloseHandle(pi.hThread);
 		}
 
-		auto metaNode = YAML::Node();
-		metaNode["lastChange"] = lastFileChange;
+		std::vector<std::string> files;
+		files.push_back(databaseHandle.GetAssetPath());
+		{
+			std::vector<uint8_t> depBuffer;
+			databaseHandle.ReadFromLibraryFile(dependenciesAssetPathId, depBuffer);
+			bool hadFirst = false;
+			int start = 0;
+			//TODO less hacky pleeeeease
+			for (int i = 0; i < depBuffer.size(); i++) {
+				if (depBuffer[i] == '\n') {
+					if (hadFirst) {
+						if (depBuffer[i - 1] == '\\') {
+							files.push_back(std::string((char*)&depBuffer[start], i - start - 2));
+						}
+						else {
+							files.push_back(std::string((char*)&depBuffer[start], i - start));
+						}
+					}
+					else {
+						hadFirst = true;
+					}
+					start = i + 2;
+				}
+			}
+		}
+		ShaderLibraryMeta expectedMeta;
+		for (auto& file : files) {
+			long lastModificationDate;
+			long lastMetaModificationDate;
+			databaseHandle.GetLastModificationTime(file, lastModificationDate, lastMetaModificationDate);
+			expectedMeta.modificationDates.push_back(AssetWithModificationDate(file, lastModificationDate));
+		}
 
-		databaseHandle.WriteToLibraryFile(metaId, metaNode);
+		SerializationContext c{};
+		::Serialize(c, expectedMeta);
+		databaseHandle.WriteToLibraryFile(metaId, c.GetYamlNode());
 
 		hasBinary = databaseHandle.ReadFromLibraryFile(binAssetPathId, buffer);
 		if (hasBinary) {
+			Log("Converted shader '%s'", databaseHandle.GetAssetPath().c_str());
 			return true;
 		}
 		else {
+			LogError("Failed to convert shader '%s'", databaseHandle.GetAssetPath().c_str());
 			return false;
 		}
 

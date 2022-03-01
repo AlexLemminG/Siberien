@@ -14,11 +14,29 @@
 #include "Compressonator.h"
 #include <bx\file.h>
 #include "SMath.h"
+#include "ryml.hpp"
 
 static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
 static constexpr bool compressTextures = false;
 static constexpr int skippedMipsForLow = 4;
-static constexpr int importerVersion = 11;
+static constexpr int importerVersion = 12;
+
+class TextureMeta {
+public:
+	bool hasMips = true;
+	std::string format = "BC1";//TODO enums
+	std::string wrapMode = "repeat";//TODO enums
+	long flags = BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_MIN_ANISOTROPIC;//TODO unsigned int
+	bool isNormalMap = false;
+	bool isLoaded = false;
+};
+
+class TextureLibraryMeta :public Object {
+public:
+	int importerVersion = 0;
+	long changeDate = 0;
+	long metaChangeDate = 0;
+};
 
 //TODO streaming
 DBG_VAR_BOOL(dbg_lowTextures, "low res textures", false);
@@ -42,32 +60,31 @@ public:
 	}
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
-		YAML::Node metaYaml;
-		if (!databaseHandle.ReadMeta(metaYaml)) {
-			metaYaml = YAML::Node();
+		std::unique_ptr<ryml::Tree> metaYamlTree;
+		databaseHandle.ReadMeta(metaYamlTree);
+		TextureMeta meta{};
+		if (metaYamlTree) {
+			auto metaShared = AssetDatabase::Get()->DeserializeFromYAML<TextureMeta>(metaYamlTree->rootref());
+			if (metaShared) {
+				meta = *metaShared;
+				meta.isLoaded = true;
+			}
 		}
+
 		//TODO is normal
 		//TODO is linear
-		bool hasMips = metaYaml["mips"].IsDefined() ? metaYaml["mips"].as<bool>() : true;
-		auto formatStr = metaYaml["format"].IsDefined() ? metaYaml["format"].as<std::string>() : "BC1";
-		auto wrapModeStr = metaYaml["wrapMode"].IsDefined() ? metaYaml["wrapMode"].as<std::string>() : "repeat";
-		auto flags = metaYaml["flags"].IsDefined() ? metaYaml["flags"].as<int>() : BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_MIN_ANISOTROPIC;
-		flags |= WrapModeStrToFlags(wrapModeStr);
+		meta.flags |= WrapModeStrToFlags(meta.wrapMode);
 
-		bool isNormalMap;
-		if (metaYaml["isNormal"].IsDefined()) {
-			isNormalMap = metaYaml["isNormal"].as<bool>();
-		}
-		else {
+		if (meta.isLoaded) {
 			auto name = databaseHandle.GetAssetFileName();
 			std::transform(name.begin(), name.end(), name.begin(),
 				[](unsigned char c) { return std::tolower(c); });
 
-			isNormalMap = name.find("normal") != std::string::npos;
+			meta.isNormalMap = name.find("normal") != std::string::npos;
 		}
 
 		//TODO return default invalid texture
-		auto txBin = LoadTexture(importerVersion, databaseHandle, hasMips, formatStr, isNormalMap, dbg_lowTextures);
+		auto txBin = LoadTexture(importerVersion, databaseHandle, meta.hasMips, meta.format, meta.isNormalMap, dbg_lowTextures);
 		if (txBin.size() == 0) {
 			return false;
 		}
@@ -95,7 +112,7 @@ public:
 			imageContainer.m_numMips > 1,
 			imageContainer.m_numLayers,
 			bgfx::TextureFormat::Enum(imageContainer.m_format),
-			flags,
+			(unsigned int)meta.flags,
 			mem);
 
 		if (!bgfx::isValid(tx)) {
@@ -119,27 +136,23 @@ public:
 		//std::string metaAssetPath = databaseHandle.GetLibraryPathFromId("meta");
 		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");
 
+		TextureLibraryMeta expectedLibMeta;
+		databaseHandle.GetLastModificationTime(expectedLibMeta.changeDate, expectedLibMeta.metaChangeDate);
+		expectedLibMeta.importerVersion = importerVersion;
 
-		bool needRebuild = false;
-		YAML::Node libraryMeta;
-		databaseHandle.ReadFromLibraryFile("meta", libraryMeta);
-		long lastChangeMeta;
-		long lastChange;
-		databaseHandle.GetLastModificationTime(lastChange, lastChangeMeta);
-		if (!libraryMeta.IsDefined()) {
-			needRebuild = true;
-		}
-		else {
-			long lastChangeRecorded = libraryMeta["lastChange"].as<long>();
-			long lastMetaChangeRecorded = libraryMeta["lastMetaChange"].as<long>();
-			long importerVersionRecorded = libraryMeta["importerVersion"].IsDefined() ? libraryMeta["importerVersion"].as<long>() : -1;
-			if (lastChange != lastChangeRecorded || lastMetaChangeRecorded != lastChangeMeta || importerVersionRecorded != importerVersion) {
-				needRebuild = true;
+		bool needRebuild = true;
+		std::unique_ptr<ryml::Tree> libraryMetaYaml;
+		databaseHandle.ReadFromLibraryFile("meta", libraryMetaYaml);
+		if (libraryMetaYaml) {
+			TextureLibraryMeta meta;
+			SerializationContext c{ libraryMetaYaml->rootref() };
+			::Deserialize(c, meta);
+
+			if (expectedLibMeta.changeDate == expectedLibMeta.changeDate &&
+				expectedLibMeta.metaChangeDate == expectedLibMeta.metaChangeDate &&
+				expectedLibMeta.importerVersion == expectedLibMeta.importerVersion) {
+				needRebuild = false;
 			}
-		}
-
-		if (lastChange == 0) {
-			needRebuild = false;
 		}
 
 		std::string libraryFileName = loadLow ? "texture_low.dds" : "texture.dds";
@@ -177,12 +190,9 @@ public:
 			return buffer;
 		}
 
-		auto metaNode = YAML::Node();
-		metaNode["lastChange"] = lastChange;
-		metaNode["lastMetaChange"] = lastChangeMeta;
-		metaNode["importerVersion"] = importerVersion;
-
-		databaseHandle.WriteToLibraryFile("meta", metaNode);
+		SerializationContext c{};
+		::Serialize(c, expectedLibMeta);
+		databaseHandle.WriteToLibraryFile("meta", c.GetYamlNode());
 
 		BinaryBuffer binBuffer;
 
@@ -368,6 +378,7 @@ public:
 			CloseHandle(pi.hThread);
 		}
 
+		Log("Converted texture '%s'", databaseHandle.GetAssetPath().c_str());
 		return true;
 	}
 

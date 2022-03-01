@@ -20,10 +20,18 @@ class ShadowSettings : public Object {
 public:
 	int resolution = 1024 * 2;
 	int numSplits = 1; //TODO way of clamping by ui and by force
+	float splitDistribution = 0.6;
+	float near = 0.1f;
+	float far = 22.0f;
+	bool stabilize = true;
 
 	REFLECT_BEGIN(ShadowSettings);
 	REFLECT_VAR(resolution);
 	REFLECT_VAR(numSplits);
+	REFLECT_VAR(splitDistribution);
+	REFLECT_VAR(stabilize);
+	REFLECT_VAR(near);
+	REFLECT_VAR(far);
 	REFLECT_END();
 };
 DECLARE_TEXT_ASSET(ShadowSettings);
@@ -469,17 +477,17 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 
 	this->shadowBias = light->shadowBias;
 	//TODO
-	int lightShadowSize = settings->resolution;// 1024 * 2;
+	int lightShadowSize = Mathf::Max(4, settings->resolution);// 1024 * 2;
 	static bool m_stencilPack = false;
 	static float m_fovXAdjust = 1.0f;
 	static float m_fovYAdjust = 1.0f;
 
-	static float m_near = 0.1;//TODO params
-	static float m_far = 22.f;//TODO params
+	float m_near = settings->near;
+	float m_far = settings->far;
 	static DepthImpl::Enum m_depthImpl = DepthImpl::Linear;
 	m_numSplits = Mathf::Clamp(settings->numSplits, 1, maxNumSplits);
-	static float m_splitDistribution = 0.6;
-	static bool m_stabilize = true;
+	float m_splitDistribution = Mathf::Clamp(settings->splitDistribution, 0.f, 1.f);
+	bool m_stabilize = settings->stabilize;
 	static uint32_t clearRgba = 0;
 	static float clearDepth = 1.f;
 	static uint8_t clearStencil = 0;

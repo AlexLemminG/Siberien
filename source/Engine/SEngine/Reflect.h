@@ -95,6 +95,9 @@ public:
 	void operator<<(const int& t);
 	void operator>>(int& t) const;
 
+	void operator<<(const long& t);
+	void operator>>(long& t) const;
+
 	void operator<<(const unsigned int& t);
 	void operator>>(unsigned int& t) const;
 
@@ -214,6 +217,12 @@ GetReflectedType() {
 template<>
 inline ReflectedTypeBase* GetReflectedType<int>() {
 	static ReflectedTypeSimple<int> type("int");
+	return &type;
+}
+
+template<>
+inline ReflectedTypeBase* GetReflectedType<long>() {
+	static ReflectedTypeSimple<long> type("long");
 	return &type;
 }
 

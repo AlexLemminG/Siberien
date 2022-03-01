@@ -14,6 +14,18 @@
 #include <codecvt>
 
 
+static std::unique_ptr<ryml::Tree> StreamToYAML(std::ifstream& input) {
+	//TODO error checks
+
+	std::vector<char> buffer;
+	std::streamsize size = input.tellg();
+	input.seekg(0, std::ios::beg);
+
+	ResizeVectorNoInit(buffer, size);
+	input.read((char*)buffer.data(), size);
+	return std::make_unique<ryml::Tree>(ryml::parse(c4::csubstr(&buffer[0], buffer.size())));
+}
+
 AssetDatabase* AssetDatabase::mainDatabase = nullptr;
 AssetDatabase* AssetDatabase::Get() {
 	return mainDatabase;
@@ -181,14 +193,8 @@ void AssetDatabase::ProcessLoadingQueue() {
 				if (input) {
 					//TODO
 					//LogError("Failed to load '%s': file not found", fullPath.c_str());
-					std::vector<char> buffer;
-					std::streamsize size = input.tellg();
-					input.seekg(0, std::ios::beg);
 
-					ResizeVectorNoInit(buffer, size);
-					input.read((char*)buffer.data(), size);
-
-					auto treePtr = std::make_shared<ryml::Tree>(ryml::parse(c4::csubstr(&buffer[0], buffer.size())));
+					auto treePtr = std::shared_ptr(std::move(StreamToYAML(input)));
 					ryml::Tree& tree = *treePtr;
 					ryml::NodeRef node = tree;
 					assets[path].originalTree = treePtr;
@@ -320,10 +326,9 @@ std::shared_ptr<Object> AssetDatabase::DeserializeFromYAMLInternal(const ryml::N
 	return main;
 }
 
-void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) const {
-
+void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(const std::string& assetPath, long& assetModificationTime, long& metaModificationTime) const {
 	struct stat result;
-	const auto fullPathAsset = database->assetsRootFolder + assetPath;
+	const auto fullPathAsset = assetPath;
 
 	if (stat(fullPathAsset.c_str(), &result) == 0)
 	{
@@ -342,6 +347,12 @@ void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(long& assetModi
 	else {
 		metaModificationTime = 0;
 	}
+}
+
+
+void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) const {
+	//TODO naming conventions what is assetPath
+	return GetLastModificationTime(database->assetsRootFolder + assetPath, assetModificationTime, metaModificationTime);
 }
 
 
@@ -382,11 +393,11 @@ bool AssetDatabase_BinaryImporterHandle::ReadAssetAsBinary(std::vector<uint8_t>&
 	return ReadBinary(GetAssetPath(), buffer);
 }
 
-bool AssetDatabase_BinaryImporterHandle::ReadAssetAsYAML(YAML::Node& node) {
+bool AssetDatabase_BinaryImporterHandle::ReadAssetAsYAML(std::unique_ptr<ryml::Tree>& node) {
 	return ReadYAML(GetAssetPath(), node);
 }
 
-bool AssetDatabase_BinaryImporterHandle::ReadMeta(YAML::Node& node) {
+bool AssetDatabase_BinaryImporterHandle::ReadMeta(std::unique_ptr<ryml::Tree>& node) {
 	const auto fullPath = database->assetsRootFolder + assetPath + ".meta";
 	return ReadYAML(fullPath, node);
 }
@@ -425,7 +436,7 @@ std::string AssetDatabase_BinaryImporterHandle::GetLibraryPathFromId(const std::
 	return database->libraryRootFolder + assetPath + "\\" + id;
 }
 
-void AssetDatabase_BinaryImporterHandle::WriteToLibraryFile(const std::string& id, const YAML::Node& node) {
+void AssetDatabase_BinaryImporterHandle::WriteToLibraryFile(const std::string& id, const ryml::NodeRef& node) {
 	//TODO checks and make sure folder exists
 	const auto fullPath = GetLibraryPathFromId(id);
 	std::ofstream fout(fullPath);
@@ -441,24 +452,18 @@ void AssetDatabase_BinaryImporterHandle::WriteToLibraryFile(const std::string& i
 	}
 }
 
-bool AssetDatabase_BinaryImporterHandle::ReadFromLibraryFile(const std::string& id, YAML::Node& node)
+bool AssetDatabase_BinaryImporterHandle::ReadFromLibraryFile(const std::string& id, std::unique_ptr<ryml::Tree>& node)
 {
 	const auto fullPath = GetLibraryPathFromId(id);
 
-	std::ifstream input(fullPath);
+	std::ifstream input(fullPath, std::ios::ate | std::ios::binary);
 	if (!input) {
 		LogError("Failed to load '%s': file not found", assetPath.c_str());
-		node = YAML::Node(YAML::NodeType::Undefined);
+		node = nullptr;
 		return false;
 	}
-	node = YAML::Load(input);
-	if (!node.IsDefined()) {
-		node = YAML::Node(YAML::NodeType::Undefined);
-		return false;
-	}
-	else {
-		return true;
-	}
+	node = StreamToYAML(input);
+	return node != nullptr;
 }
 
 bool AssetDatabase_BinaryImporterHandle::ReadFromLibraryFile(const std::string& id, std::vector<uint8_t>& buffer)
@@ -498,23 +503,17 @@ bool AssetDatabase_BinaryImporterHandle::ReadBinary(const std::string& fullPath,
 }
 
 
-bool AssetDatabase_BinaryImporterHandle::ReadYAML(const std::string& fullPath, YAML::Node& node)
+bool AssetDatabase_BinaryImporterHandle::ReadYAML(const std::string& fullPath, std::unique_ptr<ryml::Tree>& node)
 {
-	std::ifstream input(fullPath);
+	std::ifstream input(fullPath, std::ios::ate | std::ios::binary);
 	if (!input) {
 		//TODO
 		//LogError("Failed to load '%s': file not found", fullPath.c_str());
-		node = YAML::Node();
+		node = nullptr;
 		return false;
 	}
-	node = YAML::Load(input);
-	if (!node.IsDefined()) {
-		node = YAML::Node();
-		return false;
-	}
-	else {
-		return true;
-	}
+	node = StreamToYAML(input);
+	return node != nullptr;
 }
 
 std::string AssetDatabase::PathDescriptor::ToFullPath() {

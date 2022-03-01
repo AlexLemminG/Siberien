@@ -182,6 +182,12 @@ void SerializationContext::operator<<(const int& t) {
 void SerializationContext::operator>>(int& t) const {
 	GetYamlNode() >> t;
 }
+void SerializationContext::operator<<(const long& t) {
+	GetYamlNode() << t;
+}
+void SerializationContext::operator>>(long& t) const {
+	GetYamlNode() >> t;
+}
 void SerializationContext::operator<<(const unsigned int& t) {
 	GetYamlNode() << t;
 }
