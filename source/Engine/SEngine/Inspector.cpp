@@ -436,8 +436,20 @@ public:
 		else if (type->GetName() == ::GetReflectedType<Vector3>()->GetName()) {
 			Vector3* v = (Vector3*)(object);
 			BeginInspector(varInfo);
-			float speed = Mathf::Max(Mathf::Max(Mathf::Abs(v->x), Mathf::Max(v->y, v->z)) / 100.f, 0.01f);
+			Vector3 absV = Vector3(Mathf::Abs(v->x), Mathf::Abs(v->y), Mathf::Abs(v->z));
+			float speed = Mathf::Max(Mathf::Max(absV.x, Mathf::Max(absV.y, absV.z)) / 100.f, 0.01f);
 			if (ImGui::DragFloat3(name.c_str(), &v->x, speed)) {
+				varInfo.SetValue(v);
+				changed = true;
+			}
+			EndInspector(varInfo);
+		}
+		else if (type->GetName() == ::GetReflectedType<Vector4>()->GetName()) {
+			Vector4* v = (Vector4*)(object);
+			BeginInspector(varInfo);
+			Vector4 absV = Vector4(Mathf::Abs(v->x), Mathf::Abs(v->y), Mathf::Abs(v->z), Mathf::Abs(v->w));
+			float speed = Mathf::Max(Mathf::Max(Mathf::Max(absV.x, absV.y), Mathf::Max(absV.z, absV.w)) / 100.f, 0.01f);
+			if (ImGui::DragFloat4(name.c_str(), &v->x, speed)) {
 				varInfo.SetValue(v);
 				changed = true;
 			}

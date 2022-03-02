@@ -21,6 +21,10 @@ public:
 
 	bool initedCameraTransform = false;
 
+	virtual void OnEnable() override {
+		Update();
+	}
+
 	virtual void Update() override {
 		if (!Engine::Get()->IsEditorMode()) {
 			return;//TODO dont create camera in first place

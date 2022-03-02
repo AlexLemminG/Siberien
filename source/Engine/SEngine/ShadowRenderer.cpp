@@ -30,6 +30,8 @@ public:
 	float near_far = 1024;
 	bool stabilize = true;
 
+	float pcfOffset = 0.2f;
+
 	REFLECT_BEGIN(ShadowSettings);
 	REFLECT_VAR(resolution);
 	REFLECT_VAR(numSplits);
@@ -38,6 +40,7 @@ public:
 	REFLECT_VAR(near);
 	REFLECT_VAR(far);
 	REFLECT_VAR(near_far);
+	REFLECT_VAR(pcfOffset);
 	REFLECT_END();
 };
 DECLARE_TEXT_ASSET(ShadowSettings);
@@ -576,8 +579,9 @@ void ShadowRenderer::Draw(Light* light, const Camera& camera)
 
 			bgfx::TextureHandle fbtextures[] =
 			{
-				bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT),
-				bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D24S8, BGFX_TEXTURE_RT),
+				bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::R32F, BGFX_TEXTURE_RT | BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_MIN_ANISOTROPIC | BGFX_SAMPLER_COMPARE_LEQUAL
+),
+				bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D32F, BGFX_TEXTURE_RT),
 			};
 			s_rtShadowMap[0] = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
 			bgfx::setName(s_rtShadowMap[0], "s_rtShadowMap");
@@ -594,8 +598,9 @@ void ShadowRenderer::Draw(Light* light, const Camera& camera)
 
 					bgfx::TextureHandle fbtextures[] =
 					{
-						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT),//TODO why not just depth?
-						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D24S8, BGFX_TEXTURE_RT),
+						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::R32F, BGFX_TEXTURE_RT | BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_MIN_ANISOTROPIC | BGFX_SAMPLER_COMPARE_LEQUAL
+),//TODO why not just depth?
+						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D32F, BGFX_TEXTURE_RT),
 					};
 					s_rtShadowMap[ii] = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
 					bgfx::setName(s_rtShadowMap[ii], "s_rtShadowMap" + ('0' + ii));
@@ -714,10 +719,10 @@ void ShadowRenderer::Draw(Light* light, const Camera& camera)
 		// Setup light view mtx.
 
 		auto viewMatrix = light->gameObject()->transform()->GetMatrix();
-		Vector3 pos = GetPos(camera.GetViewMatrix().Inverse()) + light->gameObject()->transform()->GetForward() * settings->near_far;
-		//TODO stabilize
-		SetPos(viewMatrix, pos); // for better precision
 		SetScale(viewMatrix, Vector3_one);
+		Vector3 pos = GetPos(camera.GetViewMatrix().Inverse());// + light->gameObject()->transform()->GetForward() * settings->near_far;
+
+		SetPos(viewMatrix, pos); // for better precision
 		viewMatrix = viewMatrix.Inverse();
 		memcpy(&(lightView[0][0]), &viewMatrix(0, 0), 16 * sizeof(float));
 
@@ -812,6 +817,19 @@ void ShadowRenderer::Draw(Light* light, const Camera& camera)
 			mtxCrop[12] = offsetx;
 			mtxCrop[13] = offsety;
 
+			if (m_stabilize)
+			{
+				//PERF much inverse
+				const float halfSize = m_currentShadowMapSize * 0.5f;
+				auto mat = Matrix4(lightView[ii]).Inverse();
+				Vector3 pos = GetPos(mat);
+				Vector3 localPos = GetRot(mat.Inverse()) * pos;
+				localPos.x = bx::ceil(localPos.x * (halfSize * scalex)) / (halfSize * scalex);
+				localPos.y = bx::ceil(localPos.y * (halfSize * scaley)) / (halfSize * scaley);
+				SetPos(mat, GetRot(mat) * localPos);
+				mat = mat.Inverse();
+				memcpy(&(lightView[ii][0]), &mat(0, 0), 16 * sizeof(float));
+			}
 			bx::mtxMul(lightProj[ii], mtxCrop, mtxProj);
 		}
 	}
@@ -1334,7 +1352,7 @@ void ShadowRenderer::ApplyUniforms() {
 	v = Vector4(1, 0, 1.f / m_currentShadowMapSize, 0);
 	bgfx::setUniform(u_params2, &v.x);
 
-	v = Vector4(2, 2, 0.2f, 0.2f);
+	v = Vector4(2, 2, settings->pcfOffset, settings->pcfOffset);
 	bgfx::setUniform(u_smSamplingParams, &v.x);
 
 	for (int i = 0; i < _countof(m_shadowMapMtx); i++) {
