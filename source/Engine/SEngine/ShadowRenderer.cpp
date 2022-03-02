@@ -15,6 +15,10 @@
 #include "bx/bx.h"
 #include "bx/math.h"
 #include "Reflect.h"
+#include "DbgVars.h"
+#include "Dbg.h"
+
+DBG_VAR_BOOL_EXTERN(dbg_debugShadows);
 
 class ShadowSettings : public Object {
 public:
@@ -23,6 +27,7 @@ public:
 	float splitDistribution = 0.6;
 	float near = 0.1f;
 	float far = 22.0f;
+	float near_far = 1024;
 	bool stabilize = true;
 
 	REFLECT_BEGIN(ShadowSettings);
@@ -32,6 +37,7 @@ public:
 	REFLECT_VAR(stabilize);
 	REFLECT_VAR(near);
 	REFLECT_VAR(far);
+	REFLECT_VAR(near_far);
 	REFLECT_END();
 };
 DECLARE_TEXT_ASSET(ShadowSettings);
@@ -462,11 +468,14 @@ void ShadowRenderer::Term() {
 		}
 	}
 }
+
 float m_shadowMapMtx[ShadowMapRenderTargets::Count][16];
 static int m_numSplits = 1;
 const uint8_t maxNumSplits = 4;
-void ShadowRenderer::Draw(Light* light, const ICamera& camera)
+void ShadowRenderer::Draw(Light* light, const Camera& camera)
 {
+	//TODO set correct clear flags/colors to remove shadows out of shadow frustum
+	//TODO try to rotate dir light for better coverage
 	OPTICK_EVENT();
 
 	auto render = Graphics::Get()->render;
@@ -505,7 +514,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	static int RENDERVIEW_LAST = 9;
 
 	// Set view and projection matrices.
-	const float camFovy = Camera::GetMain()->GetFov();
+	const float camFovy = camera.GetFov();
 	int m_width = Graphics::Get()->GetScreenWidth();
 	int m_height = Graphics::Get()->GetScreenHeight();
 	const float camAspect = float(int32_t(m_width)) / float(int32_t(m_height));
@@ -705,6 +714,9 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		// Setup light view mtx.
 
 		auto viewMatrix = light->gameObject()->transform()->GetMatrix();
+		Vector3 pos = GetPos(camera.GetViewMatrix().Inverse()) + light->gameObject()->transform()->GetForward() * settings->near_far;
+		//TODO stabilize
+		SetPos(viewMatrix, pos); // for better precision
 		SetScale(viewMatrix, Vector3_one);
 		viewMatrix = viewMatrix.Inverse();
 		memcpy(&(lightView[0][0]), &viewMatrix(0, 0), 16 * sizeof(float));
@@ -744,8 +756,8 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 			, -1.0f
 			, 1.0f
 			, -1.0f
-			, -1024.f//TODO params
-			, 1024.f//TODO params
+			, -settings->near_far//TODO params
+			, settings->near_far//TODO params
 			, 0.0f
 			, caps->homogeneousDepth
 		);
@@ -1028,6 +1040,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		bgfx::touch(RENDERVIEW_SHADOWMAP_1_ID + ii);
 	}
 
+	int numShadowMaps = 0;
 	// Render.
 
 	// Craft shadow map.
@@ -1244,6 +1257,15 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 
 				bx::mtxMul(mtxTmp, lightProj[ii], mtxBias);
 				bx::mtxMul(m_shadowMapMtx[ii], lightView[ii], mtxTmp); //lViewProjCropBias
+			}
+		}
+		if (dbg_debugShadows) {
+			for (int i = 0; i < drawNum; i++) {
+				Frustum f;
+				float viewTransform[16];
+				bx::mtxMul(viewTransform, lightView[i], lightProj[i]); //lViewProjCropBias
+				f.SetFromViewProjection(Matrix4(viewTransform));
+				Dbg::Draw(f);
 			}
 		}
 	}

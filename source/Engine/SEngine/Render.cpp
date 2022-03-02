@@ -36,7 +36,10 @@
 #include "imgui/imgui.h"
 #include "Light.h"
 #include "ShadowRenderer.h"
+#include "DbgVars.h"
 #include "dear-imgui/imgui_impl_sdl.h"
+
+DBG_VAR_BOOL(dbg_debugShadows, "Debug Shadows", false);
 
 SDL_Window* Render::window = nullptr;
 
@@ -80,7 +83,7 @@ Vector3 multH(const Matrix4& m, const Vector3& v) {
 	return Vector3(v4[0], v4[1], v4[2]) * t;
 }
 
-void Render::PrepareLights(const ICamera& camera) {
+void Render::PrepareLights(const Camera& camera) {
 	OPTICK_EVENT();
 
 	//TODO adjust for dir light
@@ -532,6 +535,19 @@ void Render::Draw(SystemsManager& systems)
 		return;
 	}
 
+	Camera* shadowCamera = camera;
+	if (dbg_debugShadows) {
+		if (camera->gameObject()->tag == Camera::editorCameraTag) {
+			for (auto& camera : Camera::GetAllCameras()) {
+				if (camera->gameObject()->tag != Camera::editorCameraTag) {
+					camera->OnBeforeRender();
+					shadowCamera = camera;
+					break;
+				}
+			}
+		}
+	}
+
 	camera->OnBeforeRender();
 
 	uint8_t clearAlbedo = 1;
@@ -601,12 +617,13 @@ void Render::Draw(SystemsManager& systems)
 	//dbgMeshesDrawn = 0;
 	//dbgMeshesCulled = 0;
 
-	PrepareLights(*camera);
+	PrepareLights(*shadowCamera);
 
 	systems.Draw();
 
 	DrawAll(kRenderPassGeometry, *camera, nullptr);
 
+	Dbg::DrawAll(kRenderPassGeometry);
 	// combining gbuffer
 	{
 		//if (!defferedCombineMaterial || !defferedCombineMaterial->shader) {
@@ -644,6 +661,7 @@ void Render::Draw(SystemsManager& systems)
 
 	RenderEvents::Get()->onSceneRendered.Invoke(*this);
 
+
 	Graphics::Get()->Blit(simpleBlitMat, kRenderPassBlitToScreen);
 
 	EndFrame();
@@ -651,7 +669,6 @@ void Render::Draw(SystemsManager& systems)
 
 void Render::EndFrame() {
 
-	Dbg::DrawAll();
 	{
 		OPTICK_EVENT("bgfx::frame");
 		bgfx::frame();

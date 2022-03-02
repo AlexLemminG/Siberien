@@ -15,25 +15,28 @@ std::vector<Camera*> Camera::cameras;
 Camera* Camera::GetMain() {
 	if (Engine::Get()->IsEditorMode()) {
 		for (auto camera : cameras) {
-			if (camera->gameObject()->tag == "EditorCamera") {
+			if (camera->gameObject()->tag == editorCameraTag) {
 				return camera;
 			}
 		}
 	}
 	else {
 		for (auto camera : cameras) {
-			if (camera->gameObject()->tag != "EditorCamera") {
+			if (camera->gameObject()->tag != editorCameraTag) {
 				return camera;
 			}
 		}
 	}
 	return cameras.size() > 0 ? cameras[0] : nullptr;
-
 }
 
 void Camera::OnEnable() { cameras.push_back(this); }
 
 void Camera::OnDisable() { cameras.erase(std::find(cameras.begin(), cameras.end(), this)); }
+
+const std::vector<Camera*>& Camera::GetAllCameras() {
+	return cameras;
+}
 
 Ray Camera::ScreenPointToRay(Vector2 screenPoint) {
 
@@ -89,7 +92,7 @@ void ICamera::OnBeforeRender() {
 
 	frustum.SetFromViewProjection(viewProjectionMatrix);
 
-	position = GetPos(GetViewMatrix().Inverse());//not good not terrible
+	//position = GetPos(GetViewMatrix().Inverse());//not good not terrible
 }
 
 bool ICamera::IsVisible(const Sphere& sphere) const {

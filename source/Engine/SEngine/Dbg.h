@@ -39,7 +39,7 @@ public:
 	static void Init();
 	static void Term();
 
-	static void DrawAll();
+	static void DrawAll(int viewId);
 
 public:
 	class Point : public DrawHandle {
@@ -69,4 +69,5 @@ public:
 	};
 
 	static void ClearAll();
+	static void DrawAllGizmos(void* dde, float alphaMultiplier);
 };

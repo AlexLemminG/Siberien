@@ -37,6 +37,9 @@ public:
 	}
 };
 
+//TODO is it possible to optimize it later?
+#define DBG_VAR_BOOL_EXTERN(varName) \
+extern bool varName;
 
 #define DBG_VAR_BOOL(varName, path, defaultValue) \
 bool varName = defaultValue; \

@@ -623,6 +623,12 @@ public:
 				Dbg::DrawCone(pos, pos + dir * innerRadius * dirMultOuter, innerRadius * radiusMultOuter).SetColor(innerLightColor);
 				hasGizmos = true;
 			}
+
+			auto cam = std::dynamic_pointer_cast<Camera>(c);
+			if (cam) {
+				cam->OnBeforeRender();//TODO build inside GetFrustrum ?
+				Dbg::Draw(cam->GetFrustum());
+			}
 		}
 		CallOnDrawGizmos(go);
 		if (!hasGizmos) {

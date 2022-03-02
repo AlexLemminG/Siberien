@@ -5,8 +5,9 @@
 #include "Serialization.h"
 #include "ryml.hpp"
 #include <windows.h>
+#include "Config.h"
 
-constexpr int importerVersion = 1;
+static constexpr int importerVersion = 5;
 
 class AssetWithModificationDate {
 public:
@@ -28,26 +29,30 @@ public:
 class ShaderLibraryMeta : public Object {
 public:
 	std::vector<AssetWithModificationDate> modificationDates;
+	int importerVersion;
 
 	REFLECT_BEGIN(ShaderLibraryMeta);
 	REFLECT_VAR(modificationDates);
+	REFLECT_VAR(importerVersion);
 	REFLECT_END();
 };
 
 class BasicShaderAssetImporter : public AssetImporter {
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
+		bool isDebug = CfgGetBool("debugGraphics"); // TODO some global access var
+
 		bool isVertex = false;
 		std::vector<uint8_t> buffer;
 		auto extention = databaseHandle.GetFileExtension();
 		if (extention == "vs") {
 			isVertex = true;
-			if (!LoadShader(buffer, databaseHandle, true)) {
+			if (!LoadShader(buffer, databaseHandle, true, isDebug)) {
 				return false;
 			}
 		}
 		else if (extention == "fs") {
-			if (!LoadShader(buffer, databaseHandle, false)) {
+			if (!LoadShader(buffer, databaseHandle, false, isDebug)) {
 				return false;
 			}
 		}
@@ -76,7 +81,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 		return true;
 	}
 
-	bool LoadShader(std::vector<uint8_t>& buffer, AssetDatabase_BinaryImporterHandle& databaseHandle, bool isVertex) {
+	bool LoadShader(std::vector<uint8_t>& buffer, AssetDatabase_BinaryImporterHandle& databaseHandle, bool isVertex, bool isDebug) {
 		//TODO propper fix for loading without sources + check other assets for same mistakes
 		std::string textAssetPath = databaseHandle.GetAssetPath();
 		std::string binAssetPathId = "";
@@ -102,7 +107,13 @@ class BasicShaderAssetImporter : public AssetImporter {
 			break;
 		}
 
+
 		binAssetPathId += shaderPath;
+
+		if (isDebug) {
+			binAssetPathId += "_debug";
+		}
+
 		std::string binAssetPath = databaseHandle.GetLibraryPathFromId(binAssetPathId);
 
 		std::string metaId = binAssetPathId + ".meta";
@@ -119,12 +130,16 @@ class BasicShaderAssetImporter : public AssetImporter {
 			::Deserialize(c, meta);
 			long lastFileChange;
 			long lastMetaChange;
-
-			for (auto& record : meta.modificationDates) {
-				databaseHandle.GetLastModificationTime(record.assetPath, lastFileChange, lastMetaChange);
-				if (lastFileChange != record.modificationDate && lastFileChange != 0) {
-					needRebuild = true;
-					break;
+			if (meta.importerVersion != importerVersion) {
+				needRebuild = true;
+			}
+			else {
+				for (auto& record : meta.modificationDates) {
+					databaseHandle.GetLastModificationTime(record.assetPath, lastFileChange, lastMetaChange);
+					if (lastFileChange != record.modificationDate && lastFileChange != 0) {
+						needRebuild = true;
+						break;
+					}
 				}
 			}
 		}
@@ -142,15 +157,24 @@ class BasicShaderAssetImporter : public AssetImporter {
 		std::string params = "";
 		params += " -f " + databaseHandle.GetAssetPath();
 		params += " -o " + databaseHandle.GetLibraryPathFromId(binAssetPathId);
-		params += " --type ";
-		params += (isVertex ? "v" : "f");
-		params += " --platform ";
-		params += "windows";
+		params += " --type";
+		params += (isVertex ? " v" : " f");
+		params += " --platform";
+		params += " windows";
 		params += " -i assets\\shaders\\include";//TODO not like this
 		params += " -i assets\\engine\\shaders\\include";//TODO not like this
 		params += " -p ";
 		params += compilerProfile;
-		params += " --depends ";
+		params += " --depends";
+
+		if (isDebug) {
+			//params += " --raw ";
+			params += " --debug";
+		}
+		else {
+			params += " -O 3";
+		}
+
 
 		STARTUPINFOA si;
 		memset(&si, 0, sizeof(STARTUPINFOA));
@@ -219,6 +243,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 			}
 		}
 		ShaderLibraryMeta expectedMeta;
+		expectedMeta.importerVersion = importerVersion;
 		for (auto& file : files) {
 			long lastModificationDate;
 			long lastMetaModificationDate;

@@ -378,6 +378,7 @@ public:
 
 	std::array<Vector3, 8> GetVertices()const;
 	std::array<int, 48> GetTriangleIndices()const; //CW order
+	std::array<int, 24> GetQuadIndices()const; //CW order
 
 	OBB ToOBB()const;
 
@@ -393,6 +394,7 @@ public:
 
 	std::array<Vector3, 8> GetVertices()const;
 	static std::array<int, 48> GetTriangleIndices(); //CW order
+	static std::array<int, 24> GetQuadIndices(); //CW order
 
 	Matrix4 GetCenterMatrix() const;
 	Vector3 GetSize() const;

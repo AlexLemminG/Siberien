@@ -29,6 +29,14 @@ public:
 	long flags = BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_MIN_ANISOTROPIC;//TODO unsigned int
 	bool isNormalMap = false;
 	bool isLoaded = false;
+
+	REFLECT_BEGIN(TextureMeta);
+	REFLECT_VAR(hasMips);
+	REFLECT_VAR(format);
+	REFLECT_VAR(wrapMode);
+	REFLECT_VAR(flags);
+	REFLECT_VAR(isNormalMap);
+	REFLECT_END()
 };
 
 class TextureLibraryMeta :public Object {
@@ -36,6 +44,11 @@ public:
 	int importerVersion = 0;
 	long changeDate = 0;
 	long metaChangeDate = 0;
+	REFLECT_BEGIN(TextureLibraryMeta);
+	REFLECT_VAR(importerVersion);
+	REFLECT_VAR(changeDate);
+	REFLECT_VAR(metaChangeDate);
+	REFLECT_END()
 };
 
 //TODO streaming
@@ -64,11 +77,9 @@ public:
 		databaseHandle.ReadMeta(metaYamlTree);
 		TextureMeta meta{};
 		if (metaYamlTree) {
-			auto metaShared = AssetDatabase::Get()->DeserializeFromYAML<TextureMeta>(metaYamlTree->rootref());
-			if (metaShared) {
-				meta = *metaShared;
-				meta.isLoaded = true;
-			}
+			SerializationContext c = SerializationContext(metaYamlTree->rootref());
+			::Deserialize(c, meta);
+			meta.isLoaded = true;
 		}
 
 		//TODO is normal
@@ -148,9 +159,9 @@ public:
 			SerializationContext c{ libraryMetaYaml->rootref() };
 			::Deserialize(c, meta);
 
-			if (expectedLibMeta.changeDate == expectedLibMeta.changeDate &&
-				expectedLibMeta.metaChangeDate == expectedLibMeta.metaChangeDate &&
-				expectedLibMeta.importerVersion == expectedLibMeta.importerVersion) {
+			if (meta.changeDate == expectedLibMeta.changeDate &&
+				meta.metaChangeDate == expectedLibMeta.metaChangeDate &&
+				meta.importerVersion == expectedLibMeta.importerVersion) {
 				needRebuild = false;
 			}
 		}

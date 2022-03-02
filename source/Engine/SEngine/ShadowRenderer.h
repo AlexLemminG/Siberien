@@ -3,7 +3,7 @@
 #include <vector>
 #include "bgfx/bgfx.h"
 
-class ICamera;
+class Camera;
 class Light;
 class ShadowSettings;
 
@@ -14,7 +14,7 @@ public:
 	void Init();
 	void Term();
 
-	void Draw(Light* light, const ICamera& camera);
+	void Draw(Light* light, const Camera& camera);
 
 	void ApplyUniforms();
 private:

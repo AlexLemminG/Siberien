@@ -37,7 +37,7 @@ public:
 	static SDL_Window* window;
 
 	void ApplyMaterialProperties(const Material* material);
-	
+
 	//TODO move viewId to camera
 	void DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial, const std::vector<MeshRenderer*>* renderers = nullptr);
 
@@ -64,14 +64,14 @@ private:
 	GBuffer gBuffer;
 
 	int currentFreeViewId = 0;
-	
+
 	bool DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId = 0); //returns true if was not culled
 	void UpdateLights(Vector3 poi);
-	
+
 	bool IsFullScreen();
 	void SetFullScreen(bool isFullScreen);
 
-	void PrepareLights(const ICamera& camera);
+	void PrepareLights(const Camera& camera);
 	void EndFrame();
 
 	void LoadAssets();
@@ -121,14 +121,14 @@ private:
 	bgfx::TextureHandle m_clusterListTex;
 	bgfx::TextureHandle m_itemsListTex;
 	bgfx::TextureHandle m_lightsListTex;
-	
-	
+
+
 	bgfx::FrameBufferHandle m_fullScreenBuffer;
 	bgfx::TextureHandle m_fullScreenTex;
 	bgfx::FrameBufferHandle m_fullScreenBuffer2;
 	bgfx::TextureHandle m_fullScreenTex2;
 	int currentFullScreenTextureIdx = 0;
-	
+
 
 	bgfx::UniformHandle u_lightPosRadius;
 	bgfx::UniformHandle u_lightRgbInnerR;

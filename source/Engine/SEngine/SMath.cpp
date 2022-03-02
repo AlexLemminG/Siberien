@@ -42,7 +42,7 @@ bool AABB::Contains(const Vector3 pos) const {
 	return min.x <= pos.x && min.y <= pos.y && min.z <= pos.z && max.x >= pos.x && max.y >= pos.y && max.z >= pos.z;
 }
 
-OBB AABB::ToOBB() const{
+OBB AABB::ToOBB() const {
 	auto center = GetCenter();
 	Matrix4 matr = Matrix4::Identity();
 	SetPos(matr, center);
@@ -61,8 +61,13 @@ OBB::OBB(const Matrix4& center, const Vector3& size)
 {
 
 }
-std::array<int, 48> AABB::GetTriangleIndices()const {
+
+std::array<int, 48> AABB::GetTriangleIndices() const {
 	return OBB::GetTriangleIndices();
+}
+
+std::array<int, 24> AABB::GetQuadIndices() const {
+	return OBB::GetQuadIndices();
 }
 
 std::array<Vector3, 8> AABB::GetVertices()const {
@@ -92,6 +97,7 @@ std::array<Vector3, 8> OBB::GetVertices()const {
 	};
 	return result;
 }
+
 std::array<int, 48> OBB::GetTriangleIndices() {
 	std::array<int, 48> result{
 		0, 1, 2,//front
@@ -110,6 +116,18 @@ std::array<int, 48> OBB::GetTriangleIndices() {
 	return result;
 }
 
+std::array<int, 24> OBB::GetQuadIndices() {
+	std::array<int, 24> result{
+		0, 1, 2, 3, //front
+		4, 5, 6, 7, //back
+		3, 2, 5, 4,//right
+		6, 1, 0, 7,//left
+		0, 3, 4, 7,//top
+		2, 1, 6, 5,//bottom
+	};
+	return result;
+}
+
 Matrix4 OBB::GetCenterMatrix() const { return center; }
 
 Vector3 OBB::GetSize() const { return halfSize * 2.f; }
@@ -118,7 +136,7 @@ Vector3 OBB::GetCenter() const {
 	return GetPos(GetCenterMatrix());
 }
 
-AABB OBB::ToAABB() const{
+AABB OBB::ToAABB() const {
 	AABB aabb;
 	for (auto v : GetVertices()) {
 		aabb.Expand(v);
