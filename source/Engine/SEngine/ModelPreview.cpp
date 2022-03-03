@@ -132,10 +132,15 @@ void ModelPreview::SelectPrefab(std::shared_ptr<GameObject> prefab) {
 
 	Editor::Get()->selectedObject = prefab;
 	currentPrefab = prefab;
-	currentGameObject = Object::Instantiate(prefab);
-	if (currentGameObject->transform() != nullptr) {
-		currentGameObject->transform()->SetPosition(Vector3_zero);
-		currentGameObject->transform()->SetRotation(Quaternion::identity);
+	if (Editor::Get()->IsInEditMode()) {
+		currentGameObject = prefab;
+	}
+	else {
+		currentGameObject = Object::Instantiate(prefab);
+		if (currentGameObject->transform() != nullptr) {
+			currentGameObject->transform()->SetPosition(Vector3_zero);
+			currentGameObject->transform()->SetRotation(Quaternion::identity);
+		}
 	}
 	/*for (int i = currentGameObject->components.size() - 1; i >= 0; i--) {
 		auto c = currentGameObject->components[i];

@@ -10,6 +10,7 @@ public:
 	virtual void OnDisable() override;
 
 	REFLECT_BEGIN(ModelPreview);
+	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_END();
 
 private:
