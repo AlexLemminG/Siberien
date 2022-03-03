@@ -103,7 +103,7 @@ class DebugDrawer :public duDebugDraw {
 };
 
 
-void NavMesh::BuildForSingleOBB(const OBB& obb){
+void NavMesh::BuildForSingleOBB(const OBB& obb) {
 	int vertexIndexOffset = vertices.size();
 	auto boxVertices = obb.GetVertices();
 	ResizeVectorNoInit(vertices, vertexIndexOffset + boxVertices.size());
@@ -545,7 +545,7 @@ bool NavMesh::Init() {
 
 	debugDrawer = new DebugDrawer();
 
-	onSceneLoadedHandler = SceneManager::onBeforeSceneEnabled.Subscribe([this]() {LoadOrBuild(); });//TODO clear on scene disabled
+	onSceneLoadedHandler = SceneManager::onBeforeSceneEnabled.Subscribe([this]() {Load(); });//TODO clear on scene disabled
 
 	return true;
 }
