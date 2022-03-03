@@ -26,8 +26,8 @@ public:
 class MeshAnimation : public Object {
 public:
 	std::string name;
-	AnimationTransform GetTransform(const std::string& bone, float t);
-	AnimationTransform GetTransform(int channelIdx, float t);
+	bool GetTransform(AnimationTransform& outTransform, const std::string& bone, float t);
+	void GetTransform(AnimationTransform& outTransform, int channelIdx, float t);
 
 	int GetBoneIdx(const std::string& bone);
 
@@ -58,6 +58,7 @@ public:
 	void ResetTime() { currentTime = 0.f; }
 
 	REFLECT_BEGIN(Animator);
+	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_VAR(speed);
 	REFLECT_VAR(defaultAnimation);
 	REFLECT_END();

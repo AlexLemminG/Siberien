@@ -15,6 +15,23 @@
 #include <filesystem>
 
 
+class ModelAnimationsMeta {
+public:
+	bool deformBonesOnly = true;
+
+	REFLECT_BEGIN(ModelAnimationsMeta);
+	REFLECT_VAR(deformBonesOnly);
+	REFLECT_END()
+};
+class ModelMeta {
+public:
+	ModelAnimationsMeta animations{};
+
+	REFLECT_BEGIN(ModelMeta);
+	REFLECT_VAR(animations);
+	REFLECT_END()
+};
+
 class LibraryMeshMeta :public Object {
 public:
 	long lastAssetChangeTime;
@@ -275,7 +292,7 @@ public:
 		return true;
 	}
 
-	bool ConvertBlendToGlb(AssetDatabase_BinaryImporterHandle& databaseHandle, const std::string& inFile, const std::string& outFile) {
+	bool ConvertBlendToGlb(AssetDatabase_BinaryImporterHandle& databaseHandle, const std::string& inFile, const std::string& outFile, const ModelMeta& meta) {
 		DWORD blenderLocSize = 255;
 		char blenderLoc[255];
 		memset(blenderLoc, 0, 255);
@@ -309,6 +326,11 @@ public:
 		paramsBuffer.push_back(0);
 		LPSTR ccc = &paramsBuffer[0];
 
+		SetEnvironmentVariableA("SENGINE_BLENDER_EXPORTER_ANIMATIONS_DEFORM_BONES_ONLY", meta.animations.deformBonesOnly ? "True" : "False");
+		SetEnvironmentVariableA("SENGINE_BLENDER_EXPORTER_OUTPUT_FILE", outFile.c_str());
+
+		//TODO delete outFile before converting
+
 		auto result = CreateProcessA(
 			blenderApp.c_str()
 			, &paramsBuffer[0]
@@ -320,7 +342,6 @@ public:
 			, NULL
 			, &si
 			, &pi);
-
 
 		if (!result)
 		{
@@ -381,6 +402,16 @@ public:
 			auto meshAsset = DeserializeFromBuffer(buffer);
 			return meshAsset;
 		}
+
+
+		std::unique_ptr<ryml::Tree> metaYamlTree;
+		databaseHandle.ReadMeta(metaYamlTree);
+		ModelMeta meta{};
+		if (metaYamlTree) {
+			SerializationContext c = SerializationContext(metaYamlTree->rootref());
+			::Deserialize(c, meta);
+		}
+
 		//TODO some pipelining for blender
 		auto originalAssetPath = databaseHandle.GetAssetPath();
 		bool isBlendFile = databaseHandle.GetFileExtension() == "blend";
@@ -389,7 +420,7 @@ public:
 			//TODO less hardcode
 			databaseHandle.EnsureForderForTempFileExists("blenderToGlb.glb");
 			std::string tempFile = databaseHandle.GetTempPathFromFileName("blenderToGlb.glb");
-			if (!ConvertBlendToGlb(databaseHandle, originalAssetPath, tempFile)) {
+			if (!ConvertBlendToGlb(databaseHandle, originalAssetPath, tempFile, meta)) {
 				return false;
 			}
 			originalAssetPath = tempFile;
