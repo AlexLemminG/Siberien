@@ -8,6 +8,7 @@ class Scene;
 // TODO custom allocator, to alloc each move every Component with same type to continuous array
 class SE_CPP_API Component : public Object {
 	friend class Scene;
+	friend class InspectorWindow;//HACK needed to set m_gameObject for prefabs(non instantiated)
 public:
 	virtual void Update() {}
 	virtual void FixedUpdate() {}

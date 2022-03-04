@@ -207,6 +207,9 @@ static void CallOnValidate(std::shared_ptr<Object> object) {
 			c->OnValidate();
 		}
 	}
+
+	// TODO rename method ?
+	Editor::Get()->onGameObjectEdited.Invoke(go);
 }
 static void CallOnDrawGizmos(std::shared_ptr<Object> object) {
 	auto go = GetGameObject(object);
@@ -282,7 +285,7 @@ public:
 					if (component) {
 						go = component->gameObject();
 					}
-					int idx = currentScene->GetInstantiatedPrefabIdx(go);
+					int idx = currentScene->GetInstantiatedPrefabIdx(go.get());
 					if (idx != -1) {
 						VarInfo real{ currentScene }; //TODO pray for it to not to be instantiated scene
 						real = real.Child("prefabInstances");
@@ -358,6 +361,85 @@ public:
 
 			CallOnValidate(rootObjToCallValidate);
 		}
+		void ResetValue(ReflectedTypeBase* type, void* val) {
+			//find and clear value from yaml
+			SerializationContext rootContext{ root };
+			SerializationContext context = rootContext;
+			for (auto& name : path) {
+				if (name.size() > 0 && name[0] >= '0' && name[1] <= '9') {
+					int idx = std::stoi(name);
+					for (int i = 0; i < idx; i++) {
+						context.Child(i);//creating empty children
+					}
+					context = context.Child(idx);
+				}
+				else {
+					context = context.Child(name);
+				}
+			}
+			if (path.size() == 0) {
+				context.ClearValue();
+			}
+			else {
+				context.Clear();
+			}
+			//auto childPos = context.GetYamlNode().parent().child_pos(context.GetYamlNode());
+			//context.GetYamlNode().parent().remove_child(childPos);
+
+			//find default value to put in 'val'
+			SerializationContext defaultContext;
+			auto prefab = Scene::Get()->GetSourcePrefab(GetGameObject(Editor::Get()->selectedObject).get());
+			int pathFirstIdx = 0;
+			std::shared_ptr<Object> clearedObj;
+			if (prefab != nullptr) {
+				auto rootComponent = std::dynamic_pointer_cast<Component>(rootObjToCallValidate);
+				auto rootGameObject = std::dynamic_pointer_cast<GameObject>(rootObjToCallValidate);
+				if (rootComponent) {
+					int idx = -1;
+					for (int i = 0; i < rootComponent->gameObject()->components.size(); i++) {
+						if (rootComponent->gameObject()->components[i] == rootComponent) {
+							idx = i;
+							break;
+						}
+					}
+					if (idx != -1) {
+						//TODO support overrides in prefab components list
+						clearedObj = prefab->components[idx];
+					}
+					else {
+						ASSERT(false);
+					}
+				}
+				else if (rootGameObject) {
+					clearedObj = rootGameObject;
+				}
+				else {
+					ASSERT(false);
+				}
+			}
+			else {
+				//TODO double check
+				std::string emptyContextYamlStr = rootObjToCallValidate->GetType()->GetName() + ": ~";
+				auto tree = ryml::parse(ryml::csubstr(emptyContextYamlStr.c_str(), emptyContextYamlStr.size()));
+				clearedObj = AssetDatabase::Get()->DeserializeFromYAML<Object>(tree);
+			}
+
+			if (!clearedObj) {
+				ASSERT(false);//TODO ue4 like ENSURE key
+			}
+			else {
+				//HACK dangaras
+				char* clearedVal = ((char*)clearedObj.get() + ((char*)val - (char*)rootObjToCallValidate.get()));
+
+				SerializationContext valContext{};
+				type->Serialize(valContext, clearedVal);
+				type->Deserialize(valContext, val);
+			}
+
+			Editor::SetDirty(rootObjToSave);
+
+			CallOnValidate(rootObjToCallValidate);
+		}
 	};
 
 	std::vector<bool> needToPopEditedVarStyle;
@@ -380,6 +462,8 @@ public:
 	//returns true if value changed
 	bool DrawInspector(char* object, std::string name, ReflectedTypeBase* type, VarInfo& varInfo, bool expanded = false) {
 		bool changed = false;
+		bool canReset = varInfo.rootObjToCallValidate->GetType()->GetName() != ::GetReflectedType<Transform>()->GetName(); //transform is kinda hacky
+		canReset &= varInfo.Exist();
 		if (expanded) {
 			ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		}
@@ -442,6 +526,7 @@ public:
 				varInfo.SetValue(v);
 				changed = true;
 			}
+
 			EndInspector(varInfo);
 		}
 		else if (type->GetName() == ::GetReflectedType<Vector4>()->GetName()) {
@@ -456,6 +541,7 @@ public:
 			EndInspector(varInfo);
 		}
 		else if (type->GetName() == ::GetReflectedType<Transform>()->GetName()) {
+			canReset = false;
 			Transform* transform = (Transform*)(object);
 			auto pos = transform->GetPosition();
 			auto euler = Mathf::RadToDeg(transform->GetEulerAngles());
@@ -491,6 +577,19 @@ public:
 		}
 		else if (type->GetName() == ::GetReflectedType<GameObject>()->GetName()) {
 			GameObject* go = (GameObject*)(object);
+			auto prefab = Scene::Get()->GetSourcePrefab(go);
+			if (prefab) {
+				if (ImGui::Button("Open Prefab")) {
+					Editor::Get()->selectedObject = prefab;
+
+					//HACK honk honk, welcome to clown world
+					for (auto c : prefab->components) {
+						if (c->m_gameObject.lock() == nullptr) {
+							c->m_gameObject = prefab;
+						}
+					}
+				}
+			}
 			DrawInspector((char*)&go->tag, "tag", GetReflectedType<std::string>(), varInfo.Child("tag"));
 			for (auto c : go->components) {
 				if (c == nullptr) {
@@ -540,7 +639,17 @@ public:
 		else {
 			auto typeNonBase = dynamic_cast<ReflectedTypeNonTemplated*>(type);
 			if (typeNonBase) {
+				BeginInspector(varInfo);
 				if (ImGui::TreeNode(name.c_str())) {
+					//TODO remove duplication with code below
+					if (ImGui::BeginPopupContextItem(name.c_str(), ImGuiPopupFlags_MouseButtonRight)) {
+						std::string str = "reset " + name;
+						if (canReset && ImGui::Selectable(str.c_str())) {
+							varInfo.ResetValue(type, object);
+						}
+						ImGui::EndPopup();
+					}
+
 					for (const auto& field : typeNonBase->fields) {
 						char* var = object + field.offset;
 						auto childInfo = varInfo.Child(field.name);
@@ -548,11 +657,20 @@ public:
 					}
 					ImGui::TreePop();
 				}
+				EndInspector(varInfo);
+				canReset = false;
 			}
 			else {
 				//TODO error
 				ImGui::LabelText(name.c_str(), "???");
 			}
+		}
+		if (canReset && ImGui::BeginPopupContextItem(name.c_str(), ImGuiPopupFlags_MouseButtonRight)) {
+			std::string str = "reset " + name;
+			if (ImGui::Selectable(str.c_str())) {
+				varInfo.ResetValue(type, object);
+			}
+			ImGui::EndPopup();
 		}
 		return changed;
 	}

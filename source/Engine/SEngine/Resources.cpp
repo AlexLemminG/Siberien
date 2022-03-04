@@ -278,13 +278,14 @@ void AssetDatabase::LoadAsset(const std::string& path) {
 
 
 std::shared_ptr<Object> AssetDatabase::DeserializeFromYAMLInternal(const ryml::NodeRef& node) {
+	//TODO optimize
 	std::string path = "***temp_asset***";
 	std::vector<std::shared_ptr<Object>> loadedObjects;
 	currentAssetLoadingPath = path;
 	//TODO less code duplication
 	//TODO less hacking
 	if (!node.empty()) {
-		for (const auto& kv : node) {
+		auto process = [&](const ryml::NodeRef& kv) {
 			auto key = kv.key();
 			PathDescriptor descriptor{ std::string(key.str, key.len) };
 			std::string type = descriptor.assetPath;
@@ -310,6 +311,10 @@ std::shared_ptr<Object> AssetDatabase::DeserializeFromYAMLInternal(const ryml::N
 			else {
 				//TODO error
 			}
+		};
+		process(node);//WARN dangaras
+		for (const auto& kv : node) {
+			process(kv);
 		}
 	}
 

@@ -114,6 +114,23 @@ std::vector<std::string> SerializationContext::GetChildrenNames() const {
 	return children;
 }
 
+void SerializationContext::Clear() {
+	GetYamlNode().tree()->remove(GetYamlNode().id());
+}
+
+void SerializationContext::ClearValue() {
+	GetYamlNode().clear_children();
+	if (GetYamlNode().has_key()) {
+		auto key = GetYamlNode().key();
+		GetYamlNode().clear_val();
+		GetYamlNode().set_key(key);
+	}
+	else {
+		GetYamlNode().clear_val();
+	}
+	GetYamlNode().set_type(GetYamlNode().type() & (ryml::KEY) | ryml::VAL);//empty val
+}
+
 void SerializationContext::AddAllowedToSerializeObject(std::shared_ptr<Object> obj) {
 	rootObjectsAllowedToSerialize->push_back(obj);
 }

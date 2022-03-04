@@ -3,6 +3,7 @@
 #include "Serialization.h"
 #include "GameObject.h"
 #include "Prefab.h"
+#include "GameEvents.h"
 
 class GameObject;
 
@@ -29,12 +30,14 @@ public:
 	const std::vector<std::shared_ptr<GameObject>>& GetAllGameObjects() { return gameObjects; }
 
 	bool IsInEditMode()const { return isEditMode; }
-	int GetInstantiatedPrefabIdx(std::shared_ptr<GameObject> gameObject)const;//TODO strange name
+	int GetInstantiatedPrefabIdx(const GameObject* gameObject) const;//TODO less strange name
+	std::shared_ptr<GameObject> GetSourcePrefab(const GameObject* instantiatedGameObject) const;//TODO are you sure this stuff belongs here?
 
 	std::shared_ptr<SphericalHarmonics> sphericalHarmonics; //TODO not here
 private:
-	std::vector<std::shared_ptr<GameObject>> gameObjects; //all gameObjects
-	std::vector<PrefabInstance> prefabInstances; //+ some extra game objects which are not included in 'all'
+	std::vector<std::shared_ptr<GameObject>> gameObjects; // all gameObjects
+
+	std::vector<PrefabInstance> prefabInstances; //+ some extra game objects which are not included in 'all' before init
 
 	std::vector<std::shared_ptr<GameObject>> activeGameObjects;
 
@@ -60,6 +63,10 @@ private:
 
 	void ProcessAddedGameObjects();
 	void ProcessRemovedGameObjects();
+
+	void HandleGameObjectEdited(std::shared_ptr<GameObject>& go);
+
+	GameEventHandle gameObjectEditedHandle;
 
 	REFLECT_BEGIN(Scene);
 	REFLECT_VAR(prefabInstances);

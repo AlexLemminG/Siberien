@@ -75,3 +75,5 @@ void Editor::SaveAllDirty() {
 	}
 	dirtyObjs.clear();
 }
+
+

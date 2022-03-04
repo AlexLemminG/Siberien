@@ -6,6 +6,7 @@
 #include "SceneManager.h"
 #include "Common.h"
 #include "Prefab.h"
+#include "Editor.h"
 #include "Resources.h"
 
 DECLARE_TEXT_ASSET(Scene);
@@ -23,6 +24,7 @@ void Scene::Init(bool isEditMode) {
 		for (int i = gameObjects.size() - prefabInstances.size(); i < gameObjects.size(); i++) {
 			instantiatedPrefabs.push_back(gameObjects[i]);
 		}
+		gameObjectEditedHandle = Editor::Get()->onGameObjectEdited.Subscribe([this](auto go) {HandleGameObjectEdited(go); });
 	}
 
 	//TOOD remove nullptr components here ?
@@ -107,20 +109,48 @@ void Scene::ProcessRemovedGameObjects() {
 	removedGameObjects.clear();
 }
 
-int Scene::GetInstantiatedPrefabIdx(std::shared_ptr<GameObject> gameObject)const {
+void Scene::HandleGameObjectEdited(std::shared_ptr<GameObject>& go) {
+	for (int i = 0; i < prefabInstances.size(); i++) {
+		const auto& pi = prefabInstances[i];
+		if (pi.GetOriginalPrefab() == go) {
+			//reloading instantiated gameobject
+			auto newIp = pi.CreateGameObject();
+			RemoveGameObject(instantiatedPrefabs[i]);
+			AddGameObject(newIp);
+			instantiatedPrefabs[i] = newIp;
+		}
+	}
+}
+
+int Scene::GetInstantiatedPrefabIdx(const GameObject* gameObject)const {
 	if (!isEditMode) {
 		return -1;
 	}
 	for (int i = 0; i < instantiatedPrefabs.size(); i++) {
-		if (instantiatedPrefabs[i] == gameObject) {
+		if (instantiatedPrefabs[i].get() == gameObject) {
 			return i;
 		}
 	}
 	return -1;
 }
 
+//TODO less strange name
+
+std::shared_ptr<GameObject> Scene::GetSourcePrefab(const GameObject* instantiatedGameObject) const {
+	int idx = GetInstantiatedPrefabIdx(instantiatedGameObject);
+	if (idx == -1) {
+		return nullptr;
+	}
+	//TODO assert
+	return prefabInstances[idx].GetOriginalPrefab();
+}
+
 void Scene::Term() {
 	OPTICK_EVENT();
+
+	if (isEditMode) {
+		Editor::Get()->onGameObjectEdited.Unsubscribe(gameObjectEditedHandle);
+	}
 	for (auto& go : gameObjects) {
 		DeactivateGameObjectInternal(go);
 	}

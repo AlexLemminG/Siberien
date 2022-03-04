@@ -92,6 +92,9 @@ public:
 
 	std::vector<std::string> GetChildrenNames()const;//TODO optimize
 
+	void Clear(); //removes node completely
+	void ClearValue(); //leaves key and sets value to empty
+
 	void operator<<(const int& t);
 	void operator>>(int& t) const;
 

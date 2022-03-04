@@ -30,7 +30,7 @@ void DuplicateSerialized(const ryml::NodeRef& from, ryml::NodeRef& to) {
 	}
 }
 
-std::shared_ptr<GameObject> PrefabInstance::CreateGameObject() const{
+std::shared_ptr<GameObject> PrefabInstance::CreateGameObject() const {
 	auto serNode = AssetDatabase::Get()->GetOriginalSerializedAsset(AssetDatabase::Get()->GetAssetPath(prefab));
 	if (serNode == nullptr) {
 		ASSERT(false);
@@ -45,6 +45,8 @@ std::shared_ptr<GameObject> PrefabInstance::CreateGameObject() const{
 	auto gameObject = std::dynamic_pointer_cast<GameObject>(Object::Instantiate(c));
 	return gameObject;
 }
+
+std::shared_ptr<GameObject> PrefabInstance::GetOriginalPrefab() const { return prefab; }
 
 
 //TODO move
