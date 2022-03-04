@@ -197,6 +197,9 @@
     <ClCompile Include="SEngine\Editor.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="SEngine\ParentedTransform.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SEngine\Animation.h">
@@ -365,6 +368,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="SEngine\Editor.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="SEngine\ParentedTransform.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

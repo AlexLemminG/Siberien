@@ -180,6 +180,7 @@
     <ClCompile Include="SEngine\Navigation.cpp" />
     <ClCompile Include="SEngine\NavMeshAgent.cpp" />
     <ClCompile Include="SEngine\Object.cpp" />
+    <ClCompile Include="SEngine\ParentedTransform.cpp" />
     <ClCompile Include="SEngine\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugNoLibs|x64'">Create</PrecompiledHeader>
     </ClCompile>
@@ -244,6 +245,7 @@
     <ClInclude Include="SEngine\Navigation.h" />
     <ClInclude Include="SEngine\NavMeshAgent.h" />
     <ClInclude Include="SEngine\Object.h" />
+    <ClInclude Include="SEngine\ParentedTransform.h" />
     <ClInclude Include="SEngine\Physics.h" />
     <ClInclude Include="SEngine\PhysicsSystem.h" />
     <ClInclude Include="SEngine\pch.h" />

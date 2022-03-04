@@ -40,6 +40,7 @@
 #include "dear-imgui/imgui_impl_sdl.h"
 
 DBG_VAR_BOOL(dbg_debugShadows, "Debug Shadows", false);
+DBG_VAR_BOOL(dbg_drawBones, "Draw Bones", false);
 
 SDL_Window* Render::window = nullptr;
 
@@ -922,6 +923,12 @@ bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, co
 
 	if (renderer->bonesFinalMatrices.size() != 0) {
 		bgfx::setTransform(&renderer->bonesFinalMatrices[0], renderer->bonesFinalMatrices.size());
+
+		if (dbg_drawBones) {
+			for (const auto& bone : renderer->bonesWorldMatrices) {
+				Dbg::Draw(bone);
+			}
+		}
 	}
 	else {
 		bgfx::setTransform(&matrix);

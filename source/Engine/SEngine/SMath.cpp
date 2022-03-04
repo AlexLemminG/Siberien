@@ -49,6 +49,56 @@ OBB AABB::ToOBB() const {
 	return OBB(matr, GetSize());
 }
 
+void DeserializeMatrix4(const SerializationContext& context, Matrix4& dst) {
+	if (context.IsSequence()) {
+		dst = Matrix4(0.f);
+		for (int i = 0; i < 16; i++) {
+			auto child = context.Child(i);
+			if (!child.IsDefined()) {
+				break;
+			}
+			child >> dst(i);
+		}
+	}
+	else {
+		Vector3 pos = Vector3_zero;
+		Vector3 euler = Vector3_zero;
+		Vector3 scale = Vector3_one;
+		::Deserialize(context.Child("pos"), pos);
+		::Deserialize(context.Child("euler"), euler);
+		::Deserialize(context.Child("scale"), scale);
+		dst = Matrix4::Transform(pos, Quaternion::FromEulerAngles(Mathf::DegToRad(euler)).ToMatrix(), scale);
+	}
+}
+
+void SerializeMatrix4(SerializationContext& context, const Matrix4& src) {
+
+	Vector3 pos = GetPos(src);
+	Vector3 euler = Mathf::RadToDeg(GetRot(src).ToEulerAngles());
+	Vector3 scale = ::GetScale(src);
+
+	Matrix4 transform = Matrix4::Transform(pos, Quaternion::FromEulerAngles(Mathf::DegToRad(euler)).ToMatrix(), scale);
+	bool isTransform = true;
+
+	for (int i = 0; i < src.kElements; i++) {
+		if (Mathf::Abs(transform[i] - src[i]) > 0.0001f) {
+			isTransform = false;
+			break;
+		}
+	}
+
+	if (isTransform) {
+		::Serialize(context.Child("pos"), pos);
+		::Serialize(context.Child("euler"), euler);
+		::Serialize(context.Child("scale"), scale);
+	}
+	else {
+		for (int i = 0; i < src.kElements; i++) {
+			::Serialize(context.Child(i), src[i]);
+		}
+	}
+}
+
 //TODO static func of namespace
 bool IsOverlapping(const Sphere& sphere, Ray ray) {
 	auto delta = sphere.pos - ray.origin;//TODO project on plane func

@@ -489,6 +489,9 @@ inline void DeserializeVector4(const SerializationContext& context, Vector4& dst
 	context.Child(3) >> dst.w;
 }
 
+void DeserializeMatrix4(const SerializationContext& context, Matrix4& dst);
+void SerializeMatrix4(SerializationContext& context, const Matrix4& src);
+
 class Frustum {
 public:
 	void SetFromViewProjection(const Matrix4& viewProjection);
@@ -506,4 +509,5 @@ bool IsOverlapping(const Sphere& sphere, Ray ray);
 
 REFLECT_CUSTOM_EXT(Vector3, SerializeVector, DeserializeVector);
 REFLECT_CUSTOM_EXT(Vector4, SerializeVector4, DeserializeVector4);
+REFLECT_CUSTOM_EXT(Matrix4, SerializeMatrix4, DeserializeMatrix4);
 REFLECT_CUSTOM_EXT(Color, Color::Serialize, Color::Deserialize);

@@ -5,6 +5,7 @@
 class GameObject;
 class Scene;
 
+// TODO custom allocator, to alloc each move every Component with same type to continuous array
 class SE_CPP_API Component : public Object {
 	friend class Scene;
 public:
