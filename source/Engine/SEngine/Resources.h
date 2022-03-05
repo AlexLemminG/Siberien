@@ -45,8 +45,9 @@ public:
 	bool ReadFromLibraryFile(const std::string& id, std::vector<uint8_t>& buffer);
 	std::string GetToolPath(std::string toolName) const;
 
-	void GetLastModificationTime(const std::string& assetPath, long& assetModificationTime, long& metaModificationTime) const;
-	void GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) const;
+	void GetLastModificationTime(const std::string& assetPath, uint64_t& assetModificationTime, uint64_t& metaModificationTime) const;
+	void GetLastModificationTime(uint64_t& assetModificationTime, uint64_t& metaModificationTime) const;
+	uint64_t GetLastModificationTime(const std::string& assetPath) const;
 
 	std::string GetAssetPath() const;
 	std::string GetAssetFileName() const;
@@ -197,6 +198,7 @@ private:
 		PathDescriptor descriptor;
 	};
 
+	uint64_t GetLastModificationTime(const std::string& assetPath);
 	std::shared_ptr<Object> GetLoaded(const PathDescriptor& path, ReflectedTypeBase* type);
 	void LoadAsset(const std::string& path);
 	std::string GetFileExtension(std::string path);
@@ -206,6 +208,7 @@ private:
 	std::shared_ptr<AssetImporter>& GetAssetImporter(const std::string& type);
 
 	std::unordered_map<std::string, Asset> assets;
+	std::unordered_map<std::string, uint64_t> fileModificationDates;
 	std::unordered_map<std::shared_ptr<Object>, std::string> objectPaths;
 
 	std::string currentAssetLoadingPath;

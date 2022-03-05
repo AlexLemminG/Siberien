@@ -34,8 +34,8 @@ public:
 
 class LibraryMeshMeta :public Object {
 public:
-	long lastAssetChangeTime;
-	long lastMetaChangeTime;
+	uint64_t lastAssetChangeTime;
+	uint64_t lastMetaChangeTime;
 	int importerVersion;
 	REFLECT_BEGIN(LibraryMeshMeta);
 	REFLECT_VAR(lastAssetChangeTime);

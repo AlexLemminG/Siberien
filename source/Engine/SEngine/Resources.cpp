@@ -66,6 +66,7 @@ void AssetDatabase::UnloadAll() {
 	OPTICK_EVENT();
 	onBeforeUnloaded.Invoke();
 	assets.clear();
+	fileModificationDates.clear();
 	objectPaths.clear();
 	onAfterUnloaded.Invoke();
 }
@@ -331,31 +332,36 @@ std::shared_ptr<Object> AssetDatabase::DeserializeFromYAMLInternal(const ryml::N
 	return main;
 }
 
-void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(const std::string& assetPath, long& assetModificationTime, long& metaModificationTime) const {
-	struct stat result;
-	const auto fullPathAsset = assetPath;
-
-	if (stat(fullPathAsset.c_str(), &result) == 0)
+uint64_t AssetDatabase::GetLastModificationTime(const std::string& assetPath) {
+	auto it = fileModificationDates.find(assetPath);
+	if (it != fileModificationDates.end()) {
+		return it->second;
+	}
+	//PERF this is slow, since we need to open files multiple times (first to get modification date and then to actually open)
+	struct stat s;
+	uint64_t result;
+	if (stat(assetPath.c_str(), &s) == 0)
 	{
-		assetModificationTime = result.st_mtime;
+		result = s.st_mtime;
 	}
 	else {
-		assetModificationTime = 0;
+		result = 0;
 	}
+	fileModificationDates[assetPath] = result;
+	return result;
+}
 
-	auto fullPathMeta = fullPathAsset + ".meta";
+uint64_t AssetDatabase_BinaryImporterHandle::GetLastModificationTime(const std::string& assetPath) const {
+	return database->GetLastModificationTime(assetPath);
+}
 
-	if (stat(fullPathMeta.c_str(), &result) == 0)
-	{
-		metaModificationTime = result.st_mtime;
-	}
-	else {
-		metaModificationTime = 0;
-	}
+void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(const std::string& assetPath, uint64_t& assetModificationTime, uint64_t& metaModificationTime) const {
+	assetModificationTime = database->GetLastModificationTime(assetPath);
+	metaModificationTime = database->GetLastModificationTime(assetPath + ".meta");
 }
 
 
-void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(long& assetModificationTime, long& metaModificationTime) const {
+void AssetDatabase_BinaryImporterHandle::GetLastModificationTime(uint64_t& assetModificationTime, uint64_t& metaModificationTime) const {
 	//TODO naming conventions what is assetPath
 	return GetLastModificationTime(database->assetsRootFolder + assetPath, assetModificationTime, metaModificationTime);
 }

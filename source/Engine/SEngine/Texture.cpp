@@ -42,8 +42,8 @@ public:
 class TextureLibraryMeta :public Object {
 public:
 	int importerVersion = 0;
-	long changeDate = 0;
-	long metaChangeDate = 0;
+	uint64_t changeDate = 0;
+	uint64_t metaChangeDate = 0;
 	REFLECT_BEGIN(TextureLibraryMeta);
 	REFLECT_VAR(importerVersion);
 	REFLECT_VAR(changeDate);

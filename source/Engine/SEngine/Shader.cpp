@@ -12,13 +12,13 @@ static constexpr int importerVersion = 5;
 class AssetWithModificationDate {
 public:
 	std::string assetPath;
-	long modificationDate;
+	uint64_t modificationDate;
 
 	AssetWithModificationDate() :assetPath(""), modificationDate(0) {
 
 	}
 
-	AssetWithModificationDate(const std::string& assetPath, long modificationDate) :assetPath(assetPath), modificationDate(modificationDate) {
+	AssetWithModificationDate(const std::string& assetPath, uint64_t modificationDate) :assetPath(assetPath), modificationDate(modificationDate) {
 	}
 
 	REFLECT_BEGIN(AssetWithModificationDate);
@@ -128,14 +128,13 @@ class BasicShaderAssetImporter : public AssetImporter {
 			ShaderLibraryMeta meta;
 			SerializationContext c = SerializationContext(metaYaml->rootref());
 			::Deserialize(c, meta);
-			long lastFileChange;
-			long lastMetaChange;
+			uint64_t lastFileChange;
 			if (meta.importerVersion != importerVersion) {
 				needRebuild = true;
 			}
 			else {
 				for (auto& record : meta.modificationDates) {
-					databaseHandle.GetLastModificationTime(record.assetPath, lastFileChange, lastMetaChange);
+					uint64_t lastFileChange = databaseHandle.GetLastModificationTime(record.assetPath);
 					if (lastFileChange != record.modificationDate && lastFileChange != 0) {
 						needRebuild = true;
 						break;
@@ -245,9 +244,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 		ShaderLibraryMeta expectedMeta;
 		expectedMeta.importerVersion = importerVersion;
 		for (auto& file : files) {
-			long lastModificationDate;
-			long lastMetaModificationDate;
-			databaseHandle.GetLastModificationTime(file, lastModificationDate, lastMetaModificationDate);
+			uint64_t lastModificationDate = databaseHandle.GetLastModificationTime(file);
 			expectedMeta.modificationDates.push_back(AssetWithModificationDate(file, lastModificationDate));
 		}
 

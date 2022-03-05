@@ -817,7 +817,8 @@ void NavMesh::RecreateCrowd() {
 	auto prevCrowd = m_crowd;
 
 	m_crowd = dtAllocCrowd();
-	m_crowd->init(1024, 10.f, m_navMesh);//TODO params
+	//TODO dynamic max agents count
+	m_crowd->init(64, 10.f, m_navMesh);//TODO params
 
 
 	if (prevCrowd) {
