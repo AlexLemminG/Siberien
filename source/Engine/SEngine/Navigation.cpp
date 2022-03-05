@@ -519,6 +519,12 @@ void NavMesh::Build() {
 	aabb = AABB();
 
 	for (auto go : Scene::Get()->GetAllGameObjects()) {
+		auto rigidBody = go->GetComponent<RigidBody>();
+		if (rigidBody) {
+			if (!rigidBody->isStatic) {
+				continue;
+			}
+		}
 		// PERF use findObjectsOfType
 		auto meshCollider = go->GetComponent<MeshCollider>();
 		if (meshCollider != nullptr && meshCollider->mesh != nullptr) {

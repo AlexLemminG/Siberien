@@ -57,6 +57,7 @@ const SerializationContext SerializationContext::Child(const std::string& name) 
 }
 
 SerializationContext SerializationContext::Child(const std::string& name) {
+	//TODO create only when value set (not when non const child is acquired)
 	ryml::NodeType_e type = GetYamlNode().type();
 	type = (ryml::NodeType_e)(type & (-1 ^ ryml::VAL) | ryml::MAP);
 	GetYamlNode().set_type(type);

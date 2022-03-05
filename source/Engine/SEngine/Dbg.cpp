@@ -116,7 +116,7 @@ void Dbg::DrawAllGizmos(void* ddeVoid, float alphaMultiplier) {
 	}
 	dde.setColor(Colors::white.ToIntARGB());
 
-	dde.setWireframe(true);
+	dde.setWireframe(false);
 	for (const auto& point : points) {
 		Color color = point.color;
 		color.a *= alphaMultiplier;

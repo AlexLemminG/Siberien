@@ -106,14 +106,26 @@ public:
 	static float Max(float a, float b) {
 		return a > b ? a : b;
 	}
+	static float Max(float a, float b, float c) {
+		return Max(a, Max(b, c));
+	}
 	static float Min(float a, float b) {
 		return a < b ? a : b;
+	}
+	static float Min(float a, float b, float c) {
+		return Min(a, Min(b, c));
 	}
 	static int Max(int a, int b) {
 		return a > b ? a : b;
 	}
+	static int Max(int a, int b, int c) {
+		return Max(a, Max(b, c));
+	}
 	static int Min(int a, int b) {
 		return a < b ? a : b;
+	}
+	static int Min(int a, int b, int c) {
+		return Min(a, Min(b, c));
 	}
 	static float Clamp(float f, float a, float b) {
 		return f > b ? b : (f < a ? a : f);
