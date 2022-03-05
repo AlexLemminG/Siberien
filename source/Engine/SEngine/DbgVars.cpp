@@ -89,7 +89,7 @@ void DbgVarsSystem::Update() {
 
 	for (auto var : GetBoolVars()) {
 		changed |= *var->val != var->prevVal;
-		var->prevVal = var->val;
+		var->prevVal = *var->val;
 	}
 
 	if (changed) {
