@@ -14,9 +14,11 @@ public:
 
 	std::shared_ptr<btTriangleIndexVertexArray> indexVertexArray;
 	std::shared_ptr<Mesh> mesh;
+	bool isConvex = false;
 private:
 	REFLECT_BEGIN(MeshCollider, Collider);
 	REFLECT_VAR(mesh);//TODO read from mesh renderer if not specified
+	REFLECT_VAR(isConvex);
 	REFLECT_END();
 };
 

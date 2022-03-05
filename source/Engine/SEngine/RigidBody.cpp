@@ -11,6 +11,7 @@
 #include "Camera.h"
 #include "MeshRenderer.h"
 #include "Editor.h"
+#include "Dbg.h"
 
 DECLARE_TEXT_ASSET(RigidBody);
 
@@ -83,7 +84,9 @@ void RigidBody::Update() {
 	if (isEditMode) {
 		auto trans = transform->GetMatrix();
 		SetScale(trans, Vector3_one);//TODO optimize
-		pBody->setWorldTransform(btConvert(trans));
+		auto scale = transform->GetScale();
+		btTransform offset = btTransform(btMatrix3x3::getIdentity(), btConvert(centerOfMass * scale));
+		pBody->setWorldTransform(btConvert(trans) * offset);
 		return;
 	}
 	if (isStatic) {
@@ -126,7 +129,8 @@ void RigidBody::OnDrawGizmos()
 	if (pBody == nullptr || PhysicsSystem::Get()->dynamicsWorld == nullptr) {
 		return;
 	}
-	PhysicsSystem::Get()->dynamicsWorld->debugDrawObject(pBody->getWorldTransform(), pBody->getCollisionShape(), btVector3(1, 1, 1));
+	PhysicsSystem::Get()->dynamicsWorld->debugDrawObject(pBody->getWorldTransform(), pBody->getCollisionShape(), btVector3(0.4f, 1.f, 0.4f));
+	Dbg::Draw(btConvert(pBody->getWorldTransform()));
 }
 
 Vector3 RigidBody::GetLinearVelocity() const { return btConvert(pBody->getLinearVelocity()); }
