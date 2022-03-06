@@ -2,6 +2,7 @@
 
 #include "Common.h"
 
+#include "SMath.h"
 #include "yaml-cpp/yaml.h"
 #include "ryml.hpp"
 #include "Resources.h"
@@ -126,6 +127,54 @@ const ryml::NodeRef AssetDatabase::GetOriginalSerializedAsset(const std::shared_
 	return ryml::NodeRef();//TODO error
 }
 
+std::string AssetDatabase::AddObjectToAsset(const std::string& path, const std::shared_ptr<Object>& object) {
+	//TODO nullcheck
+	auto& asset = assets[path];
+	const std::string& typeName = object->GetType()->GetName();
+	bool useTypeNameAsId = true;
+	for (auto a : asset.objects) {
+		if (a.id == typeName) {
+			useTypeNameAsId = false;
+			break;
+		}
+	}
+	if (useTypeNameAsId) {
+		AddObjectToAsset(path, typeName, object);
+		return typeName;
+	}
+
+	int intId = 0;
+
+	for (auto a : asset.objects) {
+		char* pEnd = nullptr;
+		int i = strtol(a.id.c_str(), &pEnd, 10);
+		if (!*pEnd) {
+			intId = Mathf::Max(intId, i + 1);
+		}
+	}
+	std::string id = std::to_string(intId);
+	AddObjectToAsset(path, id, object);
+	return id;
+}
+
+std::string AssetDatabase::RemoveObjectFromAsset(const std::shared_ptr<Object>& object) {
+	auto desc = AssetDatabase::PathDescriptor(GetAssetUID(object));
+	if (!desc.assetId.empty()) {
+		auto& asset = assets[desc.assetPath];
+		asset.Remove(object);
+	}
+	objectPaths.erase(object);
+	return desc.assetId;
+}
+
+void AssetDatabase::AddObjectToAsset(const std::string& path, const std::string& id, const std::shared_ptr<Object>& object) {
+	//TODO nullcheck
+	//TODO auto mark asset dirty in public method
+	auto& asset = assets[path];
+	asset.Add(id, object);//TODO assert does not already exist
+	objectPaths[object] = AssetDatabase::PathDescriptor(path, id).ToFullPath();
+}
+
 void AssetDatabase_TextImporterHandle::RequestObjectPtr(void* dest, const std::string& uid) {
 	auto descriptor = AssetDatabase::PathDescriptor(uid);
 	if (descriptor.assetPath.size() == 0) {
@@ -215,9 +264,7 @@ void AssetDatabase::ProcessLoadingQueue() {
 
 								if (object != nullptr) {
 									loadedObjects.push_back(object);
-									auto& asset = assets[path];
-									asset.Add(id, object);
-									objectPaths[object] = AssetDatabase::PathDescriptor(path, id).ToFullPath();
+									AddObjectToAsset(path, id, object);
 								}
 								else {
 									//TODO LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
@@ -290,7 +337,7 @@ std::shared_ptr<Object> AssetDatabase::DeserializeFromYAMLInternal(const ryml::N
 			auto key = kv.key();
 			PathDescriptor descriptor{ std::string(key.str, key.len) };
 			std::string type = descriptor.assetPath;
-			std::string id = descriptor.assetId.size() > 0 ? descriptor.assetId : descriptor.assetPath;
+			std::string id = descriptor.assetId.size() > 0 ? descriptor.assetId : descriptor.assetPath;//TODO why descriptor.assetPath as id ?
 
 			auto node = kv;
 
@@ -301,9 +348,7 @@ std::shared_ptr<Object> AssetDatabase::DeserializeFromYAMLInternal(const ryml::N
 
 				if (object != nullptr) {
 					loadedObjects.push_back(object);
-					auto& asset = assets[path];
-					asset.Add(id, object);
-					objectPaths[object] = AssetDatabase::PathDescriptor(path, id).ToFullPath();//TODO delete
+					AddObjectToAsset(path, id, object);
 				}
 				else {
 					//TODO LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());

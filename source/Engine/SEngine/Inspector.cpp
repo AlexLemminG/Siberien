@@ -27,6 +27,7 @@
 #include "Editor.h"
 #include "dear-imgui/widgets/gizmo.h"
 #include "DbgVars.h"
+#include "BoxCollider.h"
 
 DBG_VAR_BOOL(dbg_showInspector, "Inspector", false);
 
@@ -338,12 +339,13 @@ public:
 		void SetValue(const T* t) {
 			SetValue(GetReflectedType(t), (void*)t);
 		}
-		void SetValue(ReflectedTypeBase* type, void* val) {
+		void SetValue(ReflectedTypeBase* type, const void* val) {
 			if (root == nullptr) {
 				return;
 			}
 			SerializationContext rootContext{ root };
 			SerializationContext context = rootContext;
+			//TODO for prefabs we need to also change or reload overrides
 			for (auto& name : path) {
 				if (name.size() > 0 && name[0] >= '0' && name[1] <= '9') {
 					int idx = std::stoi(name);
@@ -464,6 +466,7 @@ public:
 		bool changed = false;
 		bool canReset = varInfo.rootObjToCallValidate->GetType()->GetName() != ::GetReflectedType<Transform>()->GetName(); //transform is kinda hacky
 		canReset &= varInfo.Exist();
+		canReset &= !name.empty();
 		if (expanded) {
 			ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 		}
@@ -611,6 +614,63 @@ public:
 					ImGui::PopID();
 				}
 			}
+			if (!prefab) {
+				if (ImGui::Button("Add Component")) {
+					// goes to next AddComponent popup
+				}
+				{
+					ReflectedTypeBase* componentType = nullptr;
+					if (ImGui::BeginPopupContextItem("AddComponent", ImGuiPopupFlags_MouseButtonLeft)) {
+						for (auto type : GetSerialiationInfoStorage().GetAllTypes()) {
+							auto subtype = type;
+							while (subtype != nullptr) {
+								if (subtype->GetName() == GetReflectedType<Component>()->GetName()) {
+									if (ImGui::Selectable(type->GetName().c_str())) {
+										componentType = type;
+									}
+									break;
+								}
+								subtype = subtype->GetParentType();
+							}
+						}
+						ImGui::EndPopup();
+					}
+					if (componentType != nullptr) {
+						//TODO choose type
+						//TODO extract method
+						int newIdx = go->components.size();
+						auto newComponentStr = componentType->GetName() + ": ~";
+						auto newComponentYaml = ryml::parse(c4::to_csubstr(newComponentStr.c_str()));
+						SerializationContext componentContext{ newComponentYaml };
+						auto newComponent = std::dynamic_pointer_cast<Component>(Object::Instantiate(componentContext));
+						//TODO assert not null
+						newComponent->m_gameObject = go->transform()->gameObject();//HACK wowoowowoowowo
+						//TODO init newComponent
+						//TODO separate AddComponent/RemoveComponent method
+						auto allGameObject = Scene::Get()->GetAllGameObjects();
+						bool isInScene = std::find(allGameObject.begin(), allGameObject.end(), go->transform()->gameObject()) != allGameObject.end();
+						if (isInScene) {
+							Scene::Get()->RemoveGameObjectImmediately(go->transform()->gameObject());
+						}
+						go->components.push_back(newComponent);
+						std::string assetPath = AssetDatabase::Get()->GetAssetPath(go->transform()->gameObject());
+						if (!assetPath.empty()) {
+							std::string id = AssetDatabase::Get()->AddObjectToAsset(assetPath, newComponent);
+							std::string idRef = "$" + id;
+							varInfo.Child("components").Child(newIdx).SetValue(&idRef);
+							auto nodeRef = AssetDatabase::Get()->GetOriginalSerializedAsset(newComponent->gameObject());
+							SerializationContext context{ nodeRef.parent() };//HACK som much hacks in one place wow
+							context.Child(newComponent->GetType()->GetName() + "$" + id);//HACK child creates node with no val right now, but it may change in the future
+							VarInfo childInfo{ newComponent };
+							childInfo.ResetValue(newComponent->GetType(), newComponent.get());
+
+						}
+						if (isInScene) {
+							Scene::Get()->AddGameObject(go->transform()->gameObject());
+						}
+					}
+				}
+			}
 		}
 		else if (dynamic_cast<ReflectedTypeStdVectorBase*>(type)) {
 			auto vecType = dynamic_cast<ReflectedTypeStdVectorBase*>(type);
@@ -646,6 +706,56 @@ public:
 						std::string str = "reset " + name;
 						if (canReset && ImGui::Selectable(str.c_str())) {
 							varInfo.ResetValue(type, object);
+						}
+						auto go = GetGameObject(varInfo.rootObjToCallValidate);
+						auto prefab = Scene::Get()->GetSourcePrefab(go.get());
+						if (!prefab) {
+							//it is not prefab, so we can remove this component
+							//TODO check if it is a component!!!!
+							//TODO dont remove transform
+							//TODO RemoveComponent method
+							std::string str = "remove " + name;
+							if (ImGui::Selectable(str.c_str())) {
+								int idx = -1;
+								for (int i = 0; i < go->components.size(); i++) {
+									if (varInfo.rootObjToCallValidate == go->components[i]) {
+										idx = i;
+										break;
+									}
+								}
+								if (idx != -1) {
+									auto component = go->components[idx];
+									auto allGameObject = Scene::Get()->GetAllGameObjects();
+									bool isInScene = std::find(allGameObject.begin(), allGameObject.end(), go) != allGameObject.end();
+									if (isInScene) {
+										Scene::Get()->RemoveGameObjectImmediately(go);
+									}
+									//TODO disable component first
+									std::string oldId = AssetDatabase::Get()->RemoveObjectFromAsset(component);
+									go->components.erase(go->components.begin() + idx);
+
+									std::string assetPath = AssetDatabase::Get()->GetAssetPath(go->transform()->gameObject());
+									if (!assetPath.empty()) {
+										VarInfo c{ go };
+										SerializationContext context{ AssetDatabase::Get()->GetOriginalSerializedAsset(go) };
+										context.Child("components").Child(idx).Clear();
+										SerializationContext contextRoot{ AssetDatabase::Get()->GetOriginalSerializedAsset(go).parent() };
+										contextRoot.Child(component->GetType()->GetName() + "$" + oldId).Clear();
+										if (oldId == component->GetType()->GetName()) {
+											contextRoot.Child(component->GetType()->GetName()).Clear();
+										}
+									}
+
+									if (isInScene) {
+										Scene::Get()->AddGameObject(go);
+									}
+									Editor::SetDirty(go);
+									CallOnValidate(go);
+								}
+								else {
+									ASSERT(false);
+								}
+							}
 						}
 						ImGui::EndPopup();
 					}
@@ -797,14 +907,16 @@ public:
 
 		//TODO refactor
 		if (editorCamera != nullptr && Input::GetKeyDown(SDL_SCANCODE_F) && Editor::Get()->selectedObject != nullptr) {
-			auto selectedGameObject = std::dynamic_pointer_cast<GameObject>(Editor::Get()->selectedObject);
-			Matrix4 mat = Matrix4::Identity();
-			auto rot = editorCamera->gameObject()->transform()->GetRotation();
-			auto aabb = GetSphere(selectedGameObject);
-			SetPos(mat, aabb.pos);
-			auto offset = Matrix4::Transform(rot * Vector3_forward * aabb.radius * (-2.f), rot.ToMatrix(), Vector3_one);
-			mat = mat * offset;
-			editorCamera->gameObject()->transform()->SetMatrix(mat);
+			auto selectedGameObject = GetGameObject(Editor::Get()->selectedObject);
+			if (selectedGameObject) {
+				Matrix4 mat = Matrix4::Identity();
+				auto rot = editorCamera->gameObject()->transform()->GetRotation();
+				auto aabb = GetSphere(selectedGameObject);
+				SetPos(mat, aabb.pos);
+				auto offset = Matrix4::Transform(rot * Vector3_forward * aabb.radius * (-2.f), rot.ToMatrix(), Vector3_one);
+				mat = mat * offset;
+				editorCamera->gameObject()->transform()->SetMatrix(mat);
+			}
 		}
 
 		auto mousePos = Input::GetMousePosition();

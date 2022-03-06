@@ -80,6 +80,11 @@ void Scene::FixedUpdate() {
 	currentFixedUpdateIdx = -1;
 }
 
+void Scene::RemoveGameObjectImmediately(std::shared_ptr<GameObject> gameObject) {
+	RemoveGameObject(gameObject);
+	ProcessRemovedGameObjects();
+}
+
 void Scene::RemoveGameObject(std::shared_ptr<GameObject> gameObject) {
 	removedGameObjects.push_back(gameObject);
 }

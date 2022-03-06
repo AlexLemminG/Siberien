@@ -31,6 +31,9 @@ public:
 	bool HasFlag(FLAGS flag) const { return flags & flag; }
 	FLAGS GetFlags() const { return flags; }
 	void SetFlags(const FLAGS flags) { this->flags = flags; }
+
+	static ReflectedTypeBase* TypeOf();
+	virtual	ReflectedTypeBase* GetType() const override;
 private:
 	FLAGS flags = (FLAGS)0;
 	std::weak_ptr<GameObject> m_gameObject;

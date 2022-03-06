@@ -23,50 +23,30 @@ public:
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) = 0; // return false on error and true otherwise (even if no assets are imported)
 };
 
-class SerializationInfoStorage {
+class SE_CPP_API SerializationInfoStorage {
 public:
 	//TODO name to importer
 	//TODO overriding existing importer checks
-	inline void Register(std::string typeName, std::shared_ptr<TextAssetImporter> importer) {
-		textImporters[typeName] = importer;
-	}
-	inline void Register(std::string typeName, std::shared_ptr<AssetImporter> importer) {
-		binaryImporters[typeName] = importer;
-	}
+	void Register(ReflectedTypeBase* type, std::shared_ptr<TextAssetImporter> importer);
+	void Register(ReflectedTypeBase* type, std::shared_ptr<AssetImporter> importer);
 
-	inline void UnregisterText(std::string typeName) {
-		textImporters[typeName] = nullptr;
-	}
-	inline void UnregisterBinary(std::string typeName) {
-		binaryImporters[typeName] = nullptr;
-	}
+	void UnregisterText(std::string typeName);
+	void UnregisterBinary(std::string typeName);
 
-	inline void Register(const SerializationInfoStorage& otherStorage) {
-		for (auto& i : otherStorage.textImporters) {
-			Register(i.first, i.second);
-		}
-		for (auto& i : otherStorage.binaryImporters) {
-			Register(i.first, i.second);
-		}
-	}
+	void Register(const SerializationInfoStorage& otherStorage);
 
-	inline void Unregister(const SerializationInfoStorage& otherStorage) {
-		for (auto& i : otherStorage.textImporters) {
-			UnregisterText(i.first);
-		}
-		for (auto& i : otherStorage.binaryImporters) {
-			UnregisterBinary(i.first);
-		}
-	}
-
-	inline std::shared_ptr<TextAssetImporter>& GetTextImporter(const std::string typeName) {
+	void Unregister(const SerializationInfoStorage& otherStorage);
+	const std::vector<ReflectedTypeBase*>& GetAllTypes()const { return allTypes; }
+	std::shared_ptr<TextAssetImporter>& GetTextImporter(const std::string typeName) {
 		return textImporters[typeName];
 	}
-	inline std::shared_ptr<AssetImporter>& GetBinaryImporter(const std::string typeName) {
+	std::shared_ptr<AssetImporter>& GetBinaryImporter(const std::string typeName) {
 		return binaryImporters[typeName];
 	}
 
 private:
+	std::unordered_map<std::string, ReflectedTypeBase*> types;
+	std::vector<ReflectedTypeBase*> allTypes;
 	std::unordered_map<std::string, std::shared_ptr<TextAssetImporter>> textImporters;
 	std::unordered_map<std::string, std::shared_ptr<AssetImporter>> binaryImporters;
 };
@@ -92,32 +72,32 @@ inline SerializationInfoStorage& GetSerialiationInfoStorage() {
 template <typename ImporterType>
 class TextAssetImporterRegistrator : public ImporterRegistratorBase {
 public:
-	TextAssetImporterRegistrator(std::string typeName) {
-		this->typeName = typeName;
+	TextAssetImporterRegistrator(ReflectedTypeBase* type) {
+		this->type = type;
 		GameLibraryStaticStorage::Get().importerRegistrators.push_back(this);//TODO remove ?
 	}
 
 	virtual void Register() override {
-		GetSerialiationInfoStorage().Register(typeName, std::make_shared<ImporterType>());
+		GetSerialiationInfoStorage().Register(type, std::make_shared<ImporterType>());
 	}
 
-	std::string typeName;
+	ReflectedTypeBase* type;
 };
 
 
 template <typename ImporterType>
 class BinaryAssetImporterRegistrator : public ImporterRegistratorBase {
 public:
-	BinaryAssetImporterRegistrator(std::string typeName) {
-		this->typeName = typeName;
+	BinaryAssetImporterRegistrator(ReflectedTypeBase* type) {
+		this->type = type;
 		GameLibraryStaticStorage::Get().importerRegistrators.push_back(this);//TODO remove ?
 	}
 
 	virtual void Register() override {
-		GetSerialiationInfoStorage().Register(typeName, std::make_shared<ImporterType>());
+		GetSerialiationInfoStorage().Register(type, std::make_shared<ImporterType>());
 	}
 
-	std::string typeName;
+	ReflectedTypeBase* type;
 };
 
 class SE_CPP_API SerializedObjectImporterBase : public TextAssetImporter {
@@ -138,8 +118,8 @@ private:
 };
 
 #define DECLARE_BINARY_ASSET(className, importerClassName) \
-static BinaryAssetImporterRegistrator<##importerClassName> BinaryAssetImporterRegistrator_##className{#className};
+static BinaryAssetImporterRegistrator<##importerClassName> BinaryAssetImporterRegistrator_##className{GetReflectedType<className>()};
 
 //TODO maybe DEFINE_... or REGISTER_...?
 #define DECLARE_TEXT_ASSET(className) \
-static TextAssetImporterRegistrator<SerializedObjectImporter<##className>> TextAssetImporterRegistrator_##className{#className};
+static TextAssetImporterRegistrator<SerializedObjectImporter<##className>> TextAssetImporterRegistrator_##className{GetReflectedType<className>()};

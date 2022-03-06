@@ -15,7 +15,23 @@ public:
 };
 DEFINE_LIBRARY(EngineLib);
 
+static bool alreadyEngineInitedOnce = false; //HACK to prevent engine from registering types multiple times (since it's the only thjing ::Init is doing right now
 bool GameLibrariesManager::Init() {
+
+	auto& thisStaticStorage = GameLibraryStaticStorage::Get();
+	{
+		auto engineLib = SEngine_CreateLibrary();
+		std::shared_ptr<GameLibrary> libPtr;
+		libPtr.reset(engineLib);
+		//if (!engineLib->Init(Engine::Get())) {
+		//	ASSERT(false);
+		//}
+		auto handle = LibraryHandle{};
+		handle.library = libPtr;
+		handle.name = "EngineLib";
+		handle.objectHandle = nullptr;
+		libraries.push_back(handle);
+	}
 
 	auto libNames = CfgGetNode("libraries");
 	for (auto node : libNames) {
@@ -42,48 +58,30 @@ bool GameLibrariesManager::Init() {
 			ASSERT(false);
 			continue;
 		}
-		std::shared_ptr<GameLibrary> libPtr;
-		libPtr.reset(lib);
-
 		auto handle = LibraryHandle{};
-		handle.library = libPtr;
+		handle.library.reset(lib);
 		handle.name = libName;
 		handle.objectHandle = objectHandle;
 
 		libraries.push_back(handle);
 	}
-
-
-	auto& thisStaticStorage = GameLibraryStaticStorage::Get();
-	{
-		auto engineLib = SEngine_CreateLibrary();
-		std::shared_ptr<GameLibrary> libPtr;
-		libPtr.reset(engineLib);
-		if (!engineLib->Init(Engine::Get())) {
-			ASSERT(false);
-		}
-		auto handle = LibraryHandle{};
-		handle.library = libPtr;
-		handle.name = "EngineLib";
-		handle.objectHandle = nullptr;
-		libraries.push_back(handle);
+	if (!alreadyEngineInitedOnce) {
+		libraries[0].library->Init(Engine::Get());
+		alreadyEngineInitedOnce = true;
 	}
+	for (int i = 1; i < libraries.size(); i++) {
+		auto& lib = libraries[i];
 
-	for (auto& lib : libraries) {
 		lib.library->Init(Engine::Get());
+		//TODO get static global storage for engine stuff
+		const auto& libStaticStorage = lib.library->GetStaticStorage();
+		auto& storage = libStaticStorage.serializationInfoStorage;
+		GetSerialiationInfoStorage().Register(storage);
 
-		//TODO more precise
-		if(lib.objectHandle != nullptr){
-			//TODO get static global storage for engine stuff
-			const auto& libStaticStorage = lib.library->GetStaticStorage();
-			auto& storage = libStaticStorage.serializationInfoStorage;
-			GetSerialiationInfoStorage().Register(storage);
-
-			auto& libSystems = libStaticStorage.systemRegistrators;
-			//TODO cleaner
-			for (auto s : libSystems) {
-				thisStaticStorage.systemRegistrators.push_back(s);
-			}
+		auto& libSystems = libStaticStorage.systemRegistrators;
+		//TODO cleaner
+		for (auto s : libSystems) {
+			thisStaticStorage.systemRegistrators.push_back(s);
 		}
 	}
 
@@ -91,13 +89,13 @@ bool GameLibrariesManager::Init() {
 }
 
 void GameLibrariesManager::Term() {
-	//TODO different oreder
-	for (auto& lib : libraries) {
+	auto& thisStaticStorage = GameLibraryStaticStorage::Get();
+	for (int i = libraries.size() - 1; i >= 0; i--) {
+		auto& lib = libraries[i];
 
-		//TODO more precise
-		if (lib.objectHandle != nullptr) {
-			auto& systems = lib.library->GetStaticStorage().systemRegistrators;
-			//TODO cleaner
+		auto& systems = lib.library->GetStaticStorage().systemRegistrators;
+		//TODO cleaner
+		if (i != 0) {
 			for (auto s : systems) {
 				auto& thisRegistrators = GameLibraryStaticStorage::Get().systemRegistrators;
 				thisRegistrators.erase(std::find(thisRegistrators.begin(), thisRegistrators.end(), s));
@@ -106,6 +104,11 @@ void GameLibrariesManager::Term() {
 			auto& storage = lib.library->GetStaticStorage().serializationInfoStorage;
 			GetSerialiationInfoStorage().Unregister(storage);
 		}
+		else {
+			//handling engineLib as 'special'
+			//TODO there should be no special case for engineLib
+			//thisStaticStorage = GameLibraryStaticStorage();//TODO is this legal ?
+		}
 		lib.library->Term();
 		ASSERT(lib.library.use_count() == 1);
 		lib.library = nullptr;
@@ -113,5 +116,6 @@ void GameLibrariesManager::Term() {
 			SDL_UnloadObject(lib.objectHandle);
 		}
 	}
+
 	libraries.clear();
 }

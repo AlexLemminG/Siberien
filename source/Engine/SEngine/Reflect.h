@@ -174,6 +174,8 @@ public:
 		return std::find(tags.begin(), tags.end(), tag) != tags.end();
 	}
 
+	ReflectedTypeBase* GetParentType() const { return __parentType__; }
+
 
 	std::vector<std::string> tags;//TODO make protected
 	std::vector<std::shared_ptr<Attribute>> attributes;
@@ -479,15 +481,16 @@ public:
 template<typename T>
 std::enable_if_t<!std::is_assignable<Component, T>::value, int>
 inline AddComponentTags(ReflectedTypeBase* type) {
-	return -1;
+	return 0;
 }
 
+//TODO maybe this should not be here (Component.h is included in Reflect.h is yikes
 template<typename T>
 std::enable_if_t<std::is_assignable<Component, T>::value, int>
 inline AddComponentTags(ReflectedTypeBase* type) {
 	if (typeid(&T::Update) != typeid(&Component::Update)) { type->tags.push_back("HasUpdate"); }
 	if (typeid(&T::FixedUpdate) != typeid(&Component::FixedUpdate)) { type->tags.push_back("HasFixedUpdate"); }
-	return -1;
+	return 1;
 }
 
 #define _REFLECT_BEGIN_NO_PARENT_(className) \
@@ -496,7 +499,9 @@ class Type : public ReflectedType<##className> { \
 	using TYPE = ##className; \
 	public:\
 	Type() : ReflectedType<##className>(#className) {\
-		AddComponentTags<##className>(this);
+	if(AddComponentTags<##className>(this) != 0){\
+		__parentType__ = GetReflectedType<Component>();\
+	}
 
 #define REFLECT_VAR(varName)\
 		fields.push_back(ReflectedField(GetReflectedType<decltype(varName)>(), #varName, offsetOf(&TYPE::varName))); \

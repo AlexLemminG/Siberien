@@ -119,17 +119,30 @@ public:
 	const std::shared_ptr<ryml::Tree> GetOriginalSerializedAsset(const std::string& assetPath);
 	const ryml::NodeRef GetOriginalSerializedAsset(const std::shared_ptr<Object>& obj);
 
+	std::string AddObjectToAsset(const std::string& path, const std::shared_ptr<Object>& object);//returns id
+	std::string RemoveObjectFromAsset(const std::shared_ptr<Object>& object);//returns old id
+
 	static AssetDatabase* Get();
 
 	GameEvent<> onBeforeUnloaded;
 	GameEvent<> onAfterUnloaded;
 private:
+	void AddObjectToAsset(const std::string& path, const std::string& id, const std::shared_ptr<Object>& object);
 	class Asset {
 	public:
 		std::shared_ptr<ryml::Tree> originalTree;
 
 		void Add(const std::string& id, std::shared_ptr<Object> object) {
 			objects.push_back(SingleObject{ object, id });
+		}
+		void Remove(const std::shared_ptr<Object>& object) {
+			for (int i = 0; i < objects.size(); i++) {
+				if (objects[i].obj == object) {
+					objects.erase(objects.begin() + i);
+					// TODO assert this was the only one
+					return;
+				}
+			}
 		}
 		std::shared_ptr<Object> GetMain() {
 			return objects.size() > 0 ? objects[0].obj : std::shared_ptr<Object>();

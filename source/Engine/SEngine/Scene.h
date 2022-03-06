@@ -21,6 +21,7 @@ public:
 
 	void AddGameObject(std::shared_ptr<GameObject> go);
 	void RemoveGameObject(std::shared_ptr<GameObject> go);
+	void RemoveGameObjectImmediately(std::shared_ptr<GameObject> go);
 
 	static std::shared_ptr<GameObject> FindGameObjectByTag(std::string tag);
 

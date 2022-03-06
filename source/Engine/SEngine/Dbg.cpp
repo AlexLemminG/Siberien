@@ -106,6 +106,8 @@ void Dbg::Term() {
 
 void Dbg::DrawAllGizmos(void* ddeVoid, float alphaMultiplier) {
 	bgfx_examples::DebugDrawEncoder& dde = *(bgfx_examples::DebugDrawEncoder*)ddeVoid;
+	dde.setWireframe(true);
+
 	for (const auto& ray : rays) {
 		Color color = ray.color;
 		color.a *= alphaMultiplier;
@@ -116,7 +118,6 @@ void Dbg::DrawAllGizmos(void* ddeVoid, float alphaMultiplier) {
 	}
 	dde.setColor(Colors::white.ToIntARGB());
 
-	dde.setWireframe(false);
 	for (const auto& point : points) {
 		Color color = point.color;
 		color.a *= alphaMultiplier;
