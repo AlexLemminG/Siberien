@@ -82,6 +82,20 @@ std::vector<std::string> AssetDatabase::GetAllAssetNames() {
 	return result;
 }
 
+std::vector<std::shared_ptr<Object>> AssetDatabase::LoadAll(const std::string& path) {
+	auto descriptor = PathDescriptor(path);
+	auto loaded = GetLoaded(descriptor, nullptr);
+	if (!loaded) {
+		//TODO don't try to load assset if previous attempt failed
+		LoadAsset(descriptor.assetPath);
+	}
+	std::vector<std::shared_ptr<Object>> result;
+	for (auto asset : assets[path].objects) {
+		result.push_back(asset.obj);
+	}
+	return result;
+}
+
 std::string AssetDatabase::GetAssetUID(std::shared_ptr<Object> obj) {
 	auto it = objectPaths.find(obj);
 	if (it != objectPaths.end()) {

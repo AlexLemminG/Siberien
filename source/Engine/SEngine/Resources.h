@@ -93,6 +93,8 @@ public:
 		return std::dynamic_pointer_cast<T>(loaded);
 	}
 
+	std::vector<std::shared_ptr<Object>> LoadAll(const std::string& path);
+
 	std::shared_ptr<Object> Load(const std::string& path) {
 		auto descriptor = PathDescriptor(path);
 		auto loaded = GetLoaded(descriptor, nullptr);

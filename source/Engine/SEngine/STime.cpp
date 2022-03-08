@@ -44,7 +44,6 @@ bool Time::Init() {
 	s_time = 0.f;
 	s_frameCount = 0;
 
-	//TODO inspector and OnValidate
 	s_maxDeltaTime = settings->maximumDeltaTime;
 	s_fixedDeltaTime = settings->fixedDeltaTime;
 	s_timeScale = settings->timeScale;
@@ -58,6 +57,10 @@ bool Time::Init() {
 void Time::Update() {
 	uint32_t currentTicks = SDL_GetTicks();
 	float ticksPerSecond = 1000.f;
+
+	s_maxDeltaTime = settings->maximumDeltaTime;
+	s_fixedDeltaTime = settings->fixedDeltaTime;
+	s_timeScale = settings->timeScale;
 
 	s_deltaTime = (currentTicks - m_prevTicks) / ticksPerSecond;
 
