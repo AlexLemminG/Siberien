@@ -92,6 +92,7 @@ void RigidBody::Update() {
 	if (isStatic) {
 		return;
 	}
+	//TODO test isKinematic (it seems to be broken)
 	if (isKinematic) {
 		auto trans = transform->GetMatrix();
 		SetScale(trans, Vector3_one);//TODO optimize

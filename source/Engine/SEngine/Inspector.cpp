@@ -31,6 +31,8 @@
 
 DBG_VAR_BOOL(dbg_showInspector, "Inspector", false);
 
+//TODO add to some header
+extern void DuplicateSerialized(const ryml::NodeRef& from, ryml::NodeRef& to);
 
 //TODO to utils
 Sphere GetSphere(std::shared_ptr<GameObject> go) {
@@ -561,6 +563,7 @@ public:
 					transform->SetEulerAngles(Mathf::DegToRad(euler));
 					transform->SetScale(scale);
 					CallOnValidate(varInfo.rootObjToCallValidate);
+					Editor::SetDirty(transform->gameObject()->transform());
 				}
 
 				ImGui::TreePop();
@@ -621,6 +624,7 @@ public:
 				{
 					ReflectedTypeBase* componentType = nullptr;
 					if (ImGui::BeginPopupContextItem("AddComponent", ImGuiPopupFlags_MouseButtonLeft)) {
+						//TODO sort types by name
 						for (auto type : GetSerialiationInfoStorage().GetAllTypes()) {
 							auto subtype = type;
 							while (subtype != nullptr) {
@@ -736,7 +740,6 @@ public:
 
 									std::string assetPath = AssetDatabase::Get()->GetAssetPath(go->transform()->gameObject());
 									if (!assetPath.empty()) {
-										VarInfo c{ go };
 										SerializationContext context{ AssetDatabase::Get()->GetOriginalSerializedAsset(go) };
 										context.Child("components").Child(idx).Clear();
 										SerializationContext contextRoot{ AssetDatabase::Get()->GetOriginalSerializedAsset(go).parent() };
@@ -826,7 +829,105 @@ public:
 			if (ImGui::Selectable(name.c_str(), Editor::Get()->selectedObject == gameObjects[i])) {
 				Editor::Get()->selectedObject = gameObjects[i];
 			}
+			std::string deleteGameObjectStr = "context " + name;
+			if (ImGui::BeginPopupContextItem(deleteGameObjectStr.c_str(), ImGuiPopupFlags_MouseButtonRight)) {
+				std::string str = "delete " + name;
+				if (ImGui::Selectable(str.c_str())) {
+					//TODO separate delete method
+					auto go = gameObjects[i];
+					int prefabIdx = Scene::Get()->GetInstantiatedPrefabIdx(go.get());
+					if (prefabIdx != -1) {
+						VarInfo varInfo{ Scene::Get() }; //TODO pray for it to not to be instantiated scene
+						varInfo = varInfo.Child("prefabInstances");
+						varInfo = varInfo.Child(prefabIdx);
+
+						SerializationContext c{ varInfo.yaml };
+						c.Clear();
+						auto& instances = Scene::Get()->prefabInstances;
+						Scene::Get()->prefabInstances.erase(Scene::Get()->prefabInstances.begin() + prefabIdx);
+						Scene::Get()->instantiatedPrefabs.erase(Scene::Get()->instantiatedPrefabs.begin() + prefabIdx);
+					}
+					else {
+						//TODO remove gameObject data from scene (not just from list)
+
+						VarInfo varInfo{ Scene::Get() }; //TODO pray for it to not to be instantiated scene
+						varInfo = varInfo.Child("gameObjects");
+						varInfo = varInfo.Child(i);
+						SerializationContext c{ varInfo.yaml };
+						c.Clear();
+
+						std::vector<std::shared_ptr<Object>> objects;
+						objects.push_back(go);
+						for (auto c : go->components) {
+							objects.push_back(c);
+						}
+						for (auto o : objects) {
+							if (AssetDatabase::Get()->GetAssetPath(o) == AssetDatabase::Get()->GetAssetPath(Scene::Get())) {
+								VarInfo varInfo{ Scene::Get() }; //TODO pray for it to not to be instantiated scene
+								SerializationContext c{ varInfo.root.tree()->rootref() };
+								auto id = AssetDatabase::Get()->RemoveObjectFromAsset(o);
+								c.Child(o->GetType()->GetName() + "$" + id).Clear();
+								if (id == o->GetType()->GetName()) {
+									c.Child(o->GetType()->GetName()).Clear();
+
+								}
+							}
+						}
+						//TODO clear references to that game object if it is in scene
+					}
+					Editor::SetDirty(Scene::Get());
+					Scene::Get()->RemoveGameObject(go);
+				}
+				ImGui::EndPopup();
+			}
 			ImGui::PopID();
+		}
+		if (ImGui::Button("new gameObject")) {
+			//falls to next context menu
+		}
+		if (ImGui::BeginPopupContextItem("new gameObject", ImGuiPopupFlags_MouseButtonLeft)) {
+			//TODO sort types by name
+			if (ImGui::Selectable("empty")) {
+				auto go = std::make_shared<GameObject>();
+				go->components.push_back(std::make_shared<Transform>());
+				auto goId = AssetDatabase::Get()->AddObjectToAsset(AssetDatabase::Get()->GetAssetPath(Scene::Get()), go);
+				auto transformId = AssetDatabase::Get()->AddObjectToAsset(AssetDatabase::Get()->GetAssetPath(Scene::Get()), go->transform());
+				VarInfo v{ Scene::Get() };
+
+				int gameObjectIndex = Scene::Get()->gameObjects.size() - Scene::Get()->instantiatedPrefabs.size();
+				auto goContext = Object::Serialize(go);
+				SerializationContext sceneContext{ v.yaml };
+				auto gameObjectsListContext = sceneContext.Child("gameObjects");
+				gameObjectsListContext.Child(gameObjectsListContext.Size()) << std::string("$" + goId);
+
+				SerializationContext sceneRoot{ sceneContext.GetYamlNode().tree()->rootref() };
+
+				goContext.Child("GameObject$0").Child("components").Child(0) << std::string("$" + transformId);
+
+				int tempCount = 0;
+				for (auto node : goContext.GetYamlNode().children()) {
+					auto newNode = sceneRoot.GetYamlNode().append_child();
+					DuplicateSerialized(node, newNode);
+					if (tempCount == 0) {
+						//gameobject
+						newNode.set_key_serialized(("GameObject$" + goId).c_str());
+					}
+					else if (tempCount == 1) {
+						//transform
+						newNode.set_key_serialized(("Transform$" + transformId).c_str());
+					}
+					else {
+						//alien
+						ASSERT(false);
+					}
+					tempCount++;
+				}
+
+				Scene::Get()->AddGameObject(go);
+				Editor::SetDirty(Scene::Get());
+			}
+			//TODO from prefab
+			ImGui::EndPopup();
 		}
 		ImGui::EndChild();
 	}

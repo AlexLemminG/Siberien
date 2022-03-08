@@ -10,7 +10,8 @@ class GameObject;
 class SphericalHarmonics;
 
 class SE_CPP_API Scene : public Object {
-	friend class Component;
+	friend class Component;//TODO why?
+	friend class InspectorWindow;
 public:
 	std::string name;
 

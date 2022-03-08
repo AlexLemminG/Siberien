@@ -43,7 +43,7 @@ public:
 	const Matrix4& GetMatrix()const { return matrix; }
 	void SetMatrix(const Matrix4& matrix);
 private:
-	Vector3 scale;
+	Vector3 scale = Vector3_one;
 	Matrix4 matrix = Matrix4::Identity();//TODO remove direct access to matrix for optimization
 
 public:
