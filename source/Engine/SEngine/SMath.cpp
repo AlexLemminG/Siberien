@@ -99,8 +99,7 @@ void SerializeMatrix4(SerializationContext& context, const Matrix4& src) {
 	}
 }
 
-//TODO static func of namespace
-bool IsOverlapping(const Sphere& sphere, Ray ray) {
+bool GeomUtils::IsOverlapping(const Sphere& sphere, const Ray& ray) {
 	auto delta = sphere.pos - ray.origin;//TODO project on plane func
 	float distance = (delta - Vector3::DotProduct(delta, ray.dir) * ray.dir).Length();
 	return distance <= sphere.radius;

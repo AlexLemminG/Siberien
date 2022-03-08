@@ -2,6 +2,7 @@
 
 #include <memory>
 #include "Defines.h"
+#include <string>
 
 class ReflectedTypeBase;
 class SerializationContext;
@@ -11,7 +12,7 @@ public:
 	Object();
 	virtual ~Object();
 
-	virtual void OnBeforeSerializeCallback(SerializationContext& context) const;;//TODO make non const
+	virtual void OnBeforeSerializeCallback(SerializationContext& context) const;//TODO make non const //why?
 	virtual void OnAfterDeserializeCallback(const SerializationContext& context);;
 
 	static ReflectedTypeBase* TypeOf();
@@ -23,6 +24,7 @@ public:
 	static std::shared_ptr<Object> Instantiate(SerializationContext& serializedOriginal);
 	static SerializationContext Serialize(std::shared_ptr<Object> original);
 
+	virtual std::string GetDbgName() const;
 
 	template<typename T>
 	static std::shared_ptr<T> Instantiate(std::shared_ptr<T> original) {

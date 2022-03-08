@@ -241,7 +241,7 @@ void PhysicsSystem::CalcMeshPhysicsDataFromBuffer(std::shared_ptr<Mesh> mesh) {
 }
 
 void PhysicsSystem::OnPhysicsTick(btDynamicsWorld* world, btScalar timeStep) {
-	//TODO update time
+	//TODO update time //what?
 	SystemsManager::Get()->FixedUpdate();
 	if (Scene::Get()) {
 		Scene::Get()->FixedUpdate();

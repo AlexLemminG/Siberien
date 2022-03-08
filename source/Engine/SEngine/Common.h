@@ -19,95 +19,95 @@ if(var) \
 {delete var; var = nullptr;}
 
 template<typename ... Args>
-std::string FormatString(const std::string & format, Args ... args)
+std::string FormatString(const std::string& format, Args ... args)
 {
-    int size_s = std::snprintf(nullptr, 0, format.c_str(), args ...) + 1; // Extra space for '\0'
-    if (size_s <= 0) { throw std::runtime_error("Error during formatting."); }
-    auto size = static_cast<size_t>(size_s);
-    auto buf = std::make_unique<char[]>(size);
-    std::snprintf(buf.get(), size, format.c_str(), args ...);
-    return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
+	int size_s = std::snprintf(nullptr, 0, format.c_str(), args ...) + 1; // Extra space for '\0'
+	if (size_s <= 0) { throw std::runtime_error("Error during formatting."); }
+	auto size = static_cast<size_t>(size_s);
+	auto buf = std::make_unique<char[]>(size);
+	std::snprintf(buf.get(), size, format.c_str(), args ...);
+	return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
 
 template<typename ... Args>
 void LogError(const std::string& format, Args ... args) {
-    std::cout << FormatString(format, args...) << std::endl;
+	std::cerr << FormatString(format, args...) << std::endl;
 }
 
 template<typename ... Args>
 void Log(const std::string& format, Args ... args) {
-    std::cout << FormatString(format, args...) << std::endl;
+	std::cout << FormatString(format, args...) << std::endl;
 }
 
 
 class BinaryBuffer {
 public:
-    BinaryBuffer() {}
-    BinaryBuffer(std::vector<uint8_t>&& readBuffer) : buffer(std::move(readBuffer)){}
+	BinaryBuffer() {}
+	BinaryBuffer(std::vector<uint8_t>&& readBuffer) : buffer(std::move(readBuffer)) {}
 
-    std::vector<uint8_t>&& ReleaseData() {
-        return std::move(buffer);
-    }
-    const std::vector<uint8_t>& GetData() const{
-        return buffer;
-    }
+	std::vector<uint8_t>&& ReleaseData() {
+		return std::move(buffer);
+	}
+	const std::vector<uint8_t>& GetData() const {
+		return buffer;
+	}
 
-    template<typename T>
-    void Read(T& val) {
-        memcpy(&val, &buffer[currentReadOffset], sizeof(T));
-        currentReadOffset += sizeof(T);
-    }
-    template<>
-    void Read<std::string>(std::string& val) {
-        int length;
-        Read(length);
-        if (length) {
-            val = std::string((char*)&buffer[currentReadOffset], length);
-        }
-        else {
-            val = "";
-        }
-        currentReadOffset += length;
-    }
-    template<typename T>
-    void Write(const T& val) {
-        auto offset = buffer.size();
-        buffer.resize(buffer.size() + sizeof(T));
-        memcpy(&buffer[offset], &val, sizeof(T));
-    }
+	template<typename T>
+	void Read(T& val) {
+		memcpy(&val, &buffer[currentReadOffset], sizeof(T));
+		currentReadOffset += sizeof(T);
+	}
+	template<>
+	void Read<std::string>(std::string& val) {
+		int length;
+		Read(length);
+		if (length) {
+			val = std::string((char*)&buffer[currentReadOffset], length);
+		}
+		else {
+			val = "";
+		}
+		currentReadOffset += length;
+	}
+	template<typename T>
+	void Write(const T& val) {
+		auto offset = buffer.size();
+		buffer.resize(buffer.size() + sizeof(T));
+		memcpy(&buffer[offset], &val, sizeof(T));
+	}
 
-    template<>
-    void Write<std::string>(const std::string& val) {
-        Write((int)val.size());
-        if (val.size()) {
-            Write((uint8_t*)&val[0], val.size());
-        }
-    }
+	template<>
+	void Write<std::string>(const std::string& val) {
+		Write((int)val.size());
+		if (val.size()) {
+			Write((uint8_t*)&val[0], val.size());
+		}
+	}
 
-    void Write(const uint8_t* buf, int size) {
-        auto offset = buffer.size();
-        buffer.resize(buffer.size() + size);
-        memcpy(&buffer[offset], buf, size);
-    }
-    void Read(uint8_t* buf, int size) {
-        memcpy(buf, &buffer[currentReadOffset], size);
-        currentReadOffset += size;
-    }
+	void Write(const uint8_t* buf, int size) {
+		auto offset = buffer.size();
+		buffer.resize(buffer.size() + size);
+		memcpy(&buffer[offset], buf, size);
+	}
+	void Read(uint8_t* buf, int size) {
+		memcpy(buf, &buffer[currentReadOffset], size);
+		currentReadOffset += size;
+	}
 private:
-    int currentReadOffset = 0;
-    std::vector<uint8_t> buffer;
+	int currentReadOffset = 0;
+	std::vector<uint8_t> buffer;
 };
 
 template<typename V>
 void ResizeVectorNoInit(V& v, size_t newSize)
 {
 #if SE_DEBUG
-    //fater in debug
-    v.resize(newSize);
+	//fater in debug
+	v.resize(newSize);
 #else
-    struct vt { typename V::value_type v; vt() {} };
-    static_assert(sizeof(vt[10]) == sizeof(typename V::value_type[10]), "alignment error");
-    typedef std::vector<vt, typename std::allocator_traits<typename V::allocator_type>::template rebind_alloc<vt>> V2;
-    reinterpret_cast<V2&>(v).resize(newSize);
+	struct vt { typename V::value_type v; vt() {} };
+	static_assert(sizeof(vt[10]) == sizeof(typename V::value_type[10]), "alignment error");
+	typedef std::vector<vt, typename std::allocator_traits<typename V::allocator_type>::template rebind_alloc<vt>> V2;
+	reinterpret_cast<V2&>(v).resize(newSize);
 #endif
 }

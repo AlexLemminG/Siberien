@@ -148,21 +148,20 @@ void Animator::OnEnable() {
 	meshRenderer = gameObject()->GetComponent<MeshRenderer>();
 	transform = gameObject()->transform();
 	if (meshRenderer == nullptr) {
+		SetFlags(Bits::SetMaskTrue(GetFlags(), FLAGS::IGNORE_UPDATE));
 		return;
 	}
 	auto mesh = meshRenderer->mesh;
 	if (!mesh) {
+		SetFlags(Bits::SetMaskTrue(GetFlags(), FLAGS::IGNORE_UPDATE));
 		return;
 	}
-
-	//TODO support disable in middle of enable
-	transform = gameObject()->transform();
+	SetFlags(Bits::SetMaskFalse(GetFlags(), FLAGS::IGNORE_UPDATE));
 
 	for (const auto& bone : mesh->bones) {
 		meshRenderer->bonesLocalMatrices[bone.idx] = bone.initialLocal;
 	}
 	UpdateWorldMatrices();
-
 
 	currentAnimation = defaultAnimation;
 }

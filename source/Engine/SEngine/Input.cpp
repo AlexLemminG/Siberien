@@ -3,30 +3,30 @@
 #include <SDL.h>
 #include <dear-imgui/imgui_impl_sdl.h>
 
-std::vector<bool> Input::justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-std::vector<bool> Input::pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-std::vector<bool> Input::justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-bool Input::quitPressed = false;
-Uint32 Input::mouseState = 0;
-Uint32 Input::prevMouseState = 0;
-Vector2 Input::mousePos = Vector2{ 0,0 };
-Vector2 Input::mouseDeltaPos = Vector2{ 0,0 };
-float Input::mouseScrollY = 0.f;
+static std::vector<bool> justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+static std::vector<bool> pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+static std::vector<bool> justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+static bool quitPressed = false;
+static Uint32 mouseState = 0;
+static Uint32 prevMouseState = 0;
+static Vector2 mousePos = Vector2{ 0,0 };
+static Vector2 mouseDeltaPos = Vector2{ 0,0 };
+static float mouseScrollY = 0.f;
 
 bool Input::Init() {
 	OPTICK_EVENT();
-	justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-	pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-	justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+	std::fill(justPressed.begin(), justPressed.end(), false);
+	std::fill(pressed.begin(), pressed.end(), false);
+	std::fill(justReleased.begin(), justReleased.end(), false);
 
 	return true;
 }
 
 void Input::Term() {
 	OPTICK_EVENT();
-	justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-	pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-	justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+	std::fill(justPressed.begin(), justPressed.end(), false);
+	std::fill(pressed.begin(), pressed.end(), false);
+	std::fill(justReleased.begin(), justReleased.end(), false);
 }
 
 void Input::Update() {
@@ -34,8 +34,8 @@ void Input::Update() {
 	mouseDeltaPos = Vector2{ 0,0 };
 
 	quitPressed = false;
-	justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
-	justReleased = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
+	std::fill(justPressed.begin(), justPressed.end(), false);
+	std::fill(justReleased.begin(), justReleased.end(), false);
 	mouseScrollY = 0.f;
 
 	SDL_Event e;
@@ -56,10 +56,9 @@ void Input::Update() {
 
 	}
 
+	//TODO is it possible to do same stuff using pollevents instead of checking every key every frame?
 	auto keyboardState = SDL_GetKeyboardState(NULL);
 	for (int iKey = 0; iKey < SDL_Scancode::SDL_NUM_SCANCODES; iKey++) {
-		justPressed[iKey] = false;
-		justReleased[iKey] = false;
 		if (keyboardState[iKey]) {
 			if (!pressed[iKey]) {
 				justPressed[iKey] = true;
@@ -110,7 +109,7 @@ bool Input::GetMouseButton(int button) {
 }
 
 float Input::GetMouseScrollY() {
-	return Input::mouseScrollY;
+	return mouseScrollY;
 }
 
 bool Input::GetMouseButtonDown(int button) {

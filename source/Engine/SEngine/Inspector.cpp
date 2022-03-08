@@ -94,7 +94,7 @@ static bool IsInScene(std::shared_ptr<GameObject> go) {
 }
 bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray, float& distance) {
 	float maxDistance = 100000.f;
-	if (!IsOverlapping(GetSphere(go), ray)) {
+	if (!GeomUtils::IsOverlapping(GetSphere(go), ray)) {
 		return false;
 	}
 	auto meshRenderer = go->GetComponent<MeshRenderer>();
@@ -140,7 +140,7 @@ bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray, float& distance) {
 	if (pointLight) {
 		auto center = pointLight->gameObject()->transform()->GetPosition();
 		auto radius = pointLight->radius;
-		if (IsOverlapping(Sphere(center, radius), ray)) {
+		if (GeomUtils::IsOverlapping(Sphere(center, radius), ray)) {
 			distance = Vector3::DotProduct(center - ray.origin, ray.dir);
 			if (distance > 0) {
 				return true;
@@ -152,7 +152,7 @@ bool RaycastExact(std::shared_ptr<GameObject> go, Ray ray, float& distance) {
 	if (spotLight) {
 		auto center = spotLight->gameObject()->transform()->GetPosition();
 		auto radius = spotLight->radius;
-		if (IsOverlapping(Sphere(center, radius), ray)) {
+		if (GeomUtils::IsOverlapping(Sphere(center, radius), ray)) {
 			distance = Vector3::DotProduct(center - ray.origin, ray.dir);
 			if (distance > 0) {
 				return true;
@@ -256,6 +256,7 @@ public:
 		return false;
 	}
 
+	//TODO try to merge code with SerializationContext
 	struct VarInfo {
 		ryml::NodeRef yaml = ryml::NodeRef();
 		ryml::NodeRef root = ryml::NodeRef();
@@ -563,7 +564,9 @@ public:
 					transform->SetEulerAngles(Mathf::DegToRad(euler));
 					transform->SetScale(scale);
 					CallOnValidate(varInfo.rootObjToCallValidate);
-					Editor::SetDirty(transform->gameObject()->transform());
+					if (!AssetDatabase::Get()->GetAssetPath(transform->gameObject()->transform()).empty()) {
+						Editor::SetDirty(transform->gameObject()->transform());
+					}
 				}
 
 				ImGui::TreePop();
@@ -848,8 +851,6 @@ public:
 						Scene::Get()->instantiatedPrefabs.erase(Scene::Get()->instantiatedPrefabs.begin() + prefabIdx);
 					}
 					else {
-						//TODO remove gameObject data from scene (not just from list)
-
 						VarInfo varInfo{ Scene::Get() }; //TODO pray for it to not to be instantiated scene
 						varInfo = varInfo.Child("gameObjects");
 						varInfo = varInfo.Child(i);

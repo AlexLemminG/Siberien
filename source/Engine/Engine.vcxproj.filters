@@ -146,7 +146,7 @@
     <ClCompile Include="SEngine\Texture.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="SEngine\Time.cpp">
+    <ClCompile Include="SEngine\STime.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="SEngine\Transform.cpp">

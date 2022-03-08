@@ -38,7 +38,7 @@ public:
 
 	static std::vector<PointLight*> pointLights;
 
-	float radius = 5.f;
+	float radius = 5.f;//TODO bool to calc radius automagicaly(true by default)
 	float innerRadius = 0.f;
 
 	REFLECT_BEGIN(PointLight, Light);

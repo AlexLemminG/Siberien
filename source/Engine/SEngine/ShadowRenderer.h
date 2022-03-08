@@ -5,6 +5,7 @@
 
 class Camera;
 class Light;
+class Render;
 class ShadowSettings;
 
 class ShadowRenderer {
@@ -14,7 +15,7 @@ public:
 	void Init();
 	void Term();
 
-	void Draw(Light* light, const Camera& camera);
+	void Draw(Render* render, Light* light, const Camera& camera);
 
 	void ApplyUniforms();
 private:

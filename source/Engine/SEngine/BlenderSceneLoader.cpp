@@ -13,7 +13,7 @@
 void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::string& baseAssetPath, const Matrix4& parentTransform) {
 
 	Matrix4 matrix = parentTransform * node.localTransformMatrix;
-	
+
 	if (node.mesh) {
 		auto meshName = node.mesh->name;
 		auto assetPath = baseAssetPath + "$" + meshName;
@@ -22,7 +22,7 @@ void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::s
 		auto mesh = AssetDatabase::Get()->Load<Mesh>(assetPath);
 		if (mesh && !isHidden) {
 			auto gameObject = std::make_shared<GameObject>();
-			gameObject->flags = Bits::SetMaskTrue(gameObject->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR);//TODO !SE_RETAIL
+			gameObject->flags = Bits::SetMaskTrue(gameObject->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR);
 
 			auto transform = std::make_shared<Transform>();
 			transform->SetMatrix(matrix);
@@ -74,7 +74,7 @@ void BlenderSceneLoader::OnEnable() {
 		return;
 	}
 	auto rootUid = AssetDatabase::Get()->GetAssetPath(scene);
-	
+
 	AddToNodes(scene->rootNode, rootUid, Matrix4::Identity());
 }
 

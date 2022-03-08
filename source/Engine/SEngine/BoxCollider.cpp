@@ -30,6 +30,7 @@ std::shared_ptr<btCollisionShape> BoxCollider::CreateShape() {
 	transform.setIdentity();
 	transform.setOrigin(btConvert(realCenter));
 
+	//TODO try to remove boxShape
 	boxShape.reset(new btBoxShape(btConvert(realSize / 2.f)));
 	compound->addChildShape(transform, boxShape.get());
 	return compound;
@@ -50,7 +51,7 @@ std::shared_ptr<btCollisionShape> SphereCollider::CreateShape() {
 	transform.setIdentity();
 	transform.setOrigin(btConvert(realCenter));
 
-	//TODO move random somewhere else
+	//TODO try to remove sphereShape
 	sphereShape.reset(new btSphereShape(realRadius));
 	compound->addChildShape(transform, sphereShape.get());
 	return compound;
@@ -73,7 +74,7 @@ std::shared_ptr<btCollisionShape> CapsuleCollider::CreateShape() {
 	transform.setIdentity();
 	transform.setOrigin(btConvert(realCenter));
 
-	//TODO move random somewhere else
+	//TODO try to remove capsuleShape
 	capsuleShape.reset(new btCapsuleShape(realRadius, realHeight));
 	compound->addChildShape(transform, capsuleShape.get());
 	return compound;

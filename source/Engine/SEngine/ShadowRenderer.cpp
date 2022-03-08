@@ -475,13 +475,12 @@ void ShadowRenderer::Term() {
 float m_shadowMapMtx[ShadowMapRenderTargets::Count][16];
 static int m_numSplits = 1;
 const uint8_t maxNumSplits = 4;
-void ShadowRenderer::Draw(Light* light, const Camera& camera)
+void ShadowRenderer::Draw(Render* render, Light* light, const Camera& camera)
 {
 	//TODO set correct clear flags/colors to remove shadows out of shadow frustum
 	//TODO try to rotate dir light for better coverage
 	OPTICK_EVENT();
 
-	auto render = Graphics::Get()->render;
 	if (!light->drawShadows) {
 		bgfx::setUniform(render->GetOrCreateVectorUniform("u_params0"), &Vector4(1, 1, 0, 0));
 		return;
@@ -1151,7 +1150,7 @@ void ShadowRenderer::Draw(Light* light, const Camera& camera)
 			virtualCamera.projectionMatrix = Matrix4(lightProj[ii]);
 			virtualCamera.OnBeforeRender();
 			//virtualCamera.OnBeforeRender();
-			Graphics::Get()->render->DrawAll(viewId, virtualCamera, shadowCasterMaterial, &MeshRenderer::enabledShadowCasters);
+			render->DrawAll(viewId, virtualCamera, shadowCasterMaterial, &MeshRenderer::enabledShadowCasters);
 		}
 
 
@@ -1289,7 +1288,7 @@ void ShadowRenderer::Draw(Light* light, const Camera& camera)
 	}
 
 	static std::string shadowmapMtxNames[]{ "u_shadowMapMtx0","u_shadowMapMtx1","u_shadowMapMtx2","u_shadowMapMtx3" };
-	auto& matrixUniforms = Graphics::Get()->render->matrixUniforms;
+	auto& matrixUniforms = render->matrixUniforms;
 	for (int i = 0; i < _countof(m_shadowMapMtx); i++) {
 		const std::string& name = shadowmapMtxNames[i];
 		auto it = matrixUniforms.find(name);
@@ -1305,7 +1304,7 @@ void ShadowRenderer::Draw(Light* light, const Camera& camera)
 	}
 	static std::string shadowmapNames[]{ "s_shadowMap0","s_shadowMap1","s_shadowMap2","s_shadowMap3" };
 
-	auto& textureUniforms = Graphics::Get()->render->textureUniforms;
+	auto& textureUniforms = render->textureUniforms;
 
 	for (uint8_t ii = 0; ii < ShadowMapRenderTargets::Count; ++ii)
 	{
@@ -1336,8 +1335,6 @@ void ShadowRenderer::ApplyUniforms() {
 	if (!renderedPrevFrame) {
 		return;
 	}
-	auto render = Graphics::Get()->render;
-
 
 	bgfx::setUniform(u_csmFarDistances, &s_uniforms.m_csmFarDistances);
 

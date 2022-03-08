@@ -207,7 +207,7 @@
     <ClCompile Include="SEngine\System.cpp" />
     <ClCompile Include="SEngine\Test.cpp" />
     <ClCompile Include="SEngine\Texture.cpp" />
-    <ClCompile Include="SEngine\Time.cpp" />
+    <ClCompile Include="SEngine\STime.cpp" />
     <ClCompile Include="SEngine\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>

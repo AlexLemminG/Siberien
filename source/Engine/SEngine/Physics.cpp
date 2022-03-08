@@ -73,7 +73,7 @@ std::vector<RigidBody*> Physics::OverlapSphere(const Vector3& pos, float radius,
 	cb.m_collisionFilterMask = layerMask;
 	PhysicsSystem::Get()->dynamicsWorld->contactTest(&ghost, cb);
 
-	//TODO may contain doubles 
+	//TODO may contain doubles //does it?
 
 	for (auto o : cb.objects) {
 		auto* rb = o;

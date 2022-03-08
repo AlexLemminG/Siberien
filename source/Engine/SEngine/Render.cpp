@@ -57,13 +57,7 @@ constexpr bgfx::ViewId kRenderPassFree = 16;
 
 static int GetMsaaOffset() {
 	int msaa = CfgGetInt("msaa"); // TODO move to some RenderSettings class and load it as ordinary asset
-	//TODO mathf func
-	int offset = 0;
-	while (msaa > 0) {
-		offset++;
-		msaa /= 2;
-	}
-	return Mathf::Clamp(offset - 1, 0, 4);
+	return Mathf::Clamp(Mathf::Log2Floor(msaa), 0, 4);
 }
 
 bool Render::IsFullScreen() {
@@ -176,7 +170,7 @@ void Render::PrepareLights(const Camera& camera) {
 			continue;
 		}
 		hasDirLights = true;
-		shadowRenderer->Draw(light, camera);
+		shadowRenderer->Draw(this, light, camera);
 		auto dir = Vector4(light->gameObject()->transform()->GetForward(), 0.f);
 		//TODO Color to Vector4 func
 		auto color = Vector4(light->color.r, light->color.g, light->color.b, 0.f) * light->intensity;
@@ -377,6 +371,8 @@ bool Render::Init()
 	databaseAfterUnloadedHandle = AssetDatabase::Get()->onAfterUnloaded.Subscribe([this]() {LoadAssets(); });
 	databaseBeforeUnloadedHandle = AssetDatabase::Get()->onBeforeUnloaded.Subscribe([this]() {UnloadAssets(); });
 
+	Graphics::SetRenderPtr(this);
+
 	return true;
 }
 
@@ -417,13 +413,14 @@ void Render::Draw(SystemsManager& systems)
 	SDL_GetWindowSize(window, &width, &height);
 
 	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenBuffer) || !bgfx::isValid(m_fullScreenBuffer2)) {
-		auto msaaOffset = GetMsaaOffset();
 		prevWidth = width;
 		prevHeight = height;
 		auto flags = BGFX_RESET_NONE | BGFX_RESET_MAXANISOTROPY;
 		if (CfgGetBool("vsync")) { // TODO move to some RenderSettings class and load it as ordinary asset
 			flags |= BGFX_RESET_VSYNC;
 		}
+		int msaa = CfgGetInt("msaa"); // TODO move to some RenderSettings class and load it as ordinary asset
+		int msaaOffset = Mathf::Clamp(Mathf::Log2Floor(msaa), 0, 4);
 		if (msaaOffset > 0) {
 			flags |= msaaOffset << BGFX_RESET_MSAA_SHIFT;
 		}
@@ -679,6 +676,7 @@ void Render::EndFrame() {
 void Render::Term()
 {
 	OPTICK_EVENT();
+	Graphics::SetRenderPtr(nullptr);
 	shadowRenderer->Term();
 	shadowRenderer = nullptr;
 	imguiDestroy();

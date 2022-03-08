@@ -13,7 +13,11 @@ REGISTER_SYSTEM(Editor);
 
 void Editor::SetDirty(std::shared_ptr<Object> dirtyObj)
 {
-	Get()->dirtyObjs.push_back(dirtyObj);
+	if (dirtyObj != nullptr) {
+		Get()->dirtyObjs.push_back(dirtyObj);
+		return;
+	}
+	LogError("Trying to SetDirty nullptr");
 }
 
 
@@ -49,14 +53,16 @@ bool Editor::IsInEditMode() const {
 void Editor::SaveAllDirty() {
 	std::set<std::string> filesToSave;
 	for (const auto& obj : dirtyObjs) {
+		ASSERT(obj != nullptr);
+
 		auto path = AssetDatabase::Get()->GetAssetPath(obj);
 
 		if (path.empty()) {
-			//TODO error
+			LogError("no path exist for asset '%s'", obj->GetDbgName().c_str());
 			continue;
 		}
 		if (AssetDatabase::Get()->GetOriginalSerializedAsset(path) == nullptr) {
-			//TODO error
+			LogError("no original serialized asset for '%s' in path '%s'", obj->GetDbgName().c_str(), path.c_str());
 			continue;
 		}
 
@@ -65,9 +71,10 @@ void Editor::SaveAllDirty() {
 	for (const auto& path : filesToSave) {
 		//TODO no hardcode
 		//TODO do it through asset database
-		std::ofstream output("assets\\" + path);
+		auto fullPath = "assets\\" + path;
+		std::ofstream output(fullPath);
 		if (!output.is_open()) {
-			//TODO error
+			LogError("Failed to open '%s' for saving", fullPath.c_str());
 			continue;
 		}
 		auto tree = AssetDatabase::Get()->GetOriginalSerializedAsset(path);

@@ -71,13 +71,9 @@ start:
 			return -1;
 		}
 
-
 		if (!systemsManager.Init()) {
 			return -1;
 		}
-
-
-		Graphics::Get()->SetRenderPtr(&render); //TODO this is not the way
 
 		Input::Init();
 
@@ -146,8 +142,6 @@ start:
 		Input::Term();
 
 		SceneManager::Term();
-
-		Graphics::Get()->SetRenderPtr(nullptr); //TODO this is not the way
 
 		systemsManager.Term();
 

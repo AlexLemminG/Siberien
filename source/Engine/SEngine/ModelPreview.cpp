@@ -18,7 +18,7 @@ static int current = 0;
 static char buff[255];
 
 void ModelPreview::OnEnable() {
-	//TODO
+	//TODO filter to get gameObjects only
 	allGameObjects = AssetDatabase::Get()->GetAllAssetNames();
 	//TODO get rid of std::vector
 	for (int i = (int)allGameObjects.size() - 1; i >= 0; i--) {

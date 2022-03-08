@@ -25,6 +25,8 @@ constexpr Vector3 Vector3_up{ 0.f, 1.f, 0.f };
 constexpr Vector3 Vector3_right{ 1.f, 0.f, 0.f };
 constexpr Vector3 Vector3_max{ FLT_MAX,FLT_MAX,FLT_MAX };;
 
+class Sphere;
+class Ray;
 
 inline void SetPos(Matrix4& matrix, const Vector3& pos) {
 	matrix.GetColumn(3) = Vector4(pos, 1);
@@ -53,6 +55,11 @@ inline Quaternion LookRotation(const Vector3& forward, const Vector3& up) {
 	auto lookAtMatr = Matrix3::LookAt(forward, Vector3_zero, up);
 	return Quaternion::FromMatrix(lookAtMatr.Transpose());
 }
+
+class SE_CPP_API GeomUtils {
+public:
+	static bool IsOverlapping(const Sphere& sphere, const Ray& ray);
+};
 
 //TODO cleanup, optimize test and stuff
 class SE_CPP_API Mathf {
@@ -127,6 +134,25 @@ public:
 	static int Min(int a, int b, int c) {
 		return Min(a, Min(b, c));
 	}
+	static int Log2Floor(uint32_t x) {
+		int result = 0;
+		while (x >>= 1) {
+			result++;
+		}
+		return result;
+	}
+	static int Log2Ceil(uint32_t x) {
+		int result = 0;
+		uint32_t t = x;
+		while (t >>= 1) {
+			result++;
+		}
+		if ((1u << result) != x && x > 0) {
+			result++;
+		}
+		return result;
+	}
+
 	static float Clamp(float f, float a, float b) {
 		return f > b ? b : (f < a ? a : f);
 	}
@@ -515,9 +541,6 @@ private:
 	Matrix4 matrix;
 	Vector4 frustumPlanes[6];
 };
-
-//TODO static func of namespace
-bool IsOverlapping(const Sphere& sphere, Ray ray);
 
 REFLECT_CUSTOM_EXT(Vector3, SerializeVector, DeserializeVector);
 REFLECT_CUSTOM_EXT(Vector4, SerializeVector4, DeserializeVector4);
