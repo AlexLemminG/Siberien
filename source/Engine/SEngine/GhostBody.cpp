@@ -90,7 +90,7 @@ void GhostBody::OnEnable() {
 		return;
 	}
 
-	auto shape = collider->shape;
+	auto shape = collider->CreateShape();
 	if (!shape) {
 		return;
 	}
@@ -99,10 +99,13 @@ void GhostBody::OnEnable() {
 	if (!transform) {
 		return;
 	}
+
+	originalShape = shape;
 	auto matr = transform->GetMatrix();
 	SetScale(matr, Vector3_one);//TODO optimize
 	btTransform groundTransform = btConvert(matr);
 
+	//TODO use shape offset and scale!!!
 	//TODO why pair caching ?
 	pBody = new btPairCachingGhostObject();
 	pBody->setCollisionShape(shape.get());

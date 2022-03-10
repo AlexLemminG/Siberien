@@ -41,10 +41,10 @@ Sphere GetSphere(std::shared_ptr<GameObject> go) {
 	auto renderer = go->GetComponent<MeshRenderer>();
 	if (renderer && renderer->mesh) {
 		auto meshSphere = renderer->mesh->boundingSphere;
-		auto scale = renderer->m_transform->GetScale();
+		auto scale = go->transform()->GetScale();
 		float maxScale = Mathf::Max(Mathf::Max(scale.x, scale.y), scale.z);
 		meshSphere.radius *= maxScale;
-		meshSphere.pos = renderer->m_transform->GetMatrix() * meshSphere.pos;
+		meshSphere.pos = go->transform()->GetMatrix() * meshSphere.pos;
 
 		hasSphere = true;
 		sphere = meshSphere;

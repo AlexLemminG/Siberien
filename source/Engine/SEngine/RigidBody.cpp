@@ -22,8 +22,8 @@ void RigidBody::OnEnable() {
 	if (!collider) {
 		return;
 	}
-
-	auto shape = collider->shape;
+	//TODO multiple shapes
+	auto shape = collider->CreateShape();
 	if (!shape) {
 		return;
 	}
@@ -32,9 +32,12 @@ void RigidBody::OnEnable() {
 		return;
 	}
 	auto scale = transform->GetScale();
+	shape->setLocalScaling(btConvert(scale));
 
+	originalShape = shape;
+	//TODO remove intermediate shape when possible
 	offsetedShape = std::make_shared<btCompoundShape>();
-	offsetedShape->addChildShape(btTransform(btMatrix3x3::getIdentity(), -btConvert(centerOfMass * scale)), shape.get());
+	offsetedShape->addChildShape(btTransform(btMatrix3x3::getIdentity(), -btConvert((centerOfMass - collider->GetCenterOffset()) * scale)), shape.get());
 	shape = offsetedShape;
 
 	auto matr = transform->GetMatrix();

@@ -61,6 +61,7 @@ void MeshAnimation::GetTransform(AnimationTransform& outTransform, int channelId
 	auto& channel = channelKeyframes[channelIdx];
 	t = Mathf::Repeat(t, channel[channel.size() - 1].time);
 
+	//TODO store prevIdx so next one will be around prevIdx+1
 	auto lowerBound = std::lower_bound(channel.begin(), channel.end(), t, [](const auto& keyframe, float time) {return keyframe.time < time; });
 	int iBefore = lowerBound - channel.begin();
 	if (iBefore > 0) {
@@ -71,6 +72,7 @@ void MeshAnimation::GetTransform(AnimationTransform& outTransform, int channelId
 	}
 	else {
 		float lerpT = Mathf::InverseLerp(channel[iBefore].time, channel[iBefore + 1].time, t);
+		//TODO consider storing scale/position/rotation separately like originaly in assimp
 		outTransform = AnimationTransform::Lerp(channel[iBefore].transform, channel[iBefore + 1].transform, lerpT);
 	}
 }
@@ -102,13 +104,12 @@ void MeshAnimation::DeserializeFromAssimp(aiAnimation* anim) {
 		auto& keyframes = channelKeyframes.emplace_back();
 
 		for (auto t : times) {
-			//TODO probably has errors
 			AnimationTransform transform;
 			GetAnimValue(transform.position, channel->mPositionKeys, channel->mNumPositionKeys, t);
 			GetAnimValue(transform.rotation, channel->mRotationKeys, channel->mNumRotationKeys, t);
 			GetAnimValue(transform.scale, channel->mScalingKeys, channel->mNumScalingKeys, t);
 
-			float time = t / 1000.f;
+			float time = t / anim->mTicksPerSecond;
 			keyframes.push_back(AnimationKeyframe{ time, transform });
 		}
 	}

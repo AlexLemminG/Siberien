@@ -9,6 +9,7 @@ class btRigidBody;
 class Transform;
 class RigidBody;
 class GhostBody;
+class btCollisionShape;
 
 class SE_CPP_API PhysicsBody : public Component {
 public:
@@ -94,7 +95,9 @@ private:
 	btDefaultMotionState* pMotionState = nullptr;
 	btRigidBody* pBody = nullptr;
 	Transform* transform = nullptr;
+	//TODO why shared_ptr?
 	std::shared_ptr<btCompoundShape> offsetedShape;
+	std::shared_ptr<btCollisionShape> originalShape;
 
 	bool isKinematic = false;
 	float mass = 1.f;

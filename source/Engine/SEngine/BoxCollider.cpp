@@ -16,66 +16,16 @@ AABB BoxCollider::GetAABBWithoutTransform() const {
 	return AABB(center - size / 2.f, center + size / 2.f);
 }
 
-std::shared_ptr<btCollisionShape> BoxCollider::CreateShape() {
-	auto compound = std::make_shared<btCompoundShape>();
-
-	auto trans = gameObject()->transform();
-	Vector3 scale = trans->GetScale();
-	Vector3 realSize = size;
-	realSize = realSize * scale;
-
-	Vector3 realCenter = scale * center;
-
-	btTransform transform;
-	transform.setIdentity();
-	transform.setOrigin(btConvert(realCenter));
-
-	//TODO try to remove boxShape
-	boxShape.reset(new btBoxShape(btConvert(realSize / 2.f)));
-	compound->addChildShape(transform, boxShape.get());
-	return compound;
+std::shared_ptr<btCollisionShape> BoxCollider::CreateShape() const {
+	return std::make_shared<btBoxShape>(btConvert(size / 2.f));
 }
 
 
-std::shared_ptr<btCollisionShape> SphereCollider::CreateShape() {
-	auto compound = std::make_shared<btCompoundShape>();
-
-	auto trans = gameObject()->transform();
-	Vector3 scale = trans->GetScale();
-	float realRadius = radius;
-	realRadius = realRadius * Mathf::Max(scale.x, Mathf::Max(scale.y, scale.z));
-
-	Vector3 realCenter = scale * center;
-
-	btTransform transform;
-	transform.setIdentity();
-	transform.setOrigin(btConvert(realCenter));
-
-	//TODO try to remove sphereShape
-	sphereShape.reset(new btSphereShape(realRadius));
-	compound->addChildShape(transform, sphereShape.get());
-	return compound;
+std::shared_ptr<btCollisionShape> SphereCollider::CreateShape() const {
+	return std::make_shared<btSphereShape>(radius);//WARN scale comes only from x axis here
 }
 
 
-std::shared_ptr<btCollisionShape> CapsuleCollider::CreateShape() {
-	auto compound = std::make_shared<btCompoundShape>();
-
-	auto trans = gameObject()->transform();
-	Vector3 scale = trans->GetScale();
-	float realRadius = radius;
-	realRadius = realRadius * Mathf::Max(scale.x, scale.y, scale.z);
-	float realHeight = height;
-	realHeight = realHeight * Mathf::Max(scale.x, scale.y, scale.z);
-
-	Vector3 realCenter = scale * center;
-
-	btTransform transform;
-	transform.setIdentity();
-	transform.setOrigin(btConvert(realCenter));
-
-	//TODO try to remove capsuleShape
-	capsuleShape.reset(new btCapsuleShape(realRadius, realHeight));
-	compound->addChildShape(transform, capsuleShape.get());
-	return compound;
+std::shared_ptr<btCollisionShape> CapsuleCollider::CreateShape() const {
+	return std::make_shared<btCapsuleShape>(radius, height);
 }

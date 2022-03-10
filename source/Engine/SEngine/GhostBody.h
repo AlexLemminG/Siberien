@@ -21,6 +21,7 @@ public:
 
 	std::string layer;
 private:
+	std::shared_ptr<btCollisionShape> originalShape;
 	btPairCachingGhostObject* pBody = nullptr;
 	Transform* transform = nullptr;
 

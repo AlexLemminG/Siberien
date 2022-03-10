@@ -76,28 +76,23 @@ MeshColliderStorageSystem::StoredMesh MeshColliderStorageSystem::Create(std::sha
 }
 REGISTER_SYSTEM(MeshColliderStorageSystem);
 
-std::shared_ptr<btCollisionShape> MeshCollider::CreateShape() {
+std::shared_ptr<btCollisionShape> MeshCollider::CreateShape() const {
 	if (!mesh) {
 		return nullptr;
 	}
-	auto nonScaledShape = MeshColliderStorageSystem::Get()->GetStored(mesh);
-	auto scale = gameObject()->transform()->GetScale();
-	std::shared_ptr<btCollisionShape> scaledShape;
+	std::shared_ptr<btCollisionShape> result;
 	if (isConvex) {
-		//TODO create convex shape on exporting and load on GetStored
-		std::vector<btVector3> points;
-		points.reserve(mesh->rawVertices.size());
-		for (int i = 0; i < mesh->rawVertices.size(); i++) {
-			points.push_back(btConvert(Vector3::HadamardProduct(mesh->rawVertices[i].pos, scale)));
-		}
-		auto shape = std::make_shared<btConvexHullShape>((btScalar*)points.data(), points.size());
-		shape->initializePolyhedralFeatures(); // TODO this is for debug draw only now
-		scaledShape = shape;
+		// TODO create convex shape on exporting and load on GetStored
+		// TODO this is for debug draw only now and does not work well with scaling
+		// shape->initializePolyhedralFeatures();
+		return std::make_shared<btConvexHullShape>(
+			(btScalar*)&mesh->rawVertices.data()->pos,
+			mesh->rawVertices.size(),
+			sizeof(decltype(mesh->rawVertices)::value_type));
 	}
 	else {
-		scaledShape = std::make_shared<btScaledBvhTriangleMeshShape>(nonScaledShape.get(), btConvert(scale));
+		return MeshColliderStorageSystem::Get()->GetStored(mesh);
 	}
-	return scaledShape;
 }
 
 DECLARE_TEXT_ASSET(MeshCollider);

@@ -1,21 +1,20 @@
 #pragma once
 
 #include "Component.h"
+#include "SMath.h"
 
 class btCollisionShape;
 
 class Collider : public Component {
 public:
-	std::shared_ptr<btCollisionShape> shape = nullptr;
+	virtual std::shared_ptr<btCollisionShape> CreateShape() const = 0;
 
-	virtual void OnEnable() override;
-	virtual void OnDisable() override;
-	virtual void OnValidate() override;
-
+	Vector3 GetCenterOffset()const { return center; }
 protected:
-	virtual std::shared_ptr<btCollisionShape> CreateShape() = 0;
+	Vector3 center = Vector3_zero;
 
 	REFLECT_BEGIN(Collider);
 	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
+	REFLECT_VAR(center);
 	REFLECT_END();
 };
