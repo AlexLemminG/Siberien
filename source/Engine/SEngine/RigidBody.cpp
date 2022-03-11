@@ -31,13 +31,24 @@ void RigidBody::OnEnable() {
 	if (!transform) {
 		return;
 	}
+
 	auto scale = transform->GetScale();
-	shape->setLocalScaling(btConvert(scale));
+	if (Vector3::DistanceSquared(scale, Vector3_one) > Mathf::epsilon) {
+		auto meshShape = std::dynamic_pointer_cast<btBvhTriangleMeshShape>(shape);
+		if (meshShape) {
+			//TODO praying for shape to be in storage
+			ASSERT(meshShape.use_count() > 2);//TODO assert messages
+			shape = std::make_shared<btScaledBvhTriangleMeshShape>(meshShape.get(), btConvert(scale));
+		}
+		else {
+			shape->setLocalScaling(btConvert(scale));
+		}
+	}
 
 	originalShape = shape;
 	//TODO remove intermediate shape when possible
 	offsetedShape = std::make_shared<btCompoundShape>();
-	offsetedShape->addChildShape(btTransform(btMatrix3x3::getIdentity(), -btConvert((centerOfMass - collider->GetCenterOffset()) * scale)), shape.get());
+	offsetedShape->addChildShape(btTransform(btMatrix3x3::getIdentity(), -btConvert((centerOfMass - collider->center) * scale)), shape.get());
 	shape = offsetedShape;
 
 	auto matr = transform->GetMatrix();

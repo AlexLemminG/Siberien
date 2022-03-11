@@ -9,9 +9,8 @@ class Collider : public Component {
 public:
 	virtual std::shared_ptr<btCollisionShape> CreateShape() const = 0;
 
-	Vector3 GetCenterOffset()const { return center; }
-protected:
 	Vector3 center = Vector3_zero;
+protected:
 
 	REFLECT_BEGIN(Collider);
 	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
