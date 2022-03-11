@@ -55,6 +55,7 @@ void SceneManager::Update() {
 		scene = assets->Load<Scene>(sceneName);
 		if (!scene) {
 			if (sceneName != "-") { //TODO tidy
+				LogError("Failed to load scene '%s'", sceneName.c_str());
 				//ASSERT(false);
 			}
 			return;

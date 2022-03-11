@@ -1,5 +1,5 @@
 Material:
-  shader: shaders\main.asset
+  shader: engine\shaders\main.asset
   colorTex: textures\scifi\PolygonScifi_01_A.png
   normalTex: textures\scifi\PolygonSciFiCity_Texture_Normal.png
   emissiveTex: textures\scifi\PolygonScifi_Emissive_01.png

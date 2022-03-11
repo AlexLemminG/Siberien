@@ -1,21 +1,37 @@
-PhysicsSettings: 
-#if has any doNotCollideWith then collide with everything but doNotCollideWith
-#else if has any collideWith then collide with nothing but collideWith
-#if has doNotCollideWith and collideWith ignore collideWith
-#special keyword all - doNotCollideWith [all] / collideWith [all]
-#conflicts are resolved to no collision
+PhysicsSettings:
   layers:
-  - name: default
-    doNotCollideWith: [playerBullet]
-  - name: player
-    doNotCollideWith: [playerBullet, enemyCorpse, grenade]
-  - name: enemy
-    doNotCollideWith: [grenade]
-  - name: playerBullet
-    doNotCollideWith: [player, default, grenade]
-  - name: enemyCorpse
-    collideWith: [all]
-  - name: grenade
-    doNotCollideWith: [default, player, enemy, playerBullet]
-  - name: staticGeom
-    doNotCollideWith: [staticGeom]
+    - name: default
+      doNotCollideWith:
+        - playerBullet
+    - name: player
+      doNotCollideWith:
+        - playerBullet
+        - enemyCorpse
+        - grenade
+    - name: enemy
+      doNotCollideWith:
+        - grenade
+    - name: playerBullet
+      doNotCollideWith:
+        - player
+        - default
+        - grenade
+    - name: enemyCorpse
+      collideWith:
+        - all
+    - name: grenade
+      doNotCollideWith:
+        - default
+        - player
+        - enemy
+        - playerBullet
+    - name: staticGeom
+      doNotCollideWith:
+        - staticGeom
+ShadowSettings:
+  far: 30
+  stabilize: 1
+  near_far: 100
+  near: 1
+  pcfOffset: 0.5
+TimeSettings: {}

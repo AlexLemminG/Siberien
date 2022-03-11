@@ -241,6 +241,7 @@ public:
 		bool isNormalMap,
 		int lowSkippedMips)
 	{
+		Log("coverting texture '%s'", inFile.c_str());
 		//TODO convert in memory
 		//TODO formats suppoert
 		//TODO is normal map
@@ -248,7 +249,13 @@ public:
 
 		CMP_MipSet srcTexture;
 
-		if (CMP_LoadTexture(inFile.c_str(), &srcTexture) != CMP_ERROR::CMP_OK) {
+		std::vector<uint8_t> buffer;
+		if (!databaseHandle.ReadAssetAsBinary(buffer)) {
+			LogError("Failed to convert texture '%s' : failed to read file", databaseHandle.GetAssetPath().c_str());
+			return false;
+		}
+		if (CMP_LoadTextureFromMemory(buffer.data(), buffer.size(), databaseHandle.GetFileExtension().c_str(), &srcTexture) != CMP_ERROR::CMP_OK) {
+			LogError("Failed to convert texture '%s' : failed to load texture to compressinator", databaseHandle.GetAssetPath().c_str());
 			return false;
 		}
 
@@ -262,14 +269,15 @@ public:
 
 
 		if (CMP_GenerateMIPLevels(&srcTexture, CMP_CalcMinMipSize(srcTexture.m_nWidth, srcTexture.m_nHeight, srcTexture.m_nMaxMipLevels)) != CMP_ERROR::CMP_OK) {
+			LogError("Failed to convert texture '%s' : failed to generate mip levels", databaseHandle.GetAssetPath().c_str());
 			return false;
 		}
 
 		CMP_Feedback_Proc p = nullptr;
 		if (CMP_ConvertMipTexture(&srcTexture, &destTexture, &options, p) != CMP_ERROR::CMP_OK) {
+			LogError("Failed to convert texture '%s' : failed to convert mip texture", databaseHandle.GetAssetPath().c_str());
 			return false;
 		}
-		Log("coverting texture '%s'", inFile.c_str());
 		CMP_SaveTexture(outFile.c_str(), &destTexture);
 		CMP_FreeMipSet(&destTexture);
 
@@ -287,6 +295,7 @@ public:
 		srcTexture.m_nMipLevels = srcTexture.m_nMipLevels - lowSkippedMips;
 
 		if (CMP_ConvertMipTexture(&srcTexture, &destTexture, &options, p) != CMP_ERROR::CMP_OK) {
+			LogError("Failed to convert texture '%s' : failed to convert mip texture to low mips", databaseHandle.GetAssetPath().c_str());
 			return false;
 		}
 		CMP_SaveTexture(outFileLow.c_str(), &destTexture);
@@ -304,92 +313,7 @@ public:
 		CMP_FreeMipSet(&destTexture);
 		CMP_FreeMipSet(&srcTexture);
 
-		return true;
-
-		//bimg::imageWriteDds()
-
-
-		bx::FileWriter fr;
-		bx::Error err;
-		if (!fr.open(bx::FilePath(outFile.c_str()), false, &err)) {
-			return false;
-		}
-		bimg::ImageContainer imageContainer{};
-		imageContainer.m_width = destTexture.m_nWidth;
-		imageContainer.m_height = destTexture.m_nHeight;
-		imageContainer.m_format = bimg::TextureFormat::Enum::BC1;
-		imageContainer.m_numMips = destTexture.m_nMipLevels;
-		imageContainer.m_offset = 0;
-		imageContainer.m_allocator = nullptr;
-		imageContainer.m_depth = destTexture.m_nDepth;
-		imageContainer.m_numLayers = 1;
-		imageContainer.m_hasAlpha = destTexture.m_nChannels == 4;
-		imageContainer.m_srgb = true;
-
-		if (!bimg::imageWriteDds(&fr, imageContainer, destTexture.pData, destTexture.dwDataSize, &err)) {
-			return false;
-		}
-
-		return true;
-
-
-		std::string params = "";
-		params += " -f " + inFile;
-		params += " -o " + outFile;
-		params += " --mips ";
-		params += (isMips ? "true" : "false");
-		params += " --mipskip ";
-		params += FormatString("%d", lowSkippedMips);
-		if (isNormalMap) {
-			params += " --normalmap ";
-		}
-		params += " -t ";
-		params += format;
-		params += " --as ";
-		params += "dds";
-
-		//TODO move to platform independent stuff
-		STARTUPINFOA si;
-		memset(&si, 0, sizeof(STARTUPINFOA));
-		si.cb = sizeof(STARTUPINFOA);
-
-		PROCESS_INFORMATION pi;
-		memset(&pi, 0, sizeof(PROCESS_INFORMATION));
-
-		std::vector<char> paramsBuffer(params.begin(), params.end());
-		paramsBuffer.push_back(0);
-		LPSTR ccc = &paramsBuffer[0];
-
-		//TODO use compressonator and multiple threads if needed
-		auto result = CreateProcessA(
-			databaseHandle.GetToolPath("texturec.exe").c_str()
-			, &paramsBuffer[0]
-			, NULL
-			, NULL
-			, false
-			, 0
-			, NULL
-			, NULL
-			, &si
-			, &pi);
-
-
-		if (!result)
-		{
-			LogError("Failed to compile texure '%s'", databaseHandle.GetAssetPath().c_str());
-			return false;
-		}
-		else
-		{
-			// Successfully created the process.  Wait for it to finish.
-			WaitForSingleObject(pi.hProcess, INFINITE);
-
-			// Close the handles.
-			CloseHandle(pi.hProcess);
-			CloseHandle(pi.hThread);
-		}
-
-		Log("Converted texture '%s'", databaseHandle.GetAssetPath().c_str());
+		Log("texture converted '%s'", inFile.c_str());
 		return true;
 	}
 

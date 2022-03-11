@@ -154,14 +154,14 @@ class BasicShaderAssetImporter : public AssetImporter {
 			return true;
 		}
 		std::string params = "";
-		params += " -f " + databaseHandle.GetAssetPath();
+		params += " -f " + databaseHandle.GetAssetPathReal();
 		params += " -o " + databaseHandle.GetLibraryPathFromId(binAssetPathId);
 		params += " --type";
 		params += (isVertex ? " v" : " f");
 		params += " --platform";
 		params += " windows";
-		params += " -i assets\\shaders\\include";//TODO not like this
-		params += " -i assets\\engine\\shaders\\include";//TODO not like this
+		params += " -i engine\\assets\\shaders\\include";//TODO not like this
+		params += " -i engine\\assets\\engine\\shaders\\include";//TODO not like this
 		params += " -p ";
 		params += compilerProfile;
 		params += " --depends";
@@ -215,6 +215,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 			CloseHandle(pi.hProcess);
 			CloseHandle(pi.hThread);
 		}
+		const char* paramscstr = params.c_str();
 
 		std::vector<std::string> files;
 		files.push_back(databaseHandle.GetAssetPath());

@@ -3,6 +3,7 @@
 #include "Common.h"
 
 #include "SMath.h"
+#include "Config.h"
 #include "yaml-cpp/yaml.h"
 #include "ryml.hpp"
 #include "Resources.h"
@@ -14,6 +15,63 @@
 #include <locale>
 #include <codecvt>
 
+#include "physfs.h"
+
+static std::vector<std::string> split(const std::string& s, char delim) {
+	std::stringstream ss(s);
+	std::string item;
+	std::vector<std::string> elems;
+	while (std::getline(ss, item, delim)) {
+		elems.push_back(item);
+		// elems.push_back(std::move(item)); // if C++11 (based on comment from @mchiasson)
+	}
+	return elems;
+}
+
+//TODO remove func after clearing all paths with backslashes
+static void SanitizeBackslashes(std::string& path) {
+	for (auto& c : path) {
+		if (c == '\\') {
+			c = '/';
+		}
+	}
+
+	auto s = split(path, '/');
+	bool changed = false;
+	for (int i = 0; i < s.size(); i++) {
+		if (s[i] != "..") {
+			continue;
+		}
+		if (i > 0) {
+			s.erase(s.begin() + i - 1, s.begin() + i + 1);
+			i -= 2;
+			changed = true;
+		}
+		else {
+			LogError("Illegal path requested '%s'", path.c_str());
+		}
+	}
+	if (changed) {
+		path = "";
+		for (int i = 0; i < s.size(); i++) {
+			path += s[i];
+			if (i < s.size() - 1) {
+				path += '/';
+			}
+		}
+	}
+}
+
+static std::unique_ptr<ryml::Tree> FileToYAML(PHYSFS_File* file) {
+	//TODO error checks
+
+	auto size = PHYSFS_fileLength(file);
+	std::vector<char> buffer;
+
+	ResizeVectorNoInit(buffer, size);
+	PHYSFS_readBytes(file, (void*)buffer.data(), size);
+	return std::make_unique<ryml::Tree>(ryml::parse(c4::csubstr(&buffer[0], buffer.size())));
+}
 
 static std::unique_ptr<ryml::Tree> StreamToYAML(std::ifstream& input) {
 	//TODO error checks
@@ -32,8 +90,61 @@ AssetDatabase* AssetDatabase::Get() {
 	return mainDatabase;
 }
 
+static void DbgLogAllAssets() {
+	struct Data {
+		PHYSFS_EnumerateCallback callback;
+		int indent;
+	};
+	PHYSFS_EnumerateCallback callback;
+	callback = [](void* d, const char* origdir, const char* fname) {
+		Data data = *(Data*)d;
+		std::string fullPath = origdir;
+		fullPath += "/";
+		fullPath += fname;
+		Log(std::string(data.indent, ' ') + fname);
+
+		if (PHYSFS_isDirectory(fullPath.c_str())) {
+			data.indent += 2;
+			PHYSFS_enumerate(fullPath.c_str(), data.callback, &data);
+		}
+		return PHYSFS_EnumerateCallbackResult::PHYSFS_ENUM_OK;
+	};
+	Data data;
+	data.callback = callback;
+	data.indent = 0;
+
+	PHYSFS_enumerate("assets", callback, &data);
+}
+
 bool AssetDatabase::Init() {
 	OPTICK_EVENT();
+
+	if (!PHYSFS_init(nullptr)) {//TODO pass args
+		LogError("Failed to init physfs: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		return false;
+	};
+	if (!PHYSFS_setWriteDir(".")) {
+		LogError("Failed to set physfs write dir: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		return false;
+	}
+	auto nodeMountDirs = CfgGetNode("mountDirs"); //TODO some other place for dll's to state their mount dirs
+	for (const auto& dir : nodeMountDirs) {
+		auto dirstr = dir.as<std::string>();
+		if (!PHYSFS_mount(dirstr.c_str(), "assets", 0)) {
+			LogError("Failed to mount physfs '%s': %s", dirstr, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+			return false;
+		}
+	}
+	if (!PHYSFS_mkdir("library")) {
+		// TODO not always needed/possible
+		LogError("Failed to mkdir library : %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		return false;
+	}
+	if (!PHYSFS_mount("library", "library", 0)) {
+		LogError("Failed to mount physfs '%s': %s", "library", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		return false;
+	}
+
 	ASSERT(mainDatabase == nullptr);
 	mainDatabase = this;
 	return true;
@@ -47,6 +158,8 @@ void AssetDatabase::Term() {
 	onAfterUnloaded.UnsubscribeAll();
 	UnloadAll();
 	onBeforeUnloaded.UnsubscribeAll();
+
+	PHYSFS_deinit();
 }
 
 
@@ -108,6 +221,19 @@ std::string AssetDatabase::GetAssetUID(std::shared_ptr<Object> obj) {
 
 std::string AssetDatabase::GetAssetPath(std::shared_ptr<Object> obj) {
 	return AssetDatabase::PathDescriptor(GetAssetUID(obj)).assetPath;
+}
+std::string AssetDatabase::GetRealPath(const std::string& virtualPath) {
+	auto s = assetsRootFolder + virtualPath;
+	SanitizeBackslashes(s);
+	const char* realS = PHYSFS_getRealDir(s.c_str());
+	if (realS == nullptr) {
+		return s;
+	}
+	else {
+		s = std::string(realS) + "/" + virtualPath;
+		SanitizeBackslashes(s);//not realy nessasery at this point
+		return s;
+	}
 }
 
 const std::shared_ptr<ryml::Tree> AssetDatabase::GetOriginalSerializedAsset(const std::string& assetPath) {
@@ -253,12 +379,12 @@ void AssetDatabase::ProcessLoadingQueue() {
 		else if (extention == "asset") {
 			if (assets.find(path) == assets.end()) {
 				auto fileName = assetsRootFolder + path;
-				std::ifstream input(fileName, std::ios::binary | std::ios::ate);
-				if (input) {
-					//TODO
-					//LogError("Failed to load '%s': file not found", fullPath.c_str());
+				SanitizeBackslashes(fileName);
+				auto file = PHYSFS_openRead(fileName.c_str());
+				if (file) {
+					auto treePtr = std::shared_ptr(std::move(FileToYAML(file)));
+					PHYSFS_close(file);
 
-					auto treePtr = std::shared_ptr(std::move(StreamToYAML(input)));
 					ryml::Tree& tree = *treePtr;
 					ryml::NodeRef node = tree;
 					assets[path].originalTree = treePtr;
@@ -397,14 +523,15 @@ uint64_t AssetDatabase::GetLastModificationTime(const std::string& assetPath) {
 		return it->second;
 	}
 	//PERF this is slow, since we need to open files multiple times (first to get modification date and then to actually open)
-	struct stat s;
 	uint64_t result;
-	if (stat(assetPath.c_str(), &s) == 0)
-	{
-		result = s.st_mtime;
+	std::string pathSani = assetPath;
+	SanitizeBackslashes(pathSani);
+	PHYSFS_Stat stat;
+	if (!PHYSFS_stat(pathSani.c_str(), &stat)) {
+		result = 0;
 	}
 	else {
-		result = 0;
+		result = stat.modtime;
 	}
 	fileModificationDates[assetPath] = result;
 	return result;
@@ -472,7 +599,14 @@ bool AssetDatabase_BinaryImporterHandle::ReadMeta(std::unique_ptr<ryml::Tree>& n
 	return ReadYAML(fullPath, node);
 }
 
-std::string AssetDatabase_BinaryImporterHandle::GetAssetPath() const { return database->assetsRootFolder + assetPath; }
+std::string AssetDatabase_BinaryImporterHandle::GetAssetPath() const {
+	return database->assetsRootFolder + assetPath;
+}
+
+std::string AssetDatabase_BinaryImporterHandle::GetAssetPathReal() const {
+	return database->GetRealPath(assetPath);
+}
+
 std::string AssetDatabase_BinaryImporterHandle::GetAssetFileName() const { return database->GetFileName(assetPath); }
 std::string AssetDatabase_BinaryImporterHandle::GetFileExtension() const { return database->GetFileExtension(assetPath); }
 
@@ -524,15 +658,18 @@ void AssetDatabase_BinaryImporterHandle::WriteToLibraryFile(const std::string& i
 
 bool AssetDatabase_BinaryImporterHandle::ReadFromLibraryFile(const std::string& id, std::unique_ptr<ryml::Tree>& node)
 {
-	const auto fullPath = GetLibraryPathFromId(id);
+	std::string fullPath = GetLibraryPathFromId(id);
+	SanitizeBackslashes(fullPath);
 
-	std::ifstream input(fullPath, std::ios::ate | std::ios::binary);
-	if (!input) {
-		LogError("Failed to load '%s': file not found", assetPath.c_str());
+	auto file = PHYSFS_openRead(fullPath.c_str());
+	if (!file) {
+		//LogError("Failed to load '%s': %s", fullPath.c_str(), PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
 		node = nullptr;
 		return false;
 	}
-	node = StreamToYAML(input);
+
+	node = FileToYAML(file);
+	PHYSFS_close(file);
 	return node != nullptr;
 }
 
@@ -548,41 +685,48 @@ std::string AssetDatabase_BinaryImporterHandle::GetToolPath(std::string toolName
 
 bool AssetDatabase_BinaryImporterHandle::ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer)
 {
-	std::ifstream file(fullPath, std::ios::binary | std::ios::ate);
+	auto fullPathSani = fullPath;
+	SanitizeBackslashes(fullPathSani);
 
+	//TODO open/bailout macro 
+	auto file = PHYSFS_openRead(fullPathSani.c_str());
 	if (!file) {
-		//TODO different message and Log level
-		LogError("Failed to load binary asset '%s': file not found", fullPath.c_str());
+		//LogError("Failed to load binary asset'%s': %s", fullPath.c_str(), PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
 		return false;
 	}
-	std::streamsize size = file.tellg();
-	file.seekg(0, std::ios::beg);
+
+	auto size = PHYSFS_fileLength(file);
 
 	ResizeVectorNoInit(buffer, size);
-	if (file.read((char*)buffer.data(), size))
-	{
-		return true;
-	}
-	else {
-		buffer.clear();
-		//TODO different message and Log level
-		LogError("Failed to load binary asset '%s': failed to read file", fullPath.c_str());
-		ASSERT(false);
-		return false;
-	}
+	auto countRead = PHYSFS_readBytes(file, buffer.data(), size);
+	if (countRead != size) {
+		if (countRead < 0) {
+			LogError("Failed to read binary asset'%s': %s", fullPath.c_str(), PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		}
+		else {
+			LogError("Failed to read binary asset'%s' : unexpected read count", fullPath.c_str());
+		}
+	} //TODO check error 
+
+	PHYSFS_close(file);
+	return countRead == size;
 }
 
 
 bool AssetDatabase_BinaryImporterHandle::ReadYAML(const std::string& fullPath, std::unique_ptr<ryml::Tree>& node)
 {
-	std::ifstream input(fullPath, std::ios::ate | std::ios::binary);
-	if (!input) {
-		//TODO
-		//LogError("Failed to load '%s': file not found", fullPath.c_str());
+	std::string fullPathSani = fullPath;
+	SanitizeBackslashes(fullPathSani);
+
+	auto file = PHYSFS_openRead(fullPathSani.c_str());
+	if (!file) {
+		//LogError("Failed to load '%s': %s", fullPathSani.c_str(), PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
 		node = nullptr;
 		return false;
 	}
-	node = StreamToYAML(input);
+
+	node = FileToYAML(file);
+	PHYSFS_close(file);
 	return node != nullptr;
 }
 

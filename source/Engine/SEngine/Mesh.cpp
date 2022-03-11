@@ -413,20 +413,20 @@ public:
 		}
 
 		//TODO some pipelining for blender
-		auto originalAssetPath = databaseHandle.GetAssetPath();
+		auto originalAssetPathReal = databaseHandle.GetAssetPathReal();
 		bool isBlendFile = databaseHandle.GetFileExtension() == "blend";
 
 		if (isBlendFile) {
 			//TODO less hardcode
 			databaseHandle.EnsureForderForTempFileExists("blenderToGlb.glb");
 			std::string tempFile = databaseHandle.GetTempPathFromFileName("blenderToGlb.glb");
-			if (!ConvertBlendToGlb(databaseHandle, originalAssetPath, tempFile, meta)) {
+			if (!ConvertBlendToGlb(databaseHandle, originalAssetPathReal, tempFile, meta)) {
 				return false;
 			}
-			originalAssetPath = tempFile;
+			originalAssetPathReal = tempFile;
 		}
 
-		auto meshAsset = ImportUsingAssimp(originalAssetPath);
+		auto meshAsset = ImportUsingAssimp(originalAssetPathReal);
 		if (!meshAsset) {
 			return false;
 		}

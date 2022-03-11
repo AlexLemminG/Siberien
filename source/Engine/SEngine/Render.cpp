@@ -385,6 +385,8 @@ void Render::LoadAssets() {
 	defaultNormalTexture = database->Load<Texture>("engine\\textures\\defaultNormal.png");
 	defaultEmissiveTexture = database->Load<Texture>("engine\\textures\\defaultEmissive.png");
 	simpleBlitMat = database->Load<Material>("engine\\materials\\simpleBlit.asset");
+
+	//TODO assert not null
 }
 
 void Render::UnloadAssets() {
@@ -909,6 +911,7 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 }
 
 bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId) {
+	ASSERT(material && material->shader);
 	{
 		bool isVisible = camera.IsVisible(*renderer);
 		if (!isVisible) {

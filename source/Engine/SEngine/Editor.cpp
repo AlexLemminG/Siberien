@@ -71,7 +71,7 @@ void Editor::SaveAllDirty() {
 	for (const auto& path : filesToSave) {
 		//TODO no hardcode
 		//TODO do it through asset database
-		auto fullPath = "assets\\" + path;
+		auto fullPath = AssetDatabase::Get()->GetRealPath(path);
 		std::ofstream output(fullPath);
 		if (!output.is_open()) {
 			LogError("Failed to open '%s' for saving", fullPath.c_str());

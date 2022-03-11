@@ -43,7 +43,7 @@ void SettingsSetInt(std::string name, int i) {
 
 bool Config::Init() {
 	OPTICK_EVENT();
-	config = YAML::LoadFile("config.yaml");
+	config = YAML::LoadFile("config.yaml");//TODO use ryml and remove YAML from solution
 	settings = YAML::LoadFile("settings.yaml");
 	return true;
 }

@@ -49,6 +49,7 @@ public:
 	void GetLastModificationTime(uint64_t& assetModificationTime, uint64_t& metaModificationTime) const;
 	uint64_t GetLastModificationTime(const std::string& assetPath) const;
 
+	std::string GetAssetPathReal() const; //could include archive and such
 	std::string GetAssetPath() const;
 	std::string GetAssetFileName() const;
 	std::string GetFileExtension() const;
@@ -115,8 +116,8 @@ public:
 	}
 
 	std::string GetAssetUID(std::shared_ptr<Object> obj);
-	//returns 
 	std::string GetAssetPath(std::shared_ptr<Object> obj);
+	std::string GetRealPath(const std::string& virtualPath);
 
 	const std::shared_ptr<ryml::Tree> GetOriginalSerializedAsset(const std::string& assetPath);
 	const ryml::NodeRef GetOriginalSerializedAsset(const std::shared_ptr<Object>& obj);

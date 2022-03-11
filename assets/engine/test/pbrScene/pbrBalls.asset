@@ -14,7 +14,7 @@ MeshRenderer$2:
   material: $M1
   
 Material$M1:
-  shader: shaders\main.asset
-  colorTex: textures\white.png
-  metalicTex: textures\blackToWhiteGradientBottonToTop.png
-  roughnessTex: textures\blackToWhiteGradientRightToLeft.png
+  shader: engine\shaders\main.asset
+  colorTex: engine\textures\white.png
+  metalicTex: engine\textures\blackToWhiteGradientBottonToTop.png
+  roughnessTex: engine\textures\blackToWhiteGradientRightToLeft.png
