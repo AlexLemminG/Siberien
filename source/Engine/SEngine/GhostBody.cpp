@@ -56,7 +56,8 @@ void GetCollidingObjectsInsidePairCachingGhostObject(btDynamicsWorld* m_dynamics
 		if (!collisionPair) continue;
 		if (collisionPair->m_algorithm) collisionPair->m_algorithm->getAllContactManifolds(m_manifoldArray);
 		else {	// THIS SHOULD NEVER HAPPEN, AND IF IT DOES, PLEASE RE-ENABLE the "call" a few lines above...
-			printf("No collisionPair.m_algorithm - probably m_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(...) must be missing.\n");
+			// actually this can happen on first frame (before first physics update)
+			//printf("No collisionPair.m_algorithm - probably m_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(...) must be missing.\n");
 		}
 #endif //USE_PLAIN_COLLISION_WORLD
 
