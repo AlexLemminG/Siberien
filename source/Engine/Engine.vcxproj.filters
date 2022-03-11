@@ -200,6 +200,18 @@
     <ClCompile Include="SEngine\ParentedTransform.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="SEngine\FileWatcher.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="SEngine\FileWatcherLinux.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="SEngine\FileWatcherOSX.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="SEngine\FileWatcherWin32.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SEngine\Animation.h">
@@ -371,6 +383,21 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="SEngine\ParentedTransform.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="SEngine\FileWatcher\FileWatcher.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherImpl.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherLinux.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherOSX.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherWin32.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

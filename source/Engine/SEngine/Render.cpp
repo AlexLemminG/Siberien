@@ -36,6 +36,7 @@
 #include "imgui/imgui.h"
 #include "Light.h"
 #include "ShadowRenderer.h"
+#include "Editor.h"
 #include "DbgVars.h"
 #include "dear-imgui/imgui_impl_sdl.h"
 
@@ -399,6 +400,16 @@ void Render::UnloadAssets() {
 void Render::Draw(SystemsManager& systems)
 {
 	OPTICK_EVENT();
+
+	//TODO this should really be in editor class and not here, but 'window' var is hard to access
+	std::string windowTitle = "Siberien";
+	if (Editor::Get()->IsInEditMode()) {
+		windowTitle += " Editor";
+	}
+	if (Editor::Get()->HasUnsavedFiles()) {
+		windowTitle += " [NOT SAVED]";
+	}
+	SDL_SetWindowTitle(window, windowTitle.c_str());
 
 	currentFreeViewId = kRenderPassFree;
 	currentFullScreenTextureIdx = 0;

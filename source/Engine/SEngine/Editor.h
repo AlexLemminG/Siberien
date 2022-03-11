@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <set>
 #include "System.h"
 #include "GameEvents.h"
 
@@ -11,17 +12,23 @@ public:
 	static void SetDirty(std::shared_ptr<Object> dirtyObj);
 
 
+	bool Init() override;
 	void Update() override;
+	void Term() override;
 
 	bool IsInEditMode() const;
+	bool HasUnsavedFiles() const;
 
 	std::shared_ptr<Object> selectedObject;
 
 	GameEvent<std::shared_ptr<GameObject>&> onGameObjectEdited; //called each time gameObject or it's components are changed from editor
 private:
-	bool autoSaveEveryFrame = true;
+	bool autoSaveOnTerm = true;
+	bool autoSaveEveryFrame = false;
 
-	std::vector<std::shared_ptr<Object>> dirtyObjs;
+	std::set<std::shared_ptr<Object>> dirtyObjs;
+
+	GameEventHandle onBeforeDatabaseUnloadedHandle;
 
 	void SaveAllDirty();
 };

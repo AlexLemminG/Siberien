@@ -161,6 +161,10 @@
     <ClCompile Include="SEngine\Editor.cpp" />
     <ClCompile Include="SEngine\EditorCameraController.cpp" />
     <ClCompile Include="SEngine\Engine.cpp" />
+    <ClCompile Include="SEngine\FileWatcher.cpp" />
+    <ClCompile Include="SEngine\FileWatcherLinux.cpp" />
+    <ClCompile Include="SEngine\FileWatcherOSX.cpp" />
+    <ClCompile Include="SEngine\FileWatcherWin32.cpp" />
     <ClCompile Include="SEngine\FlyCameraMovement.cpp" />
     <ClCompile Include="SEngine\GameEvents.cpp" />
     <ClCompile Include="SEngine\GameLibrariesManager.cpp" />
@@ -229,6 +233,11 @@
     <ClInclude Include="SEngine\Editor.h" />
     <ClInclude Include="SEngine\EditorSceneInfo.h" />
     <ClInclude Include="SEngine\Engine.h" />
+    <ClInclude Include="SEngine\FileWatcher\FileWatcher.h" />
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherImpl.h" />
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherLinux.h" />
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherOSX.h" />
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherWin32.h" />
     <ClInclude Include="SEngine\FlyCameraMovement.h" />
     <ClInclude Include="SEngine\GameEvents.h" />
     <ClInclude Include="SEngine\GameLibrariesManager.h" />

@@ -7,6 +7,8 @@
 #include "SceneManager.h"
 #include "DbgVars.h"
 #include "Input.h"
+#include "sdl.h"
+
 
 DBG_VAR_BOOL(dbg_isEditMode, "EditMode", false)
 REGISTER_SYSTEM(Editor);
@@ -14,12 +16,28 @@ REGISTER_SYSTEM(Editor);
 void Editor::SetDirty(std::shared_ptr<Object> dirtyObj)
 {
 	if (dirtyObj != nullptr) {
-		Get()->dirtyObjs.push_back(dirtyObj);
+		Get()->dirtyObjs.insert(dirtyObj);
 		return;
 	}
 	LogError("Trying to SetDirty nullptr");
 }
 
+
+bool Editor::Init() {
+	onBeforeDatabaseUnloadedHandle = AssetDatabase::Get()->onBeforeUnloaded.Subscribe([this]() {
+		if (autoSaveOnTerm) {
+			SaveAllDirty();
+		}});
+	return true;
+}
+
+
+void Editor::Term() {
+	AssetDatabase::Get()->onBeforeUnloaded.Unsubscribe(onBeforeDatabaseUnloadedHandle);
+	if (autoSaveOnTerm) {
+		SaveAllDirty();
+	}
+}
 
 void Editor::Update() {
 	if (Input::GetKeyDown(SDL_SCANCODE_F4)) {
@@ -32,8 +50,13 @@ void Editor::Update() {
 	else if (!dbg_isEditMode && scene && scene->IsInEditMode()) {
 		SceneManager::LoadScene(SceneManager::GetCurrentScenePath());
 	}
+	bool save = autoSaveEveryFrame;
 
-	if (autoSaveEveryFrame) {
+	if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LCTRL) && Input::GetKeyDown(SDL_SCANCODE_S)) {
+		save = true;
+	}
+
+	if (save) {
 		SaveAllDirty();
 	}
 }
@@ -49,9 +72,10 @@ bool Editor::IsInEditMode() const {
 	}
 }
 
+bool Editor::HasUnsavedFiles() const { return !dirtyObjs.empty(); }
+
 
 void Editor::SaveAllDirty() {
-	std::set<std::string> filesToSave;
 	for (const auto& obj : dirtyObjs) {
 		ASSERT(obj != nullptr);
 
@@ -66,9 +90,6 @@ void Editor::SaveAllDirty() {
 			continue;
 		}
 
-		filesToSave.insert(path);
-	}
-	for (const auto& path : filesToSave) {
 		//TODO no hardcode
 		//TODO do it through asset database
 		auto fullPath = AssetDatabase::Get()->GetRealPath(path);

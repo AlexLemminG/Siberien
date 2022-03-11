@@ -17,6 +17,31 @@
 
 #include "physfs.h"
 
+#include "FileWatcher/FileWatcher.h"
+
+
+class AssetDatabase_AssetChangeListener : public FW::FileWatchListener, public FW::FileWatcher {
+public:
+	virtual AssetDatabase_AssetChangeListener::~AssetDatabase_AssetChangeListener() override {
+
+	}
+	virtual void handleFileAction(FW::WatchID watchid, const FW::String& dir, const FW::String& filename, FW::Action action) {
+		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+		std::string narrow = converter.to_bytes(filename);
+		std::string actionStr = action == FW::Actions::Modified ? "Modified" : (action == FW::Actions::Add ? "Added" : "Deleted");
+		Log(converter.to_bytes(dir) + "/" + converter.to_bytes(filename) + " " + actionStr);
+	}
+};
+AssetDatabase_AssetChangeListener* changeListener = nullptr;
+
+class AssetDatabase_AssetChangeListenerSystem : public System<AssetDatabase_AssetChangeListenerSystem> {
+	void Update() override {
+		changeListener->update();
+	}
+};
+REGISTER_SYSTEM(AssetDatabase_AssetChangeListenerSystem);
+
+
 static std::vector<std::string> split(const std::string& s, char delim) {
 	std::stringstream ss(s);
 	std::string item;
@@ -115,10 +140,8 @@ static void DbgLogAllAssets() {
 
 	PHYSFS_enumerate("assets", callback, &data);
 }
-
 bool AssetDatabase::Init() {
 	OPTICK_EVENT();
-
 	if (!PHYSFS_init(nullptr)) {//TODO pass args
 		LogError("Failed to init physfs: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
 		return false;
@@ -127,6 +150,9 @@ bool AssetDatabase::Init() {
 		LogError("Failed to set physfs write dir: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
 		return false;
 	}
+	ASSERT(changeListener == nullptr);
+	changeListener = new AssetDatabase_AssetChangeListener();
+
 	auto nodeMountDirs = CfgGetNode("mountDirs"); //TODO some other place for dll's to state their mount dirs
 	for (const auto& dir : nodeMountDirs) {
 		auto dirstr = dir.as<std::string>();
@@ -134,6 +160,8 @@ bool AssetDatabase::Init() {
 			LogError("Failed to mount physfs '%s': %s", dirstr, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
 			return false;
 		}
+		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+		changeListener->addWatch(converter.from_bytes(dirstr), changeListener, true);
 	}
 	if (!PHYSFS_mkdir("library")) {
 		// TODO not always needed/possible
@@ -145,6 +173,7 @@ bool AssetDatabase::Init() {
 		return false;
 	}
 
+
 	ASSERT(mainDatabase == nullptr);
 	mainDatabase = this;
 	return true;
@@ -152,6 +181,9 @@ bool AssetDatabase::Init() {
 
 void AssetDatabase::Term() {
 	OPTICK_EVENT();
+	ASSERT(changeListener != nullptr);
+	delete changeListener;
+	changeListener = nullptr;
 	ASSERT(mainDatabase == this);
 	mainDatabase = nullptr;
 	//TODO little bit hacky
