@@ -30,7 +30,8 @@ std::string CfgGetString(std::string name) {
 	SDL_assert(config[name]);
 	return config[name].as<std::string>();
 }
-
+//TODO remove settings and use assets instead
+//TODO or at least do not save/load them to git folder
 int SettingsGetInt(std::string name) {
 	SDL_assert(settings[name]);
 	return settings[name].as<int>();
