@@ -35,3 +35,4 @@ ShadowSettings:
   near: 1
   pcfOffset: 0.5
 TimeSettings: {}
+RenderSettings: {}

@@ -456,10 +456,6 @@ void ShadowRenderer::Init() {
 	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
 	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
 
-	settings = AssetDatabase::Get()->Load<ShadowSettings>("settings.asset");
-	if (settings == nullptr) {
-		settings = std::make_shared<ShadowSettings>();
-	}
 }
 
 void ShadowRenderer::Term() {
@@ -483,6 +479,11 @@ void ShadowRenderer::Draw(Render* render, Light* light, const Camera& camera)
 
 	if (!light->drawShadows) {
 		return;
+	}
+
+	settings = AssetDatabase::Get()->Load<ShadowSettings>("settings.asset");
+	if (settings == nullptr) {
+		settings = std::make_shared<ShadowSettings>();
 	}
 
 	this->shadowBias = light->shadowBias;

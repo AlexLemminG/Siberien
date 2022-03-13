@@ -413,6 +413,7 @@ bool Render::Init()
 	}
 
 	renderSettings = AssetDatabase::Get()->Load<RenderSettings>("settings.asset");
+	ASSERT(renderSettings);
 	s_renderSettings = renderSettings;//TODO kinda hacky
 
 	int width = SettingsGetInt("screenWidth");
@@ -520,6 +521,7 @@ void Render::LoadAssets() {
 		return;;//HACK for terminated app
 	}
 	renderSettings = AssetDatabase::Get()->Load<RenderSettings>("settings.asset");
+	ASSERT(renderSettings);
 	s_renderSettings = renderSettings;//TODO kinda hacky
 
 	whiteTexture = database->Load<Texture>("engine\\textures\\white.png");
@@ -1074,7 +1076,7 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 		//TODO get rid of std::vector / std::string
 		if (renderSettings->tryToMinimizeStateChanges) {
 			if (renderers.size() > 0) {
-				const auto& mesh = renderers[renderers.size() - 1];
+				const auto& mesh = renderers[0];
 				DrawMesh(mesh, overrideMaterial.get(), camera, renderers.size() == 1, renderers.size() == 1, true, true, viewId);
 			}
 			for (int i = 1; i < ((int)renderers.size() - 1); i++) {
