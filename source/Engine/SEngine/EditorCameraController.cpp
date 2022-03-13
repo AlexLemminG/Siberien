@@ -108,10 +108,11 @@ public:
 		}
 		transform->SetPosition(transform->GetPosition() + vel * Time::deltaTime() * moveSpeed);
 
-
+		float deltaX = Mathf::DegToRad(Time::deltaTime() * rotateSpeed * Input::GetMouseDeltaPosition().x);
+		float deltaY = Mathf::DegToRad(Time::deltaTime() * rotateSpeed * Input::GetMouseDeltaPosition().y);
 		auto rotation = transform->GetRotation();
-		auto r1 = Quaternion::FromAngleAxis(Mathf::DegToRad(Time::deltaTime() * rotateSpeed) * Input::GetMouseDeltaPosition().x, Vector3_up);
-		auto r2 = Quaternion::FromAngleAxis(Mathf::DegToRad(Time::deltaTime() * rotateSpeed) * Input::GetMouseDeltaPosition().y, transform->GetRight());
+		auto r1 = Quaternion::FromAngleAxis(deltaX, Vector3_up);
+		auto r2 = Quaternion::FromAngleAxis(deltaY, transform->GetRight());
 		transform->SetRotation(r1 * r2 * rotation);
 		editorTransformMatrix = transform->GetMatrix();
 	}

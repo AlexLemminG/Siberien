@@ -1,6 +1,6 @@
 Material:
   color: 0x33ff00ff
-  shader: shaders\main.asset
+  shader: engine\shaders\main.asset
   colorTex: textures\zombie.png
   randomColorTextures: 
   - textures\zombie.png

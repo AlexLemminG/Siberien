@@ -118,6 +118,7 @@ public:
 	std::string GetAssetUID(std::shared_ptr<Object> obj);
 	std::string GetAssetPath(std::shared_ptr<Object> obj);
 	std::string GetRealPath(const std::string& virtualPath);
+	std::string GetVirtualPath(const std::string& realPath);
 
 	const std::shared_ptr<ryml::Tree> GetOriginalSerializedAsset(const std::string& assetPath);
 	const ryml::NodeRef GetOriginalSerializedAsset(const std::shared_ptr<Object>& obj);

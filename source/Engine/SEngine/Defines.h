@@ -33,6 +33,6 @@
 #define RYML_SHARED
 #endif
 
-#ifdef SE_DEBUG
+#ifndef SE_RETAIL
 #define SDL_ASSERT_LEVEL 2
-#endif
+#endif//TODO else

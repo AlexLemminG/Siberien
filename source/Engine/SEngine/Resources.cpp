@@ -36,7 +36,8 @@ AssetDatabase_AssetChangeListener* changeListener = nullptr;
 
 class AssetDatabase_AssetChangeListenerSystem : public System<AssetDatabase_AssetChangeListenerSystem> {
 	void Update() override {
-		changeListener->update();
+		//TODO this is expensive, need to move to separate thread
+		//changeListener->update();
 	}
 };
 REGISTER_SYSTEM(AssetDatabase_AssetChangeListenerSystem);
@@ -140,6 +141,7 @@ static void DbgLogAllAssets() {
 
 	PHYSFS_enumerate("assets", callback, &data);
 }
+
 bool AssetDatabase::Init() {
 	OPTICK_EVENT();
 	if (!PHYSFS_init(nullptr)) {//TODO pass args
@@ -254,6 +256,27 @@ std::string AssetDatabase::GetAssetUID(std::shared_ptr<Object> obj) {
 std::string AssetDatabase::GetAssetPath(std::shared_ptr<Object> obj) {
 	return AssetDatabase::PathDescriptor(GetAssetUID(obj)).assetPath;
 }
+
+std::string AssetDatabase::GetVirtualPath(const std::string& realPath) {
+	auto s = realPath;
+	SanitizeBackslashes(s);
+
+	auto dirs = PHYSFS_getSearchPath();
+	for (auto path = dirs; path += 1; path != NULL) {
+		if (s.find(*path) == 0) {
+			s = s.substr(strlen(*path), s.length() - strlen(*path));
+			std::string mountPoint = PHYSFS_getMountPoint(*path);
+			if (s.length() > 0 && s[0] == '/') {
+				s = s.substr(1, s.length() - 1);
+			}
+			s = mountPoint + s;
+			break;
+		}
+	}
+	PHYSFS_freeList(dirs);
+	return s;
+}
+
 std::string AssetDatabase::GetRealPath(const std::string& virtualPath) {
 	auto s = assetsRootFolder + virtualPath;
 	SanitizeBackslashes(s);

@@ -15,6 +15,7 @@ class Shader;
 class Camera;
 class ShadowRenderer;
 class ICamera;
+class RenderSettings;
 
 class Render {
 	friend class ShadowRenderer;
@@ -43,6 +44,7 @@ public:
 
 	bgfx::UniformHandle GetOrCreateVectorUniform(const std::string& name);
 
+	static bool IsDebugMode();
 private:
 	class GBuffer {
 	public:
@@ -65,7 +67,7 @@ private:
 
 	int currentFreeViewId = 0;
 
-	bool DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId = 0); //returns true if was not culled
+	void DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId = 0); //returns true if was not culled
 	void UpdateLights(Vector3 poi);
 
 	bool IsFullScreen();
@@ -76,6 +78,7 @@ private:
 
 	void LoadAssets();
 	void UnloadAssets();
+
 
 	GameEventHandle databaseAfterUnloadedHandle;
 	GameEventHandle databaseBeforeUnloadedHandle;
@@ -141,8 +144,12 @@ private:
 	std::shared_ptr<Texture> defaultNormalTexture;
 	std::shared_ptr<Texture> defaultEmissiveTexture;
 	std::shared_ptr<Material> simpleBlitMat;
+	std::shared_ptr<Material> brokenMat;
 
 	//int dbgMeshesDrawn = 0;
 	//int dbgMeshesCulled = 0;
 	std::shared_ptr<ShadowRenderer> shadowRenderer;
+	std::string prevWindowTitle = "";
+
+	std::shared_ptr<RenderSettings> renderSettings;
 };

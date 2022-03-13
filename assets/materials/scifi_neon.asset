@@ -1,5 +1,5 @@
 Material:
-  shader: shaders\main.asset
+  shader: engine\shaders\main.asset
   colorTex: textures\scifi\NeonSigns.png
   emissiveTex: textures\scifi\NeonSigns.png
   colors:

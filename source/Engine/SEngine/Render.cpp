@@ -38,10 +38,41 @@
 #include "ShadowRenderer.h"
 #include "Editor.h"
 #include "DbgVars.h"
+#include "bx/bx.h"
+#include "bx/platform.h"
+#include "bx/file.h"
+#include "bx/mutex.h"
+#include "bx/debug.h"
+#include "bimg/bimg.h"
 #include "dear-imgui/imgui_impl_sdl.h"
 
 DBG_VAR_BOOL(dbg_debugShadows, "Debug Shadows", false);
 DBG_VAR_BOOL(dbg_drawBones, "Draw Bones", false);
+
+
+static std::shared_ptr<RenderSettings> s_renderSettings;
+class RenderSettings : public Object {
+public:
+	bool frustumCulling = true;
+	int msaa = 0;//TODO min/max
+	bool vsync = false;
+	bool debug = false;
+	bool preSortRenderers = true;
+	bool preSortShadowRenderers = true;
+	bool tryToMinimizeStateChanges = true;
+
+	REFLECT_BEGIN(RenderSettings);
+	REFLECT_VAR(frustumCulling);
+	REFLECT_VAR(msaa);
+	REFLECT_VAR(vsync);
+	REFLECT_VAR(debug);
+	REFLECT_VAR(preSortRenderers);
+	REFLECT_VAR(preSortShadowRenderers);
+	REFLECT_VAR(tryToMinimizeStateChanges);
+	REFLECT_END();
+};
+
+DECLARE_TEXT_ASSET(RenderSettings);
 
 SDL_Window* Render::window = nullptr;
 
@@ -55,11 +86,6 @@ constexpr bgfx::ViewId kRenderPassFullScreen1 = 14;
 constexpr bgfx::ViewId kRenderPassFullScreen2 = 15;
 constexpr bgfx::ViewId kRenderPassFree = 16;
 
-
-static int GetMsaaOffset() {
-	int msaa = CfgGetInt("msaa"); // TODO move to some RenderSettings class and load it as ordinary asset
-	return Mathf::Clamp(Mathf::Log2Floor(msaa), 0, 4);
-}
 
 bool Render::IsFullScreen() {
 	auto flags = SDL_GetWindowFlags(window);
@@ -270,6 +296,112 @@ void Render::PrepareLights(const Camera& camera) {
 }
 
 
+class bgfxCallbacks : public bgfx::CallbackI {
+public:
+	virtual ~bgfxCallbacks()
+	{
+	}
+
+	virtual void fatal(const char* _filePath, uint16_t _line, bgfx::Fatal::Enum _code, const char* _str) override
+	{
+		//TODO
+		//bgfx::trace(_filePath, _line, "BGFX 0x%08x: %s\n", _code, _str);
+
+		if (bgfx::Fatal::DebugCheck == _code)
+		{
+			bx::debugBreak();
+		}
+		else
+		{
+			abort();
+		}
+	}
+
+	virtual void traceVargs(const char* _filePath, uint16_t _line, const char* _format, va_list _argList) override
+	{
+		char temp[2048];
+		char* out = temp;
+		va_list argListCopy;
+		va_copy(argListCopy, _argList);
+		int32_t len = bx::snprintf(out, sizeof(temp), "%s (%d): ", _filePath, _line);
+		int32_t total = len + bx::vsnprintf(out + len, sizeof(temp) - len, _format, argListCopy);
+		va_end(argListCopy);
+		if ((int32_t)sizeof(temp) < total)
+		{
+			out = (char*)alloca(total + 1);
+			bx::memCopy(out, temp, len);
+			bx::vsnprintf(out + len, total - len, _format, _argList);
+		}
+		out[total] = '\0';
+		bx::debugOutput(out);
+	}
+	virtual void profilerBegin(const char* _name, uint32_t _abgr, const char* _filePath, uint16_t _line) override
+	{
+		Optick::Event::Push(_name);
+	}
+
+	virtual void profilerBeginLiteral(const char* _name, uint32_t _abgr, const char* _filePath, uint16_t _line) override
+	{
+		Optick::Event::Push(_name);
+	}
+	virtual void profilerThreadStart(const char* _name) override {
+		Optick::RegisterThread(_name);
+	}
+	virtual void profilerThreadQuit(const char* /*_name*/) override {
+		Optick::UnRegisterThread(false);
+	}
+
+	virtual void profilerEnd() override
+	{
+		Optick::Event::Pop();
+	}
+
+	virtual uint32_t cacheReadSize(uint64_t /*_id*/) override
+	{
+		return 0;
+	}
+
+	virtual bool cacheRead(uint64_t /*_id*/, void* /*_data*/, uint32_t /*_size*/) override
+	{
+		return false;
+	}
+
+	virtual void cacheWrite(uint64_t /*_id*/, const void* /*_data*/, uint32_t /*_size*/) override
+	{
+	}
+
+	virtual void screenShot(const char* _filePath, uint32_t _width, uint32_t _height, uint32_t _pitch, const void* _data, uint32_t _size, bool _yflip) override
+	{
+		BX_UNUSED(_filePath, _width, _height, _pitch, _data, _size, _yflip);
+
+		const int32_t len = bx::strLen(_filePath) + 5;
+		char* filePath = (char*)alloca(len);
+		bx::strCopy(filePath, len, _filePath);
+		bx::strCat(filePath, len, ".tga");
+
+		bx::FileWriter writer;
+		if (bx::open(&writer, filePath))
+		{
+			bimg::imageWriteTga(&writer, _width, _height, _pitch, _data, false, _yflip);
+			bx::close(&writer);
+		}
+	}
+
+	virtual void captureBegin(uint32_t /*_width*/, uint32_t /*_height*/, uint32_t /*_pitch*/, bgfx::TextureFormat::Enum /*_format*/, bool /*_yflip*/) override
+	{
+		BX_TRACE("Warning: using capture without callback (a.k.a. pointless).");
+	}
+
+	virtual void captureEnd() override
+	{
+	}
+
+	virtual void captureFrame(const void* /*_data*/, uint32_t /*_size*/) override
+	{
+	}
+} callbacksForBgfx;
+
+
 bool Render::Init()
 {
 	OPTICK_EVENT();
@@ -279,6 +411,9 @@ bool Render::Init()
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 		return false;
 	}
+
+	renderSettings = AssetDatabase::Get()->Load<RenderSettings>("settings.asset");
+	s_renderSettings = renderSettings;//TODO kinda hacky
 
 	int width = SettingsGetInt("screenWidth");
 	int height = SettingsGetInt("screenHeight");
@@ -310,15 +445,16 @@ bool Render::Init()
 
 	bgfx::Init initInfo{};
 	initInfo.type = bgfx::RendererType::Direct3D11;
+	initInfo.callback = &callbacksForBgfx;
 	//TODO preload renderdoc.dll from tools folder
 #ifdef SE_HAS_DEBUG
 	initInfo.limits.transientVbSize *= 10;
 	initInfo.limits.transientIbSize *= 10;
-	initInfo.debug = CfgGetBool("debugGraphics"); // TODO move to some RenderSettings class and load it as ordinary asset
-	initInfo.profile = CfgGetBool("debugGraphics"); // TODO move to some RenderSettings class and load it as ordinary asset
+	initInfo.debug = renderSettings->debug;
+	initInfo.profile = renderSettings->debug;
 #endif
 	bgfx::init(initInfo);
-	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE); // TODO move to some RenderSettings class and load it as ordinary asset
+	bgfx::reset(width, height, renderSettings->vsync ? BGFX_RESET_VSYNC : BGFX_RESET_NONE); // TODO move to some RenderSettings class and load it as ordinary asset
 
 	bgfx::resetView(kRenderPassGeometry);
 	bgfx::resetView(1);
@@ -367,10 +503,11 @@ bool Render::Init()
 
 	Dbg::Init();
 
-	LoadAssets();
 	//TODO is it good idea to load something after database is unloaded ?
-	databaseAfterUnloadedHandle = AssetDatabase::Get()->onAfterUnloaded.Subscribe([this]() {LoadAssets(); });
-	databaseBeforeUnloadedHandle = AssetDatabase::Get()->onBeforeUnloaded.Subscribe([this]() {UnloadAssets(); });
+	databaseAfterUnloadedHandle = AssetDatabase::Get()->onAfterUnloaded.Subscribe([this]() { LoadAssets(); });
+	databaseBeforeUnloadedHandle = AssetDatabase::Get()->onBeforeUnloaded.Subscribe([this]() { UnloadAssets(); });
+
+	LoadAssets();
 
 	Graphics::SetRenderPtr(this);
 
@@ -382,10 +519,14 @@ void Render::LoadAssets() {
 	if (database == nullptr) {
 		return;;//HACK for terminated app
 	}
+	renderSettings = AssetDatabase::Get()->Load<RenderSettings>("settings.asset");
+	s_renderSettings = renderSettings;//TODO kinda hacky
+
 	whiteTexture = database->Load<Texture>("engine\\textures\\white.png");
 	defaultNormalTexture = database->Load<Texture>("engine\\textures\\defaultNormal.png");
 	defaultEmissiveTexture = database->Load<Texture>("engine\\textures\\defaultEmissive.png");
 	simpleBlitMat = database->Load<Material>("engine\\materials\\simpleBlit.asset");
+	brokenMat = database->Load<Material>("engine\\materials\\broken.asset");
 
 	//TODO assert not null
 }
@@ -396,7 +537,15 @@ void Render::UnloadAssets() {
 	defaultNormalTexture = nullptr;
 	defaultEmissiveTexture = nullptr;
 	simpleBlitMat = nullptr;
+	brokenMat = nullptr;
+	renderSettings = nullptr;
+	s_renderSettings = nullptr;//TODO kinda hacky
 }
+
+bool Render::IsDebugMode() {
+	return s_renderSettings->debug;
+}
+
 void Render::Draw(SystemsManager& systems)
 {
 	OPTICK_EVENT();
@@ -409,7 +558,10 @@ void Render::Draw(SystemsManager& systems)
 	if (Editor::Get()->HasUnsavedFiles()) {
 		windowTitle += " [NOT SAVED]";
 	}
-	SDL_SetWindowTitle(window, windowTitle.c_str());
+	if (prevWindowTitle != windowTitle) {
+		prevWindowTitle = windowTitle;
+		SDL_SetWindowTitle(window, windowTitle.c_str());
+	}
 
 	currentFreeViewId = kRenderPassFree;
 	currentFullScreenTextureIdx = 0;
@@ -429,10 +581,10 @@ void Render::Draw(SystemsManager& systems)
 		prevWidth = width;
 		prevHeight = height;
 		auto flags = BGFX_RESET_NONE | BGFX_RESET_MAXANISOTROPY;
-		if (CfgGetBool("vsync")) { // TODO move to some RenderSettings class and load it as ordinary asset
+		if (renderSettings->vsync) { // TODO move to some RenderSettings class and load it as ordinary asset
 			flags |= BGFX_RESET_VSYNC;
 		}
-		int msaa = CfgGetInt("msaa"); // TODO move to some RenderSettings class and load it as ordinary asset
+		int msaa = renderSettings->msaa; // TODO move to some RenderSettings class and load it as ordinary asset
 		int msaaOffset = Mathf::Clamp(Mathf::Log2Floor(msaa), 0, 4);
 		if (msaaOffset > 0) {
 			flags |= msaaOffset << BGFX_RESET_MSAA_SHIFT;
@@ -837,15 +989,27 @@ void Render::UpdateLights(Vector3 poi) {
 		}
 	}
 }
-
 void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial, const std::vector<MeshRenderer*>* ptrRenderers) {
 	//TODO setup camera
 	OPTICK_EVENT();
 
-	auto renderers = ptrRenderers != nullptr ? *ptrRenderers : MeshRenderer::enabledMeshRenderers;
+	std::vector<MeshRenderer*> renderers = ptrRenderers != nullptr ? *ptrRenderers : MeshRenderer::enabledMeshRenderers;
+
+	if (renderSettings->frustumCulling) {
+		int size = renderers.size();
+		for (int i = 0; i < size; i++) {
+			if (!camera.IsVisible(*renderers[i])) {
+				//dbgMeshesCulled++;
+				size--;
+				renderers[i] = renderers[size];
+				i--;
+			}
+		}
+		renderers.resize(size);
+	}
 
 	if (!overrideMaterial) {
-		auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
+		static auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
 			if (r1->mesh.get() < r2->mesh.get()) {
 				return true;
 			}
@@ -855,83 +1019,93 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 			else if (r1->material.get() > r2->material.get()) {
 				return false;
 			}
-			if (r1->material.get() < r2->material.get()) {
+			else if (r1->material.get() < r2->material.get()) {
 				return true;
 			}
-			else if (r1->material.get() > r2->material.get()) {
-				return false;
+			else {
+				return r1->randomColorTextureIdx < r2->randomColorTextureIdx;
 			}
-			return r1->randomColorTextureIdx < r2->randomColorTextureIdx;
 		};
-		{
+		if (renderSettings->preSortRenderers) {
 			OPTICK_EVENT("SortRenderers");
-			auto& renderers = MeshRenderer::enabledMeshRenderers;
 			std::sort(renderers.begin(), renderers.end(), renderersSort);
 		}
 
 
 		OPTICK_EVENT("DrawRenderers");
 		bool prevEq = false;
+		const MeshRenderer* meshNext;
+		bool nextEq;
 		//TODO get rid of std::vector / std::string
-		for (int i = 0; i < ((int)renderers.size() - 1); i++) {
-			const auto& mesh = renderers[i];
-			const auto& meshNext = renderers[i + 1];
-			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
-			bool drawn = DrawMesh(mesh, mesh->material.get(), camera, !nextEq, !nextEq, !prevEq, !prevEq, viewId);
-			prevEq = nextEq && drawn;
+		if (renderSettings->tryToMinimizeStateChanges) {
+			for (int i = 0; i < ((int)renderers.size() - 1); i++) {
+				const auto mesh = renderers[i];
+				meshNext = renderers[i + 1];
+				nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
+				DrawMesh(mesh, mesh->material.get(), camera, !nextEq, !nextEq, !prevEq, !prevEq, viewId);
+				prevEq = nextEq;
+			}
+			//TODO do we really need this ?
+			if (renderers.size() > 0) {
+				const auto& mesh = renderers[renderers.size() - 1];
+				DrawMesh(mesh, mesh->material.get(), camera, true, true, !prevEq, !prevEq, viewId);
+			}
 		}
-		//TODO do we really need this ?
-		if (renderers.size() > 0) {
-			const auto& mesh = renderers[renderers.size() - 1];
-			DrawMesh(mesh, mesh->material.get(), camera, true, true, !prevEq, !prevEq, viewId);
+		else {
+			for (const auto renderer : renderers) {
+				DrawMesh(renderer, renderer->material.get(), camera, true, true, true, true, viewId);
+			}
 		}
 	}
 	else {
 		//TODO refactor duplicated code
 
-		auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
+		static auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
 			return r1->mesh.get() < r2->mesh.get();
 		};
-		{
-			//assuming renderers are already sorted by mesh type
-			// 
-			//OPTICK_EVENT("SortRenderers");
-			//auto& renderers = MeshRenderer::enabledMeshRenderers;
-			//std::sort(renderers.begin(), renderers.end(), renderersSort);
+		if (renderSettings->preSortShadowRenderers) {
+			OPTICK_EVENT("SortShadowRenderers");
+			std::sort(renderers.begin(), renderers.end(), renderersSort);
 		}
-
 
 		OPTICK_EVENT("DrawRenderers");
 		bool prevEq = false;
 		bool materialApplied = false;//TODO dsplit drawMesh into bind material / bind mesh / submit / clear
 		//TODO get rid of std::vector / std::string
-		for (int i = 0; i < ((int)renderers.size() - 1); i++) {
-			const auto& mesh = renderers[i];
-			const auto& meshNext = renderers[i + 1];
-			//TODO optimize
-			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
-			bool drawn = DrawMesh(mesh, overrideMaterial.get(), camera, false, !nextEq, !materialApplied, !prevEq, viewId);
-			prevEq = nextEq && drawn;
-			materialApplied |= drawn;
+		if (renderSettings->tryToMinimizeStateChanges) {
+			if (renderers.size() > 0) {
+				const auto& mesh = renderers[renderers.size() - 1];
+				DrawMesh(mesh, overrideMaterial.get(), camera, renderers.size() == 1, renderers.size() == 1, true, true, viewId);
+			}
+			for (int i = 1; i < ((int)renderers.size() - 1); i++) {
+				const auto mesh = renderers[i];
+				const auto meshNext = renderers[i + 1];
+				//TODO optimize
+				bool nextEq = mesh == meshNext;
+				DrawMesh(mesh, overrideMaterial.get(), camera, false, !nextEq, false, !prevEq, viewId);
+				prevEq = nextEq;
+				materialApplied = true;
+			}
+			if (renderers.size() > 1) {
+				const auto& mesh = renderers[renderers.size() - 1];
+				DrawMesh(mesh, overrideMaterial.get(), camera, true, true, true, true, viewId);
+			}
 		}
-		if (renderers.size() > 0) {
-			const auto& mesh = renderers[renderers.size() - 1];
-			DrawMesh(mesh, overrideMaterial.get(), camera, true, true, !materialApplied, !prevEq, viewId);
+		else {
+			for (const auto renderer : renderers) {
+				DrawMesh(renderer, overrideMaterial.get(), camera, true, true, true, true, viewId);
+			}
 		}
 	}
 }
 
-bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId) {
-	ASSERT(material && material->shader);
-	{
-		bool isVisible = camera.IsVisible(*renderer);
-		if (!isVisible) {
-			//dbgMeshesCulled++;
-			return false;
-		}
+void Render::DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId) {
+	if (!material || !material->shader || !bgfx::isValid(material->shader->program)) {
+		material = brokenMat.get();//PERF checking and fixing cornercase
 	}
+	ASSERT(material && material->shader && bgfx::isValid(material->shader->program));
+
 	const auto& matrix = renderer->m_transform->GetMatrix();
-	//dbgMeshesDrawn++;
 
 	if (renderer->bonesFinalMatrices.size() != 0) {
 		bgfx::setTransform(&renderer->bonesFinalMatrices[0], renderer->bonesFinalMatrices.size());
@@ -988,8 +1162,9 @@ bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, co
 	else if (clearMaterialState) {
 		discardFlags = BGFX_DISCARD_BINDINGS | BGFX_DISCARD_STATE;
 	}
-	bgfx::submit(viewId, material->shader->program, 0u, discardFlags);
-	return true;
+	Vector4 viewPos = (camera.GetViewMatrix() * matrix.GetColumn(3));
+	uint32_t depth = viewPos.z * 1024.f;//TODO * farplane
+	bgfx::submit(viewId, material->shader->program, depth, discardFlags);
 }
 
 void Render::ApplyMaterialProperties(const Material* material) {

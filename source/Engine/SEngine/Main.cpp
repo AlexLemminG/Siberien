@@ -95,8 +95,11 @@ start:
 		Input::Update();
 
 		//TODO move away
-		ImGui_ImplSDL2_NewFrame();
-		imguiBeginFrame();
+		{
+			OPTICK_FRAME("ImGui newframe");
+			ImGui_ImplSDL2_NewFrame();
+			imguiBeginFrame();
+		}
 
 
 		if (Scene::Get()) {

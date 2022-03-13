@@ -3,23 +3,21 @@
 #include "Shader.h"
 #include "Resources.h"
 #include "Serialization.h"
+#include "Render.h"
 #include "ryml.hpp"
 #include <windows.h>
 #include "Config.h"
 
-static constexpr int importerVersion = 5;
+static constexpr int importerVersion = 6;
 
 class AssetWithModificationDate {
 public:
 	std::string assetPath;
 	uint64_t modificationDate;
 
-	AssetWithModificationDate() :assetPath(""), modificationDate(0) {
+	AssetWithModificationDate() :assetPath(""), modificationDate(0) { }
 
-	}
-
-	AssetWithModificationDate(const std::string& assetPath, uint64_t modificationDate) :assetPath(assetPath), modificationDate(modificationDate) {
-	}
+	AssetWithModificationDate(const std::string& assetPath, uint64_t modificationDate) :assetPath(assetPath), modificationDate(modificationDate) { }
 
 	REFLECT_BEGIN(AssetWithModificationDate);
 	REFLECT_VAR(assetPath);
@@ -40,7 +38,7 @@ public:
 class BasicShaderAssetImporter : public AssetImporter {
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
-		bool isDebug = CfgGetBool("debugGraphics"); // TODO some global access var
+		bool isDebug = Render::IsDebugMode();
 
 		bool isVertex = false;
 		std::vector<uint8_t> buffer;
@@ -228,12 +226,14 @@ class BasicShaderAssetImporter : public AssetImporter {
 			for (int i = 0; i < depBuffer.size(); i++) {
 				if (depBuffer[i] == '\n') {
 					if (hadFirst) {
+						std::string fileName;
 						if (depBuffer[i - 1] == '\\') {
-							files.push_back(std::string((char*)&depBuffer[start], i - start - 2));
+							fileName = (std::string((char*)&depBuffer[start], i - start - 2));
 						}
 						else {
-							files.push_back(std::string((char*)&depBuffer[start], i - start));
+							fileName = (std::string((char*)&depBuffer[start], i - start));
 						}
+						files.push_back(AssetDatabase::Get()->GetVirtualPath(fileName));
 					}
 					else {
 						hadFirst = true;
@@ -246,6 +246,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 		expectedMeta.importerVersion = importerVersion;
 		for (auto& file : files) {
 			uint64_t lastModificationDate = databaseHandle.GetLastModificationTime(file);
+			ASSERT(lastModificationDate != 0);
 			expectedMeta.modificationDates.push_back(AssetWithModificationDate(file, lastModificationDate));
 		}
 

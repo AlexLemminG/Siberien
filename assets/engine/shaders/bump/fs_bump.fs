@@ -23,9 +23,6 @@ SAMPLER2DSHADOW(s_shadowMap1, 9);
 SAMPLER2DSHADOW(s_shadowMap2, 10);
 SAMPLER2DSHADOW(s_shadowMap3, 11);
 
-uniform SamplerState s_shadowMap0SimpleSampler : REGISTER(s, 12);
-static BgfxSampler2D s_shadowMap0Simple = { s_shadowMap0SimpleSampler, s_shadowMap0Texture };
-
 #include "../deferredDirLight/fs.fs"
 
 uniform vec4 u_sphericalHarmonics[9];

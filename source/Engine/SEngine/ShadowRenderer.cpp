@@ -482,7 +482,6 @@ void ShadowRenderer::Draw(Render* render, Light* light, const Camera& camera)
 	OPTICK_EVENT();
 
 	if (!light->drawShadows) {
-		bgfx::setUniform(render->GetOrCreateVectorUniform("u_params0"), &Vector4(1, 1, 0, 0));
 		return;
 	}
 
@@ -1331,17 +1330,18 @@ void ShadowRenderer::Draw(Render* render, Light* light, const Camera& camera)
 }
 
 void ShadowRenderer::ApplyUniforms() {
-	bool renderedPrevFrame = lastRenderedFrame == Time::frameCount();
-	if (!renderedPrevFrame) {
+	bool hasShadowMap = lastRenderedFrame == Time::frameCount();
+
+	Vector4 v;
+
+	v = Vector4(1, 1, hasShadowMap, 0);
+	bgfx::setUniform(u_params0, &v.x);
+
+	if (!hasShadowMap) {
 		return;
 	}
 
 	bgfx::setUniform(u_csmFarDistances, &s_uniforms.m_csmFarDistances);
-
-	Vector4 v;
-
-	v = Vector4(1, 1, 1, 0);
-	bgfx::setUniform(u_params0, &v.x);
 
 	v = Vector4(shadowBias, 0.001f, 0.7f, 500.0f);
 	bgfx::setUniform(u_params1, &v.x);

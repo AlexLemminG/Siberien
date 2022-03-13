@@ -99,6 +99,14 @@ namespace bgfx
 			bx::debugOutput(out);
 		}
 
+		virtual void profilerThreadStart(const char* /*_name*/) override
+		{
+		}
+
+		virtual void profilerThreadQuit(const char* /*_name*/) override
+		{
+		}
+
 		virtual void profilerBegin(const char* /*_name*/, uint32_t /*_abgr*/, const char* /*_filePath*/, uint16_t /*_line*/) override
 		{
 		}
@@ -1257,13 +1265,13 @@ namespace bgfx
 
 		m_key.m_view = _id;
 
-		SortKey::Enum type = SortKey::SortProgram;
+		SortKey::Enum type;
 		switch (s_ctx->m_view[_id].m_mode)
 		{
 		case ViewMode::Sequential:      m_key.m_seq   = s_ctx->getSeqIncr(_id); type = SortKey::SortSequence; break;
 		case ViewMode::DepthAscending:  m_key.m_depth =            _depth;      type = SortKey::SortDepth;    break;
 		case ViewMode::DepthDescending: m_key.m_depth = UINT32_MAX-_depth;      type = SortKey::SortDepth;    break;
-		default: break;
+		default:                        m_key.m_depth =            _depth;      type = SortKey::SortProgram;  break;
 		}
 
 		uint64_t key = m_key.encodeDraw(type);
@@ -5640,6 +5648,16 @@ namespace bgfx
 		virtual void traceVargs(const char* _filePath, uint16_t _line, const char* _format, va_list _argList) override
 		{
 			m_interface->vtbl->trace_vargs(m_interface, _filePath, _line, _format, _argList);
+		}
+
+		virtual void profilerThreadStart(const char* _name) override
+		{
+			m_interface->vtbl->profiler_thread_start(m_interface, _name);
+		}
+
+		virtual void profilerThreadQuit(const char* _name) override
+		{
+			m_interface->vtbl->profiler_thread_quit(m_interface, _name);
 		}
 
 		virtual void profilerBegin(const char* _name, uint32_t _abgr, const char* _filePath, uint16_t _line) override

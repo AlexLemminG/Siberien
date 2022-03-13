@@ -277,10 +277,12 @@ public:
 		for (auto& mesh : meshAsset->meshes) {
 			auto vertices = VertexLayoutSystem::Get()->layout_pos.CreateBuffer(mesh->rawVertices);
 			mesh->vertexBuffer = bgfx::createVertexBuffer(bgfx::copy(&vertices[0], vertices.size()), VertexLayoutSystem::Get()->layout_pos.bgfxLayout);
+			ASSERT(bgfx::isValid(mesh->vertexBuffer));
 			bgfx::setName(mesh->vertexBuffer, mesh->name.c_str());
 			auto& indices = mesh->rawIndices;
 			//TODO makeRef + release func instead of copy 
 			mesh->indexBuffer = bgfx::createIndexBuffer(bgfx::copy(&indices[0], indices.size() * sizeof(uint16_t)));
+			ASSERT(bgfx::isValid(mesh->indexBuffer));
 			bgfx::setName(mesh->indexBuffer, mesh->name.c_str());
 
 			databaseHandle.AddAssetToLoaded(mesh->name.c_str(), mesh);

@@ -54,7 +54,6 @@ if(u_hasShadowMap > 0.0){
 		float coverage = texcoordInRange(shadowcoord.xy/shadowcoord.w) * 0.4;
 		colorCoverage = vec3(-coverage, coverage, -coverage);
 		visibility = computeVisibility(s_shadowMap0
-						, s_shadowMap0Simple
 						, shadowcoord
 						, u_shadowMapBias
 						, u_smSamplingParams
@@ -70,7 +69,7 @@ if(u_hasShadowMap > 0.0){
 
 		float coverage = texcoordInRange(shadowcoord.xy/shadowcoord.w) * 0.4;
 		colorCoverage = vec3(coverage, coverage, -coverage);
-		visibility = computeVisibility(s_shadowMap1, s_shadowMap0Simple
+		visibility = computeVisibility(s_shadowMap1
 						, shadowcoord
 						, u_shadowMapBias
 						, u_smSamplingParams
@@ -86,7 +85,7 @@ if(u_hasShadowMap > 0.0){
 
 		float coverage = texcoordInRange(shadowcoord.xy/shadowcoord.w) * 0.4;
 		colorCoverage = vec3(-coverage, -coverage, coverage);
-		visibility = computeVisibility(s_shadowMap2, s_shadowMap0Simple
+		visibility = computeVisibility(s_shadowMap2
 						, shadowcoord
 						, u_shadowMapBias
 						, u_smSamplingParams
@@ -102,7 +101,7 @@ if(u_hasShadowMap > 0.0){
 
 		float coverage = texcoordInRange(shadowcoord.xy/shadowcoord.w) * 0.4;
 		colorCoverage = vec3(coverage, -coverage, -coverage);
-		visibility = computeVisibility(s_shadowMap3, s_shadowMap0Simple
+		visibility = computeVisibility(s_shadowMap3
 						, shadowcoord
 						, u_shadowMapBias
 						, u_smSamplingParams
@@ -159,7 +158,7 @@ if(u_hasShadowMap > 0.0){
 		colorCoverage = vec3(coverage, -coverage, -coverage);
 	}
 
-	visibility = computeVisibility(s_shadowMap0, s_shadowMap0Simple
+	visibility = computeVisibility(s_shadowMap0
 					, shadowcoord
 					, u_shadowMapBias
 					, u_smSamplingParams
@@ -174,7 +173,7 @@ if(u_hasShadowMap > 0.0){
 	float coverage = texcoordInRange(v_shadowcoord.xy/v_shadowcoord.w) * 0.3;
 	colorCoverage = vec3(coverage, -coverage, -coverage);
 
-	visibility = computeVisibility(s_shadowMap0, s_shadowMap0Simple
+	visibility = computeVisibility(s_shadowMap0
 					, v_shadowcoord
 					, u_shadowMapBias
 					, u_smSamplingParams

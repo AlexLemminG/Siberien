@@ -1,0 +1,4 @@
+Scene:
+  sphericalHarmonics: harmonics.asset
+  gameObjects:
+    - engine\modelPreview\camera.asset

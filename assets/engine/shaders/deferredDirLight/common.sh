@@ -147,7 +147,7 @@ float PCFSoft(sampler2DShadow _sampler, sampler2D _samplerSimple, vec4 _shadowCo
 
 	return result / 16.0;
 }
-float PCFHard(sampler2DShadow _sampler, sampler2D _samplerSimple, vec4 _shadowCoord, float _bias, vec4 _pcfParams, vec2 _texelSize)
+float PCFHard(sampler2DShadow _sampler, vec4 _shadowCoord, float _bias, vec4 _pcfParams, vec2 _texelSize)
 {
 	float result = 0.0;
 	vec2 offset = _pcfParams.zw * _texelSize * _shadowCoord.w;
@@ -160,9 +160,9 @@ float PCFHard(sampler2DShadow _sampler, sampler2D _samplerSimple, vec4 _shadowCo
 
 	return result / 16.0;
 }
-float PCF(sampler2DShadow _sampler, sampler2D _samplerSimple, vec4 _shadowCoord, float _bias, vec4 _pcfParams, vec2 _texelSize)
+float PCF(sampler2DShadow _sampler, vec4 _shadowCoord, float _bias, vec4 _pcfParams, vec2 _texelSize)
 {
-	return PCFHard(_sampler, _samplerSimple, _shadowCoord, _bias, _pcfParams, _texelSize);
+	return PCFHard(_sampler, _shadowCoord, _bias, _pcfParams, _texelSize);
 }
 
 float VSM(sampler2DShadow _sampler, vec4 _shadowCoord, float _bias, float _depthMultiplier, float _minVariance)

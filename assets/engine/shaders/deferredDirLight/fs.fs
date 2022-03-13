@@ -91,33 +91,3 @@ float dirLightVisibility(vec3 worldPos){
 
 	return visibility;
 }
-
-vec3 dirLight(vec3 w_normal, vec3 w_pos)
-{
-	vec3 wpos = w_pos;
-
-	vec3 view = mul(u_view, vec4(wpos, 0.0) ).xyz;
-	view = -normalize(view);
-
-	vec3 lightColor = dirLightCalcLight(w_normal, view, u_lightColor[0].xyz, u_lightDir[0].xyz);
-	
-	vec3 v_view = view;
-	vec4 v_worldPos = vec4(wpos, 1.0);	
-	
-	vec4 v_texcoord1 = mul(u_shadowMapMtx0, v_worldPos);
-	vec4 v_texcoord2 = mul(u_shadowMapMtx1, v_worldPos);
-	vec4 v_texcoord3 = mul(u_shadowMapMtx2, v_worldPos);
-	vec4 v_texcoord4 = mul(u_shadowMapMtx3, v_worldPos);
-	//TODO why?
-	v_texcoord1.z += 0.5;
-	v_texcoord2.z += 0.5;
-	v_texcoord3.z += 0.5;
-	v_texcoord4.z += 0.5;
-	
-	float visibility;
-	
-	//TODO as func and not like this
-#include "fs_shadowmaps_color_lighting_main.sh"
-
-	return lightColor.xyz * visibility;
-}
