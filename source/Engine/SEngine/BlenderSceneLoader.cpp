@@ -49,14 +49,17 @@ void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::s
 			renderer->mesh = mesh;
 			gameObject->components.push_back(renderer);
 
-			auto collider = std::make_shared<MeshCollider>();
-			collider->mesh = mesh;
-			gameObject->components.push_back(collider);
+			if (addRigidBodies) {
+				auto collider = std::make_shared<MeshCollider>();
+				collider->mesh = mesh;
+				collider->isConvex = dynamicRigidBodies;
+				gameObject->components.push_back(collider);
 
-			auto rigidBody = std::make_shared<RigidBody>();
-			rigidBody->isStatic = true;
-			rigidBody->layer = "staticGeom";
-			gameObject->components.push_back(rigidBody);
+				auto rigidBody = std::make_shared<RigidBody>();
+				rigidBody->isStatic = !dynamicRigidBodies;
+				rigidBody->layer = "staticGeom";
+				gameObject->components.push_back(rigidBody);
+			}
 
 			createdObjects.push_back(gameObject);
 			Scene::Get()->AddGameObject(gameObject);

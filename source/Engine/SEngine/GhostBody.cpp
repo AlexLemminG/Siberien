@@ -17,10 +17,9 @@ DECLARE_TEXT_ASSET(GhostBody);
 //TODO add trigger enter/exit events
 
 // Portable static method: prerequisite call: m_dynamicsWorld->getBroadphase()->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback()); 
-void GetCollidingObjectsInsidePairCachingGhostObject(btDynamicsWorld* m_dynamicsWorld, btPairCachingGhostObject* m_pairCachingGhostObject, btAlignedObjectArray < btCollisionObject* >& collisionArrayOut) {
-	collisionArrayOut.resize(0);
+void GetCollidingObjectsInsidePairCachingGhostObject(btDynamicsWorld* m_dynamicsWorld, btPairCachingGhostObject* m_pairCachingGhostObject, std::vector<std::shared_ptr<GameObject>>& collisionArrayOut) {
 	if (!m_pairCachingGhostObject || !m_dynamicsWorld) return;
-	const bool addOnlyObjectsWithNegativeDistance(true);	// With "false" things don't change much, and the code is a bit faster and cleaner...
+	const bool addOnlyObjectsWithNegativeDistance(false);	// With "false" things don't change much, and the code is a bit faster and cleaner...
 
 	//#define USE_PLAIN_COLLISION_WORLD // We dispatch all collision pairs of the ghost object every step (slow)
 #ifdef USE_PLAIN_COLLISION_WORLD
@@ -70,7 +69,7 @@ void GetCollidingObjectsInsidePairCachingGhostObject(btDynamicsWorld* m_dynamics
 					const btManifoldPoint& pt = manifold->getContactPoint(p);
 					if (pt.getDistance() < 0.0) {
 						// How can I be sure that the colObjs are all distinct ? I use the "added" flag.
-						collisionArrayOut.push_back((btCollisionObject*)(manifold->getBody0() == m_pairCachingGhostObject ? manifold->getBody1() : manifold->getBody0()));
+						collisionArrayOut.push_back(Physics::GetGameObject((btCollisionObject*)(manifold->getBody0() == m_pairCachingGhostObject ? manifold->getBody1() : manifold->getBody0())));
 						added = true;
 						break;
 					}
@@ -78,7 +77,7 @@ void GetCollidingObjectsInsidePairCachingGhostObject(btDynamicsWorld* m_dynamics
 				if (added) break;
 			}
 			else if (manifold->getNumContacts() > 0) {
-				collisionArrayOut.push_back((btCollisionObject*)(manifold->getBody0() == m_pairCachingGhostObject ? manifold->getBody1() : manifold->getBody0()));
+				collisionArrayOut.push_back(Physics::GetGameObject((btCollisionObject*)(manifold->getBody0() == m_pairCachingGhostObject ? manifold->getBody1() : manifold->getBody0())));
 				break;
 			}
 		}
@@ -143,19 +142,10 @@ void GhostBody::OnDisable() {
 	SAFE_DELETE(pBody);
 }
 
-int GhostBody::GetOverlappedCount() const {
-	if (!pBody) {
-		return 0;
-	}
-	btAlignedObjectArray < btCollisionObject* > collisionArrayOut;
-	GetCollidingObjectsInsidePairCachingGhostObject(PhysicsSystem::Get()->dynamicsWorld, pBody, collisionArrayOut);
 
-	return collisionArrayOut.size();
+std::vector<std::shared_ptr<GameObject>> GhostBody::GetOverlappedObjects() const {
+	std::vector<std::shared_ptr<GameObject>> collisionArrayOut;
+	GetCollidingObjectsInsidePairCachingGhostObject(PhysicsSystem::Get()->dynamicsWorld, pBody, collisionArrayOut);
+	return collisionArrayOut;
 }
 
-std::shared_ptr<GameObject> GhostBody::GetOverlappedObject(int idx) const {
-	btAlignedObjectArray < btCollisionObject* > collisionArrayOut;
-	GetCollidingObjectsInsidePairCachingGhostObject(PhysicsSystem::Get()->dynamicsWorld, pBody, collisionArrayOut);
-	//TODO optimize
-	return Physics::GetGameObject(collisionArrayOut[idx]);
-}

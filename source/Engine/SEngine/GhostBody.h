@@ -16,8 +16,7 @@ public:
 	virtual void FixedUpdate() override;
 	virtual void OnDisable() override;
 
-	int GetOverlappedCount() const;
-	std::shared_ptr<GameObject> GetOverlappedObject(int idx) const;
+	std::vector<std::shared_ptr<GameObject>> GetOverlappedObjects() const;
 
 	std::string layer;
 private:

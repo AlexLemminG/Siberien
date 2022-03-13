@@ -28,7 +28,8 @@ class BlenderSceneLoader : public Component {
 	std::shared_ptr<Material> materialPosters;
 	std::shared_ptr<FullMeshAsset> scene;
 
-
+	bool addRigidBodies = true;
+	bool dynamicRigidBodies = false;
 
 	virtual void OnEnable() override;
 	virtual void OnDisable() override;
@@ -41,6 +42,8 @@ class BlenderSceneLoader : public Component {
 	REFLECT_VAR(materialRoads);
 	REFLECT_VAR(materialPosters);
 	REFLECT_VAR(scene);
+	REFLECT_VAR(addRigidBodies);
+	REFLECT_VAR(dynamicRigidBodies);
 	REFLECT_END();
 
 	std::vector<std::shared_ptr<GameObject>> createdObjects;

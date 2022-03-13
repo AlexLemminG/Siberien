@@ -9,6 +9,7 @@ public:
 	float collisionLerpT = 10.f;
 	Vector3 offset = Vector3_zero;
 	std::string targetTag;
+	bool sphereCast = true;
 
 
 	void OnEnable() override;
@@ -19,6 +20,7 @@ public:
 	REFLECT_VAR(lerpT);
 	REFLECT_VAR(collisionLerpT);
 	REFLECT_VAR(offset);
+	REFLECT_VAR(sphereCast);
 	REFLECT_END();
 
 private:
