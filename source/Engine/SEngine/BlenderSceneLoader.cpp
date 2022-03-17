@@ -41,6 +41,12 @@ void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::s
 			else if (meshName.find("Posters") != -1 || meshName.find("Billboard") != -1) {
 				material = materialPosters;
 			}
+			for (auto& mat : materialMapping) {
+				if (mat.from == mesh->assetMaterialName) {
+					ASSERT(mat.to);
+					material = mat.to;
+				}
+			}
 
 			//LogError("%s - %s", node->mName.C_Str(), meshName.c_str());
 

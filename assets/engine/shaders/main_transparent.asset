@@ -1,4 +1,4 @@
 Shader:
   vs: shaders\bump\vs_bump.vs
-  fs: shaders\bump\transparent.fs
+  fs: shaders\bump\fs_transparent.fs
   isAlphaBlending: true

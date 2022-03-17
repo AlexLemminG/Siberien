@@ -130,7 +130,7 @@ start:
 		}
 		if (needSceneReload) {
 			needSceneReload = false;
-			SceneManager::LoadScene(GetFirstSceneName());
+			SceneManager::LoadScene(SceneManager::GetCurrentScenePath());
 			assets.UnloadAll();
 		}
 

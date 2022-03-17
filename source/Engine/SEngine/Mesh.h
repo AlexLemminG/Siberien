@@ -58,6 +58,8 @@ public:
 
 	std::string name;
 
+	std::string assetMaterialName;
+
 	std::vector<RawVertexData> rawVertices;
 	std::vector<uint16_t> rawIndices;
 

@@ -842,6 +842,10 @@ public:
 			isSettings = !isSettings;
 		}
 		ImGui::SameLine();
+		if (ImGui::Button("Scene")) {
+			Editor::Get()->selectedObject = Scene::Get();
+		}
+		ImGui::SameLine();
 		ImGui::Checkbox("DrawGizmos", &s_drawGizmos);
 
 		//TODO some wrapper for imgui string input

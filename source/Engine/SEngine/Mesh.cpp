@@ -364,7 +364,7 @@ public:
 	}
 
 	std::shared_ptr<FullMeshAsset> Import(AssetDatabase_BinaryImporterHandle& databaseHandle) {
-		int importerVersion = 0;//TODO move somewhere
+		int importerVersion = 1;//TODO move somewhere
 		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("MeshAsset");
 		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");
 
@@ -488,6 +488,8 @@ public:
 			fullMeshAsset->meshes.push_back(mesh);
 			buffer.Read(mesh->name);
 
+			buffer.Read(mesh->assetMaterialName);
+
 			int numIndices;
 			buffer.Read(numIndices);
 			ResizeVectorNoInit(mesh->rawIndices, numIndices);
@@ -574,6 +576,8 @@ public:
 		for (int i = 0; i < numMeshes; i++) {
 			auto mesh = meshAsset->meshes[i];
 			buffer.Write(mesh->name);
+
+			buffer.Write(mesh->assetMaterialName);
 
 			int numIndices = mesh->rawIndices.size();
 			buffer.Write(numIndices);
@@ -680,7 +684,12 @@ public:
 		for (int iMesh = 0; iMesh < scene->mNumMeshes; iMesh++) {
 			auto* aiMesh = scene->mMeshes[iMesh];
 			auto mesh = std::make_shared<Mesh>();
+
 			mesh->name = aiMesh->mName.C_Str();
+
+			if (aiMesh->mMaterialIndex < scene->mNumMaterials) {
+				mesh->assetMaterialName = scene->mMaterials[aiMesh->mMaterialIndex]->GetName().C_Str();
+			}
 
 			mesh->rawVertices = CalcVerticesFromAiMesh(aiMesh);
 			mesh->rawIndices = CalcIndicesFromAiMesh(aiMesh);
@@ -714,7 +723,6 @@ public:
 			}
 
 			PhysicsSystem::Get()->CalcMeshPhysicsDataFromBuffer(mesh);
-
 
 			fullAsset->meshes.push_back(mesh);
 

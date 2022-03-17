@@ -116,6 +116,36 @@ AssetDatabase* AssetDatabase::Get() {
 	return mainDatabase;
 }
 
+
+static void GetAllAssets(std::vector<std::string>& result) {
+	struct Data {
+		PHYSFS_EnumerateCallback callback;
+		std::vector<std::string>* result;
+		int indent;
+	};
+	PHYSFS_EnumerateCallback callback;
+	callback = [](void* d, const char* origdir, const char* fname) {
+		Data data = *(Data*)d;
+		std::string fullPath = origdir;
+		fullPath += "/";
+		fullPath += fname;
+
+		if (PHYSFS_isDirectory(fullPath.c_str())) {
+			data.indent += 1;
+			PHYSFS_enumerate(fullPath.c_str(), data.callback, &data);
+		}
+		else {
+			data.result->push_back(fullPath.substr(strlen("assets/"), fullPath.length() - strlen("assets/")));
+		}
+		return PHYSFS_EnumerateCallbackResult::PHYSFS_ENUM_OK;
+	};
+	Data data;
+	data.result = &result;
+	data.callback = callback;
+	data.indent = 0;
+
+	PHYSFS_enumerate("assets", callback, &data);
+}
 static void DbgLogAllAssets() {
 	struct Data {
 		PHYSFS_EnumerateCallback callback;
@@ -220,12 +250,8 @@ void AssetDatabase::UnloadAll() {
 }
 
 std::vector<std::string> AssetDatabase::GetAllAssetNames() {
-	std::string path = assetsRootFolder;
 	std::vector<std::string> result;
-	for (const auto& entry : std::filesystem::recursive_directory_iterator(path)) {
-		auto str = entry.path().string();
-		result.push_back(str.substr(path.length(), str.length() - path.length()));
-	}
+	GetAllAssets(result);
 	return result;
 }
 
