@@ -19,6 +19,7 @@ typedef mathfu::Matrix<float, 3, 3> Matrix3;
 typedef mathfu::Quaternion<float> Quaternion;
 
 constexpr Vector3 Vector3_zero{ 0.f, 0.f, 0.f };
+constexpr Vector4 Vector4_zero{ 0.f, 0.f, 0.f, 0.f };
 constexpr Vector3 Vector3_one{ 1.f,1.f,1.f };
 constexpr Vector3 Vector3_forward{ 0.f, 0.f, 1.f };
 constexpr Vector3 Vector3_up{ 0.f, 1.f, 0.f };

@@ -28,19 +28,7 @@ void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::s
 			transform->SetMatrix(matrix);
 			gameObject->components.push_back(transform);
 
-			auto material = this->material;
-			if (meshName.find("Road") != -1) {
-				material = materialRoads;
-			}
-			else if (meshName.find("Sign_Ad") != -1) {
-				material = materialSigns;
-			}
-			else if (meshName.find("Sign_Neon") != -1) {
-				material = materialNeon;
-			}
-			else if (meshName.find("Posters") != -1 || meshName.find("Billboard") != -1) {
-				material = materialPosters;
-			}
+			std::shared_ptr<Material> material = this->material;
 			for (auto& mat : materialMapping) {
 				if (mat.from == mesh->assetMaterialName) {
 					ASSERT(mat.to);
@@ -48,12 +36,12 @@ void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::s
 				}
 			}
 
-			//LogError("%s - %s", node->mName.C_Str(), meshName.c_str());
-
-			auto renderer = std::make_shared<MeshRenderer>();
-			renderer->material = material;
-			renderer->mesh = mesh;
-			gameObject->components.push_back(renderer);
+			if (material) {
+				auto renderer = std::make_shared<MeshRenderer>();
+				renderer->material = material;
+				renderer->mesh = mesh;
+				gameObject->components.push_back(renderer);
+			}
 
 			if (addRigidBodies) {
 				auto collider = std::make_shared<MeshCollider>();

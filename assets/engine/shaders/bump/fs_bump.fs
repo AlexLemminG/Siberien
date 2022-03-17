@@ -28,6 +28,7 @@ SAMPLER2DSHADOW(s_shadowMap3, 11);
 uniform vec4 u_sphericalHarmonics[9];
 uniform vec4 u_cameraPos;
 uniform vec4 u_emissiveColor;
+uniform vec4 u_uvOffset;
 
 vec3 SampleSH(vec3 normal, vec4 sph[9]) {
   float x = normal.x;
@@ -262,21 +263,21 @@ vec4 CalcPBR(Surface surface){
 void main()
 {
 	mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
-
+	vec2 uv = v_texcoord0 + u_uvOffset;
 	vec3 localNormal;
-	localNormal.xy = texture2D(s_texNormal, v_texcoord0).xy * 2.0 - 1.0;
+	localNormal.xy = texture2D(s_texNormal, uv).xy * 2.0 - 1.0;
 	localNormal.z = sqrt(1.0 - dot(localNormal.xy, localNormal.xy) );
 	
-	vec4 albedoAlpha = toLinear(texture2D(s_texColor, v_texcoord0));
+	vec4 albedoAlpha = toLinear(texture2D(s_texColor, uv));
 #if ALPHA_CUTOFF
 	if (albedoAlpha.a < 0.5){
 		discard;
 	}
 #endif
-	vec3 emissive = toLinear(texture2D(s_texEmissive, v_texcoord0)).rgb;
+	vec3 emissive = toLinear(texture2D(s_texEmissive, uv)).rgb;
 	
-	float metalic = texture2D(s_texMetalic, v_texcoord0).b;
-	float roughness = texture2D(s_texRoughness, v_texcoord0).g;
+	float metalic = texture2D(s_texMetalic, uv).b;
+	float roughness = texture2D(s_texRoughness, uv).g;
 	
 	Surface surface;
 	surface.albedo = albedoAlpha.rgb;

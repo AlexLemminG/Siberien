@@ -5,3 +5,6 @@ Material:
   colors:
     - name: u_emissiveColor
       value: [1.0,1.0,1.0]
+  vectors:
+    - name: u_uvOffset
+      value: [0.0,0.0]

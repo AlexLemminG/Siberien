@@ -41,7 +41,7 @@ class Vector<T, 4> {
   explicit inline Vector(T s)
       : x(s), y(s), z(s), w(s) {}
 
-  inline Vector(T s1, T s2, T s3, T s4)
+  inline constexpr Vector(T s1, T s2, T s3, T s4)
       : x(s1), y(s2), z(s3), w(s4) {}
 
   inline Vector(const Vector<T, 3>& v123, T s4)

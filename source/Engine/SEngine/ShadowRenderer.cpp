@@ -440,15 +440,15 @@ private:
 };
 static Uniforms s_uniforms;
 
-bgfx::UniformHandle u_csmFarDistances;
-bgfx::UniformHandle u_params0;
-bgfx::UniformHandle u_params1;
-bgfx::UniformHandle u_params2;
-bgfx::UniformHandle u_smSamplingParams;
+static bgfx::UniformHandle u_csmFarDistances;
+static bgfx::UniformHandle u_params0 = BGFX_INVALID_HANDLE;
+static bgfx::UniformHandle u_params1;
+static bgfx::UniformHandle u_params2;
+static bgfx::UniformHandle u_smSamplingParams;
 
-bgfx::UniformHandle s_shadowMap[4];
+static bgfx::UniformHandle s_shadowMap[4];
 
-bgfx::UniformHandle u_shadowMapMtx[4];
+static bgfx::UniformHandle u_shadowMapMtx[4];
 
 void ShadowRenderer::Init() {
 	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
@@ -1331,9 +1331,14 @@ void ShadowRenderer::Draw(Render* render, Light* light, const Camera& camera)
 }
 
 void ShadowRenderer::ApplyUniforms() {
+	if (!bgfx::isValid(u_params0)) {
+		return;
+	}
+
 	bool hasShadowMap = lastRenderedFrame == Time::frameCount();
 
 	Vector4 v;
+
 
 	v = Vector4(1, 1, hasShadowMap, 0);
 	bgfx::setUniform(u_params0, &v.x);

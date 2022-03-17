@@ -6,6 +6,7 @@
 #include "Gun.h"
 
 class EnemyCreepController;
+class Material;
 
 class CheckpointAmmo {
 public:
@@ -45,11 +46,13 @@ public:
 	REFLECT_VAR(indoorCameraSettings);
 	REFLECT_VAR(outdoorCameraSettings);
 	REFLECT_VAR(checkpointAmmo);
+	REFLECT_VAR(neonMaterial);
 	REFLECT_END();
 
 	std::shared_ptr<RandomObjectSpawner> randomGun;
 	std::shared_ptr<Camera> outdoorCameraSettings;
 	std::shared_ptr<Camera> indoorCameraSettings;
+	std::shared_ptr<Material> neonMaterial;
 
 	bool IsTriggered(const std::string& name);
 	void Trigger(const std::string& name);

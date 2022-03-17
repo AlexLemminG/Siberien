@@ -1105,7 +1105,7 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 			}
 			if (renderers.size() > 1) {
 				const auto& mesh = renderers[renderers.size() - 1];
-				DrawMesh(mesh, overrideMaterial.get(), camera, true, true, true, true, viewId);
+				DrawMesh(mesh, overrideMaterial.get(), camera, true, true, false, !prevEq, viewId);
 			}
 		}
 		else {
@@ -1249,18 +1249,22 @@ void Render::ApplyMaterialProperties(const Material* material) {
 		}
 		bgfx::setUniform(uniform, &colorProp.value);
 	}
-
-	for (const auto& vecProp : material->vectors) {
-		auto it = vectorUniforms.find(vecProp.name);
+	static auto setVectorUniform = [](Render* render, const std::string& name, const Vector4& value) {
+		auto it = render->vectorUniforms.find(name);
 		bgfx::UniformHandle uniform;
-		if (it == vectorUniforms.end()) {
-			uniform = bgfx::createUniform(vecProp.name.c_str(), bgfx::UniformType::Vec4);
-			vectorUniforms[vecProp.name] = uniform;
+		if (it == render->vectorUniforms.end()) {
+			uniform = bgfx::createUniform(name.c_str(), bgfx::UniformType::Vec4);
+			render->vectorUniforms[name] = uniform;
 		}
 		else {
 			uniform = it->second;
 		}
-		bgfx::setUniform(uniform, &vecProp.value);
+		bgfx::setUniform(uniform, &value);
+	};
+	setVectorUniform(this, "u_uvOffset", Vector4_zero);
+
+	for (const auto& vecProp : material->vectors) {
+		setVectorUniform(this, vecProp.name, vecProp.value);
 	}
 
 	//TODO i based on shader uniformInfo samplers order ?

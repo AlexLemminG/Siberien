@@ -50,11 +50,6 @@ class BlenderSceneLoader : public Component {
 	REFLECT_BEGIN(BlenderSceneLoader);
 	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_VAR(materialMapping);
-	REFLECT_VAR(material);
-	REFLECT_VAR(materialNeon);
-	REFLECT_VAR(materialSigns);
-	REFLECT_VAR(materialRoads);
-	REFLECT_VAR(materialPosters);
 	REFLECT_VAR(scene);
 	REFLECT_VAR(addRigidBodies);
 	REFLECT_VAR(dynamicRigidBodies);
