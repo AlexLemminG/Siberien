@@ -140,6 +140,8 @@ private:
 	int prevWidth;
 	int prevHeight;
 
+	uint32_t bgfxResetFlags = 0;
+
 	std::shared_ptr<Texture> whiteTexture;
 	std::shared_ptr<Texture> defaultNormalTexture;
 	std::shared_ptr<Texture> defaultEmissiveTexture;

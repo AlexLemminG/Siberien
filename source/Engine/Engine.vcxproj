@@ -246,6 +246,7 @@
     <ClInclude Include="SEngine\Graphics.h" />
     <ClInclude Include="SEngine\Input.h" />
     <ClInclude Include="SEngine\Light.h" />
+    <ClInclude Include="SEngine\magic_enum.hpp" />
     <ClInclude Include="SEngine\Material.h" />
     <ClInclude Include="SEngine\Mesh.h" />
     <ClInclude Include="SEngine\MeshCollider.h" />

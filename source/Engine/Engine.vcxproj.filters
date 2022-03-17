@@ -400,5 +400,8 @@
     <ClInclude Include="SEngine\FileWatcher\FileWatcherWin32.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="SEngine\magic_enum.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

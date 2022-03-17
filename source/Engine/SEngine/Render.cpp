@@ -49,6 +49,7 @@
 DBG_VAR_BOOL(dbg_debugShadows, "Debug Shadows", false);
 DBG_VAR_BOOL(dbg_drawBones, "Draw Bones", false);
 
+REFLECT_ENUM(bgfx::RendererType::Enum);
 
 static std::shared_ptr<RenderSettings> s_renderSettings;
 class RenderSettings : public Object {
@@ -60,6 +61,9 @@ public:
 	bool preSortRenderers = true;
 	bool preSortShadowRenderers = true;
 	bool tryToMinimizeStateChanges = true;
+	bool bgfxDebugStats = false;
+	bool maxAnisotropy = true;
+	bgfx::RendererType::Enum backend = bgfx::RendererType::Vulkan;
 
 	REFLECT_BEGIN(RenderSettings);
 	REFLECT_VAR(frustumCulling);
@@ -69,6 +73,9 @@ public:
 	REFLECT_VAR(preSortRenderers);
 	REFLECT_VAR(preSortShadowRenderers);
 	REFLECT_VAR(tryToMinimizeStateChanges);
+	REFLECT_VAR(bgfxDebugStats);
+	REFLECT_VAR(maxAnisotropy);
+	REFLECT_VAR(backend);
 	REFLECT_END();
 };
 
@@ -305,6 +312,7 @@ public:
 	virtual void fatal(const char* _filePath, uint16_t _line, bgfx::Fatal::Enum _code, const char* _str) override
 	{
 		//TODO
+		LogError("%s", _str ? _str : "");
 		//bgfx::trace(_filePath, _line, "BGFX 0x%08x: %s\n", _code, _str);
 
 		if (bgfx::Fatal::DebugCheck == _code)
@@ -445,7 +453,7 @@ bool Render::Init()
 
 
 	bgfx::Init initInfo{};
-	initInfo.type = bgfx::RendererType::Direct3D11;
+	initInfo.type = renderSettings->backend;
 	initInfo.callback = &callbacksForBgfx;
 	//TODO preload renderdoc.dll from tools folder
 #ifdef SE_HAS_DEBUG
@@ -455,11 +463,6 @@ bool Render::Init()
 	initInfo.profile = renderSettings->debug;
 #endif
 	bgfx::init(initInfo);
-	bgfx::reset(width, height, renderSettings->vsync ? BGFX_RESET_VSYNC : BGFX_RESET_NONE); // TODO move to some RenderSettings class and load it as ordinary asset
-
-	bgfx::resetView(kRenderPassGeometry);
-	bgfx::resetView(1);
-	bgfx::setDebug(BGFX_DEBUG_TEXT /*| BGFX_DEBUG_STATS*/);
 
 	bgfx::setViewRect(kRenderPassGeometry, 0, 0, width, height);
 	bgfx::setViewRect(1, 0, 0, width, height);
@@ -574,24 +577,35 @@ void Render::Draw(SystemsManager& systems)
 	if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_RETURN) && (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LALT) || Input::GetKey(SDL_Scancode::SDL_SCANCODE_RALT))) {
 		SetFullScreen(!IsFullScreen());
 	}
+	auto bgfxDbg = BGFX_DEBUG_TEXT;
+	if (renderSettings->bgfxDebugStats) {
+		bgfxDbg |= BGFX_DEBUG_STATS;
+	}
+	bgfx::setDebug(bgfxDbg);
 
 	int width;
 	int height;
 	SDL_GetWindowSize(window, &width, &height);
 
-	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenBuffer) || !bgfx::isValid(m_fullScreenBuffer2)) {
+	auto bgfxResetFlags = BGFX_RESET_NONE;
+	if (renderSettings->vsync) {
+		bgfxResetFlags |= BGFX_RESET_VSYNC;
+	}
+	if (renderSettings->maxAnisotropy) {
+		bgfxResetFlags |= BGFX_RESET_MAXANISOTROPY;
+	}
+	if (renderSettings->msaa > 0) {
+		int msaaOffset = Mathf::Clamp(Mathf::Log2Floor(renderSettings->msaa), 0, 4);
+		if (msaaOffset > 0) {
+			bgfxResetFlags |= msaaOffset << BGFX_RESET_MSAA_SHIFT;
+		}
+	}
+
+	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenBuffer) || !bgfx::isValid(m_fullScreenBuffer2) || this->bgfxResetFlags != bgfxResetFlags) {
 		prevWidth = width;
 		prevHeight = height;
-		auto flags = BGFX_RESET_NONE | BGFX_RESET_MAXANISOTROPY;
-		if (renderSettings->vsync) { // TODO move to some RenderSettings class and load it as ordinary asset
-			flags |= BGFX_RESET_VSYNC;
-		}
-		int msaa = renderSettings->msaa; // TODO move to some RenderSettings class and load it as ordinary asset
-		int msaaOffset = Mathf::Clamp(Mathf::Log2Floor(msaa), 0, 4);
-		if (msaaOffset > 0) {
-			flags |= msaaOffset << BGFX_RESET_MSAA_SHIFT;
-		}
-		bgfx::reset(width, height, flags);
+		this->bgfxResetFlags = bgfxResetFlags;
+		bgfx::reset(width, height, bgfxResetFlags);
 		if (bgfx::isValid(m_fullScreenBuffer)) {
 			bgfx::destroy(m_fullScreenBuffer);
 		}
@@ -609,7 +623,8 @@ void Render::Draw(SystemsManager& systems)
 			;
 
 		uint64_t tsFlagsWithMsaa = tsFlags;
-		if (msaaOffset > 0) {
+		if (renderSettings->msaa > 0) {
+			int msaaOffset = Mathf::Clamp(Mathf::Log2Floor(renderSettings->msaa), 0, 4);
 			tsFlagsWithMsaa = Bits::SetMaskFalse(tsFlagsWithMsaa, BGFX_TEXTURE_RT);
 			tsFlagsWithMsaa |= uint64_t(msaaOffset + 1) << BGFX_TEXTURE_RT_MSAA_SHIFT;
 		}

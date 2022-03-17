@@ -28,9 +28,10 @@
 #include "dear-imgui/widgets/gizmo.h"
 #include "DbgVars.h"
 #include "BoxCollider.h"
+#include "magic_enum.hpp"
 
 DBG_VAR_BOOL(dbg_showInspector, "Inspector", false);
-
+bool s_drawGizmos = true;
 //TODO add to some header
 extern void DuplicateSerialized(const ryml::NodeRef& from, ryml::NodeRef& to);
 
@@ -705,6 +706,7 @@ public:
 		}
 		else {
 			auto typeNonBase = dynamic_cast<ReflectedTypeNonTemplated*>(type);
+			auto enumTypeBase = dynamic_cast<ReflectedTypeEnumBase*>(type);
 			if (typeNonBase) {
 				BeginInspector(varInfo);
 				if (ImGui::TreeNode(name.c_str())) {
@@ -776,6 +778,40 @@ public:
 				EndInspector(varInfo);
 				canReset = false;
 			}
+			else if (enumTypeBase != nullptr) {
+				int* value = (int*)(object);//TODO not always int!!!
+				BeginInspector(varInfo);
+
+				std::string currentVal = "";
+				for (auto val : enumTypeBase->GetEnumEntries()) {
+					bool hasVal = enumTypeBase->IsFlags() ? (*value & val.first) == val.first : *value == val.first;
+					if (hasVal) {
+						if (currentVal.size() > 0) {
+							currentVal = currentVal + " | " + val.second;
+						}
+						else {
+							currentVal = val.second;
+						}
+					}
+				}
+				if (ImGui::BeginCombo(name.c_str(), currentVal.c_str())) {
+					for (auto val : enumTypeBase->GetEnumEntries()) {
+						bool isSelected = false;
+						if (ImGui::Selectable(val.second.c_str(), isSelected)) {
+							if (enumTypeBase->IsFlags()) {
+								*value = *value ^ val.first;
+							}
+							else {
+								*value = val.first;
+							}
+							varInfo.SetValue(value);
+							changed = true;
+						}
+					}
+					ImGui::EndCombo();
+				}
+				EndInspector(varInfo);
+			}
 			else {
 				//TODO error
 				ImGui::LabelText(name.c_str(), "???");
@@ -805,6 +841,8 @@ public:
 		if (ImGui::Button(isSettings ? "GameObjects" : "Settings")) {
 			isSettings = !isSettings;
 		}
+		ImGui::SameLine();
+		ImGui::Checkbox("DrawGizmos", &s_drawGizmos);
 
 		//TODO some wrapper for imgui string input
 		char buff[256];
@@ -1068,7 +1106,7 @@ public:
 			}
 		}
 
-		if (Editor::Get()->selectedObject) {
+		if (Editor::Get()->selectedObject && s_drawGizmos) {
 			//gizmos stuff
 			auto go = std::dynamic_pointer_cast<GameObject>(Editor::Get()->selectedObject);
 
@@ -1101,7 +1139,7 @@ public:
 			}
 		}
 
-		if (Input::GetMouseButtonDown(0) && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && !ImGuizmo::IsUsing()) {
+		if (Input::GetMouseButtonDown(0) && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && !ImGuizmo::IsUsing() && s_drawGizmos) {
 			auto objectsUnderCursor = GetObjectsUnderCursor();
 			if (objectsUnderCursor.size() > 0) {
 				auto idx = nextSelectedObjectIndex % objectsUnderCursor.size();

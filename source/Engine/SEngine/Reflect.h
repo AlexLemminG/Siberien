@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include "Object.h"
 #include "Component.h"
+#include "magic_enum.hpp"
 
 template<class T>
 struct is_shared_ptr : std::false_type {};
@@ -221,6 +222,44 @@ inline std::enable_if_t<!is_shared_ptr<T>::value && !is_std_vector<T>::value, Re
 GetReflectedType() {
 	return T::TypeOf();
 }
+
+
+class ReflectedTypeEnumBase : public ReflectedTypeBase {
+public:
+	ReflectedTypeEnumBase(std::string name) : ReflectedTypeBase(name) { }
+	virtual const std::vector<std::pair<uint64_t, std::string>>& GetEnumEntries() = 0;
+	virtual const bool IsFlags() = 0;
+};
+
+template<typename T, bool is_flags>
+class ReflectedTypeEnum : public ReflectedTypeEnumBase {
+public:
+	ReflectedTypeEnum(std::string name) : ReflectedTypeEnumBase(name) {
+
+	}
+	virtual void Serialize(SerializationContext& context, const void* object) override
+	{
+		context << *((uint64_t*)(T*)object);
+	}
+	virtual void Deserialize(const SerializationContext& context, void* object) override
+	{
+		if (context.IsDefined()) {
+			context >> (*(uint64_t*)(T*)object);
+		}
+	}
+
+	virtual const std::vector<std::pair<uint64_t, std::string>>& GetEnumEntries() override {
+		static std::vector<std::pair<uint64_t, std::string>> result;
+		if (result.size() == 0) {
+			for (auto e : magic_enum::enum_entries<T>()) {
+				result.push_back(std::make_pair(uint64_t(e.first), std::string(e.second)));
+			}
+		}
+		return result;
+	}
+	virtual const bool IsFlags() override { return is_flags; };
+};
+
 
 template<>
 inline ReflectedTypeBase* GetReflectedType<int>() {
@@ -550,6 +589,20 @@ public:\
 	ReflectedTypeBase* GetType() const{ \
 		return TypeOf(); \
 	}
+
+#define REFLECT_ENUM_FLAGS(enumClass) \
+template<> \
+inline ReflectedTypeBase * GetReflectedType<##enumClass>() { \
+	static ReflectedTypeEnum<##enumClass, true> type(#enumClass); \
+	return &type; \
+}
+
+#define REFLECT_ENUM(enumClass) \
+template<> \
+inline ReflectedTypeBase * GetReflectedType<##enumClass>() { \
+	static ReflectedTypeEnum<##enumClass, false> type(#enumClass); \
+	return &type; \
+}
 
 template<typename T>
 void Deserialize(const SerializationContext& context, T& t) {
