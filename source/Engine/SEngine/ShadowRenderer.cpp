@@ -14,6 +14,36 @@
 #include "bgfx/bgfx.h"
 #include "bx/bx.h"
 #include "bx/math.h"
+#include "Reflect.h"
+#include "DbgVars.h"
+#include "Dbg.h"
+
+DBG_VAR_BOOL_EXTERN(dbg_debugShadows);
+
+class ShadowSettings : public Object {
+public:
+	int resolution = 1024 * 2;
+	int numSplits = 1; //TODO way of clamping by ui and by force
+	float splitDistribution = 0.6;
+	float near = 0.1f;
+	float far = 22.0f;
+	float near_far = 1024;
+	bool stabilize = true;
+
+	float pcfOffset = 0.2f;
+
+	REFLECT_BEGIN(ShadowSettings);
+	REFLECT_VAR(resolution);
+	REFLECT_VAR(numSplits);
+	REFLECT_VAR(splitDistribution);
+	REFLECT_VAR(stabilize);
+	REFLECT_VAR(near);
+	REFLECT_VAR(far);
+	REFLECT_VAR(near_far);
+	REFLECT_VAR(pcfOffset);
+	REFLECT_END();
+};
+DECLARE_TEXT_ASSET(ShadowSettings);
 
 ShadowRenderer::ShadowRenderer() {}
 
@@ -410,21 +440,22 @@ private:
 };
 static Uniforms s_uniforms;
 
-bgfx::UniformHandle u_csmFarDistances;
-bgfx::UniformHandle u_params0;
-bgfx::UniformHandle u_params1;
-bgfx::UniformHandle u_params2;
-bgfx::UniformHandle u_smSamplingParams;
+static bgfx::UniformHandle u_csmFarDistances;
+static bgfx::UniformHandle u_params0 = BGFX_INVALID_HANDLE;
+static bgfx::UniformHandle u_params1;
+static bgfx::UniformHandle u_params2;
+static bgfx::UniformHandle u_smSamplingParams;
 
-bgfx::UniformHandle s_shadowMap[4];
+static bgfx::UniformHandle s_shadowMap[4];
 
-bgfx::UniformHandle u_shadowMapMtx[4];
+static bgfx::UniformHandle u_shadowMapMtx[4];
 
 void ShadowRenderer::Init() {
 	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
 	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
 	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
 	s_rtShadowMap.push_back(BGFX_INVALID_HANDLE);
+
 }
 
 void ShadowRenderer::Term() {
@@ -436,30 +467,38 @@ void ShadowRenderer::Term() {
 		}
 	}
 }
+
 float m_shadowMapMtx[ShadowMapRenderTargets::Count][16];
 static int m_numSplits = 1;
-void ShadowRenderer::Draw(Light* light, const ICamera& camera)
+const uint8_t maxNumSplits = 4;
+void ShadowRenderer::Draw(Render* render, Light* light, const Camera& camera)
 {
+	//TODO set correct clear flags/colors to remove shadows out of shadow frustum
+	//TODO try to rotate dir light for better coverage
 	OPTICK_EVENT();
-	auto render = Graphics::Get()->render;
+
 	if (!light->drawShadows) {
-		bgfx::setUniform(render->GetOrCreateVectorUniform("u_params0"), &Vector4(1, 1, 0, 0));
 		return;
+	}
+
+	settings = AssetDatabase::Get()->Load<ShadowSettings>("settings.asset");
+	if (settings == nullptr) {
+		settings = std::make_shared<ShadowSettings>();
 	}
 
 	this->shadowBias = light->shadowBias;
 	//TODO
-	int lightShadowSize = 1024 * 2;
+	int lightShadowSize = Mathf::Max(4, settings->resolution);// 1024 * 2;
 	static bool m_stencilPack = false;
 	static float m_fovXAdjust = 1.0f;
 	static float m_fovYAdjust = 1.0f;
 
-	static float m_near = 0.1;//TODO params
-	static float m_far = 22.f;//TODO params
+	float m_near = settings->near;
+	float m_far = settings->far;
 	static DepthImpl::Enum m_depthImpl = DepthImpl::Linear;
-	m_numSplits = 1;
-	static float m_splitDistribution = 0.6;
-	static bool m_stabilize = true;
+	m_numSplits = Mathf::Clamp(settings->numSplits, 1, maxNumSplits);
+	float m_splitDistribution = Mathf::Clamp(settings->splitDistribution, 0.f, 1.f);
+	bool m_stabilize = settings->stabilize;
 	static uint32_t clearRgba = 0;
 	static float clearDepth = 1.f;
 	static uint8_t clearStencil = 0;
@@ -477,7 +516,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	static int RENDERVIEW_LAST = 9;
 
 	// Set view and projection matrices.
-	const float camFovy = Camera::GetMain()->GetFov();
+	const float camFovy = camera.GetFov();
 	int m_width = Graphics::Get()->GetScreenWidth();
 	int m_height = Graphics::Get()->GetScreenHeight();
 	const float camAspect = float(int32_t(m_width)) / float(int32_t(m_height));
@@ -486,9 +525,13 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	const float projHeight = bx::tan(bx::toRad(camFovy) * 0.5f);
 	const float projWidth = projHeight * camAspect;
 
-	std::shared_ptr<Material> shadowCasterMaterial = AssetDatabase::Get()->Load<Material>("materials\\shadowCaster.asset");
+	std::shared_ptr<Material> shadowCasterMaterial = AssetDatabase::Get()->Load<Material>("engine\\materials\\shadowCaster.asset");//TODO no hardcode
 	if (!shadowCasterMaterial) {
-		return;
+		shadowCasterMaterial = AssetDatabase::Get()->Load<Material>("materials\\shadowCaster.asset");//TODO no hardcode
+		if (!shadowCasterMaterial) {
+			//TODO error
+			return;
+		}
 	}
 
 	Vector3 lightPosition = light->gameObject()->transform()->GetPosition();
@@ -535,10 +578,12 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 
 			bgfx::TextureHandle fbtextures[] =
 			{
-				bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT),
-				bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D24S8, BGFX_TEXTURE_RT),
+				bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::R32F, BGFX_TEXTURE_RT | BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_MIN_ANISOTROPIC | BGFX_SAMPLER_COMPARE_LEQUAL
+),
+				bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D32F, BGFX_TEXTURE_RT),
 			};
 			s_rtShadowMap[0] = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
+			bgfx::setName(s_rtShadowMap[0], "s_rtShadowMap");
 		}
 
 		if (isDirectional)
@@ -552,10 +597,12 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 
 					bgfx::TextureHandle fbtextures[] =
 					{
-						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT),//TODO why not just depth?
-						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D24S8, BGFX_TEXTURE_RT),
+						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::R32F, BGFX_TEXTURE_RT | BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_MIN_ANISOTROPIC | BGFX_SAMPLER_COMPARE_LEQUAL
+),//TODO why not just depth?
+						bgfx::createTexture2D(m_currentShadowMapSize, m_currentShadowMapSize, false, 1, bgfx::TextureFormat::D32F, BGFX_TEXTURE_RT),
 					};
 					s_rtShadowMap[ii] = bgfx::createFrameBuffer(BX_COUNTOF(fbtextures), fbtextures, true);
+					bgfx::setName(s_rtShadowMap[ii], "s_rtShadowMap" + ('0' + ii));
 				}
 			}
 		}
@@ -672,6 +719,9 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 
 		auto viewMatrix = light->gameObject()->transform()->GetMatrix();
 		SetScale(viewMatrix, Vector3_one);
+		Vector3 pos = GetPos(camera.GetViewMatrix().Inverse());// + light->gameObject()->transform()->GetForward() * settings->near_far;
+
+		SetPos(viewMatrix, pos); // for better precision
 		viewMatrix = viewMatrix.Inverse();
 		memcpy(&(lightView[0][0]), &viewMatrix(0, 0), 16 * sizeof(float));
 
@@ -686,8 +736,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		bx::mtxInverse(mtxViewInv, &camera.GetViewMatrix()(0, 0));
 
 		// Compute split distances.
-		const uint8_t maxNumSplits = 4;
-		BX_ASSERT(maxNumSplits >= settings.m_numSplits, "Error! Max num splits.");
+		BX_ASSERT(maxNumSplits >= numSplits, "Error! Max num splits.");
 
 		float splitSlices[maxNumSplits * 2];
 		splitFrustum(splitSlices
@@ -711,8 +760,8 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 			, -1.0f
 			, 1.0f
 			, -1.0f
-			, -1024.f//TODO params
-			, 1024.f//TODO params
+			, -settings->near_far//TODO params
+			, settings->near_far//TODO params
 			, 0.0f
 			, caps->homogeneousDepth
 		);
@@ -767,6 +816,19 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 			mtxCrop[12] = offsetx;
 			mtxCrop[13] = offsety;
 
+			if (m_stabilize)
+			{
+				//PERF much inverse
+				const float halfSize = m_currentShadowMapSize * 0.5f;
+				auto mat = Matrix4(lightView[ii]).Inverse();
+				Vector3 pos = GetPos(mat);
+				Vector3 localPos = GetRot(mat.Inverse()) * pos;
+				localPos.x = bx::ceil(localPos.x * (halfSize * scalex)) / (halfSize * scalex);
+				localPos.y = bx::ceil(localPos.y * (halfSize * scaley)) / (halfSize * scaley);
+				SetPos(mat, GetRot(mat) * localPos);
+				mat = mat.Inverse();
+				memcpy(&(lightView[ii][0]), &mat(0, 0), 16 * sizeof(float));
+			}
 			bx::mtxMul(lightProj[ii], mtxCrop, mtxProj);
 		}
 	}
@@ -935,7 +997,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		//bgfx::setViewRect(RENDERVIEW_DRAWDEPTH_3_ID, depthRectX + (3 * depthRectWidth), depthRectY, depthRectWidth, depthRectHeight);
 
 		for (int i = 0; i < m_numSplits; i++) {
-			bgfx::setViewTransform(RENDERVIEW_SHADOWMAP_1_ID + i, lightView[0], lightProj[0]);
+			bgfx::setViewTransform(RENDERVIEW_SHADOWMAP_1_ID + i, lightView[i], lightProj[i]);
 		}
 		//bgfx::setViewTransform(RENDERVIEW_VBLUR_0_ID, screenView, screenProj);
 		//bgfx::setViewTransform(RENDERVIEW_HBLUR_0_ID, screenView, screenProj);
@@ -995,6 +1057,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 		bgfx::touch(RENDERVIEW_SHADOWMAP_1_ID + ii);
 	}
 
+	int numShadowMaps = 0;
 	// Render.
 
 	// Craft shadow map.
@@ -1087,7 +1150,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 			virtualCamera.projectionMatrix = Matrix4(lightProj[ii]);
 			virtualCamera.OnBeforeRender();
 			//virtualCamera.OnBeforeRender();
-			Graphics::Get()->render->DrawAll(viewId, virtualCamera, shadowCasterMaterial, &MeshRenderer::enabledShadowCasters);
+			render->DrawAll(viewId, virtualCamera, shadowCasterMaterial, &MeshRenderer::enabledShadowCasters);
 		}
 
 
@@ -1210,13 +1273,22 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 				float mtxTmp[16];
 
 				bx::mtxMul(mtxTmp, lightProj[ii], mtxBias);
-				bx::mtxMul(m_shadowMapMtx[ii], lightView[0], mtxTmp); //lViewProjCropBias
+				bx::mtxMul(m_shadowMapMtx[ii], lightView[ii], mtxTmp); //lViewProjCropBias
+			}
+		}
+		if (dbg_debugShadows) {
+			for (int i = 0; i < drawNum; i++) {
+				Frustum f;
+				float viewTransform[16];
+				bx::mtxMul(viewTransform, lightView[i], lightProj[i]); //lViewProjCropBias
+				f.SetFromViewProjection(Matrix4(viewTransform));
+				Dbg::Draw(f);
 			}
 		}
 	}
 
 	static std::string shadowmapMtxNames[]{ "u_shadowMapMtx0","u_shadowMapMtx1","u_shadowMapMtx2","u_shadowMapMtx3" };
-	auto& matrixUniforms = Graphics::Get()->render->matrixUniforms;
+	auto& matrixUniforms = render->matrixUniforms;
 	for (int i = 0; i < _countof(m_shadowMapMtx); i++) {
 		const std::string& name = shadowmapMtxNames[i];
 		auto it = matrixUniforms.find(name);
@@ -1232,7 +1304,7 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 	}
 	static std::string shadowmapNames[]{ "s_shadowMap0","s_shadowMap1","s_shadowMap2","s_shadowMap3" };
 
-	auto& textureUniforms = Graphics::Get()->render->textureUniforms;
+	auto& textureUniforms = render->textureUniforms;
 
 	for (uint8_t ii = 0; ii < ShadowMapRenderTargets::Count; ++ii)
 	{
@@ -1259,19 +1331,23 @@ void ShadowRenderer::Draw(Light* light, const ICamera& camera)
 }
 
 void ShadowRenderer::ApplyUniforms() {
-	bool renderedPrevFrame = lastRenderedFrame == Time::frameCount();
-	if (!renderedPrevFrame) {
+	if (!bgfx::isValid(u_params0)) {
 		return;
 	}
-	auto render = Graphics::Get()->render;
 
-
-	bgfx::setUniform(u_csmFarDistances, &s_uniforms.m_csmFarDistances);
+	bool hasShadowMap = lastRenderedFrame == Time::frameCount();
 
 	Vector4 v;
 
-	v = Vector4(1, 1, 1, 0);
+
+	v = Vector4(1, 1, hasShadowMap, 0);
 	bgfx::setUniform(u_params0, &v.x);
+
+	if (!hasShadowMap) {
+		return;
+	}
+
+	bgfx::setUniform(u_csmFarDistances, &s_uniforms.m_csmFarDistances);
 
 	v = Vector4(shadowBias, 0.001f, 0.7f, 500.0f);
 	bgfx::setUniform(u_params1, &v.x);
@@ -1279,7 +1355,7 @@ void ShadowRenderer::ApplyUniforms() {
 	v = Vector4(1, 0, 1.f / m_currentShadowMapSize, 0);
 	bgfx::setUniform(u_params2, &v.x);
 
-	v = Vector4(2, 2, 0.2f, 0.2f);
+	v = Vector4(2, 2, settings->pcfOffset, settings->pcfOffset);
 	bgfx::setUniform(u_smSamplingParams, &v.x);
 
 	for (int i = 0; i < _countof(m_shadowMapMtx); i++) {

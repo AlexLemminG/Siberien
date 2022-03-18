@@ -4,9 +4,8 @@
 #include "SMath.h"
 
 class SE_CPP_API Transform : public Component {
-	//TODO private
 	//TODO custom serializer from pos,eulers to matrix
-
+	//TODO store euler angles or use yaml for inspector
 public:
 	void SetPosition(const Vector3& pos) {
 		SetPos(matrix, pos);
@@ -21,7 +20,7 @@ public:
 		return GetRot(matrix);
 	}
 	Vector3 GetEulerAngles() const {
-		return GetRotation().ToEulerAngles();
+		return  GetRotation().ToEulerAngles();
 	}
 	void SetEulerAngles(const Vector3& euler) {
 		SetRotation(Quaternion::FromEulerAngles(euler));
@@ -42,13 +41,15 @@ public:
 	}
 	const Matrix4& GetMatrix()const { return matrix; }
 	void SetMatrix(const Matrix4& matrix);
+
 private:
-	Vector3 scale;
+	Vector3 scale = Vector3_one;
+
 	Matrix4 matrix = Matrix4::Identity();//TODO remove direct access to matrix for optimization
 
 public:
-	static void Des(const SerializationContext& so, Transform& t);
-	static void Ser(SerializationContext& so, const Transform& t);
+	static void Deserialize(const SerializationContext& so, Transform& t);
+	static void Serialize(SerializationContext& so, const Transform& t);
 
-	REFLECT_CUSTOM(Transform, Transform::Ser, Transform::Des);
+	REFLECT_CUSTOM(Transform, Transform::Serialize, Transform::Deserialize);
 };

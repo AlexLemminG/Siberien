@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include "Object.h"
 #include "Component.h"
+#include "magic_enum.hpp"
 
 template<class T>
 struct is_shared_ptr : std::false_type {};
@@ -92,8 +93,17 @@ public:
 
 	std::vector<std::string> GetChildrenNames()const;//TODO optimize
 
+	void Clear(); //removes node completely
+	void ClearValue(); //leaves key and sets value to empty
+
 	void operator<<(const int& t);
 	void operator>>(int& t) const;
+
+	void operator<<(const long& t);
+	void operator>>(long& t) const;
+
+	void operator<<(const uint64_t& t);
+	void operator>>(uint64_t& t) const;
 
 	void operator<<(const unsigned int& t);
 	void operator>>(unsigned int& t) const;
@@ -165,6 +175,8 @@ public:
 		return std::find(tags.begin(), tags.end(), tag) != tags.end();
 	}
 
+	ReflectedTypeBase* GetParentType() const { return __parentType__; }
+
 
 	std::vector<std::string> tags;//TODO make protected
 	std::vector<std::shared_ptr<Attribute>> attributes;
@@ -211,9 +223,59 @@ GetReflectedType() {
 	return T::TypeOf();
 }
 
+
+class ReflectedTypeEnumBase : public ReflectedTypeBase {
+public:
+	ReflectedTypeEnumBase(std::string name) : ReflectedTypeBase(name) { }
+	virtual const std::vector<std::pair<uint64_t, std::string>>& GetEnumEntries() = 0;
+	virtual const bool IsFlags() = 0;
+};
+
+template<typename T, bool is_flags>
+class ReflectedTypeEnum : public ReflectedTypeEnumBase {
+public:
+	ReflectedTypeEnum(std::string name) : ReflectedTypeEnumBase(name) {
+
+	}
+	virtual void Serialize(SerializationContext& context, const void* object) override
+	{
+		context << *((uint64_t*)(T*)object);
+	}
+	virtual void Deserialize(const SerializationContext& context, void* object) override
+	{
+		if (context.IsDefined()) {
+			context >> (*(uint64_t*)(T*)object);
+		}
+	}
+
+	virtual const std::vector<std::pair<uint64_t, std::string>>& GetEnumEntries() override {
+		static std::vector<std::pair<uint64_t, std::string>> result;
+		if (result.size() == 0) {
+			for (auto e : magic_enum::enum_entries<T>()) {
+				result.push_back(std::make_pair(uint64_t(e.first), std::string(e.second)));
+			}
+		}
+		return result;
+	}
+	virtual const bool IsFlags() override { return is_flags; };
+};
+
+
 template<>
 inline ReflectedTypeBase* GetReflectedType<int>() {
 	static ReflectedTypeSimple<int> type("int");
+	return &type;
+}
+
+template<>
+inline ReflectedTypeBase* GetReflectedType<uint64_t>() {
+	static ReflectedTypeSimple<uint64_t> type("uint64_t");
+	return &type;
+}
+
+template<>
+inline ReflectedTypeBase* GetReflectedType<long>() {
+	static ReflectedTypeSimple<long> type("long");
 	return &type;
 }
 
@@ -458,15 +520,16 @@ public:
 template<typename T>
 std::enable_if_t<!std::is_assignable<Component, T>::value, int>
 inline AddComponentTags(ReflectedTypeBase* type) {
-	return -1;
+	return 0;
 }
 
+//TODO maybe this should not be here (Component.h is included in Reflect.h is yikes
 template<typename T>
 std::enable_if_t<std::is_assignable<Component, T>::value, int>
 inline AddComponentTags(ReflectedTypeBase* type) {
 	if (typeid(&T::Update) != typeid(&Component::Update)) { type->tags.push_back("HasUpdate"); }
 	if (typeid(&T::FixedUpdate) != typeid(&Component::FixedUpdate)) { type->tags.push_back("HasFixedUpdate"); }
-	return -1;
+	return 1;
 }
 
 #define _REFLECT_BEGIN_NO_PARENT_(className) \
@@ -475,7 +538,9 @@ class Type : public ReflectedType<##className> { \
 	using TYPE = ##className; \
 	public:\
 	Type() : ReflectedType<##className>(#className) {\
-		AddComponentTags<##className>(this);
+	if(AddComponentTags<##className>(this) != 0){\
+		__parentType__ = GetReflectedType<Component>();\
+	}
 
 #define REFLECT_VAR(varName)\
 		fields.push_back(ReflectedField(GetReflectedType<decltype(varName)>(), #varName, offsetOf(&TYPE::varName))); \
@@ -524,6 +589,20 @@ public:\
 	ReflectedTypeBase* GetType() const{ \
 		return TypeOf(); \
 	}
+
+#define REFLECT_ENUM_FLAGS(enumClass) \
+template<> \
+inline ReflectedTypeBase * GetReflectedType<##enumClass>() { \
+	static ReflectedTypeEnum<##enumClass, true> type(#enumClass); \
+	return &type; \
+}
+
+#define REFLECT_ENUM(enumClass) \
+template<> \
+inline ReflectedTypeBase * GetReflectedType<##enumClass>() { \
+	static ReflectedTypeEnum<##enumClass, false> type(#enumClass); \
+	return &type; \
+}
 
 template<typename T>
 void Deserialize(const SerializationContext& context, T& t) {

@@ -5,7 +5,7 @@ GameObject:
   - $BoxCollider
   - $RigidBody
 MeshRenderer:
-  mesh: meshes\wall.glb$cdt_wall
+  mesh: meshes\wall.blend$cdt_wall
   material: material.asset
 Transform:
   pos: [0, 0, 12]

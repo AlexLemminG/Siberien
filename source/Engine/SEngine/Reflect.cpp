@@ -57,7 +57,10 @@ const SerializationContext SerializationContext::Child(const std::string& name) 
 }
 
 SerializationContext SerializationContext::Child(const std::string& name) {
-	GetYamlNode() |= ryml::MAP;
+	//TODO create only when value set (not when non const child is acquired)
+	ryml::NodeType_e type = GetYamlNode().type();
+	type = (ryml::NodeType_e)(type & (-1 ^ ryml::VAL) | ryml::MAP);
+	GetYamlNode().set_type(type);
 	auto cname = c4::csubstr(name.c_str(), name.length());
 	ryml::NodeRef child;
 	if (GetYamlNode().has_child(cname)) {
@@ -112,6 +115,23 @@ std::vector<std::string> SerializationContext::GetChildrenNames() const {
 	return children;
 }
 
+void SerializationContext::Clear() {
+	GetYamlNode().tree()->remove(GetYamlNode().id());
+}
+
+void SerializationContext::ClearValue() {
+	GetYamlNode().clear_children();
+	if (GetYamlNode().has_key()) {
+		auto key = GetYamlNode().key();
+		GetYamlNode().clear_val();
+		GetYamlNode().set_key(key);
+	}
+	else {
+		GetYamlNode().clear_val();
+	}
+	GetYamlNode().set_type(GetYamlNode().type() & (ryml::KEY) | ryml::VAL);//empty val
+}
+
 void SerializationContext::AddAllowedToSerializeObject(std::shared_ptr<Object> obj) {
 	rootObjectsAllowedToSerialize->push_back(obj);
 }
@@ -143,7 +163,7 @@ void SerializationContext::FlushRequiestedToSerialize() {
 	for (auto it : objectsRequestedToSerializeRequesters) {
 		std::string path = objectPaths[it.first];
 		for (auto& node : it.second) {
-			(*(ryml::NodeRef*)& node) << c4::csubstr(path.c_str(), path.length());
+			(*(ryml::NodeRef*)&node) << c4::csubstr(path.c_str(), path.length());
 		}
 	}
 }
@@ -156,7 +176,7 @@ void SerializationContext::FinishDeserialization() {
 }
 
 ryml::NodeRef& SerializationContext::GetYamlNode() { return *(ryml::NodeRef*)&yamlNode; }
-const ryml::NodeRef& SerializationContext::GetYamlNode() const{ return *(ryml::NodeRef*)&yamlNode; }
+const ryml::NodeRef& SerializationContext::GetYamlNode() const { return *(ryml::NodeRef*)&yamlNode; }
 
 SerializationContext::SerializationContext(ryml::NodeRef yamlNode, const SerializationContext& parent)
 	:yamlNode(*(RymlNodeRefDummy*)&(yamlNode))
@@ -178,6 +198,18 @@ void SerializationContext::operator<<(const int& t) {
 	GetYamlNode() << t;
 }
 void SerializationContext::operator>>(int& t) const {
+	GetYamlNode() >> t;
+}
+void SerializationContext::operator<<(const long& t) {
+	GetYamlNode() << t;
+}
+void SerializationContext::operator>>(long& t) const {
+	GetYamlNode() >> t;
+}
+void SerializationContext::operator<<(const uint64_t& t) {
+	GetYamlNode() << t;
+}
+void SerializationContext::operator>>(uint64_t& t) const {
 	GetYamlNode() >> t;
 }
 void SerializationContext::operator<<(const unsigned int& t) {

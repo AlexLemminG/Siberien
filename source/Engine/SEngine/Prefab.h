@@ -12,6 +12,8 @@ REFLECT_CUSTOM_EXT(ryml::Tree, SerRymlTree, DesRymlTree);
 class PrefabInstance {
 public:
 	std::shared_ptr<GameObject> CreateGameObject() const;
+
+	std::shared_ptr<GameObject> GetOriginalPrefab() const;
 private:
 	std::shared_ptr<GameObject> prefab;
 	ryml::Tree overrides;

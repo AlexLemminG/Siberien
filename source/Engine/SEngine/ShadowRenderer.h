@@ -3,8 +3,10 @@
 #include <vector>
 #include "bgfx/bgfx.h"
 
-class ICamera;
+class Camera;
 class Light;
+class Render;
+class ShadowSettings;
 
 class ShadowRenderer {
 public:
@@ -13,10 +15,11 @@ public:
 	void Init();
 	void Term();
 
-	void Draw(Light* light, const ICamera& camera);
+	void Draw(Render* render, Light* light, const Camera& camera);
 
 	void ApplyUniforms();
 private:
+	std::shared_ptr<ShadowSettings> settings;
 	std::vector<bgfx::FrameBufferHandle> s_rtShadowMap;
 	int m_currentShadowMapSize = 0;
 	int lastRenderedFrame = -1;

@@ -16,6 +16,7 @@ class dtNavMesh;
 class dtNavMeshQuery;
 class DebugDrawer;
 class dtCrowd;
+class BoxCollider;
 
 enum SamplePartitionType
 {
@@ -59,6 +60,7 @@ public:
 	dtNavMesh* GetNavMesh() { return m_navMesh; }
 	dtCrowd* GetCrowd() { return m_crowd; }
 private:
+	void BuildForSingleOBB(const OBB& obb);
 	void BuildForSingleMesh(const std::shared_ptr<Mesh>& mesh, const Matrix4& transform);
 	bool BuildAllMeshes();
 

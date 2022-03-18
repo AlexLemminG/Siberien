@@ -7,6 +7,7 @@
 #include "SceneManager.h"
 #include "Scene.h"
 #include "Input.h"
+#include "Config.h"
 
 DBG_VAR_TRIGGER(dbg_showLevelSelectionScreen, "select scene");
 
@@ -17,6 +18,9 @@ public:
 		return true;
 	}
 	virtual void Update()override {
+		if (!CfgGetBool("godMode")) {
+			return;
+		}
 		bool openWindow = dbg_showLevelSelectionScreen;
 		if (Input::GetKeyDown(SDL_SCANCODE_F3)) {
 			if (screenShown) {

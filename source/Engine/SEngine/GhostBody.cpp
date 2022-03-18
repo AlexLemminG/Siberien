@@ -17,10 +17,9 @@ DECLARE_TEXT_ASSET(GhostBody);
 //TODO add trigger enter/exit events
 
 // Portable static method: prerequisite call: m_dynamicsWorld->getBroadphase()->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback()); 
-void GetCollidingObjectsInsidePairCachingGhostObject(btDynamicsWorld* m_dynamicsWorld, btPairCachingGhostObject* m_pairCachingGhostObject, btAlignedObjectArray < btCollisionObject* >& collisionArrayOut) {
-	collisionArrayOut.resize(0);
+void GetCollidingObjectsInsidePairCachingGhostObject(btDynamicsWorld* m_dynamicsWorld, btPairCachingGhostObject* m_pairCachingGhostObject, std::vector<std::shared_ptr<GameObject>>& collisionArrayOut) {
 	if (!m_pairCachingGhostObject || !m_dynamicsWorld) return;
-	const bool addOnlyObjectsWithNegativeDistance(true);	// With "false" things don't change much, and the code is a bit faster and cleaner...
+	const bool addOnlyObjectsWithNegativeDistance(false);	// With "false" things don't change much, and the code is a bit faster and cleaner...
 
 	//#define USE_PLAIN_COLLISION_WORLD // We dispatch all collision pairs of the ghost object every step (slow)
 #ifdef USE_PLAIN_COLLISION_WORLD
@@ -56,7 +55,8 @@ void GetCollidingObjectsInsidePairCachingGhostObject(btDynamicsWorld* m_dynamics
 		if (!collisionPair) continue;
 		if (collisionPair->m_algorithm) collisionPair->m_algorithm->getAllContactManifolds(m_manifoldArray);
 		else {	// THIS SHOULD NEVER HAPPEN, AND IF IT DOES, PLEASE RE-ENABLE the "call" a few lines above...
-			printf("No collisionPair.m_algorithm - probably m_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(...) must be missing.\n");
+			// actually this can happen on first frame (before first physics update)
+			//printf("No collisionPair.m_algorithm - probably m_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(...) must be missing.\n");
 		}
 #endif //USE_PLAIN_COLLISION_WORLD
 
@@ -69,7 +69,7 @@ void GetCollidingObjectsInsidePairCachingGhostObject(btDynamicsWorld* m_dynamics
 					const btManifoldPoint& pt = manifold->getContactPoint(p);
 					if (pt.getDistance() < 0.0) {
 						// How can I be sure that the colObjs are all distinct ? I use the "added" flag.
-						collisionArrayOut.push_back((btCollisionObject*)(manifold->getBody0() == m_pairCachingGhostObject ? manifold->getBody1() : manifold->getBody0()));
+						collisionArrayOut.push_back(Physics::GetGameObject((btCollisionObject*)(manifold->getBody0() == m_pairCachingGhostObject ? manifold->getBody1() : manifold->getBody0())));
 						added = true;
 						break;
 					}
@@ -77,7 +77,7 @@ void GetCollidingObjectsInsidePairCachingGhostObject(btDynamicsWorld* m_dynamics
 				if (added) break;
 			}
 			else if (manifold->getNumContacts() > 0) {
-				collisionArrayOut.push_back((btCollisionObject*)(manifold->getBody0() == m_pairCachingGhostObject ? manifold->getBody1() : manifold->getBody0()));
+				collisionArrayOut.push_back(Physics::GetGameObject((btCollisionObject*)(manifold->getBody0() == m_pairCachingGhostObject ? manifold->getBody1() : manifold->getBody0())));
 				break;
 			}
 		}
@@ -90,7 +90,7 @@ void GhostBody::OnEnable() {
 		return;
 	}
 
-	auto shape = collider->shape;
+	auto shape = collider->CreateShape();
 	if (!shape) {
 		return;
 	}
@@ -99,10 +99,13 @@ void GhostBody::OnEnable() {
 	if (!transform) {
 		return;
 	}
+
+	originalShape = shape;
 	auto matr = transform->GetMatrix();
 	SetScale(matr, Vector3_one);//TODO optimize
 	btTransform groundTransform = btConvert(matr);
 
+	//TODO use shape offset and scale!!!
 	//TODO why pair caching ?
 	pBody = new btPairCachingGhostObject();
 	pBody->setCollisionShape(shape.get());
@@ -139,19 +142,10 @@ void GhostBody::OnDisable() {
 	SAFE_DELETE(pBody);
 }
 
-int GhostBody::GetOverlappedCount() const {
-	if (!pBody) {
-		return 0;
-	}
-	btAlignedObjectArray < btCollisionObject* > collisionArrayOut;
-	GetCollidingObjectsInsidePairCachingGhostObject(PhysicsSystem::Get()->dynamicsWorld, pBody, collisionArrayOut);
 
-	return collisionArrayOut.size();
+std::vector<std::shared_ptr<GameObject>> GhostBody::GetOverlappedObjects() const {
+	std::vector<std::shared_ptr<GameObject>> collisionArrayOut;
+	GetCollidingObjectsInsidePairCachingGhostObject(PhysicsSystem::Get()->dynamicsWorld, pBody, collisionArrayOut);
+	return collisionArrayOut;
 }
 
-std::shared_ptr<GameObject> GhostBody::GetOverlappedObject(int idx) const {
-	btAlignedObjectArray < btCollisionObject* > collisionArrayOut;
-	GetCollidingObjectsInsidePairCachingGhostObject(PhysicsSystem::Get()->dynamicsWorld, pBody, collisionArrayOut);
-	//TODO optimize
-	return Physics::GetGameObject(collisionArrayOut[idx]);
-}

@@ -6,7 +6,7 @@ GameObject:
   - $BoxCollider
   - $RigidBody
 MeshRenderer:
-  mesh: meshes\door.glb$door
+  mesh: meshes\door.blend$door
   material: materials\scifi.asset
 Transform:
   pos: [-19.22, 3, 130.3]

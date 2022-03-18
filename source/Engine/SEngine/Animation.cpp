@@ -46,30 +46,34 @@ int MeshAnimation::GetBoneIdx(const std::string& bone) {
 	return -1;
 }
 
-AnimationTransform MeshAnimation::GetTransform(const std::string& bone, float t) {
+bool MeshAnimation::GetTransform(AnimationTransform& outTransform, const std::string& bone, float t) {
 	auto idx = GetBoneIdx(bone);
 	if (idx != -1) {
-		return GetTransform(idx, t);
+		GetTransform(outTransform, idx, t);
+		return true;
 	}
-	ASSERT(false);
-	return AnimationTransform{};//TODO just return false
+	else {
+		return false;
+	}
 }
 
-AnimationTransform MeshAnimation::GetTransform(int channelIdx, float t) {
+void MeshAnimation::GetTransform(AnimationTransform& outTransform, int channelIdx, float t) {
 	auto& channel = channelKeyframes[channelIdx];
 	t = Mathf::Repeat(t, channel[channel.size() - 1].time);
 
+	//TODO store prevIdx so next one will be around prevIdx+1
 	auto lowerBound = std::lower_bound(channel.begin(), channel.end(), t, [](const auto& keyframe, float time) {return keyframe.time < time; });
 	int iBefore = lowerBound - channel.begin();
 	if (iBefore > 0) {
 		iBefore--;
 	}
 	if (lowerBound == channel.end() || iBefore == channel.size() - 1) {
-		return channel[channel.size() - 1].transform;
+		outTransform = channel[channel.size() - 1].transform;
 	}
 	else {
 		float lerpT = Mathf::InverseLerp(channel[iBefore].time, channel[iBefore + 1].time, t);
-		return AnimationTransform::Lerp(channel[iBefore].transform, channel[iBefore + 1].transform, lerpT);
+		//TODO consider storing scale/position/rotation separately like originaly in assimp
+		outTransform = AnimationTransform::Lerp(channel[iBefore].transform, channel[iBefore + 1].transform, lerpT);
 	}
 }
 
@@ -100,13 +104,12 @@ void MeshAnimation::DeserializeFromAssimp(aiAnimation* anim) {
 		auto& keyframes = channelKeyframes.emplace_back();
 
 		for (auto t : times) {
-			//TODO probably has errors
 			AnimationTransform transform;
 			GetAnimValue(transform.position, channel->mPositionKeys, channel->mNumPositionKeys, t);
 			GetAnimValue(transform.rotation, channel->mRotationKeys, channel->mNumRotationKeys, t);
 			GetAnimValue(transform.scale, channel->mScalingKeys, channel->mNumScalingKeys, t);
 
-			float time = t / 1000.f;
+			float time = t / anim->mTicksPerSecond;
 			keyframes.push_back(AnimationKeyframe{ time, transform });
 		}
 	}
@@ -131,9 +134,12 @@ void Animator::Update() {
 
 	if (currentAnimation != nullptr) {
 		currentTime += Time::deltaTime() * speed;
+		AnimationTransform transform;
 		for (auto& bone : mesh->bones) {
-			auto transform = currentAnimation->GetTransform(bone.name, currentTime);
-			transform.ToMatrix(meshRenderer->bonesLocalMatrices[bone.idx]);
+			bool hasTransform = currentAnimation->GetTransform(transform, bone.name, currentTime);
+			if (hasTransform) {
+				transform.ToMatrix(meshRenderer->bonesLocalMatrices[bone.idx]);
+			}
 		}
 	}
 	UpdateWorldMatrices();
@@ -143,21 +149,20 @@ void Animator::OnEnable() {
 	meshRenderer = gameObject()->GetComponent<MeshRenderer>();
 	transform = gameObject()->transform();
 	if (meshRenderer == nullptr) {
+		SetFlags(Bits::SetMaskTrue(GetFlags(), FLAGS::IGNORE_UPDATE));
 		return;
 	}
 	auto mesh = meshRenderer->mesh;
 	if (!mesh) {
+		SetFlags(Bits::SetMaskTrue(GetFlags(), FLAGS::IGNORE_UPDATE));
 		return;
 	}
-
-	//TODO support disable in middle of enable
-	transform = gameObject()->transform();
+	SetFlags(Bits::SetMaskFalse(GetFlags(), FLAGS::IGNORE_UPDATE));
 
 	for (const auto& bone : mesh->bones) {
 		meshRenderer->bonesLocalMatrices[bone.idx] = bone.initialLocal;
 	}
 	UpdateWorldMatrices();
-
 
 	currentAnimation = defaultAnimation;
 }

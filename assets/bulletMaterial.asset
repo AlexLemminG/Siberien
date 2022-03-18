@@ -1,2 +1,2 @@
 Material:
-  shader: BulletShader.asset
+  shader: shaders\bullet_shader.asset

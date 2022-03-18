@@ -14,11 +14,43 @@
 #include "Compressonator.h"
 #include <bx\file.h>
 #include "SMath.h"
+#include "ryml.hpp"
+#include "Config.h"
 
 static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
 static constexpr bool compressTextures = false;
 static constexpr int skippedMipsForLow = 4;
-static constexpr int importerVersion = 11;
+static constexpr int importerVersion = 12;
+
+class TextureMeta {
+public:
+	bool hasMips = true;
+	std::string format = "BC1";//TODO enums
+	std::string wrapMode = "repeat";//TODO enums
+	long flags = BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_MIN_ANISOTROPIC;//TODO unsigned int
+	bool isNormalMap = false;
+	bool isLoaded = false;
+
+	REFLECT_BEGIN(TextureMeta);
+	REFLECT_VAR(hasMips);
+	REFLECT_VAR(format);
+	REFLECT_VAR(wrapMode);
+	REFLECT_VAR(flags);
+	REFLECT_VAR(isNormalMap);
+	REFLECT_END()
+};
+
+class TextureLibraryMeta :public Object {
+public:
+	int importerVersion = 0;
+	uint64_t changeDate = 0;
+	uint64_t metaChangeDate = 0;
+	REFLECT_BEGIN(TextureLibraryMeta);
+	REFLECT_VAR(importerVersion);
+	REFLECT_VAR(changeDate);
+	REFLECT_VAR(metaChangeDate);
+	REFLECT_END()
+};
 
 //TODO streaming
 DBG_VAR_BOOL(dbg_lowTextures, "low res textures", false);
@@ -42,32 +74,29 @@ public:
 	}
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
-		YAML::Node metaYaml;
-		if (!databaseHandle.ReadMeta(metaYaml)) {
-			metaYaml = YAML::Node();
+		std::unique_ptr<ryml::Tree> metaYamlTree;
+		databaseHandle.ReadMeta(metaYamlTree);
+		TextureMeta meta{};
+		if (metaYamlTree) {
+			SerializationContext c = SerializationContext(metaYamlTree->rootref());
+			::Deserialize(c, meta);
+			meta.isLoaded = true;
 		}
+
 		//TODO is normal
 		//TODO is linear
-		bool hasMips = metaYaml["mips"].IsDefined() ? metaYaml["mips"].as<bool>() : true;
-		auto formatStr = metaYaml["format"].IsDefined() ? metaYaml["format"].as<std::string>() : "BC1";
-		auto wrapModeStr = metaYaml["wrapMode"].IsDefined() ? metaYaml["wrapMode"].as<std::string>() : "repeat";
-		auto flags = metaYaml["flags"].IsDefined() ? metaYaml["flags"].as<int>() : BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_MIN_ANISOTROPIC;
-		flags |= WrapModeStrToFlags(wrapModeStr);
+		meta.flags |= WrapModeStrToFlags(meta.wrapMode);
 
-		bool isNormalMap;
-		if (metaYaml["isNormal"].IsDefined()) {
-			isNormalMap = metaYaml["isNormal"].as<bool>();
-		}
-		else {
+		if (meta.isLoaded) {
 			auto name = databaseHandle.GetAssetFileName();
 			std::transform(name.begin(), name.end(), name.begin(),
 				[](unsigned char c) { return std::tolower(c); });
 
-			isNormalMap = name.find("normal") != std::string::npos;
+			meta.isNormalMap = name.find("normal") != std::string::npos;
 		}
 
 		//TODO return default invalid texture
-		auto txBin = LoadTexture(importerVersion, databaseHandle, hasMips, formatStr, isNormalMap, dbg_lowTextures);
+		auto txBin = LoadTexture(importerVersion, databaseHandle, meta.hasMips, meta.format, meta.isNormalMap, dbg_lowTextures);
 		if (txBin.size() == 0) {
 			return false;
 		}
@@ -95,7 +124,7 @@ public:
 			imageContainer.m_numMips > 1,
 			imageContainer.m_numLayers,
 			bgfx::TextureFormat::Enum(imageContainer.m_format),
-			flags,
+			(unsigned int)meta.flags,
 			mem);
 
 		if (!bgfx::isValid(tx)) {
@@ -119,27 +148,29 @@ public:
 		//std::string metaAssetPath = databaseHandle.GetLibraryPathFromId("meta");
 		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");
 
+		bool convertionAllowed = databaseHandle.ConvertionAllowed();
+		//TODO dont load if version differs!!!
 
+		TextureLibraryMeta expectedLibMeta;
 		bool needRebuild = false;
-		YAML::Node libraryMeta;
-		databaseHandle.ReadFromLibraryFile("meta", libraryMeta);
-		long lastChangeMeta;
-		long lastChange;
-		databaseHandle.GetLastModificationTime(lastChange, lastChangeMeta);
-		if (!libraryMeta.IsDefined()) {
+		if (convertionAllowed) {
 			needRebuild = true;
-		}
-		else {
-			long lastChangeRecorded = libraryMeta["lastChange"].as<long>();
-			long lastMetaChangeRecorded = libraryMeta["lastMetaChange"].as<long>();
-			long importerVersionRecorded = libraryMeta["importerVersion"].IsDefined() ? libraryMeta["importerVersion"].as<long>() : -1;
-			if (lastChange != lastChangeRecorded || lastMetaChangeRecorded != lastChangeMeta || importerVersionRecorded != importerVersion) {
-				needRebuild = true;
-			}
-		}
+			databaseHandle.GetLastModificationTime(expectedLibMeta.changeDate, expectedLibMeta.metaChangeDate);
+			expectedLibMeta.importerVersion = importerVersion;
 
-		if (lastChange == 0) {
-			needRebuild = false;
+			std::unique_ptr<ryml::Tree> libraryMetaYaml;
+			databaseHandle.ReadFromLibraryFile("meta", libraryMetaYaml);
+			if (libraryMetaYaml) {
+				TextureLibraryMeta meta;
+				SerializationContext c{ libraryMetaYaml->rootref() };
+				::Deserialize(c, meta);
+
+				if (meta.changeDate == expectedLibMeta.changeDate &&
+					meta.metaChangeDate == expectedLibMeta.metaChangeDate &&
+					meta.importerVersion == expectedLibMeta.importerVersion) {
+					needRebuild = false;
+				}
+			}
 		}
 
 		std::string libraryFileName = loadLow ? "texture_low.dds" : "texture.dds";
@@ -161,6 +192,10 @@ public:
 		if (bufferLoaded) {
 			return std::move(buffer);
 		}
+		else if (!convertionAllowed) {
+			//TODO error
+			return buffer;
+		}
 
 		databaseHandle.EnsureForderForLibraryFileExists("texture");
 
@@ -174,15 +209,13 @@ public:
 		bool convertedLow = converted;// ConvertTextureFile(databaseHandle, databaseHandle.GetAssetPath(), convertedAssetPathLow, mips, format, isNormalMap, 4);
 
 		if (!converted || !convertedLow) {
+			//TODO error
 			return buffer;
 		}
 
-		auto metaNode = YAML::Node();
-		metaNode["lastChange"] = lastChange;
-		metaNode["lastMetaChange"] = lastChangeMeta;
-		metaNode["importerVersion"] = importerVersion;
-
-		databaseHandle.WriteToLibraryFile("meta", metaNode);
+		SerializationContext c{};
+		::Serialize(c, expectedLibMeta);
+		databaseHandle.WriteToLibraryFile("meta", c.GetYamlNode());
 
 		BinaryBuffer binBuffer;
 
@@ -220,6 +253,7 @@ public:
 		bool isNormalMap,
 		int lowSkippedMips)
 	{
+		Log("coverting texture '%s'", inFile.c_str());
 		//TODO convert in memory
 		//TODO formats suppoert
 		//TODO is normal map
@@ -227,7 +261,13 @@ public:
 
 		CMP_MipSet srcTexture;
 
-		if (CMP_LoadTexture(inFile.c_str(), &srcTexture) != CMP_ERROR::CMP_OK) {
+		std::vector<uint8_t> buffer;
+		if (!databaseHandle.ReadAssetAsBinary(buffer)) {
+			LogError("Failed to convert texture '%s' : failed to read file", databaseHandle.GetAssetPath().c_str());
+			return false;
+		}
+		if (CMP_LoadTextureFromMemory(buffer.data(), buffer.size(), databaseHandle.GetFileExtension().c_str(), &srcTexture) != CMP_ERROR::CMP_OK) {
+			LogError("Failed to convert texture '%s' : failed to load texture to compressinator", databaseHandle.GetAssetPath().c_str());
 			return false;
 		}
 
@@ -241,14 +281,15 @@ public:
 
 
 		if (CMP_GenerateMIPLevels(&srcTexture, CMP_CalcMinMipSize(srcTexture.m_nWidth, srcTexture.m_nHeight, srcTexture.m_nMaxMipLevels)) != CMP_ERROR::CMP_OK) {
+			LogError("Failed to convert texture '%s' : failed to generate mip levels", databaseHandle.GetAssetPath().c_str());
 			return false;
 		}
 
 		CMP_Feedback_Proc p = nullptr;
 		if (CMP_ConvertMipTexture(&srcTexture, &destTexture, &options, p) != CMP_ERROR::CMP_OK) {
+			LogError("Failed to convert texture '%s' : failed to convert mip texture", databaseHandle.GetAssetPath().c_str());
 			return false;
 		}
-		Log("coverting texture '%s'", inFile.c_str());
 		CMP_SaveTexture(outFile.c_str(), &destTexture);
 		CMP_FreeMipSet(&destTexture);
 
@@ -266,6 +307,7 @@ public:
 		srcTexture.m_nMipLevels = srcTexture.m_nMipLevels - lowSkippedMips;
 
 		if (CMP_ConvertMipTexture(&srcTexture, &destTexture, &options, p) != CMP_ERROR::CMP_OK) {
+			LogError("Failed to convert texture '%s' : failed to convert mip texture to low mips", databaseHandle.GetAssetPath().c_str());
 			return false;
 		}
 		CMP_SaveTexture(outFileLow.c_str(), &destTexture);
@@ -283,91 +325,7 @@ public:
 		CMP_FreeMipSet(&destTexture);
 		CMP_FreeMipSet(&srcTexture);
 
-		return true;
-
-		//bimg::imageWriteDds()
-
-
-		bx::FileWriter fr;
-		bx::Error err;
-		if (!fr.open(bx::FilePath(outFile.c_str()), false, &err)) {
-			return false;
-		}
-		bimg::ImageContainer imageContainer{};
-		imageContainer.m_width = destTexture.m_nWidth;
-		imageContainer.m_height = destTexture.m_nHeight;
-		imageContainer.m_format = bimg::TextureFormat::Enum::BC1;
-		imageContainer.m_numMips = destTexture.m_nMipLevels;
-		imageContainer.m_offset = 0;
-		imageContainer.m_allocator = nullptr;
-		imageContainer.m_depth = destTexture.m_nDepth;
-		imageContainer.m_numLayers = 1;
-		imageContainer.m_hasAlpha = destTexture.m_nChannels == 4;
-		imageContainer.m_srgb = true;
-
-		if (!bimg::imageWriteDds(&fr, imageContainer, destTexture.pData, destTexture.dwDataSize, &err)) {
-			return false;
-		}
-
-		return true;
-
-
-		std::string params = "";
-		params += " -f " + inFile;
-		params += " -o " + outFile;
-		params += " --mips ";
-		params += (isMips ? "true" : "false");
-		params += " --mipskip ";
-		params += FormatString("%d", lowSkippedMips);
-		if (isNormalMap) {
-			params += " --normalmap ";
-		}
-		params += " -t ";
-		params += format;
-		params += " --as ";
-		params += "dds";
-
-		//TODO move to platform independent stuff
-		STARTUPINFOA si;
-		memset(&si, 0, sizeof(STARTUPINFOA));
-		si.cb = sizeof(STARTUPINFOA);
-
-		PROCESS_INFORMATION pi;
-		memset(&pi, 0, sizeof(PROCESS_INFORMATION));
-
-		std::vector<char> paramsBuffer(params.begin(), params.end());
-		paramsBuffer.push_back(0);
-		LPSTR ccc = &paramsBuffer[0];
-
-		//TODO use compressonator and multiple threads if needed
-		auto result = CreateProcessA(
-			databaseHandle.GetToolPath("texturec.exe").c_str()
-			, &paramsBuffer[0]
-			, NULL
-			, NULL
-			, false
-			, 0
-			, NULL
-			, NULL
-			, &si
-			, &pi);
-
-
-		if (!result)
-		{
-			LogError("Failed to compile texure '%s'", databaseHandle.GetAssetPath().c_str());
-			return false;
-		}
-		else
-		{
-			// Successfully created the process.  Wait for it to finish.
-			WaitForSingleObject(pi.hProcess, INFINITE);
-
-			// Close the handles.
-			CloseHandle(pi.hProcess);
-			CloseHandle(pi.hThread);
-		}
-
+		Log("texture converted '%s'", inFile.c_str());
 		return true;
 	}
 

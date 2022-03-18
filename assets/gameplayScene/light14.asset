@@ -1,12 +1,15 @@
 GameObject:
   tag: Light
   components:
-  - $Transform
-  - $PointLight
+    - $Transform
+    - $PointLight
 PointLight:
   color: 0xff0000ff
   radius: 15
   innerRadius: 0.0
-  intensity: 15.0
+  intensity: 29.463837
 Transform:
-  pos: [-18.5,7.5,158.3]
+  pos:
+    - -18.5
+    - 7.5
+    - 158.3

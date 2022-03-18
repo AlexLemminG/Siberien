@@ -1,4 +1,5 @@
 #include "ZombiepunkGame.h"
+#include "Config.h"
 
 REGISTER_GAME_SYSTEM(GameEvents);
 REGISTER_GAME_SYSTEM(ZombiepunkGame);
@@ -8,5 +9,5 @@ bool GameEvents::Init() {
 }
 
 bool ZombiepunkGame::IsGodMode() {
-	return true;//TODO
+	return CfgGetBool("godMode");
 }

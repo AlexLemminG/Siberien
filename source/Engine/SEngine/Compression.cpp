@@ -14,7 +14,7 @@ bool Compression::Compress(const BinaryBuffer& from, BinaryBuffer& to) {
 	ResizeVectorNoInit(compressBuff, max_dst_size + sizeof(uint64_t));
 	const int compressed_data_size = LZ4_compress_default((const char*)data.data(), (char*)compressBuff.data(), data.size(), max_dst_size);
 	if (compressed_data_size <= 0) {
-		//TODO message
+		LogError("Failed to compress data");
 		return false;
 	}
 
@@ -36,9 +36,8 @@ bool Compression::Decompress(const BinaryBuffer& from, BinaryBuffer& to) {
 	ResizeVectorNoInit(uncopressBuff, decompressed_size);
 
 	int final_decompressed_size = LZ4_decompress_safe((const char*)data.data(), (char*)uncopressBuff.data(), data.size() - sizeof(uint64_t), decompressed_size);
-	if (final_decompressed_size < 0)
-	{
-		//TODO message
+	if (final_decompressed_size < 0) {
+		LogError("Failed to decompress data");
 		return false;
 	}
 	ASSERT(final_decompressed_size == decompressed_size);
@@ -49,7 +48,6 @@ bool Compression::Decompress(const BinaryBuffer& from, BinaryBuffer& to) {
 bool Compression::Compress(BinaryBuffer& fromTo) {
 	BinaryBuffer to;
 	if (!Compress(fromTo, to)) {
-		//TODO message
 		return false;
 	}
 	fromTo = BinaryBuffer(to.ReleaseData());
@@ -59,7 +57,6 @@ bool Compression::Compress(BinaryBuffer& fromTo) {
 bool Compression::Decompress(BinaryBuffer& fromTo) {
 	BinaryBuffer to;
 	if (!Decompress(fromTo, to)) {
-		//TODO message
 		return false;
 	}
 	fromTo = BinaryBuffer(to.ReleaseData());
@@ -75,29 +72,29 @@ class CompressionSystem : public System<CompressionSystem> {
 			bool decompress = command == "decompress";
 
 			if (args.size() < 2) {
-				return;//TODO error
+				LogError("'%s' command expected at least 2 arguments (got %d)", command.c_str(), (int)args.size());
+				return;
 			}
-
 
 			std::ifstream in(args[0], std::ios::binary | std::ios::ate);
 			std::ofstream out(args[1], std::ios::binary);
 
 			if (!in) {
-				return;//TOOD error
+				LogError("'%s' command input file '%s' not found", command.c_str(), args[0].c_str());
+				return;
 			}
 			if (!out) {
-				return;//TOOD error
+				LogError("'%s' command failed to open output file '%s'", command.c_str(), args[1].c_str());
+				return;
 			}
 			std::vector<uint8_t> charBuffer;
-
 
 			std::streamsize size = in.tellg();
 			in.seekg(0, std::ios::beg);
 
 			ResizeVectorNoInit(charBuffer, size);
-			if (!in.read((char*)charBuffer.data(), size))
-			{
-				//TODO error
+			if (!in.read((char*)charBuffer.data(), size)) {
+				LogError("'%s' command error while reading input file '%s'", command.c_str(), args[0].c_str());
 				return;
 			}
 
@@ -110,13 +107,15 @@ class CompressionSystem : public System<CompressionSystem> {
 				ok = Compression::Compress(buffer);
 			}
 			if (!ok) {
-				//TODO error
+				LogError("'%s' command failed to %s buffer", command.c_str(), command.c_str());
 				return;
 			}
 			charBuffer = buffer.ReleaseData();
 			if (charBuffer.size() > 0) {
 				out.write((char*)&charBuffer[0], charBuffer.size());
 			}
+
+			Log("'%s' success", command.c_str());
 		}
 	};
 

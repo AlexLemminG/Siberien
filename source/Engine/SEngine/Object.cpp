@@ -18,8 +18,6 @@ Object::~Object() {}
 
 void Object::OnBeforeSerializeCallback(SerializationContext& context) const {}
 
-//TODO make non const
-
 void Object::OnAfterDeserializeCallback(const SerializationContext& context) {}
 
 ReflectedTypeBase* Object::TypeOf() {
@@ -44,6 +42,11 @@ SerializationContext Object::Serialize(std::shared_ptr<Object> original) {
 	context.FlushRequiestedToSerialize();
 
 	return context;
+}
+
+std::string Object::GetDbgName() const
+{
+	return GetType()->GetName();
 }
 
 std::shared_ptr<Object> Object::Instantiate(std::shared_ptr<Object> original) {

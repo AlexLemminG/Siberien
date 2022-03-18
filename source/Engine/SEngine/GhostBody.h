@@ -16,15 +16,15 @@ public:
 	virtual void FixedUpdate() override;
 	virtual void OnDisable() override;
 
-	int GetOverlappedCount() const;
-	std::shared_ptr<GameObject> GetOverlappedObject(int idx) const;
+	std::vector<std::shared_ptr<GameObject>> GetOverlappedObjects() const;
 
 	std::string layer;
 private:
+	std::shared_ptr<btCollisionShape> originalShape;
 	btPairCachingGhostObject* pBody = nullptr;
 	Transform* transform = nullptr;
-	
-	REFLECT_BEGIN(GhostBody);
+
+	REFLECT_BEGIN(GhostBody, PhysicsBody);
 	REFLECT_VAR(layer);
 	REFLECT_END();
 };

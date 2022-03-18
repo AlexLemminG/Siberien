@@ -5,7 +5,7 @@ GameObject:
   - $BoxCollider
   - $RigidBody
 MeshRenderer:
-  mesh: meshes\cube.glb$Cube.001
+  mesh: meshes\cube.blend$Cube.001
   material: material.asset
 Transform:
 BoxCollider:

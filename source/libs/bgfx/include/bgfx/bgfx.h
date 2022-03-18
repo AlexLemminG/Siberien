@@ -461,6 +461,9 @@ namespace bgfx
 			, va_list _argList
 			) = 0;
 
+		virtual void profilerThreadStart(const char* name) = 0;
+		virtual void profilerThreadQuit(const char* name) = 0;
+
 		/// Profiler region begin.
 		///
 		/// @param[in] _name Region name, contains dynamic string.

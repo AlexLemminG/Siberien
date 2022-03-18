@@ -11,6 +11,7 @@
 
 typedef mathfu::Vector<float, 2> Vector2;
 typedef mathfu::Vector<int, 2> Vector2Int;
+typedef mathfu::Vector<int, 3> Vector3Int;
 typedef mathfu::Vector<float, 3> Vector3;
 typedef mathfu::Vector<float, 4> Vector4;
 typedef mathfu::Matrix<float, 4, 4> Matrix4;
@@ -18,12 +19,15 @@ typedef mathfu::Matrix<float, 3, 3> Matrix3;
 typedef mathfu::Quaternion<float> Quaternion;
 
 constexpr Vector3 Vector3_zero{ 0.f, 0.f, 0.f };
+constexpr Vector4 Vector4_zero{ 0.f, 0.f, 0.f, 0.f };
 constexpr Vector3 Vector3_one{ 1.f,1.f,1.f };
 constexpr Vector3 Vector3_forward{ 0.f, 0.f, 1.f };
 constexpr Vector3 Vector3_up{ 0.f, 1.f, 0.f };
 constexpr Vector3 Vector3_right{ 1.f, 0.f, 0.f };
 constexpr Vector3 Vector3_max{ FLT_MAX,FLT_MAX,FLT_MAX };;
 
+class Sphere;
+class Ray;
 
 inline void SetPos(Matrix4& matrix, const Vector3& pos) {
 	matrix.GetColumn(3) = Vector4(pos, 1);
@@ -53,23 +57,103 @@ inline Quaternion LookRotation(const Vector3& forward, const Vector3& up) {
 	return Quaternion::FromMatrix(lookAtMatr.Transpose());
 }
 
+class SE_CPP_API GeomUtils {
+public:
+	static bool IsOverlapping(const Sphere& sphere, const Ray& ray);
+};
+
+//TODO cleanup, optimize test and stuff
 class SE_CPP_API Mathf {
 public:
-	static int Round(float f) {
+	static float Floor(float a)
+	{
+		if (a < 0.0f)
+		{
+			const float fr = Fract(-a);
+			const float result = -a - fr;
+
+			return -(0.0f != fr
+				? result + 1.0f
+				: result)
+				;
+		}
+
+		return a - Fract(a);
+	}
+
+	static float Trunc(float a)
+	{
+		return float(int(a));
+	}
+
+	static float Fract(float a)
+	{
+		return a - Trunc(a);
+	}
+
+	static float Ceil(float a)
+	{
+		return -Floor(-a);
+	}
+
+	static float Round(float f)
+	{
+		return Floor(f + 0.5f);
+	}
+
+	static int RoundToInt(float f)
+	{
 		return (int)(f + 0.5f - (f < 0));
+	}
+	static int FloorToInt(float f) {
+		return RoundToInt(Floor(f));
+	}
+	static int CeilToInt(float f) {
+		return RoundToInt(Ceil(f));
 	}
 	static float Max(float a, float b) {
 		return a > b ? a : b;
 	}
+	static float Max(float a, float b, float c) {
+		return Max(a, Max(b, c));
+	}
 	static float Min(float a, float b) {
 		return a < b ? a : b;
+	}
+	static float Min(float a, float b, float c) {
+		return Min(a, Min(b, c));
 	}
 	static int Max(int a, int b) {
 		return a > b ? a : b;
 	}
+	static int Max(int a, int b, int c) {
+		return Max(a, Max(b, c));
+	}
 	static int Min(int a, int b) {
 		return a < b ? a : b;
 	}
+	static int Min(int a, int b, int c) {
+		return Min(a, Min(b, c));
+	}
+	static int Log2Floor(uint32_t x) {
+		int result = 0;
+		while (x >>= 1) {
+			result++;
+		}
+		return result;
+	}
+	static int Log2Ceil(uint32_t x) {
+		int result = 0;
+		uint32_t t = x;
+		while (t >>= 1) {
+			result++;
+		}
+		if ((1u << result) != x && x > 0) {
+			result++;
+		}
+		return result;
+	}
+
 	static float Clamp(float f, float a, float b) {
 		return f > b ? b : (f < a ? a : f);
 	}
@@ -104,7 +188,7 @@ public:
 		return Clamp(f, 0.f, 1.f);
 	}
 	static int NormalizedFloatToByte(float f) {
-		return Clamp(Round(f * 255.f), 0, 255);
+		return Clamp(RoundToInt(f * 255.f), 0, 255);
 	}
 	static float ByteToNormalizedFloat(int byte) {
 		return Clamp(byte, 0, 255) / 255.f;
@@ -318,15 +402,8 @@ public:
 	Vector3 min = Vector3_max;
 	Vector3 max = -Vector3_max;
 
-	void Expand(Vector3 pos) {
-		min.x = Mathf::Min(min.x, pos.x);
-		min.y = Mathf::Min(min.y, pos.y);
-		min.z = Mathf::Min(min.z, pos.z);
-
-		max.x = Mathf::Max(max.x, pos.x);
-		max.y = Mathf::Max(max.y, pos.y);
-		max.z = Mathf::Max(max.z, pos.z);
-	}
+	void Expand(Vector3 pos);
+	void Expand(AABB box);
 
 	Vector3 GetSize() const {
 		return max - min;
@@ -337,6 +414,10 @@ public:
 	}
 
 	bool Contains(const Vector3 pos) const;
+
+	std::array<Vector3, 8> GetVertices()const;
+	std::array<int, 48> GetTriangleIndices()const; //CW order
+	std::array<int, 24> GetQuadIndices()const; //CW order
 
 	OBB ToOBB()const;
 
@@ -351,6 +432,8 @@ public:
 	AABB ToAABB()const;
 
 	std::array<Vector3, 8> GetVertices()const;
+	static std::array<int, 48> GetTriangleIndices(); //CW order
+	static std::array<int, 24> GetQuadIndices(); //CW order
 
 	Matrix4 GetCenterMatrix() const;
 	Vector3 GetSize() const;
@@ -400,6 +483,14 @@ public:
 		distance = projDst / projRayDir;
 		return distance > 0.f;
 	}
+
+	Vector3 ProjectVector(const Vector3& vec) const {
+		return vec - Vector3::DotProduct(vec, normal) * normal;
+	}
+
+	Vector3 ProjectPoint(const Vector3& vec) const {
+		return ProjectVector(vec - origin) + origin;
+	}
 };
 
 inline void SerializeVector(SerializationContext& context, const Vector3& src) {
@@ -437,6 +528,9 @@ inline void DeserializeVector4(const SerializationContext& context, Vector4& dst
 	context.Child(3) >> dst.w;
 }
 
+void DeserializeMatrix4(const SerializationContext& context, Matrix4& dst);
+void SerializeMatrix4(SerializationContext& context, const Matrix4& src);
+
 class Frustum {
 public:
 	void SetFromViewProjection(const Matrix4& viewProjection);
@@ -449,9 +543,7 @@ private:
 	Vector4 frustumPlanes[6];
 };
 
-//TODO static func of namespace
-bool IsOverlapping(const Sphere& sphere, Ray ray);
-
 REFLECT_CUSTOM_EXT(Vector3, SerializeVector, DeserializeVector);
 REFLECT_CUSTOM_EXT(Vector4, SerializeVector4, DeserializeVector4);
+REFLECT_CUSTOM_EXT(Matrix4, SerializeMatrix4, DeserializeMatrix4);
 REFLECT_CUSTOM_EXT(Color, Color::Serialize, Color::Deserialize);

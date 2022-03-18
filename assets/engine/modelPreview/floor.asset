@@ -13,5 +13,5 @@ BoxCollider:
 Transform:
   position: [0, 0, 0]
 MeshRenderer:
-  mesh: meshes\floor.glb$floor
+  mesh: meshes\floor.blend$floor
   material: floorMaterial.asset

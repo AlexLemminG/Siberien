@@ -71,13 +71,9 @@ start:
 			return -1;
 		}
 
-
 		if (!systemsManager.Init()) {
 			return -1;
 		}
-
-
-		Graphics::Get()->SetRenderPtr(&render); //TODO this is not the way
 
 		Input::Init();
 
@@ -99,8 +95,11 @@ start:
 		Input::Update();
 
 		//TODO move away
-		ImGui_ImplSDL2_NewFrame();
-		imguiBeginFrame();
+		{
+			OPTICK_FRAME("ImGui newframe");
+			ImGui_ImplSDL2_NewFrame();
+			imguiBeginFrame();
+		}
 
 
 		if (Scene::Get()) {
@@ -131,7 +130,7 @@ start:
 		}
 		if (needSceneReload) {
 			needSceneReload = false;
-			SceneManager::LoadScene(GetFirstSceneName());
+			SceneManager::LoadScene(SceneManager::GetCurrentScenePath());
 			assets.UnloadAll();
 		}
 
@@ -146,8 +145,6 @@ start:
 		Input::Term();
 
 		SceneManager::Term();
-
-		Graphics::Get()->SetRenderPtr(nullptr); //TODO this is not the way
 
 		systemsManager.Term();
 

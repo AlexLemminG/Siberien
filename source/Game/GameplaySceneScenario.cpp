@@ -5,6 +5,7 @@
 #include "Scene.h"
 #include "GameEvents.h"
 #include "EnemyCreep.h"
+#include "Material.h"
 #include "MeshRenderer.h"
 #include "STime.h"
 #include "PlayerController.h"
@@ -35,6 +36,13 @@ void GameplaySceneScenario::OnEnable() {
 
 void GameplaySceneScenario::Update() {
 	UpdateCamera();
+
+	//for (auto& v : neonMaterial->vectors) {
+	//	if (v.name == "u_uvOffset") {
+	//		v.value.x += Time::deltaTime();
+	//		v.value.x = Mathf::Fract(v.value.x);
+	//	}
+	//}
 
 	if (!IsTriggered("init")) {
 		Trigger("init");

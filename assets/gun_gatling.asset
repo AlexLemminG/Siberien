@@ -1,20 +1,30 @@
 GameObject:
   components:
-  - $MeshRenderer
-  - $Transform
-  - $Pickup
-  - $PointLight
-  - $SphereCollider
-  - $GhostBody
+    - $MeshRenderer
+    - $Transform
+    - $Pickup
+    - $PointLight
+    - $SphereCollider
+    - $GhostBody
+  tag: BigGun
 MeshRenderer:
-  mesh: meshes\gatling.glb$Mesh
+  mesh: meshes\gatling.blend$Mesh
   material: materials\scifi.asset
 Transform:
-  pos: [-26.6,3.5,146.0]
-  euler: [0, 60, 0]
-  scale: [1,1,1]
+  pos:
+    - -26.6
+    - 3.5305533
+    - 145.893
+  euler:
+    - 0
+    - 59.999992
+    - 0
+  scale:
+    - 1
+    - 1
+    - 1
 Pickup:
-  gun: $Gun  
+  gun: $Gun
 Gun:
   shootOnlyOnTrigger: false
   shotsPerSecond: 60.0
@@ -33,5 +43,8 @@ PointLight:
   intensity: 4
 SphereCollider:
   radius: 0.5
-  center: [0,1,0]
+  center:
+    - 0
+    - 1
+    - 0
 GhostBody: {}

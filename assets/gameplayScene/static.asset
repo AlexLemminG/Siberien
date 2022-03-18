@@ -3,9 +3,15 @@ GameObject:
   components:
     - $BlenderSceneLoader
 BlenderSceneLoader:
-  scene: meshes\gameplayStatic.glb$FullMeshAsset
-  material: materials\scifi.asset
-  materialNeon: materials\scifi_neon.asset
-  materialSigns: materials\scifi_signs.asset
-  materialRoads: materials\scifi_roads.asset
-  materialPosters: materials\scifi_posters.asset
+  scene: meshes\gameplayStatic.blend$FullMeshAsset
+  materialMapping:
+    - from: 'DefaultMat'
+      to: materials\scifi.asset
+    - from: 'PostersMat'
+      to: materials\scifi_posters.asset
+    - from: 'RoadMat'
+      to: materials\scifi_roads.asset
+    - from: 'SignsNeonMat'
+      to: materials\scifi_neon.asset
+    - from: 'SignsMat'
+      to: materials\scifi_signs.asset

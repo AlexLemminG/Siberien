@@ -9,10 +9,40 @@
 #include "System.h"
 #include "Animation.h"
 #include "PhysicsSystem.h"//TODO looks weird
-#include "yaml-cpp/yaml.h"
+#include "ryml.hpp"
 #include "Compression.h"
+#include "shlwapi.h"
+#include <filesystem>
 
 
+class ModelAnimationsMeta {
+public:
+	bool deformBonesOnly = true;
+
+	REFLECT_BEGIN(ModelAnimationsMeta);
+	REFLECT_VAR(deformBonesOnly);
+	REFLECT_END()
+};
+class ModelMeta {
+public:
+	ModelAnimationsMeta animations{};
+
+	REFLECT_BEGIN(ModelMeta);
+	REFLECT_VAR(animations);
+	REFLECT_END()
+};
+
+class LibraryMeshMeta :public Object {
+public:
+	uint64_t lastAssetChangeTime;
+	uint64_t lastMetaChangeTime;
+	int importerVersion;
+	REFLECT_BEGIN(LibraryMeshMeta);
+	REFLECT_VAR(lastAssetChangeTime);
+	REFLECT_VAR(lastMetaChangeTime);
+	REFLECT_VAR(importerVersion);
+	REFLECT_END();
+};
 
 MeshVertexLayout& MeshVertexLayout::Begin() {
 	attributes.clear();
@@ -247,10 +277,12 @@ public:
 		for (auto& mesh : meshAsset->meshes) {
 			auto vertices = VertexLayoutSystem::Get()->layout_pos.CreateBuffer(mesh->rawVertices);
 			mesh->vertexBuffer = bgfx::createVertexBuffer(bgfx::copy(&vertices[0], vertices.size()), VertexLayoutSystem::Get()->layout_pos.bgfxLayout);
+			ASSERT(bgfx::isValid(mesh->vertexBuffer));
 			bgfx::setName(mesh->vertexBuffer, mesh->name.c_str());
 			auto& indices = mesh->rawIndices;
 			//TODO makeRef + release func instead of copy 
 			mesh->indexBuffer = bgfx::createIndexBuffer(bgfx::copy(&indices[0], indices.size() * sizeof(uint16_t)));
+			ASSERT(bgfx::isValid(mesh->indexBuffer));
 			bgfx::setName(mesh->indexBuffer, mesh->name.c_str());
 
 			databaseHandle.AddAssetToLoaded(mesh->name.c_str(), mesh);
@@ -262,31 +294,103 @@ public:
 		return true;
 	}
 
+	bool ConvertBlendToGlb(AssetDatabase_BinaryImporterHandle& databaseHandle, const std::string& inFile, const std::string& outFile, const ModelMeta& meta) {
+		DWORD blenderLocSize = 1024;
+		char blenderLoc[1024];
+		memset(blenderLoc, 0, 1024);
+		auto findBlendResult = AssocQueryStringA(ASSOCF_VERIFY, ASSOCSTR_EXECUTABLE, ".blend", nullptr, blenderLoc, &blenderLocSize);
+		if (findBlendResult != 0) {
+			//TODO log error
+			return false;
+		}
+		std::string blenderApp = blenderLoc;
+		int launcherStrIdx = blenderApp.find("blender-launcher.exe");
+		if (launcherStrIdx != -1) {
+			blenderApp.replace(launcherStrIdx, strlen("blender-launcher.exe"), "blender.exe"); // *-launcher.exe does not wait
+		}
+
+		//TODO less hardcode
+		auto pythonConverterScript = databaseHandle.GetToolPath("BlenderToGlb.py");//TODO make sure file exist
+		std::string params = " ";
+		params += inFile;
+		params += " -b";
+		params += " --python \"" + pythonConverterScript + "\"";
+
+		//TODO move to platform independent stuff
+		STARTUPINFOA si;
+		memset(&si, 0, sizeof(STARTUPINFOA));
+		si.cb = sizeof(STARTUPINFOA);
+
+		PROCESS_INFORMATION pi;
+		memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+
+		std::vector<char> paramsBuffer(params.begin(), params.end());
+		paramsBuffer.push_back(0);
+		LPSTR ccc = &paramsBuffer[0];
+
+		SetEnvironmentVariableA("SENGINE_BLENDER_EXPORTER_ANIMATIONS_DEFORM_BONES_ONLY", meta.animations.deformBonesOnly ? "True" : "False");
+		SetEnvironmentVariableA("SENGINE_BLENDER_EXPORTER_OUTPUT_FILE", outFile.c_str());
+
+		//TODO delete outFile before converting
+
+		auto result = CreateProcessA(
+			blenderApp.c_str()
+			, &paramsBuffer[0]
+			, NULL
+			, NULL
+			, false
+			, 0
+			, NULL
+			, NULL
+			, &si
+			, &pi);
+
+		if (!result)
+		{
+			LogError("Failed to open blender for exporting '%s'", databaseHandle.GetAssetPath().c_str());
+			return false;
+		}
+		else
+		{
+			// Successfully created the process.  Wait for it to finish.
+			WaitForSingleObject(pi.hProcess, INFINITE);
+
+			// Close the handles.
+			CloseHandle(pi.hProcess);
+			CloseHandle(pi.hThread);
+		}
+
+		return true;
+	}
+
 	std::shared_ptr<FullMeshAsset> Import(AssetDatabase_BinaryImporterHandle& databaseHandle) {
-		int importerVersion = 0;//TODO move somewhere
+		bool convertionAllowed = databaseHandle.ConvertionAllowed();
+		//TODO dont load if version differs!!!
+
+		int importerVersion = 1;//TODO move somewhere
 		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("MeshAsset");
 		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");
 
 
+		LibraryMeshMeta expectedMeta;
 		bool needRebuild = false;
-		YAML::Node libraryMeta;
-		databaseHandle.ReadFromLibraryFile("meta", libraryMeta);
-		long lastChangeMeta;
-		long lastChange;
-		databaseHandle.GetLastModificationTime(lastChange, lastChangeMeta);
-		if (!libraryMeta.IsDefined()) {
+		if (convertionAllowed) {
 			needRebuild = true;
-		}
-		else {
-			long lastChangeRecorded = libraryMeta["lastChange"].as<long>();
-			long lastMetaChangeRecorded = libraryMeta["lastMetaChange"].as<long>();
-			long importerVersionRecorded = libraryMeta["importerVersion"].IsDefined() ? libraryMeta["importerVersion"].as<long>() : -1;
-			if (lastChange != lastChangeRecorded || lastMetaChangeRecorded != lastChangeMeta || importerVersionRecorded != importerVersion) {
-				needRebuild = true;
+			expectedMeta.importerVersion = importerVersion;
+			databaseHandle.GetLastModificationTime(expectedMeta.lastAssetChangeTime, expectedMeta.lastMetaChangeTime);
+
+			std::unique_ptr<ryml::Tree> libraryMetaYaml;
+			databaseHandle.ReadFromLibraryFile("meta", libraryMetaYaml);
+			if (libraryMetaYaml) {
+				LibraryMeshMeta meta;
+				SerializationContext c{ libraryMetaYaml->rootref() };
+				::Deserialize(c, meta);
+				if (meta.lastAssetChangeTime == expectedMeta.lastAssetChangeTime &&
+					meta.lastMetaChangeTime == expectedMeta.lastMetaChangeTime &&
+					meta.importerVersion == expectedMeta.importerVersion) {
+					needRebuild = false;
+				}
 			}
-		}
-		if (lastChange == 0) {
-			needRebuild = false;
 		}
 
 		std::vector<uint8_t> buffer;
@@ -306,22 +410,47 @@ public:
 			auto meshAsset = DeserializeFromBuffer(buffer);
 			return meshAsset;
 		}
-		auto meshAsset = ImportUsingAssimp(databaseHandle.GetAssetPath());
+		else if (!convertionAllowed) {
+			//TODO error
+			return nullptr;
+		}
+
+
+		std::unique_ptr<ryml::Tree> metaYamlTree;
+		databaseHandle.ReadMeta(metaYamlTree);
+		ModelMeta meta{};
+		if (metaYamlTree) {
+			SerializationContext c = SerializationContext(metaYamlTree->rootref());
+			::Deserialize(c, meta);
+		}
+
+		//TODO some pipelining for blender
+		auto originalAssetPathReal = databaseHandle.GetAssetPathReal();
+		bool isBlendFile = databaseHandle.GetFileExtension() == "blend";
+
+		if (isBlendFile) {
+			//TODO less hardcode
+			databaseHandle.EnsureForderForTempFileExists("blenderToGlb.glb");
+			std::string tempFile = databaseHandle.GetTempPathFromFileName("blenderToGlb.glb");
+			if (!ConvertBlendToGlb(databaseHandle, originalAssetPathReal, tempFile, meta)) {
+				return false;
+			}
+			originalAssetPathReal = tempFile;
+		}
+
+		auto meshAsset = ImportUsingAssimp(originalAssetPathReal);
 		if (!meshAsset) {
 			return false;
 		}
 
 		buffer = SerializeToBuffer(meshAsset);
-
-		auto metaNode = YAML::Node();
-		metaNode["lastChange"] = lastChange;
-		metaNode["lastMetaChange"] = lastChangeMeta;
-		metaNode["importerVersion"] = importerVersion;
+		SerializationContext c{};
+		::Serialize(c, expectedMeta);
 
 		databaseHandle.EnsureForderForLibraryFileExists("meta");
 		databaseHandle.EnsureForderForLibraryFileExists("MeshAsset");
 
-		databaseHandle.WriteToLibraryFile("meta", metaNode);
+		databaseHandle.WriteToLibraryFile("meta", c.GetYamlNode());
 
 		{
 			BinaryBuffer from = BinaryBuffer(std::move(buffer));
@@ -330,6 +459,7 @@ public:
 			ASSERT(compressed);
 			databaseHandle.WriteToLibraryFile("MeshAsset", to.GetData());
 		}
+		Log("Converted mesh '%s'", databaseHandle.GetAssetPath().c_str());
 		return meshAsset;
 	}
 
@@ -367,6 +497,8 @@ public:
 			std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
 			fullMeshAsset->meshes.push_back(mesh);
 			buffer.Read(mesh->name);
+
+			buffer.Read(mesh->assetMaterialName);
 
 			int numIndices;
 			buffer.Read(numIndices);
@@ -454,6 +586,8 @@ public:
 		for (int i = 0; i < numMeshes; i++) {
 			auto mesh = meshAsset->meshes[i];
 			buffer.Write(mesh->name);
+
+			buffer.Write(mesh->assetMaterialName);
 
 			int numIndices = mesh->rawIndices.size();
 			buffer.Write(numIndices);
@@ -560,7 +694,12 @@ public:
 		for (int iMesh = 0; iMesh < scene->mNumMeshes; iMesh++) {
 			auto* aiMesh = scene->mMeshes[iMesh];
 			auto mesh = std::make_shared<Mesh>();
+
 			mesh->name = aiMesh->mName.C_Str();
+
+			if (aiMesh->mMaterialIndex < scene->mNumMaterials) {
+				mesh->assetMaterialName = scene->mMaterials[aiMesh->mMaterialIndex]->GetName().C_Str();
+			}
 
 			mesh->rawVertices = CalcVerticesFromAiMesh(aiMesh);
 			mesh->rawIndices = CalcIndicesFromAiMesh(aiMesh);
@@ -594,7 +733,6 @@ public:
 			}
 
 			PhysicsSystem::Get()->CalcMeshPhysicsDataFromBuffer(mesh);
-
 
 			fullAsset->meshes.push_back(mesh);
 

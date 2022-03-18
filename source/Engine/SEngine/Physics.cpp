@@ -33,8 +33,9 @@ bool Physics::SphereCast(Physics::RaycastHit& hit, Ray ray, float radius, float 
 	}
 }
 
-bool Physics::Raycast(RaycastHit& hit, Ray ray, float maxDistance) {
+bool Physics::Raycast(RaycastHit& hit, Ray ray, float maxDistance, int layerMask) {
 	btCollisionWorld::ClosestRayResultCallback cb(btConvert(ray.origin), btConvert(ray.origin + ray.dir * maxDistance));
+	cb.m_collisionFilterMask = layerMask;
 	PhysicsSystem::Get()->dynamicsWorld->rayTest(btConvert(ray.origin), btConvert(ray.origin + ray.dir * maxDistance), cb);
 	if (cb.hasHit()) {
 		hit = Physics::RaycastHit(btConvert(cb.m_hitPointWorld), btConvert(cb.m_hitNormalWorld), GetRigidBody(cb.m_collisionObject));
@@ -72,7 +73,7 @@ std::vector<RigidBody*> Physics::OverlapSphere(const Vector3& pos, float radius,
 	cb.m_collisionFilterMask = layerMask;
 	PhysicsSystem::Get()->dynamicsWorld->contactTest(&ghost, cb);
 
-	//TODO may contain doubles 
+	//TODO may contain doubles //does it?
 
 	for (auto o : cb.objects) {
 		auto* rb = o;

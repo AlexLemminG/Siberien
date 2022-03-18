@@ -4,8 +4,9 @@
 #include "bgfx/bgfx.h"
 #include "Render.h"
 
-struct PosTexCoord0Vertex
-{
+static Render* s_render;
+
+struct PosTexCoord0Vertex {
 	float m_x;
 	float m_y;
 	float m_z;
@@ -14,16 +15,16 @@ struct PosTexCoord0Vertex
 
 	static void init()
 	{
-		ms_layout
+		layout
 			.begin()
 			.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
 			.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
 			.end();
 	}
 
-	static bgfx::VertexLayout ms_layout;
+	static bgfx::VertexLayout layout;
 };
-bgfx::VertexLayout PosTexCoord0Vertex::ms_layout;
+bgfx::VertexLayout PosTexCoord0Vertex::layout;
 
 REGISTER_SYSTEM(Graphics);
 
@@ -37,11 +38,11 @@ void Graphics::Blit(std::shared_ptr<Material> material) {
 		return;
 	}
 
-	render->ApplyMaterialProperties(material.get());
+	s_render->ApplyMaterialProperties(material.get());
 
-	auto s_tex = render->GetTexColorSampler();
+	auto s_tex = s_render->GetTexColorSampler();
 
-	auto texture = render->GetCurrentFullScreenTexture();
+	auto texture = s_render->GetCurrentFullScreenTexture();
 	bgfx::setTexture(0, s_tex, texture);
 
 	bgfx::setState(0
@@ -51,8 +52,8 @@ void Graphics::Blit(std::shared_ptr<Material> material) {
 
 	SetScreenSpaceQuadBuffer();
 
-	bgfx::submit(render->GetNextFullScreenTextureViewId(), material->shader->program);
-	render->FlipFullScreenTextures();
+	bgfx::submit(s_render->GetNextFullScreenTextureViewId(), material->shader->program);
+	s_render->FlipFullScreenTextures();
 }
 
 void Graphics::Blit(std::shared_ptr<Material> material, int targetViewId) {
@@ -60,11 +61,11 @@ void Graphics::Blit(std::shared_ptr<Material> material, int targetViewId) {
 		return;
 	}
 
-	render->ApplyMaterialProperties(material.get());
+	s_render->ApplyMaterialProperties(material.get());
 
-	auto s_tex = render->GetTexColorSampler();
+	auto s_tex = s_render->GetTexColorSampler();
 
-	auto texture = render->GetCurrentFullScreenTexture();
+	auto texture = s_render->GetCurrentFullScreenTexture();
 	bgfx::setTexture(0, s_tex, texture);
 
 	bgfx::setState(0
@@ -77,18 +78,17 @@ void Graphics::Blit(std::shared_ptr<Material> material, int targetViewId) {
 	bgfx::submit(targetViewId, material->shader->program);
 }
 
+void Graphics::SetRenderPtr(Render* render) { s_render = render; }
 
-void Graphics::SetRenderPtr(Render* render) { this->render = render; }
+int Graphics::GetScreenWidth() const { return s_render->GetWidth(); }
 
-int Graphics::GetScreenWidth() const { return render->GetWidth(); }
-
-int Graphics::GetScreenHeight() const { return render->GetHeight(); }
+int Graphics::GetScreenHeight() const { return s_render->GetHeight(); }
 
 Vector2Int Graphics::GetScreenSize() const { return Vector2Int(GetScreenWidth(), GetScreenHeight()); }
 
 void Graphics::SetScreenSpaceQuadBuffer() {
-	float textureWidth = render->GetWidth();
-	float textureHeight = render->GetHeight();
+	float textureWidth = s_render->GetWidth();
+	float textureHeight = s_render->GetHeight();
 
 	const bgfx::RendererType::Enum renderer = bgfx::getRendererType();
 	auto texelHalf = bgfx::RendererType::Direct3D9 == renderer ? 0.5f : 0.0f;
@@ -98,10 +98,10 @@ void Graphics::SetScreenSpaceQuadBuffer() {
 	float _width = 1.0f;
 	float _height = 1.0f;
 
-	if (4 == bgfx::getAvailTransientVertexBuffer(4, PosTexCoord0Vertex::ms_layout) && 6 == bgfx::getAvailTransientIndexBuffer(6))
+	if (4 == bgfx::getAvailTransientVertexBuffer(4, PosTexCoord0Vertex::layout) && 6 == bgfx::getAvailTransientIndexBuffer(6))
 	{
 		bgfx::TransientVertexBuffer vb;
-		bgfx::allocTransientVertexBuffer(&vb, 4, PosTexCoord0Vertex::ms_layout);
+		bgfx::allocTransientVertexBuffer(&vb, 4, PosTexCoord0Vertex::layout);
 		bgfx::TransientIndexBuffer ib;
 		bgfx::allocTransientIndexBuffer(&ib, 6);
 

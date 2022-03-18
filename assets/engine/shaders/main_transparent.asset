@@ -1,0 +1,4 @@
+Shader:
+  vs: engine\shaders\bump\vs_bump.vs
+  fs: engine\shaders\bump\fs_transparent.fs
+  isAlphaBlending: true

@@ -30,7 +30,8 @@ std::string CfgGetString(std::string name) {
 	SDL_assert(config[name]);
 	return config[name].as<std::string>();
 }
-
+//TODO remove settings and use assets instead
+//TODO or at least do not save/load them to git folder
 int SettingsGetInt(std::string name) {
 	SDL_assert(settings[name]);
 	return settings[name].as<int>();
@@ -43,7 +44,7 @@ void SettingsSetInt(std::string name, int i) {
 
 bool Config::Init() {
 	OPTICK_EVENT();
-	config = YAML::LoadFile("config.yaml");
+	config = YAML::LoadFile("config.yaml");//TODO use ryml and remove YAML from solution
 	settings = YAML::LoadFile("settings.yaml");
 	return true;
 }

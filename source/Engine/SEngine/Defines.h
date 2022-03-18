@@ -32,3 +32,7 @@
 #ifndef SE_BUILD
 #define RYML_SHARED
 #endif
+
+#ifndef SE_RETAIL
+#define SDL_ASSERT_LEVEL 2
+#endif//TODO else

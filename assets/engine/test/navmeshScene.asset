@@ -29,11 +29,11 @@ Transform$cubeTransform:
   pos: [0,0,0]
 
 MeshRenderer$cubeRenderer:
-  mesh: engine\test\navmeshtest.glb$Mesh
+  mesh: engine\test\navmeshtest.blend$Mesh
   material: materials\scifi.asset
 
 MeshCollider$cubeShape:
-  mesh: engine\test\navmeshtest.glb$Mesh
+  mesh: engine\test\navmeshtest.blend$Mesh
   
 RigidBody$cubeRigidBody:
   isStatic: true

@@ -33,35 +33,19 @@ Dbg::DrawHandle& Dbg::DrawCone(Vector3 from, Vector3 to, float radius) {
 }
 
 void Dbg::Draw(Frustum frustum) {
+	float depthStart = bgfx::getCaps()->homogeneousDepth ? -1 : 0;
 	auto inv = frustum.GetMatrix().Inverse();
+	AABB aabb = AABB(Vector3(-1, -1, depthStart), Vector3(1, 1, 1));
+	auto vertices = aabb.GetVertices();
+	auto tris = aabb.GetQuadIndices();
 
-	Vector3 a1 = inv * Vector3(-1, +1, -1);
-	Vector3 a2 = inv * Vector3(-1, +1, +1);
-	Vector3 a3 = inv * Vector3(+1, +1, -1);
-	Vector3 a4 = inv * Vector3(+1, +1, +1);
-
-	Vector3 a5 = inv * Vector3(-1, -1, -1);
-	Vector3 a6 = inv * Vector3(-1, -1, +1);
-	Vector3 a7 = inv * Vector3(+1, -1, -1);
-	Vector3 a8 = inv * Vector3(+1, -1, +1);
-
-	//top
-	Dbg::DrawLine(a1, a2);
-	Dbg::DrawLine(a2, a3);
-	Dbg::DrawLine(a3, a4);
-	Dbg::DrawLine(a4, a1);
-	
-	//bottom
-	Dbg::DrawLine(a5, a6);
-	Dbg::DrawLine(a6, a7);
-	Dbg::DrawLine(a7, a8);
-	Dbg::DrawLine(a8, a5);
-
-	//sides
-	Dbg::DrawLine(a1, a5);
-	Dbg::DrawLine(a2, a6);
-	Dbg::DrawLine(a3, a7);
-	Dbg::DrawLine(a4, a8);
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 4; j++) {
+			int i1 = i * 4 + j;
+			int i2 = i * 4 + (j + 1) % 4;
+			Dbg::DrawLine(inv * vertices[tris[i1]], inv * vertices[tris[i2]]);
+		}
+	}
 }
 
 void Dbg::Draw(const AABB& aabb) {
@@ -120,24 +104,24 @@ void Dbg::Term() {
 	bgfx_examples::ddShutdown();
 }
 
-void Dbg::DrawAll() {
-	OPTICK_EVENT();
-	bgfx_examples::DebugDrawEncoder dde;
-	dde.begin(1);
-
-	dde.setState(false, false, true);
+void Dbg::DrawAllGizmos(void* ddeVoid, float alphaMultiplier) {
+	bgfx_examples::DebugDrawEncoder& dde = *(bgfx_examples::DebugDrawEncoder*)ddeVoid;
+	dde.setWireframe(true);
 
 	for (const auto& ray : rays) {
-		dde.setColor(ray.color.ToIntARGB());
+		Color color = ray.color;
+		color.a *= alphaMultiplier;
+		dde.setColor(color.ToIntARGB());
 		dde.moveTo(ray.ray.origin.x, ray.ray.origin.y, ray.ray.origin.z);
 		auto nextPos = ray.ray.GetPoint(ray.length);
 		dde.lineTo(bx::Vec3(nextPos.x, nextPos.y, nextPos.z));
 	}
 	dde.setColor(Colors::white.ToIntARGB());
 
-	dde.setWireframe(true);
 	for (const auto& point : points) {
-		dde.setColor(point.color.ToIntARGB());
+		Color color = point.color;
+		color.a *= alphaMultiplier;
+		dde.setColor(color.ToIntARGB());
 
 		float weight = 0.f;
 		dde.drawCircle(bx::Vec3(0, 0, 1), bx::Vec3(point.pos.x, point.pos.y, point.pos.z), point.radius, weight);
@@ -149,10 +133,26 @@ void Dbg::DrawAll() {
 
 	dde.setLod(3);
 	for (const auto& cone : cones) {
-		dde.setColor(cone.color.ToIntARGB());
+		Color color = cone.color;
+		color.a *= alphaMultiplier;
+		dde.setColor(color.ToIntARGB());
 		dde.drawCone(bx::Vec3(cone.to.x, cone.to.y, cone.to.z), bx::Vec3(cone.from.x, cone.from.y, cone.from.z), cone.radius);
 	}
 	dde.setLod(0);
+}
+
+void Dbg::DrawAll(int viewId) {
+	OPTICK_EVENT();
+	bgfx_examples::DebugDrawEncoder dde;
+	dde.begin(viewId);
+
+	//drawing with bigger opacity without ztest
+	dde.setState(false, false, true);
+	DrawAllGizmos(&dde, 0.1f);
+
+	//drawing with ztest/zwrite
+	dde.setState(true, true, true);
+	DrawAllGizmos(&dde, 1.f);
 
 	dde.setColor(Colors::white.ToIntARGB());
 

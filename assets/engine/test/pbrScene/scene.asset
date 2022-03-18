@@ -1,5 +1,5 @@
 Scene:
-  sphericalHarmonics: harmonics.asset
+  sphericalHarmonics: engine\nightHarmonics.asset
   gameObjects:
     - engine\test\pbrScene\camera.asset
     - engine\test\pbrScene\pbrBalls.asset

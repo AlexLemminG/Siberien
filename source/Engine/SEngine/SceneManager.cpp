@@ -12,8 +12,16 @@ std::shared_ptr<Scene> SceneManager::currentScene;
 GameEvent<> SceneManager::onBeforeSceneEnabled;
 GameEvent<> SceneManager::onAfterSceneDisabled;
 GameEvent<> SceneManager::onSceneLoaded;
+bool lastLoadRequestIsForEditing = false;
+
 void SceneManager::LoadScene(std::string sceneName) {
 	lastLoadRequest = sceneName;
+	lastLoadRequestIsForEditing = false;
+}
+
+void SceneManager::LoadSceneForEditing(std::string sceneName) {
+	lastLoadRequest = sceneName;
+	lastLoadRequestIsForEditing = true;
 }
 
 void SceneManager::Update() {
@@ -25,6 +33,14 @@ void SceneManager::Update() {
 	if (currentScene) {
 		currentScene->Term();
 		onAfterSceneDisabled.Invoke();
+
+		if (currentScene->IsInEditMode()) {
+			//HACK to reload prefab yaml nodes
+			auto path = AssetDatabase::Get()->GetAssetPath(currentScene);
+			if (!path.empty()) {
+				AssetDatabase::Get()->Unload(path);
+			}
+		}
 		currentScene = nullptr;
 	}
 
@@ -36,12 +52,15 @@ void SceneManager::Update() {
 	std::shared_ptr<Scene> scene;
 	{
 		OPTICK_EVENT("Load scene");
-		scene = assets->Load<Scene>(sceneName);
-		if (!scene) {
-			if (sceneName != "-") { //TODO tidy
-				//ASSERT(false);
+		if (sceneName != "-") { //TODO tidy
+			scene = assets->Load<Scene>(sceneName);
+			if (!scene) {
+				LogError("Failed to load scene '%s'", sceneName.c_str());
+				ASSERT(false);
 			}
-			return;
+		}
+		else {
+			scene = nullptr;
 		}
 	}
 
@@ -59,11 +78,16 @@ void SceneManager::Update() {
 	}
 	{
 		OPTICK_EVENT("Instantiate Scene");
-		currentScene = Object::Instantiate(scene);
+		if (lastLoadRequestIsForEditing) {
+			currentScene = scene;
+		}
+		else {
+			currentScene = Object::Instantiate(scene);
+		}
 		if (currentScene) {
 			currentScene->name = sceneName;
 			onBeforeSceneEnabled.Invoke();
-			currentScene->Init();
+			currentScene->Init(lastLoadRequestIsForEditing);
 			onSceneLoaded.Invoke();
 		}
 	}
@@ -78,7 +102,7 @@ void SceneManager::Term() {
 
 std::shared_ptr<Scene> SceneManager::GetCurrentScene() { return currentScene; }
 
-std::string SceneManager::GetCurrentScenePath() { 
+std::string SceneManager::GetCurrentScenePath() {
 
-	return currentScene != nullptr ? currentScene->name : "-"; 
+	return currentScene != nullptr ? currentScene->name : "-";
 }

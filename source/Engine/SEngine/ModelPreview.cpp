@@ -11,13 +11,14 @@
 #include "Animation.h"
 #include "Mesh.h"
 #include "Input.h"
+#include "Editor.h"
 
 DECLARE_TEXT_ASSET(ModelPreview);
 static int current = 0;
 static char buff[255];
 
 void ModelPreview::OnEnable() {
-	//TODO
+	//TODO filter to get gameObjects only
 	allGameObjects = AssetDatabase::Get()->GetAllAssetNames();
 	//TODO get rid of std::vector
 	for (int i = (int)allGameObjects.size() - 1; i >= 0; i--) {
@@ -129,11 +130,17 @@ void ModelPreview::SelectPrefab(std::shared_ptr<GameObject> prefab) {
 		return;
 	}
 
+	Editor::Get()->selectedObject = prefab;
 	currentPrefab = prefab;
-	currentGameObject = Object::Instantiate(prefab);
-	if (currentGameObject->transform() != nullptr) {
-		currentGameObject->transform()->SetPosition(Vector3_zero);
-		currentGameObject->transform()->SetRotation(Quaternion::identity);
+	if (Editor::Get()->IsInEditMode()) {
+		currentGameObject = prefab;
+	}
+	else {
+		currentGameObject = Object::Instantiate(prefab);
+		if (currentGameObject->transform() != nullptr) {
+			currentGameObject->transform()->SetPosition(Vector3_zero);
+			currentGameObject->transform()->SetRotation(Quaternion::identity);
+		}
 	}
 	/*for (int i = currentGameObject->components.size() - 1; i >= 0; i--) {
 		auto c = currentGameObject->components[i];

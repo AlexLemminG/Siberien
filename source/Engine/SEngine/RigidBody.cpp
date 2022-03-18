@@ -10,6 +10,8 @@
 #include "Common.h"
 #include "Camera.h"
 #include "MeshRenderer.h"
+#include "Editor.h"
+#include "Dbg.h"
 
 DECLARE_TEXT_ASSET(RigidBody);
 
@@ -20,8 +22,8 @@ void RigidBody::OnEnable() {
 	if (!collider) {
 		return;
 	}
-
-	auto shape = collider->shape;
+	//TODO multiple shapes
+	auto shape = collider->CreateShape();
 	if (!shape) {
 		return;
 	}
@@ -29,10 +31,24 @@ void RigidBody::OnEnable() {
 	if (!transform) {
 		return;
 	}
-	auto scale = transform->GetScale();
 
+	auto scale = transform->GetScale();
+	if (Vector3::DistanceSquared(scale, Vector3_one) > Mathf::epsilon) {
+		auto meshShape = std::dynamic_pointer_cast<btBvhTriangleMeshShape>(shape);
+		if (meshShape) {
+			//TODO praying for shape to be in storage
+			ASSERT(meshShape.use_count() > 2);//TODO assert messages
+			shape = std::make_shared<btScaledBvhTriangleMeshShape>(meshShape.get(), btConvert(scale));
+		}
+		else {
+			shape->setLocalScaling(btConvert(scale));
+		}
+	}
+
+	originalShape = shape;
+	//TODO remove intermediate shape when possible
 	offsetedShape = std::make_shared<btCompoundShape>();
-	offsetedShape->addChildShape(btTransform(btMatrix3x3::getIdentity(), -btConvert(centerOfMass * scale)), shape.get());
+	offsetedShape->addChildShape(btTransform(btMatrix3x3::getIdentity(), -btConvert((centerOfMass - collider->center) * scale)), shape.get());
 	shape = offsetedShape;
 
 	auto matr = transform->GetMatrix();
@@ -70,24 +86,40 @@ void RigidBody::OnEnable() {
 	PhysicsSystem::Get()->GetGroupAndMask(layer, group, mask);
 	PhysicsSystem::Get()->dynamicsWorld->addRigidBody(pBody, group, mask);
 
-	SetFlags(Bits::SetMask(GetFlags(), FLAGS::IGNORE_UPDATE, isStatic));
+	bool isEditMode = Editor::Get()->IsInEditMode(); // PERF always either true or false
+	SetFlags(Bits::SetMask(GetFlags(), FLAGS::IGNORE_UPDATE, isStatic && !isEditMode));
 }
 
 void RigidBody::Update() {
-	if (!isStatic) {
-		if (!isKinematic) {
-			auto matr = btConvert(pMotionState->m_graphicsWorldTrans);
-			auto scale = transform->GetScale();
-			SetScale(matr, scale);
-			//TODO not so persistent
-			transform->SetMatrix(matr);
-		}
-		else {
-			auto trans = transform->GetMatrix();
-			SetScale(trans, Vector3_one);//TODO optimize
-			pMotionState->m_graphicsWorldTrans = btConvert(trans);
-		}
+	if (pBody == nullptr) { // PERF required only because pBody can become nullptr after disable/enable
+		return;
 	}
+	bool isEditMode = Editor::Get()->IsInEditMode(); // PERF called every frame!!!
+	if (isEditMode) {
+		auto trans = transform->GetMatrix();
+		SetScale(trans, Vector3_one);//TODO optimize
+		auto scale = transform->GetScale();
+		btTransform offset = btTransform(btMatrix3x3::getIdentity(), btConvert(centerOfMass * scale));
+		pBody->setWorldTransform(btConvert(trans) * offset);
+		return;
+	}
+	if (isStatic) {
+		return;
+	}
+	//TODO test isKinematic (it seems to be broken)
+	if (isKinematic) {
+		auto trans = transform->GetMatrix();
+		SetScale(trans, Vector3_one);//TODO optimize
+		pMotionState->m_graphicsWorldTrans = btConvert(trans);
+	}
+	else {
+		auto matr = btConvert(pMotionState->m_graphicsWorldTrans);
+		auto scale = transform->GetScale();
+		SetScale(matr, scale);
+		//TODO not so persistent
+		transform->SetMatrix(matr);
+	}
+
 }
 
 void RigidBody::OnDisable() {
@@ -97,6 +129,23 @@ void RigidBody::OnDisable() {
 	offsetedShape = nullptr;
 	SAFE_DELETE(pMotionState);
 	SAFE_DELETE(pBody)
+}
+
+void PhysicsBody::OnValidate() {
+	if (!IsEnabled()) {
+		return;
+	}
+	OnDisable();
+	OnEnable();
+}
+
+void RigidBody::OnDrawGizmos()
+{
+	if (pBody == nullptr || PhysicsSystem::Get()->dynamicsWorld == nullptr) {
+		return;
+	}
+	PhysicsSystem::Get()->dynamicsWorld->debugDrawObject(pBody->getWorldTransform(), pBody->getCollisionShape(), btVector3(0.4f, 1.f, 0.4f));
+	Dbg::Draw(btConvert(pBody->getWorldTransform()));
 }
 
 Vector3 RigidBody::GetLinearVelocity() const { return btConvert(pBody->getLinearVelocity()); }

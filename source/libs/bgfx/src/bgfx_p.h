@@ -55,13 +55,15 @@
 #	define BGFX_PROFILER_BEGIN(_name, _abgr)            g_callback->profilerBegin(_name, _abgr, __FILE__, uint16_t(__LINE__) )
 #	define BGFX_PROFILER_BEGIN_LITERAL(_name, _abgr)    g_callback->profilerBeginLiteral(_name, _abgr, __FILE__, uint16_t(__LINE__) )
 #	define BGFX_PROFILER_END()                          g_callback->profilerEnd()
-#	define BGFX_PROFILER_SET_CURRENT_THREAD_NAME(_name) BX_NOOP()
+#	define BGFX_PROFILER_THREAD_START(_name)            g_callback->profilerThreadStart(_name)
+#	define BGFX_PROFILER_THREAD_QUIT(_name)             g_callback->profilerThreadQuit(_name)
 #else
 #	define BGFX_PROFILER_SCOPE(_name, _abgr)            BX_NOOP()
 #	define BGFX_PROFILER_BEGIN(_name, _abgr)            BX_NOOP()
 #	define BGFX_PROFILER_BEGIN_LITERAL(_name, _abgr)    BX_NOOP()
 #	define BGFX_PROFILER_END()                          BX_NOOP()
-#	define BGFX_PROFILER_SET_CURRENT_THREAD_NAME(_name) BX_NOOP()
+#	define BGFX_PROFILER_THREAD_START(_name)            BX_NOOP()
+#	define BGFX_PROFILER_THREAD_QUIT(_name)             BX_NOOP()
 #endif // BGFX_PROFILER_SCOPE
 
 namespace bgfx
@@ -3006,9 +3008,10 @@ namespace bgfx
 		static int32_t renderThread(bx::Thread* /*_self*/, void* /*_userData*/)
 		{
 			BX_TRACE("render thread start");
-			BGFX_PROFILER_SET_CURRENT_THREAD_NAME("bgfx - Render Thread");
+			BGFX_PROFILER_THREAD_START("bgfx - Render Thread");
 			while (RenderFrame::Exiting != bgfx::renderFrame() ) {};
 			BX_TRACE("render thread exit");
+			BGFX_PROFILER_THREAD_QUIT("bgfx - Render Thread");
 			return bx::kExitSuccess;
 		}
 #endif

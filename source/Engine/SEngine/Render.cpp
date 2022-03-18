@@ -36,7 +36,50 @@
 #include "imgui/imgui.h"
 #include "Light.h"
 #include "ShadowRenderer.h"
+#include "Editor.h"
+#include "DbgVars.h"
+#include "bx/bx.h"
+#include "bx/platform.h"
+#include "bx/file.h"
+#include "bx/mutex.h"
+#include "bx/debug.h"
+#include "bimg/bimg.h"
 #include "dear-imgui/imgui_impl_sdl.h"
+
+DBG_VAR_BOOL(dbg_debugShadows, "Debug Shadows", false);
+DBG_VAR_BOOL(dbg_drawBones, "Draw Bones", false);
+
+REFLECT_ENUM(bgfx::RendererType::Enum);
+
+static std::shared_ptr<RenderSettings> s_renderSettings;
+class RenderSettings : public Object {
+public:
+	bool frustumCulling = true;
+	int msaa = 0;//TODO min/max
+	bool vsync = false;
+	bool debug = false;
+	bool preSortRenderers = true;
+	bool preSortShadowRenderers = true;
+	bool tryToMinimizeStateChanges = true;
+	bool bgfxDebugStats = false;
+	bool maxAnisotropy = true;
+	bgfx::RendererType::Enum backend = bgfx::RendererType::Vulkan;
+
+	REFLECT_BEGIN(RenderSettings);
+	REFLECT_VAR(frustumCulling);
+	REFLECT_VAR(msaa);
+	REFLECT_VAR(vsync);
+	REFLECT_VAR(debug);
+	REFLECT_VAR(preSortRenderers);
+	REFLECT_VAR(preSortShadowRenderers);
+	REFLECT_VAR(tryToMinimizeStateChanges);
+	REFLECT_VAR(bgfxDebugStats);
+	REFLECT_VAR(maxAnisotropy);
+	REFLECT_VAR(backend);
+	REFLECT_END();
+};
+
+DECLARE_TEXT_ASSET(RenderSettings);
 
 SDL_Window* Render::window = nullptr;
 
@@ -50,17 +93,6 @@ constexpr bgfx::ViewId kRenderPassFullScreen1 = 14;
 constexpr bgfx::ViewId kRenderPassFullScreen2 = 15;
 constexpr bgfx::ViewId kRenderPassFree = 16;
 
-
-static int GetMsaaOffset() {
-	int msaa = CfgGetInt("msaa");
-	//TODO mathf func
-	int offset = 0;
-	while (msaa > 0) {
-		offset++;
-		msaa /= 2;
-	}
-	return Mathf::Clamp(offset - 1, 0, 4);
-}
 
 bool Render::IsFullScreen() {
 	auto flags = SDL_GetWindowFlags(window);
@@ -80,7 +112,7 @@ Vector3 multH(const Matrix4& m, const Vector3& v) {
 	return Vector3(v4[0], v4[1], v4[2]) * t;
 }
 
-void Render::PrepareLights(const ICamera& camera) {
+void Render::PrepareLights(const Camera& camera) {
 	OPTICK_EVENT();
 
 	//TODO adjust for dir light
@@ -166,14 +198,23 @@ void Render::PrepareLights(const ICamera& camera) {
 	}
 
 	std::vector<DirLight*> dirLights = DirLight::dirLights;
+	bool hasDirLights = false;
 	for (auto light : dirLights) {
 		if (light->color.r <= 0.f && light->color.g <= 0.f && light->color.b <= 0.f) {
 			continue;
 		}
-		shadowRenderer->Draw(light, camera);
+		hasDirLights = true;
+		shadowRenderer->Draw(this, light, camera);
 		auto dir = Vector4(light->gameObject()->transform()->GetForward(), 0.f);
+		//TODO Color to Vector4 func
 		auto color = Vector4(light->color.r, light->color.g, light->color.b, 0.f) * light->intensity;
+		//TODO support more than 1 dir light
 		bgfx::setUniform(u_dirLightDirHandle, &dir, 1);
+		bgfx::setUniform(u_dirLightColorHandle, &color, 1);
+	}
+	if (!hasDirLights) {
+		//no dir lights
+		Vector4 color = Vector4(0, 0, 0, 0);
 		bgfx::setUniform(u_dirLightColorHandle, &color, 1);
 	}
 
@@ -261,6 +302,122 @@ void Render::PrepareLights(const ICamera& camera) {
 	}
 }
 
+class bgfxCallbacks : public bgfx::CallbackI {
+public:
+	virtual ~bgfxCallbacks()
+	{
+	}
+
+	virtual void fatal(const char* _filePath, uint16_t _line, bgfx::Fatal::Enum _code, const char* _str) override
+	{
+		//TODO
+		LogError("%s", _str ? _str : "");
+		//bgfx::trace(_filePath, _line, "BGFX 0x%08x: %s\n", _code, _str);
+
+		if (bgfx::Fatal::DebugCheck == _code)
+		{
+			bx::debugBreak();
+		}
+		else
+		{
+			abort();
+		}
+	}
+
+	virtual void traceVargs(const char* _filePath, uint16_t _line, const char* _format, va_list _argList) override
+	{
+		char temp[2048];
+		char* out = temp;
+		va_list argListCopy;
+		va_copy(argListCopy, _argList);
+		int32_t len = bx::snprintf(out, sizeof(temp), "%s (%d): ", _filePath, _line);
+		int32_t total = len + bx::vsnprintf(out + len, sizeof(temp) - len, _format, argListCopy);
+		va_end(argListCopy);
+		if ((int32_t)sizeof(temp) < total)
+		{
+			out = (char*)alloca(total + 1);
+			bx::memCopy(out, temp, len);
+			bx::vsnprintf(out + len, total - len, _format, _argList);
+		}
+		out[total] = '\0';
+		bx::debugOutput(out);
+	}
+	virtual void profilerBegin(const char* _name, uint32_t _abgr, const char* _filePath, uint16_t _line) override
+	{
+#ifdef USE_OPTICK
+		Optick::Event::Push(_name);
+#endif// USE_OPTICK
+	}
+
+	virtual void profilerBeginLiteral(const char* _name, uint32_t _abgr, const char* _filePath, uint16_t _line) override
+	{
+#ifdef USE_OPTICK
+		Optick::Event::Push(_name);
+#endif// USE_OPTICK
+	}
+	virtual void profilerThreadStart(const char* _name) override {
+#ifdef USE_OPTICK
+		Optick::RegisterThread(_name);
+#endif// USE_OPTICK
+	}
+	virtual void profilerThreadQuit(const char* /*_name*/) override {
+#ifdef USE_OPTICK
+		Optick::UnRegisterThread(false);
+#endif// USE_OPTICK
+	}
+
+	virtual void profilerEnd() override
+	{
+#ifdef USE_OPTICK
+		Optick::Event::Pop();
+#endif// USE_OPTICK
+	}
+
+	virtual uint32_t cacheReadSize(uint64_t /*_id*/) override
+	{
+		return 0;
+	}
+
+	virtual bool cacheRead(uint64_t /*_id*/, void* /*_data*/, uint32_t /*_size*/) override
+	{
+		return false;
+	}
+
+	virtual void cacheWrite(uint64_t /*_id*/, const void* /*_data*/, uint32_t /*_size*/) override
+	{
+	}
+
+	virtual void screenShot(const char* _filePath, uint32_t _width, uint32_t _height, uint32_t _pitch, const void* _data, uint32_t _size, bool _yflip) override
+	{
+		BX_UNUSED(_filePath, _width, _height, _pitch, _data, _size, _yflip);
+
+		const int32_t len = bx::strLen(_filePath) + 5;
+		char* filePath = (char*)alloca(len);
+		bx::strCopy(filePath, len, _filePath);
+		bx::strCat(filePath, len, ".tga");
+
+		bx::FileWriter writer;
+		if (bx::open(&writer, filePath))
+		{
+			bimg::imageWriteTga(&writer, _width, _height, _pitch, _data, false, _yflip);
+			bx::close(&writer);
+		}
+	}
+
+	virtual void captureBegin(uint32_t /*_width*/, uint32_t /*_height*/, uint32_t /*_pitch*/, bgfx::TextureFormat::Enum /*_format*/, bool /*_yflip*/) override
+	{
+		BX_TRACE("Warning: using capture without callback (a.k.a. pointless).");
+	}
+
+	virtual void captureEnd() override
+	{
+	}
+
+	virtual void captureFrame(const void* /*_data*/, uint32_t /*_size*/) override
+	{
+	}
+} callbacksForBgfx;
+
 
 bool Render::Init()
 {
@@ -271,6 +428,10 @@ bool Render::Init()
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 		return false;
 	}
+
+	renderSettings = AssetDatabase::Get()->Load<RenderSettings>("settings.asset");
+	ASSERT(renderSettings);
+	s_renderSettings = renderSettings;//TODO kinda hacky
 
 	int width = SettingsGetInt("screenWidth");
 	int height = SettingsGetInt("screenHeight");
@@ -284,7 +445,7 @@ bool Render::Init()
 		printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
 		return false;
 	}
-	SetFullScreen(CfgGetBool("fullscreen"));
+	SetFullScreen(CfgGetBool("fullscreen")); // TODO move to some RenderSettings class and load it as ordinary asset
 	SDL_SysWMinfo wmi;
 	SDL_VERSION(&wmi.version);
 	if (!SDL_GetWindowWMInfo(window, &wmi)) {
@@ -301,19 +462,16 @@ bool Render::Init()
 
 
 	bgfx::Init initInfo{};
-	initInfo.type = bgfx::RendererType::Direct3D11;
+	initInfo.type = renderSettings->backend;
+	initInfo.callback = &callbacksForBgfx;
+	//TODO preload renderdoc.dll from tools folder
 #ifdef SE_HAS_DEBUG
 	initInfo.limits.transientVbSize *= 10;
 	initInfo.limits.transientIbSize *= 10;
-	initInfo.debug = CfgGetBool("debugGraphics");
-	initInfo.profile = CfgGetBool("debugGraphics");
+	initInfo.debug = renderSettings->debug;
+	initInfo.profile = renderSettings->debug;
 #endif
 	bgfx::init(initInfo);
-	bgfx::reset(width, height, CfgGetBool("vsync") ? BGFX_RESET_VSYNC : BGFX_RESET_NONE);
-
-	bgfx::resetView(kRenderPassGeometry);
-	bgfx::resetView(1);
-	bgfx::setDebug(BGFX_DEBUG_TEXT /*| BGFX_DEBUG_STATS*/);
 
 	bgfx::setViewRect(kRenderPassGeometry, 0, 0, width, height);
 	bgfx::setViewRect(1, 0, 0, width, height);
@@ -358,10 +516,13 @@ bool Render::Init()
 
 	Dbg::Init();
 
-	LoadAssets();
 	//TODO is it good idea to load something after database is unloaded ?
-	databaseAfterUnloadedHandle = AssetDatabase::Get()->onAfterUnloaded.Subscribe([this]() {LoadAssets(); });
-	databaseBeforeUnloadedHandle = AssetDatabase::Get()->onBeforeUnloaded.Subscribe([this]() {UnloadAssets(); });
+	databaseAfterUnloadedHandle = AssetDatabase::Get()->onAfterUnloaded.Subscribe([this]() { LoadAssets(); });
+	databaseBeforeUnloadedHandle = AssetDatabase::Get()->onBeforeUnloaded.Subscribe([this]() { UnloadAssets(); });
+
+	LoadAssets();
+
+	Graphics::SetRenderPtr(this);
 
 	return true;
 }
@@ -371,10 +532,17 @@ void Render::LoadAssets() {
 	if (database == nullptr) {
 		return;;//HACK for terminated app
 	}
-	whiteTexture = database->Load<Texture>("textures\\white.png");
-	defaultNormalTexture = database->Load<Texture>("textures\\defaultNormal.png");
-	defaultEmissiveTexture = database->Load<Texture>("textures\\defaultEmissive.png");
-	simpleBlitMat = database->Load<Material>("materials\\simpleBlit.asset");
+	renderSettings = AssetDatabase::Get()->Load<RenderSettings>("settings.asset");
+	ASSERT(renderSettings);
+	s_renderSettings = renderSettings;//TODO kinda hacky
+
+	whiteTexture = database->Load<Texture>("engine\\textures\\white.png");
+	defaultNormalTexture = database->Load<Texture>("engine\\textures\\defaultNormal.png");
+	defaultEmissiveTexture = database->Load<Texture>("engine\\textures\\defaultEmissive.png");
+	simpleBlitMat = database->Load<Material>("engine\\materials\\simpleBlit.asset");
+	brokenMat = database->Load<Material>("engine\\materials\\broken.asset");
+
+	//TODO assert not null
 }
 
 void Render::UnloadAssets() {
@@ -383,10 +551,31 @@ void Render::UnloadAssets() {
 	defaultNormalTexture = nullptr;
 	defaultEmissiveTexture = nullptr;
 	simpleBlitMat = nullptr;
+	brokenMat = nullptr;
+	renderSettings = nullptr;
+	s_renderSettings = nullptr;//TODO kinda hacky
 }
+
+bool Render::IsDebugMode() {
+	return s_renderSettings->debug;
+}
+
 void Render::Draw(SystemsManager& systems)
 {
 	OPTICK_EVENT();
+
+	//TODO this should really be in editor class and not here, but 'window' var is hard to access
+	std::string windowTitle = "Siberien";
+	if (Editor::Get()->IsInEditMode()) {
+		windowTitle += " Editor";
+	}
+	if (Editor::Get()->HasUnsavedFiles()) {
+		windowTitle += " [NOT SAVED]";
+	}
+	if (prevWindowTitle != windowTitle) {
+		prevWindowTitle = windowTitle;
+		SDL_SetWindowTitle(window, windowTitle.c_str());
+	}
 
 	currentFreeViewId = kRenderPassFree;
 	currentFullScreenTextureIdx = 0;
@@ -397,23 +586,35 @@ void Render::Draw(SystemsManager& systems)
 	if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_RETURN) && (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LALT) || Input::GetKey(SDL_Scancode::SDL_SCANCODE_RALT))) {
 		SetFullScreen(!IsFullScreen());
 	}
+	auto bgfxDbg = BGFX_DEBUG_TEXT;
+	if (renderSettings->bgfxDebugStats) {
+		bgfxDbg |= BGFX_DEBUG_STATS;
+	}
+	bgfx::setDebug(bgfxDbg);
 
 	int width;
 	int height;
 	SDL_GetWindowSize(window, &width, &height);
 
-	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenBuffer) || !bgfx::isValid(m_fullScreenBuffer2)) {
-		auto msaaOffset = GetMsaaOffset();
+	auto bgfxResetFlags = BGFX_RESET_NONE;
+	if (renderSettings->vsync) {
+		bgfxResetFlags |= BGFX_RESET_VSYNC;
+	}
+	if (renderSettings->maxAnisotropy) {
+		bgfxResetFlags |= BGFX_RESET_MAXANISOTROPY;
+	}
+	if (renderSettings->msaa > 0) {
+		int msaaOffset = Mathf::Clamp(Mathf::Log2Floor(renderSettings->msaa), 0, 4);
+		if (msaaOffset > 0) {
+			bgfxResetFlags |= msaaOffset << BGFX_RESET_MSAA_SHIFT;
+		}
+	}
+
+	if (height != prevHeight || width != prevWidth || !bgfx::isValid(m_fullScreenBuffer) || !bgfx::isValid(m_fullScreenBuffer2) || this->bgfxResetFlags != bgfxResetFlags) {
 		prevWidth = width;
 		prevHeight = height;
-		auto flags = BGFX_RESET_NONE | BGFX_RESET_MAXANISOTROPY;
-		if (CfgGetBool("vsync")) {
-			flags |= BGFX_RESET_VSYNC;
-		}
-		if (msaaOffset > 0) {
-			flags |= msaaOffset << BGFX_RESET_MSAA_SHIFT;
-		}
-		bgfx::reset(width, height, flags);
+		this->bgfxResetFlags = bgfxResetFlags;
+		bgfx::reset(width, height, bgfxResetFlags);
 		if (bgfx::isValid(m_fullScreenBuffer)) {
 			bgfx::destroy(m_fullScreenBuffer);
 		}
@@ -431,7 +632,8 @@ void Render::Draw(SystemsManager& systems)
 			;
 
 		uint64_t tsFlagsWithMsaa = tsFlags;
-		if (msaaOffset > 0) {
+		if (renderSettings->msaa > 0) {
+			int msaaOffset = Mathf::Clamp(Mathf::Log2Floor(renderSettings->msaa), 0, 4);
 			tsFlagsWithMsaa = Bits::SetMaskFalse(tsFlagsWithMsaa, BGFX_TEXTURE_RT);
 			tsFlagsWithMsaa |= uint64_t(msaaOffset + 1) << BGFX_TEXTURE_RT_MSAA_SHIFT;
 		}
@@ -522,6 +724,19 @@ void Render::Draw(SystemsManager& systems)
 		return;
 	}
 
+	Camera* shadowCamera = camera;
+	if (dbg_debugShadows) {
+		if (camera->gameObject()->tag == Camera::editorCameraTag) {
+			for (auto& camera : Camera::GetAllCameras()) {
+				if (camera->gameObject()->tag != Camera::editorCameraTag) {
+					camera->OnBeforeRender();
+					shadowCamera = camera;
+					break;
+				}
+			}
+		}
+	}
+
 	camera->OnBeforeRender();
 
 	uint8_t clearAlbedo = 1;
@@ -555,7 +770,7 @@ void Render::Draw(SystemsManager& systems)
 		bgfx::touch(kRenderPassGeometry);//TODO not needed ?
 	}
 
-	if (CfgGetBool("showFps")) {
+	if (CfgGetBool("showFps")) { // TODO move to some RenderSettings class and load it as ordinary asset
 		bgfx::dbgTextPrintf(1, 2, 0x0f, "FPS: %.1f", fps);
 	}
 
@@ -591,12 +806,13 @@ void Render::Draw(SystemsManager& systems)
 	//dbgMeshesDrawn = 0;
 	//dbgMeshesCulled = 0;
 
-	PrepareLights(*camera);
+	PrepareLights(*shadowCamera);
 
 	systems.Draw();
 
 	DrawAll(kRenderPassGeometry, *camera, nullptr);
 
+	Dbg::DrawAll(kRenderPassGeometry);
 	// combining gbuffer
 	{
 		//if (!defferedCombineMaterial || !defferedCombineMaterial->shader) {
@@ -634,6 +850,7 @@ void Render::Draw(SystemsManager& systems)
 
 	RenderEvents::Get()->onSceneRendered.Invoke(*this);
 
+
 	Graphics::Get()->Blit(simpleBlitMat, kRenderPassBlitToScreen);
 
 	EndFrame();
@@ -641,7 +858,6 @@ void Render::Draw(SystemsManager& systems)
 
 void Render::EndFrame() {
 
-	Dbg::DrawAll();
 	{
 		OPTICK_EVENT("bgfx::frame");
 		bgfx::frame();
@@ -651,6 +867,7 @@ void Render::EndFrame() {
 void Render::Term()
 {
 	OPTICK_EVENT();
+	Graphics::SetRenderPtr(nullptr);
 	shadowRenderer->Term();
 	shadowRenderer = nullptr;
 	imguiDestroy();
@@ -798,15 +1015,27 @@ void Render::UpdateLights(Vector3 poi) {
 		}
 	}
 }
-
 void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial, const std::vector<MeshRenderer*>* ptrRenderers) {
 	//TODO setup camera
 	OPTICK_EVENT();
 
-	auto renderers = ptrRenderers != nullptr ? *ptrRenderers : MeshRenderer::enabledMeshRenderers;
+	std::vector<MeshRenderer*> renderers = ptrRenderers != nullptr ? *ptrRenderers : MeshRenderer::enabledMeshRenderers;
+
+	if (renderSettings->frustumCulling) {
+		int size = renderers.size();
+		for (int i = 0; i < size; i++) {
+			if (!camera.IsVisible(*renderers[i])) {
+				//dbgMeshesCulled++;
+				size--;
+				renderers[i] = renderers[size];
+				i--;
+			}
+		}
+		renderers.resize(size);
+	}
 
 	if (!overrideMaterial) {
-		auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
+		static auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
 			if (r1->mesh.get() < r2->mesh.get()) {
 				return true;
 			}
@@ -816,85 +1045,102 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 			else if (r1->material.get() > r2->material.get()) {
 				return false;
 			}
-			if (r1->material.get() < r2->material.get()) {
+			else if (r1->material.get() < r2->material.get()) {
 				return true;
 			}
-			else if (r1->material.get() > r2->material.get()) {
-				return false;
+			else {
+				return r1->randomColorTextureIdx < r2->randomColorTextureIdx;
 			}
-			return r1->randomColorTextureIdx < r2->randomColorTextureIdx;
 		};
-		{
+		if (renderSettings->preSortRenderers) {
 			OPTICK_EVENT("SortRenderers");
-			auto& renderers = MeshRenderer::enabledMeshRenderers;
 			std::sort(renderers.begin(), renderers.end(), renderersSort);
 		}
 
 
 		OPTICK_EVENT("DrawRenderers");
 		bool prevEq = false;
+		const MeshRenderer* meshNext;
+		bool nextEq;
 		//TODO get rid of std::vector / std::string
-		for (int i = 0; i < ((int)renderers.size() - 1); i++) {
-			const auto& mesh = renderers[i];
-			const auto& meshNext = renderers[i + 1];
-			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
-			bool drawn = DrawMesh(mesh, mesh->material.get(), camera, !nextEq, !nextEq, !prevEq, !prevEq, viewId);
-			prevEq = nextEq && drawn;
+		if (renderSettings->tryToMinimizeStateChanges) {
+			for (int i = 0; i < ((int)renderers.size() - 1); i++) {
+				const auto mesh = renderers[i];
+				meshNext = renderers[i + 1];
+				nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
+				DrawMesh(mesh, mesh->material.get(), camera, !nextEq, !nextEq, !prevEq, !prevEq, viewId);
+				prevEq = nextEq;
+			}
+			//TODO do we really need this ?
+			if (renderers.size() > 0) {
+				const auto& mesh = renderers[renderers.size() - 1];
+				DrawMesh(mesh, mesh->material.get(), camera, true, true, !prevEq, !prevEq, viewId);
+			}
 		}
-		//TODO do we really need this ?
-		if (renderers.size() > 0) {
-			const auto& mesh = renderers[renderers.size() - 1];
-			DrawMesh(mesh, mesh->material.get(), camera, true, true, !prevEq, !prevEq, viewId);
+		else {
+			for (const auto renderer : renderers) {
+				DrawMesh(renderer, renderer->material.get(), camera, true, true, true, true, viewId);
+			}
 		}
 	}
 	else {
 		//TODO refactor duplicated code
 
-		auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
+		static auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
 			return r1->mesh.get() < r2->mesh.get();
 		};
-		{
-			//assuming renderers are already sorted by mesh type
-			// 
-			//OPTICK_EVENT("SortRenderers");
-			//auto& renderers = MeshRenderer::enabledMeshRenderers;
-			//std::sort(renderers.begin(), renderers.end(), renderersSort);
+		if (renderSettings->preSortShadowRenderers) {
+			OPTICK_EVENT("SortShadowRenderers");
+			std::sort(renderers.begin(), renderers.end(), renderersSort);
 		}
-
 
 		OPTICK_EVENT("DrawRenderers");
 		bool prevEq = false;
 		bool materialApplied = false;//TODO dsplit drawMesh into bind material / bind mesh / submit / clear
 		//TODO get rid of std::vector / std::string
-		for (int i = 0; i < ((int)renderers.size() - 1); i++) {
-			const auto& mesh = renderers[i];
-			const auto& meshNext = renderers[i + 1];
-			//TODO optimize
-			bool nextEq = !renderersSort(mesh, meshNext) && !renderersSort(meshNext, mesh);
-			bool drawn = DrawMesh(mesh, overrideMaterial.get(), camera, false, !nextEq, !materialApplied, !prevEq, viewId);
-			prevEq = nextEq && drawn;
-			materialApplied |= drawn;
+		if (renderSettings->tryToMinimizeStateChanges) {
+			if (renderers.size() > 0) {
+				const auto& mesh = renderers[0];
+				DrawMesh(mesh, overrideMaterial.get(), camera, renderers.size() == 1, renderers.size() == 1, true, true, viewId);
+			}
+			for (int i = 1; i < ((int)renderers.size() - 1); i++) {
+				const auto mesh = renderers[i];
+				const auto meshNext = renderers[i + 1];
+				//TODO optimize
+				bool nextEq = mesh == meshNext;
+				DrawMesh(mesh, overrideMaterial.get(), camera, false, !nextEq, false, !prevEq, viewId);
+				prevEq = nextEq;
+				materialApplied = true;
+			}
+			if (renderers.size() > 1) {
+				const auto& mesh = renderers[renderers.size() - 1];
+				DrawMesh(mesh, overrideMaterial.get(), camera, true, true, false, !prevEq, viewId);
+			}
 		}
-		if (renderers.size() > 0) {
-			const auto& mesh = renderers[renderers.size() - 1];
-			DrawMesh(mesh, overrideMaterial.get(), camera, true, true, !materialApplied, !prevEq, viewId);
+		else {
+			for (const auto renderer : renderers) {
+				DrawMesh(renderer, overrideMaterial.get(), camera, true, true, true, true, viewId);
+			}
 		}
 	}
 }
 
-bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId) {
-	{
-		bool isVisible = camera.IsVisible(*renderer);
-		if (!isVisible) {
-			//dbgMeshesCulled++;
-			return false;
-		}
+void Render::DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId) {
+	if (!material || !material->shader || !bgfx::isValid(material->shader->program)) {
+		material = brokenMat.get();//PERF checking and fixing cornercase
 	}
+	ASSERT(material && material->shader && bgfx::isValid(material->shader->program));
+
 	const auto& matrix = renderer->m_transform->GetMatrix();
-	//dbgMeshesDrawn++;
 
 	if (renderer->bonesFinalMatrices.size() != 0) {
 		bgfx::setTransform(&renderer->bonesFinalMatrices[0], renderer->bonesFinalMatrices.size());
+
+		if (dbg_drawBones) {
+			for (const auto& bone : renderer->bonesWorldMatrices) {
+				Dbg::Draw(bone);
+			}
+		}
 	}
 	else {
 		bgfx::setTransform(&matrix);
@@ -942,8 +1188,9 @@ bool Render::DrawMesh(const MeshRenderer* renderer, const Material* material, co
 	else if (clearMaterialState) {
 		discardFlags = BGFX_DISCARD_BINDINGS | BGFX_DISCARD_STATE;
 	}
-	bgfx::submit(viewId, material->shader->program, 0u, discardFlags);
-	return true;
+	Vector4 viewPos = (camera.GetViewMatrix() * matrix.GetColumn(3));
+	uint32_t depth = viewPos.z * 1024.f;//TODO * farplane
+	bgfx::submit(viewId, material->shader->program, depth, discardFlags);
 }
 
 void Render::ApplyMaterialProperties(const Material* material) {
@@ -1011,18 +1258,22 @@ void Render::ApplyMaterialProperties(const Material* material) {
 		}
 		bgfx::setUniform(uniform, &colorProp.value);
 	}
-
-	for (const auto& vecProp : material->vectors) {
-		auto it = vectorUniforms.find(vecProp.name);
+	static auto setVectorUniform = [](Render* render, const std::string& name, const Vector4& value) {
+		auto it = render->vectorUniforms.find(name);
 		bgfx::UniformHandle uniform;
-		if (it == vectorUniforms.end()) {
-			uniform = bgfx::createUniform(vecProp.name.c_str(), bgfx::UniformType::Vec4);
-			vectorUniforms[vecProp.name] = uniform;
+		if (it == render->vectorUniforms.end()) {
+			uniform = bgfx::createUniform(name.c_str(), bgfx::UniformType::Vec4);
+			render->vectorUniforms[name] = uniform;
 		}
 		else {
 			uniform = it->second;
 		}
-		bgfx::setUniform(uniform, &vecProp.value);
+		bgfx::setUniform(uniform, &value);
+	};
+	setVectorUniform(this, "u_uvOffset", Vector4_zero);
+
+	for (const auto& vecProp : material->vectors) {
+		setVectorUniform(this, vecProp.name, vecProp.value);
 	}
 
 	//TODO i based on shader uniformInfo samplers order ?

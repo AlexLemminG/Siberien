@@ -10,13 +10,15 @@ class btBvhTriangleMeshShape;
 
 class MeshCollider : public Collider {
 public:
-	virtual std::shared_ptr<btCollisionShape> CreateShape() override;
+	virtual std::shared_ptr<btCollisionShape> CreateShape() const override;
 
 	std::shared_ptr<btTriangleIndexVertexArray> indexVertexArray;
 	std::shared_ptr<Mesh> mesh;
+	bool isConvex = false;
 private:
-	REFLECT_BEGIN(MeshCollider);
-	REFLECT_VAR(mesh);
+	REFLECT_BEGIN(MeshCollider, Collider);
+	REFLECT_VAR(mesh);//TODO read from mesh renderer if not specified
+	REFLECT_VAR(isConvex);
 	REFLECT_END();
 };
 

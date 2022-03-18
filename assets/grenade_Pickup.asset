@@ -6,7 +6,7 @@ GameObject:
   - $SphereCollider
   - $GhostBody
 MeshRenderer:
-  mesh: meshes\grenadePickup.glb$Mesh
+  mesh: meshes\grenadePickup.blend$Mesh
   material: materials\scifi.asset
 Transform:
   pos: [-4.0, 0.5 ,5.0]

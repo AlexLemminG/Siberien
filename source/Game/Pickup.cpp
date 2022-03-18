@@ -20,8 +20,8 @@ void Pickup::Update() {
 	}
 
 	std::shared_ptr< PlayerController> playerController;
-	for (int i = 0; i < ghost->GetOverlappedCount(); i++) {
-		auto go = ghost->GetOverlappedObject(i);
+	auto objs = ghost->GetOverlappedObjects();
+	for (auto& go : objs) {
 		playerController = go->GetComponent<PlayerController>();
 		if (playerController != nullptr) {
 			break;

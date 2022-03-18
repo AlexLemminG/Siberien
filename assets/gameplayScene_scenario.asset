@@ -9,6 +9,7 @@ GameplaySceneScenario:
   randomGun: $pick
   indoorCameraSettings: camera_indoor.asset$Camera
   outdoorCameraSettings: camera_outdoor.asset$Camera
+  neonMaterial: materials\scifi_neon.asset
   checkpointAmmo:
   - guns:
     - gun_machineGun.asset$Gun

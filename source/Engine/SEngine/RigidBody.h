@@ -9,6 +9,7 @@ class btRigidBody;
 class Transform;
 class RigidBody;
 class GhostBody;
+class btCollisionShape;
 
 class SE_CPP_API PhysicsBody : public Component {
 public:
@@ -16,6 +17,11 @@ public:
 	GhostBody* AsGhostBody();
 	const RigidBody* AsRigidBody()const;
 	const GhostBody* AsGhostBody()const;
+	virtual void OnValidate() override;
+
+	REFLECT_BEGIN(PhysicsBody);
+	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
+	REFLECT_END();
 protected:
 	bool isRigidBody = false;
 };
@@ -27,6 +33,7 @@ public:
 	virtual void OnEnable() override;
 	virtual void Update() override;
 	virtual void OnDisable() override;
+	virtual void OnDrawGizmos() override;
 
 	std::string layer;
 	float friction = 0.5f;
@@ -88,12 +95,14 @@ private:
 	btDefaultMotionState* pMotionState = nullptr;
 	btRigidBody* pBody = nullptr;
 	Transform* transform = nullptr;
+	//TODO why shared_ptr?
 	std::shared_ptr<btCompoundShape> offsetedShape;
+	std::shared_ptr<btCollisionShape> originalShape;
 
 	bool isKinematic = false;
 	float mass = 1.f;
 	float restitution = 0.f;
-	REFLECT_BEGIN(RigidBody);
+	REFLECT_BEGIN(RigidBody, PhysicsBody);
 	REFLECT_VAR(mass);
 	REFLECT_VAR(isStatic);
 	REFLECT_VAR(isKinematic);

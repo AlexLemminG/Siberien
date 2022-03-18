@@ -78,7 +78,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PreprocessorDefinitions>BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_WIN64;NDEBUG;_CONSOLE;SE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;..\libs\compressonator\cmp_compressonatorlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;..\libs\compressonator\cmp_compressonatorlib;..\libs\physfs\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -86,7 +86,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;Shlwapi.lib;physfs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
@@ -94,7 +94,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PreprocessorDefinitions>BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;SE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;..\libs\compressonator\cmp_compressonatorlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;..\libs\compressonator\cmp_compressonatorlib;..\libs\physfs\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -103,7 +103,7 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;Shlwapi.lib;physfs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
@@ -111,7 +111,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoLibs|x64'">
     <ClCompile>
       <PreprocessorDefinitions>BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;SE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;..\libs\compressonator\cmp_compressonatorlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;..\libs\compressonator\cmp_compressonatorlib;..\libs\physfs\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -119,7 +119,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
-      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;Shlwapi.lib;physfs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\Release\</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
@@ -127,7 +127,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'">
     <ClCompile>
       <PreprocessorDefinitions>BGFX_SHARED_LIB_BUILD;yaml_cpp_EXPORTS;YAML_CPP_DLL;SE_BUILD;HAVE_M_PI;NDEBUG;_CONSOLE;SE_RETAIL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;..\libs\compressonator\cmp_compressonatorlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\libs\bx\include\compat\msvc;..\libs\yaml-cpp\include;..\libs\bx\include;..\libs\bgfx\include;..\libs\SDL\include;..\libs\bimg\include;..\libs\bgfx\examples\common;..\libs\assimp\include;..\libs\mathfu\include;..\libs\bullet\src;..\libs\optick\src;..\libs\imgui;..\libs\bgfx\3rdparty;..\libs\rapidyaml\src;..\libs\rapidyaml\ext\c4core\src;..\libs\assimp\contrib\zlib;..\libs\lz4\lib;..\libs\RecastDetour\Recast\Include;..\libs\RecastDetour\Detour\Include;..\libs\RecastDetour\DebugUtils\Include;..\libs\RecastDetour\DetourTileCache\Include;..\libs\RecastDetour\DetourCrowd\Include;..\libs\compressonator\cmp_compressonatorlib;..\libs\physfs\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -136,7 +136,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>liblz4.lib;winmm.lib;SDL2.lib;SDL2main.lib;yaml-cpp.lib;bgfx.lib;bx.lib;bimg.lib;bimg_decode.lib;assimp.lib;bgfx-example-common.lib;BulletCollision.lib;BulletDynamics.lib;BulletLinearMath.lib;OptickCore.lib;Bullet2FileLoader.lib;Bullet3Common.lib;ryml.lib;Detour.lib;DetourCrowd.lib;DetourTileCache.lib;Recast.lib;RecastDebugUtils.lib;Compressonator.lib;CMP_Core.lib;CMP_Framework.lib;Shlwapi.lib;physfs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Platform)\$(Configuration)\</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
@@ -158,8 +158,13 @@
     <ClCompile Include="SEngine\Dbg.cpp" />
     <ClCompile Include="SEngine\DbgSceneSelectionScreen.cpp" />
     <ClCompile Include="SEngine\DbgVars.cpp" />
+    <ClCompile Include="SEngine\Editor.cpp" />
     <ClCompile Include="SEngine\EditorCameraController.cpp" />
     <ClCompile Include="SEngine\Engine.cpp" />
+    <ClCompile Include="SEngine\FileWatcher.cpp" />
+    <ClCompile Include="SEngine\FileWatcherLinux.cpp" />
+    <ClCompile Include="SEngine\FileWatcherOSX.cpp" />
+    <ClCompile Include="SEngine\FileWatcherWin32.cpp" />
     <ClCompile Include="SEngine\FlyCameraMovement.cpp" />
     <ClCompile Include="SEngine\GameEvents.cpp" />
     <ClCompile Include="SEngine\GameLibrariesManager.cpp" />
@@ -179,6 +184,7 @@
     <ClCompile Include="SEngine\Navigation.cpp" />
     <ClCompile Include="SEngine\NavMeshAgent.cpp" />
     <ClCompile Include="SEngine\Object.cpp" />
+    <ClCompile Include="SEngine\ParentedTransform.cpp" />
     <ClCompile Include="SEngine\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugNoLibs|x64'">Create</PrecompiledHeader>
     </ClCompile>
@@ -205,7 +211,7 @@
     <ClCompile Include="SEngine\System.cpp" />
     <ClCompile Include="SEngine\Test.cpp" />
     <ClCompile Include="SEngine\Texture.cpp" />
-    <ClCompile Include="SEngine\Time.cpp" />
+    <ClCompile Include="SEngine\STime.cpp" />
     <ClCompile Include="SEngine\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -224,8 +230,14 @@
     <ClInclude Include="SEngine\Dbg.h" />
     <ClInclude Include="SEngine\DbgVars.h" />
     <ClInclude Include="SEngine\Defines.h" />
+    <ClInclude Include="SEngine\Editor.h" />
     <ClInclude Include="SEngine\EditorSceneInfo.h" />
     <ClInclude Include="SEngine\Engine.h" />
+    <ClInclude Include="SEngine\FileWatcher\FileWatcher.h" />
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherImpl.h" />
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherLinux.h" />
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherOSX.h" />
+    <ClInclude Include="SEngine\FileWatcher\FileWatcherWin32.h" />
     <ClInclude Include="SEngine\FlyCameraMovement.h" />
     <ClInclude Include="SEngine\GameEvents.h" />
     <ClInclude Include="SEngine\GameLibrariesManager.h" />
@@ -234,6 +246,7 @@
     <ClInclude Include="SEngine\Graphics.h" />
     <ClInclude Include="SEngine\Input.h" />
     <ClInclude Include="SEngine\Light.h" />
+    <ClInclude Include="SEngine\magic_enum.hpp" />
     <ClInclude Include="SEngine\Material.h" />
     <ClInclude Include="SEngine\Mesh.h" />
     <ClInclude Include="SEngine\MeshCollider.h" />
@@ -242,6 +255,7 @@
     <ClInclude Include="SEngine\Navigation.h" />
     <ClInclude Include="SEngine\NavMeshAgent.h" />
     <ClInclude Include="SEngine\Object.h" />
+    <ClInclude Include="SEngine\ParentedTransform.h" />
     <ClInclude Include="SEngine\Physics.h" />
     <ClInclude Include="SEngine\PhysicsSystem.h" />
     <ClInclude Include="SEngine\pch.h" />

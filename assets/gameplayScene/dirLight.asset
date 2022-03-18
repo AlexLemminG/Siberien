@@ -1,13 +1,23 @@
 GameObject:
   components:
-  - $DirLight
-  - $Transform
-  
+    - $DirLight
+    - $Transform
+  tag: DirLight
 DirLight:
-  color: 0x000522ff
-  drawShadows: true
+  color:
+    r: 0
+    g: 0.017503198
+    b: 0.13333334
+    a: 1
   shadowBias: 0.0012
-  
+  drawShadows: 1
+  intensity: 31.417858
 Transform:
-  euler: [60, 135, 0]
-  pos: [-20, 30, 100]
+  euler:
+    - 60
+    - 135
+    - 0
+  pos:
+    - -20
+    - 30
+    - 100

@@ -13,7 +13,7 @@
 void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::string& baseAssetPath, const Matrix4& parentTransform) {
 
 	Matrix4 matrix = parentTransform * node.localTransformMatrix;
-	
+
 	if (node.mesh) {
 		auto meshName = node.mesh->name;
 		auto assetPath = baseAssetPath + "$" + meshName;
@@ -22,41 +22,38 @@ void BlenderSceneLoader::AddToNodes(const FullMeshAsset_Node& node, const std::s
 		auto mesh = AssetDatabase::Get()->Load<Mesh>(assetPath);
 		if (mesh && !isHidden) {
 			auto gameObject = std::make_shared<GameObject>();
-			gameObject->flags = Bits::SetMaskTrue(gameObject->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR);//TODO !SE_RETAIL
+			gameObject->flags = Bits::SetMaskTrue(gameObject->flags, GameObject::FLAGS::IS_HIDDEN_IN_INSPECTOR);
 
 			auto transform = std::make_shared<Transform>();
 			transform->SetMatrix(matrix);
 			gameObject->components.push_back(transform);
 
-			auto material = this->material;
-			if (meshName.find("Road") != -1) {
-				material = materialRoads;
-			}
-			else if (meshName.find("Sign_Ad") != -1) {
-				material = materialSigns;
-			}
-			else if (meshName.find("Sign_Neon") != -1) {
-				material = materialNeon;
-			}
-			else if (meshName.find("Posters") != -1 || meshName.find("Billboard") != -1) {
-				material = materialPosters;
+			std::shared_ptr<Material> material = this->material;
+			for (auto& mat : materialMapping) {
+				if (mat.from == mesh->assetMaterialName) {
+					ASSERT(mat.to);
+					material = mat.to;
+				}
 			}
 
-			//LogError("%s - %s", node->mName.C_Str(), meshName.c_str());
+			if (material) {
+				auto renderer = std::make_shared<MeshRenderer>();
+				renderer->material = material;
+				renderer->mesh = mesh;
+				gameObject->components.push_back(renderer);
+			}
 
-			auto renderer = std::make_shared<MeshRenderer>();
-			renderer->material = material;
-			renderer->mesh = mesh;
-			gameObject->components.push_back(renderer);
+			if (addRigidBodies) {
+				auto collider = std::make_shared<MeshCollider>();
+				collider->mesh = mesh;
+				collider->isConvex = dynamicRigidBodies;
+				gameObject->components.push_back(collider);
 
-			auto collider = std::make_shared<MeshCollider>();
-			collider->mesh = mesh;
-			gameObject->components.push_back(collider);
-
-			auto rigidBody = std::make_shared<RigidBody>();
-			rigidBody->isStatic = true;
-			rigidBody->layer = "staticGeom";
-			gameObject->components.push_back(rigidBody);
+				auto rigidBody = std::make_shared<RigidBody>();
+				rigidBody->isStatic = !dynamicRigidBodies;
+				rigidBody->layer = "staticGeom";
+				gameObject->components.push_back(rigidBody);
+			}
 
 			createdObjects.push_back(gameObject);
 			Scene::Get()->AddGameObject(gameObject);
@@ -74,7 +71,7 @@ void BlenderSceneLoader::OnEnable() {
 		return;
 	}
 	auto rootUid = AssetDatabase::Get()->GetAssetPath(scene);
-	
+
 	AddToNodes(scene->rootNode, rootUid, Matrix4::Identity());
 }
 

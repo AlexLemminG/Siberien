@@ -8,5 +8,5 @@ BulletSettings:
   applyGravity: true
   radius: 0.3
 MeshRenderer:
-  mesh: meshes\bullet.glb$bullet_mesh
+  mesh: meshes\bullet.blend$bullet_mesh
   material: bulletMaterial.asset

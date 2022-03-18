@@ -4,6 +4,6 @@ GameObject:
   - $MeshRenderer
   - $Transform
 MeshRenderer:
-  mesh: meshes\gameplayStatic.glb$indoorHidePlane_hidden
+  mesh: meshes\gameplayStatic.blend$indoorHidePlane_hidden
   material: materials\scifi.asset
 Transform:

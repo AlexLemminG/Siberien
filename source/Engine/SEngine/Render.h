@@ -15,6 +15,7 @@ class Shader;
 class Camera;
 class ShadowRenderer;
 class ICamera;
+class RenderSettings;
 
 class Render {
 	friend class ShadowRenderer;
@@ -37,12 +38,13 @@ public:
 	static SDL_Window* window;
 
 	void ApplyMaterialProperties(const Material* material);
-	
+
 	//TODO move viewId to camera
 	void DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial, const std::vector<MeshRenderer*>* renderers = nullptr);
 
 	bgfx::UniformHandle GetOrCreateVectorUniform(const std::string& name);
 
+	static bool IsDebugMode();
 private:
 	class GBuffer {
 	public:
@@ -64,18 +66,19 @@ private:
 	GBuffer gBuffer;
 
 	int currentFreeViewId = 0;
-	
-	bool DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId = 0); //returns true if was not culled
+
+	void DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId = 0); //returns true if was not culled
 	void UpdateLights(Vector3 poi);
-	
+
 	bool IsFullScreen();
 	void SetFullScreen(bool isFullScreen);
 
-	void PrepareLights(const ICamera& camera);
+	void PrepareLights(const Camera& camera);
 	void EndFrame();
 
 	void LoadAssets();
 	void UnloadAssets();
+
 
 	GameEventHandle databaseAfterUnloadedHandle;
 	GameEventHandle databaseBeforeUnloadedHandle;
@@ -121,14 +124,14 @@ private:
 	bgfx::TextureHandle m_clusterListTex;
 	bgfx::TextureHandle m_itemsListTex;
 	bgfx::TextureHandle m_lightsListTex;
-	
-	
+
+
 	bgfx::FrameBufferHandle m_fullScreenBuffer;
 	bgfx::TextureHandle m_fullScreenTex;
 	bgfx::FrameBufferHandle m_fullScreenBuffer2;
 	bgfx::TextureHandle m_fullScreenTex2;
 	int currentFullScreenTextureIdx = 0;
-	
+
 
 	bgfx::UniformHandle u_lightPosRadius;
 	bgfx::UniformHandle u_lightRgbInnerR;
@@ -137,12 +140,18 @@ private:
 	int prevWidth;
 	int prevHeight;
 
+	uint32_t bgfxResetFlags = 0;
+
 	std::shared_ptr<Texture> whiteTexture;
 	std::shared_ptr<Texture> defaultNormalTexture;
 	std::shared_ptr<Texture> defaultEmissiveTexture;
 	std::shared_ptr<Material> simpleBlitMat;
+	std::shared_ptr<Material> brokenMat;
 
 	//int dbgMeshesDrawn = 0;
 	//int dbgMeshesCulled = 0;
 	std::shared_ptr<ShadowRenderer> shadowRenderer;
+	std::string prevWindowTitle = "";
+
+	std::shared_ptr<RenderSettings> renderSettings;
 };

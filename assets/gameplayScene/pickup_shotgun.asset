@@ -6,7 +6,7 @@ GameObject:
   - $SphereCollider
   - $GhostBody
 MeshRenderer:
-  mesh: meshes\shotgun.glb$Mesh
+  mesh: meshes\shotgun.blend$Mesh
   material: materials\scifi.asset
 Transform:
   pos: [-2,3.3,128.1]

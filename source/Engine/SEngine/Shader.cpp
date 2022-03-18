@@ -2,25 +2,55 @@
 
 #include "Shader.h"
 #include "Resources.h"
-#include <windows.h>
 #include "Serialization.h"
-#include "yaml-cpp/yaml.h"
+#include "Render.h"
+#include "ryml.hpp"
+#include <windows.h>
+#include "Config.h"
 
+static constexpr int importerVersion = 6;
+
+class AssetWithModificationDate {
+public:
+	std::string assetPath;
+	uint64_t modificationDate;
+
+	AssetWithModificationDate() :assetPath(""), modificationDate(0) { }
+
+	AssetWithModificationDate(const std::string& assetPath, uint64_t modificationDate) :assetPath(assetPath), modificationDate(modificationDate) { }
+
+	REFLECT_BEGIN(AssetWithModificationDate);
+	REFLECT_VAR(assetPath);
+	REFLECT_VAR(modificationDate);
+	REFLECT_END();
+};
+class ShaderLibraryMeta : public Object {
+public:
+	std::vector<AssetWithModificationDate> modificationDates;
+	int importerVersion;
+
+	REFLECT_BEGIN(ShaderLibraryMeta);
+	REFLECT_VAR(modificationDates);
+	REFLECT_VAR(importerVersion);
+	REFLECT_END();
+};
 
 class BasicShaderAssetImporter : public AssetImporter {
 	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override
 	{
+		bool isDebug = Render::IsDebugMode();
+
 		bool isVertex = false;
 		std::vector<uint8_t> buffer;
 		auto extention = databaseHandle.GetFileExtension();
 		if (extention == "vs") {
 			isVertex = true;
-			if (!LoadShader(buffer, databaseHandle, true)) {
+			if (!LoadShader(buffer, databaseHandle, true, isDebug)) {
 				return false;
 			}
 		}
 		else if (extention == "fs") {
-			if (!LoadShader(buffer, databaseHandle, false)) {
+			if (!LoadShader(buffer, databaseHandle, false, isDebug)) {
 				return false;
 			}
 		}
@@ -49,7 +79,11 @@ class BasicShaderAssetImporter : public AssetImporter {
 		return true;
 	}
 
-	bool LoadShader(std::vector<uint8_t>& buffer, AssetDatabase_BinaryImporterHandle& databaseHandle, bool isVertex) {
+	bool LoadShader(std::vector<uint8_t>& buffer, AssetDatabase_BinaryImporterHandle& databaseHandle, bool isVertex, bool isDebug) {
+
+		bool convertionAllowed = databaseHandle.ConvertionAllowed();
+		//TODO dont load if version differs!!!
+
 		//TODO propper fix for loading without sources + check other assets for same mistakes
 		std::string textAssetPath = databaseHandle.GetAssetPath();
 		std::string binAssetPathId = "";
@@ -75,24 +109,41 @@ class BasicShaderAssetImporter : public AssetImporter {
 			break;
 		}
 
+
 		binAssetPathId += shaderPath;
+
+		if (isDebug) {
+			binAssetPathId += "_debug";
+		}
+
 		std::string binAssetPath = databaseHandle.GetLibraryPathFromId(binAssetPathId);
 
 		std::string metaId = binAssetPathId + ".meta";
 
 		bool needRebuild = false;
-		YAML::Node meta;
-		bool hasMeta = databaseHandle.ReadFromLibraryFile(metaId, meta);
-		long lastFileChange;
-		long lastMetaChange;
-		databaseHandle.GetLastModificationTime(lastFileChange, lastMetaChange);
-		if (!hasMeta) {
-			needRebuild = true;
-		}
-		else {
-			long lastChangeRecorded = meta["lastChange"].as<long>();
-			if (lastFileChange != lastChangeRecorded && lastFileChange != 0) {
+		std::unique_ptr<ryml::Tree> metaYaml;
+		if (convertionAllowed) {
+			bool hasMeta = databaseHandle.ReadFromLibraryFile(metaId, metaYaml);
+			if (!hasMeta) {
 				needRebuild = true;
+			}
+			else {
+				ShaderLibraryMeta meta;
+				SerializationContext c = SerializationContext(metaYaml->rootref());
+				::Deserialize(c, meta);
+				uint64_t lastFileChange;
+				if (meta.importerVersion != importerVersion) {
+					needRebuild = true;
+				}
+				else {
+					for (auto& record : meta.modificationDates) {
+						uint64_t lastFileChange = databaseHandle.GetLastModificationTime(record.assetPath);
+						if (lastFileChange != record.modificationDate && lastFileChange != 0) {
+							needRebuild = true;
+							break;
+						}
+					}
+				}
 			}
 		}
 		//TODO check modification of all included ones
@@ -105,17 +156,31 @@ class BasicShaderAssetImporter : public AssetImporter {
 		if (hasBinary) {
 			return true;
 		}
-
+		else if (!convertionAllowed) {
+			//TODO error
+			return false;
+		}
 		std::string params = "";
-		params += " -f " + databaseHandle.GetAssetPath();
+		params += " -f " + databaseHandle.GetAssetPathReal();
 		params += " -o " + databaseHandle.GetLibraryPathFromId(binAssetPathId);
-		params += " --type ";
-		params += (isVertex ? "v" : "f");
-		params += " --platform ";
-		params += "windows";
-		params += " -i assets\\shaders\\include";
+		params += " --type";
+		params += (isVertex ? " v" : " f");
+		params += " --platform";
+		params += " windows";
+		params += " -i engine\\assets\\shaders\\include";//TODO not like this
+		params += " -i engine\\assets\\engine\\shaders\\include";//TODO not like this
 		params += " -p ";
 		params += compilerProfile;
+		params += " --depends";
+
+		if (isDebug) {
+			//params += " --raw ";
+			params += " --debug";
+		}
+		else {
+			params += " -O 3";
+		}
+
 
 		STARTUPINFOA si;
 		memset(&si, 0, sizeof(STARTUPINFOA));
@@ -129,7 +194,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 		LPSTR ccc = &cmdBuffer[0];
 
 		databaseHandle.EnsureForderForLibraryFileExists(binAssetPathId);
-
+		//TODO delete old lirary files before converting
 		auto result = CreateProcessA(
 			databaseHandle.GetToolPath("shaderc.exe").c_str()
 			, &cmdBuffer[0]
@@ -157,17 +222,57 @@ class BasicShaderAssetImporter : public AssetImporter {
 			CloseHandle(pi.hProcess);
 			CloseHandle(pi.hThread);
 		}
+		const char* paramscstr = params.c_str();
 
-		auto metaNode = YAML::Node();
-		metaNode["lastChange"] = lastFileChange;
+		std::vector<std::string> files;
+		files.push_back(databaseHandle.GetAssetPath());
+		{
+			std::vector<uint8_t> depBuffer;
+			std::string dependenciesAssetPathId = binAssetPathId + ".d";
+			databaseHandle.ReadFromLibraryFile(dependenciesAssetPathId, depBuffer);
+			bool hadFirst = false;
+			int start = 0;
+			//TODO less hacky pleeeeease
+			for (int i = 0; i < depBuffer.size(); i++) {
+				if (depBuffer[i] == '\n') {
+					if (hadFirst) {
+						std::string fileName;
+						if (depBuffer[i - 1] == '\\') {
+							fileName = (std::string((char*)&depBuffer[start], i - start - 2));
+						}
+						else {
+							fileName = (std::string((char*)&depBuffer[start], i - start));
+						}
+						files.push_back(AssetDatabase::Get()->GetVirtualPath(fileName));
+					}
+					else {
+						hadFirst = true;
+					}
+					start = i + 2;
+				}
+			}
+		}
+		ShaderLibraryMeta expectedMeta;
+		expectedMeta.importerVersion = importerVersion;
+		for (auto& file : files) {
+			uint64_t lastModificationDate = databaseHandle.GetLastModificationTime(file);
+			if (hasBinary) {
+				ASSERT(lastModificationDate != 0);
+			}
+			expectedMeta.modificationDates.push_back(AssetWithModificationDate(file, lastModificationDate));
+		}
 
-		databaseHandle.WriteToLibraryFile(metaId, metaNode);
+		SerializationContext c{};
+		::Serialize(c, expectedMeta);
+		databaseHandle.WriteToLibraryFile(metaId, c.GetYamlNode());
 
 		hasBinary = databaseHandle.ReadFromLibraryFile(binAssetPathId, buffer);
 		if (hasBinary) {
+			Log("Converted shader '%s'", databaseHandle.GetAssetPath().c_str());
 			return true;
 		}
 		else {
+			LogError("Failed to convert shader '%s'", databaseHandle.GetAssetPath().c_str());
 			return false;
 		}
 

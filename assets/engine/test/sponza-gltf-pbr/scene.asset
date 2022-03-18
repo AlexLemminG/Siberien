@@ -1,0 +1,256 @@
+Scene:
+  sphericalHarmonics: engine\dayHarmonics.asset
+  gameObjects:
+    - $GameObject
+    - $0
+    - $1
+GameObject:
+  tag: BlenderSceneLoader
+  components:
+    - $BlenderSceneLoader
+BlenderSceneLoader:
+  scene: 'engine\test\sponza-gltf-pbr\sponza.blend$FullMeshAsset'
+  material: engine\materials\standard.asset
+  materialNeon: materials\scifi_neon.asset
+  materialSigns: materials\scifi_signs.asset
+  materialRoads: materials\scifi_roads.asset
+  materialPosters: materials\scifi_posters.asset
+  materialMapping:
+    - from: 'Material_7'
+      to: $Material_7
+    - from: 'Material_6'
+      to: $Material_6
+    - from: 'Material_16'
+      to: $Material_16
+    - from: 'Material_15'
+      to: $Material_15
+    - from: 'Material_17'
+      to: $Material_17
+    - from: 'Material_5'
+      to: $Material_5
+    - from: 'Material_24'
+      to: $Material_24
+    - from: 'Material_10'
+      to: $Material_10
+    - from: 'Material_11'
+      to: $Material_11
+    - from: 'Material_13'
+      to: $Material_13
+    - from: 'Material_9'
+      to: $Material_9
+    - from: 'Material_0'
+      to: $Material_0
+    - from: 'Material_19'
+      to: $Material_19
+    - from: 'Material_18'
+      to: $Material_18
+    - from: 'Material_20'
+      to: $Material_20
+    - from: 'Material_4'
+      to: $Material_4
+    - from: 'Material_1'
+      to: $Material_1
+    - from: 'Material_14'
+      to: $Material_14
+    - from: 'Material_22'
+      to: $Material_22
+    - from: 'Material_21'
+      to: $Material_21
+    - from: 'Material_8'
+      to: $Material_8
+    - from: 'Material_23'
+      to: $Material_23
+    - from: 'Material_12'
+      to: $Material_12
+    - from: 'Material_25'
+      to: $Material_25
+Material$Material_0:
+  shader: engine\shaders\main_alpha_cutoff.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\9902244931375451333.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\2476780530225283311.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\13403324930296584722.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\13403324930296584722.png'
+Material$Material_1:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\1542529576189667841.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\12594002301861873831.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\5664105101133334238.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\5664105101133334238.png'
+Material$Material_4:
+  shader: engine\shaders\main_alpha_cutoff.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\15763468896848997518.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\14889877426847768220.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\9690544065500475605.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\9690544065500475605.png'
+Material$Material_5:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\1032882375854590004.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\3024505075340887865.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\16629179577494203696.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\16629179577494203696.png'
+Material$Material_6:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\8759994149281352776.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\1180362371129094107.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\8131002636958089324.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\8131002636958089324.png'
+Material$Material_7:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\5832062518599983612.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\7972573899771518506.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\1028279501752930479.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\1028279501752930479.png'
+Material$Material_8:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\8296618020194622850.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\3923303327751769896.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\16356796650360613890.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\16356796650360613890.png'
+Material$Material_9:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\11951833815537665903.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\14756318304758091217.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\11767032366500980006.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\11767032366500980006.png'
+Material$Material_10:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\17895787136451829206.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\2079865044350246831.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\11730337235035663189.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\11730337235035663189.png'
+Material$Material_11:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\1998971870295487297.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\12329509035612604735.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\13409925532914268225.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\13409925532914268225.png'
+Material$Material_12:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\18323644941784144220.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\1122449420293395305.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\13595501589012174731.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\13595501589012174731.png'
+Material$Material_13:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\16011208436118768083.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\14205398132421384128.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\1584091021348870901.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\1584091021348870901.png'
+Material$Material_14:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\16477962303174451462.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\3978994262251708158.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\14579308432899259383.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\14579308432899259383.png'
+Material$Material_15:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\1140786120295422654.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\6310083497554052894.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\16821249183869841744.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\16821249183869841744.png'
+Material$Material_16:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\14930275953430797156.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\6310083497554052894.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\16821249183869841744.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\16821249183869841744.png'
+Material$Material_17:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\2882036392247032076.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\6310083497554052894.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\16821249183869841744.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\16821249183869841744.png'
+Material$Material_18:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\6868100442424064722.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\5884384475331579104.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\9324166217220601391.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\9324166217220601391.png'
+Material$Material_19:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\10048691058615206298.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\5884384475331579104.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\9324166217220601391.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\9324166217220601391.png'
+Material$Material_20:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\2763628767906623784.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\5884384475331579104.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\9324166217220601391.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\9324166217220601391.png'
+Material$Material_21:
+  shader: engine\shaders\main_alpha_cutoff.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\10522109282340384846.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\1580937199681144457.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\6589266898288282879.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\6589266898288282879.png'
+Material$Material_22:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\3466468048949695469.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\5341784451809001011.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\9502968375209926516.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\9502968375209926516.png'
+Material$Material_23:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\1774157975403286845.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\7377890232508786340.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\8114265492436541323.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\8114265492436541323.png'
+Material$Material_24:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\5775677410124227070.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\7151673072344121468.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\7385312956576678639.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\7385312956576678639.png'
+Material$Material_25:
+  shader: engine\shaders\main.asset
+  colorTex: 'engine\test\sponza-gltf-pbr\17644577987043643793.png'
+  normalTex: 'engine\test\sponza-gltf-pbr\8148743991790068494.png'
+  metalicTex: 'engine\test\sponza-gltf-pbr\823547076410903191.png'
+  roughnessTex: 'engine\test\sponza-gltf-pbr\823547076410903191.png'
+GameObject$0:
+  tag: 'DirLight'
+  components:
+    - $Transform
+    - $DirLight
+Transform$Transform:
+  pos:
+    - 0
+    - 0
+    - 0
+  euler:
+    - 76.68763
+    - -54.147636
+    - -17.580107
+  scale:
+    - 1
+    - 1.0000006
+    - 1.0000001
+DirLight$DirLight:
+  drawShadows: 1
+  intensity: 12.800422
+GameObject$1:
+  tag: 'Camera'
+  components:
+    - $2
+    - $Camera
+Transform$2:
+  pos:
+    - 5.2198863
+    - 2.5430145
+    - -0.4169376
+  euler:
+    - 0
+    - -76.67
+    - 0
+  scale:
+    - 0.99999994
+    - 1
+    - 0.99999994
+Camera$Camera:
+  farPlane: 100
+  clearColor:
+    r: 0.63529414
+    g: 0.78431374
+    b: 0.92941177
+    a: 1
