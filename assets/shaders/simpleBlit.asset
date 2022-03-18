@@ -1,3 +1,0 @@
-Shader:
-  vs: shaders\simpleBlit\vs.vs
-  fs: shaders\simpleBlit\fs.fs

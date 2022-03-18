@@ -302,7 +302,6 @@ void Render::PrepareLights(const Camera& camera) {
 	}
 }
 
-
 class bgfxCallbacks : public bgfx::CallbackI {
 public:
 	virtual ~bgfxCallbacks()
@@ -345,23 +344,33 @@ public:
 	}
 	virtual void profilerBegin(const char* _name, uint32_t _abgr, const char* _filePath, uint16_t _line) override
 	{
+#ifdef USE_OPTICK
 		Optick::Event::Push(_name);
+#endif// USE_OPTICK
 	}
 
 	virtual void profilerBeginLiteral(const char* _name, uint32_t _abgr, const char* _filePath, uint16_t _line) override
 	{
+#ifdef USE_OPTICK
 		Optick::Event::Push(_name);
+#endif// USE_OPTICK
 	}
 	virtual void profilerThreadStart(const char* _name) override {
+#ifdef USE_OPTICK
 		Optick::RegisterThread(_name);
+#endif// USE_OPTICK
 	}
 	virtual void profilerThreadQuit(const char* /*_name*/) override {
+#ifdef USE_OPTICK
 		Optick::UnRegisterThread(false);
+#endif// USE_OPTICK
 	}
 
 	virtual void profilerEnd() override
 	{
+#ifdef USE_OPTICK
 		Optick::Event::Pop();
+#endif// USE_OPTICK
 	}
 
 	virtual uint32_t cacheReadSize(uint64_t /*_id*/) override

@@ -1,3 +1,0 @@
-Shader:
-  vs: shaders\simple\vs_simple.vs
-  fs: shaders\simple\fs_simple.fs

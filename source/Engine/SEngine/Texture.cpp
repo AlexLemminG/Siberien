@@ -15,6 +15,7 @@
 #include <bx\file.h>
 #include "SMath.h"
 #include "ryml.hpp"
+#include "Config.h"
 
 static bx::DefaultAllocator s_bxAllocator = bx::DefaultAllocator();
 static constexpr bool compressTextures = false;
@@ -147,22 +148,28 @@ public:
 		//std::string metaAssetPath = databaseHandle.GetLibraryPathFromId("meta");
 		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");
 
+		bool convertionAllowed = databaseHandle.ConvertionAllowed();
+		//TODO dont load if version differs!!!
+
 		TextureLibraryMeta expectedLibMeta;
-		databaseHandle.GetLastModificationTime(expectedLibMeta.changeDate, expectedLibMeta.metaChangeDate);
-		expectedLibMeta.importerVersion = importerVersion;
+		bool needRebuild = false;
+		if (convertionAllowed) {
+			needRebuild = true;
+			databaseHandle.GetLastModificationTime(expectedLibMeta.changeDate, expectedLibMeta.metaChangeDate);
+			expectedLibMeta.importerVersion = importerVersion;
 
-		bool needRebuild = true;
-		std::unique_ptr<ryml::Tree> libraryMetaYaml;
-		databaseHandle.ReadFromLibraryFile("meta", libraryMetaYaml);
-		if (libraryMetaYaml) {
-			TextureLibraryMeta meta;
-			SerializationContext c{ libraryMetaYaml->rootref() };
-			::Deserialize(c, meta);
+			std::unique_ptr<ryml::Tree> libraryMetaYaml;
+			databaseHandle.ReadFromLibraryFile("meta", libraryMetaYaml);
+			if (libraryMetaYaml) {
+				TextureLibraryMeta meta;
+				SerializationContext c{ libraryMetaYaml->rootref() };
+				::Deserialize(c, meta);
 
-			if (meta.changeDate == expectedLibMeta.changeDate &&
-				meta.metaChangeDate == expectedLibMeta.metaChangeDate &&
-				meta.importerVersion == expectedLibMeta.importerVersion) {
-				needRebuild = false;
+				if (meta.changeDate == expectedLibMeta.changeDate &&
+					meta.metaChangeDate == expectedLibMeta.metaChangeDate &&
+					meta.importerVersion == expectedLibMeta.importerVersion) {
+					needRebuild = false;
+				}
 			}
 		}
 
@@ -185,6 +192,10 @@ public:
 		if (bufferLoaded) {
 			return std::move(buffer);
 		}
+		else if (!convertionAllowed) {
+			//TODO error
+			return buffer;
+		}
 
 		databaseHandle.EnsureForderForLibraryFileExists("texture");
 
@@ -198,6 +209,7 @@ public:
 		bool convertedLow = converted;// ConvertTextureFile(databaseHandle, databaseHandle.GetAssetPath(), convertedAssetPathLow, mips, format, isNormalMap, 4);
 
 		if (!converted || !convertedLow) {
+			//TODO error
 			return buffer;
 		}
 

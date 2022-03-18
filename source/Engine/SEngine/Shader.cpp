@@ -80,6 +80,10 @@ class BasicShaderAssetImporter : public AssetImporter {
 	}
 
 	bool LoadShader(std::vector<uint8_t>& buffer, AssetDatabase_BinaryImporterHandle& databaseHandle, bool isVertex, bool isDebug) {
+
+		bool convertionAllowed = databaseHandle.ConvertionAllowed();
+		//TODO dont load if version differs!!!
+
 		//TODO propper fix for loading without sources + check other assets for same mistakes
 		std::string textAssetPath = databaseHandle.GetAssetPath();
 		std::string binAssetPathId = "";
@@ -118,29 +122,30 @@ class BasicShaderAssetImporter : public AssetImporter {
 
 		bool needRebuild = false;
 		std::unique_ptr<ryml::Tree> metaYaml;
-		bool hasMeta = databaseHandle.ReadFromLibraryFile(metaId, metaYaml);
-		if (!hasMeta) {
-			needRebuild = true;
-		}
-		else {
-			ShaderLibraryMeta meta;
-			SerializationContext c = SerializationContext(metaYaml->rootref());
-			::Deserialize(c, meta);
-			uint64_t lastFileChange;
-			if (meta.importerVersion != importerVersion) {
+		if (convertionAllowed) {
+			bool hasMeta = databaseHandle.ReadFromLibraryFile(metaId, metaYaml);
+			if (!hasMeta) {
 				needRebuild = true;
 			}
 			else {
-				for (auto& record : meta.modificationDates) {
-					uint64_t lastFileChange = databaseHandle.GetLastModificationTime(record.assetPath);
-					if (lastFileChange != record.modificationDate && lastFileChange != 0) {
-						needRebuild = true;
-						break;
+				ShaderLibraryMeta meta;
+				SerializationContext c = SerializationContext(metaYaml->rootref());
+				::Deserialize(c, meta);
+				uint64_t lastFileChange;
+				if (meta.importerVersion != importerVersion) {
+					needRebuild = true;
+				}
+				else {
+					for (auto& record : meta.modificationDates) {
+						uint64_t lastFileChange = databaseHandle.GetLastModificationTime(record.assetPath);
+						if (lastFileChange != record.modificationDate && lastFileChange != 0) {
+							needRebuild = true;
+							break;
+						}
 					}
 				}
 			}
 		}
-		std::string dependenciesAssetPathId = binAssetPathId + ".d";
 		//TODO check modification of all included ones
 
 		bool hasBinary = false;
@@ -150,6 +155,10 @@ class BasicShaderAssetImporter : public AssetImporter {
 
 		if (hasBinary) {
 			return true;
+		}
+		else if (!convertionAllowed) {
+			//TODO error
+			return false;
 		}
 		std::string params = "";
 		params += " -f " + databaseHandle.GetAssetPathReal();
@@ -185,7 +194,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 		LPSTR ccc = &cmdBuffer[0];
 
 		databaseHandle.EnsureForderForLibraryFileExists(binAssetPathId);
-
+		//TODO delete old lirary files before converting
 		auto result = CreateProcessA(
 			databaseHandle.GetToolPath("shaderc.exe").c_str()
 			, &cmdBuffer[0]
@@ -219,6 +228,7 @@ class BasicShaderAssetImporter : public AssetImporter {
 		files.push_back(databaseHandle.GetAssetPath());
 		{
 			std::vector<uint8_t> depBuffer;
+			std::string dependenciesAssetPathId = binAssetPathId + ".d";
 			databaseHandle.ReadFromLibraryFile(dependenciesAssetPathId, depBuffer);
 			bool hadFirst = false;
 			int start = 0;
@@ -246,7 +256,9 @@ class BasicShaderAssetImporter : public AssetImporter {
 		expectedMeta.importerVersion = importerVersion;
 		for (auto& file : files) {
 			uint64_t lastModificationDate = databaseHandle.GetLastModificationTime(file);
-			ASSERT(lastModificationDate != 0);
+			if (hasBinary) {
+				ASSERT(lastModificationDate != 0);
+			}
 			expectedMeta.modificationDates.push_back(AssetWithModificationDate(file, lastModificationDate));
 		}
 

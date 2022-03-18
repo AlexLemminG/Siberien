@@ -6,7 +6,7 @@ GameObject:
   - $NavMeshAgent
   - $NavMeshAgentTest_WASD
 MeshRenderer:
-  mesh: meshes/zombie.glb$Zombie
+  mesh: meshes/zombie.blend$Zombie
   material: enemyMaterial.asset
 Transform:
   pos: [5,0.5,0]
@@ -14,7 +14,7 @@ Transform:
   scale: [0.7, 0.7, 0.7]
 Animator:
   speed: 10
-  defaultAnimation: meshes/zombie.glb$Walk
+  defaultAnimation: meshes/zombie.blend$Walk
 NavMeshAgent:
   maxAcceleration: inf
 NavMeshAgentTest_WASD:

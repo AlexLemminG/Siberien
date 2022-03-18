@@ -28,7 +28,9 @@ bool DbgVarsSystem::Init() {
 		*var->val = var->defaultValue;
 	}
 
-	Load();
+	if (CfgGetBool("godMode")) {
+		Load();
+	}
 
 	return true;
 }
@@ -98,7 +100,9 @@ void DbgVarsSystem::Update() {
 }
 
 void DbgVarsSystem::Term() {
-	Save();
+	if (CfgGetBool("godMode")) {
+		Save();
+	}
 }
 
 void DbgVarsSystem::AddDbgVar(DbgVarBool* dbgvar) {

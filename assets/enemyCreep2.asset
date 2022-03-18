@@ -5,10 +5,10 @@ GameObject:
   - $Transform
   - $Animator
 MeshRenderer:
-  mesh: meshes/zombie.glb$Zombie
+  mesh: meshes/zombie.blend$Zombie
   material: enemyMaterial.asset
 Transform:
   pos: [3,1.5,7]
   euler: [0,-90,0]
 Animator:
-  defaultAnimation: meshes/zombie.glb$Walk
+  defaultAnimation: meshes/zombie.blend$Walk

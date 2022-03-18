@@ -295,9 +295,9 @@ public:
 	}
 
 	bool ConvertBlendToGlb(AssetDatabase_BinaryImporterHandle& databaseHandle, const std::string& inFile, const std::string& outFile, const ModelMeta& meta) {
-		DWORD blenderLocSize = 255;
-		char blenderLoc[255];
-		memset(blenderLoc, 0, 255);
+		DWORD blenderLocSize = 1024;
+		char blenderLoc[1024];
+		memset(blenderLoc, 0, 1024);
 		auto findBlendResult = AssocQueryStringA(ASSOCF_VERIFY, ASSOCSTR_EXECUTABLE, ".blend", nullptr, blenderLoc, &blenderLocSize);
 		if (findBlendResult != 0) {
 			//TODO log error
@@ -364,26 +364,32 @@ public:
 	}
 
 	std::shared_ptr<FullMeshAsset> Import(AssetDatabase_BinaryImporterHandle& databaseHandle) {
+		bool convertionAllowed = databaseHandle.ConvertionAllowed();
+		//TODO dont load if version differs!!!
+
 		int importerVersion = 1;//TODO move somewhere
 		std::string convertedAssetPath = databaseHandle.GetLibraryPathFromId("MeshAsset");
 		std::string metaPath = databaseHandle.GetLibraryPathFromId("meta");
 
 
-		bool needRebuild = true;
 		LibraryMeshMeta expectedMeta;
-		expectedMeta.importerVersion = importerVersion;
-		databaseHandle.GetLastModificationTime(expectedMeta.lastAssetChangeTime, expectedMeta.lastMetaChangeTime);
+		bool needRebuild = false;
+		if (convertionAllowed) {
+			needRebuild = true;
+			expectedMeta.importerVersion = importerVersion;
+			databaseHandle.GetLastModificationTime(expectedMeta.lastAssetChangeTime, expectedMeta.lastMetaChangeTime);
 
-		std::unique_ptr<ryml::Tree> libraryMetaYaml;
-		databaseHandle.ReadFromLibraryFile("meta", libraryMetaYaml);
-		if (libraryMetaYaml) {
-			LibraryMeshMeta meta;
-			SerializationContext c{ libraryMetaYaml->rootref() };
-			::Deserialize(c, meta);
-			if (meta.lastAssetChangeTime == expectedMeta.lastAssetChangeTime &&
-				meta.lastMetaChangeTime == expectedMeta.lastMetaChangeTime &&
-				meta.importerVersion == expectedMeta.importerVersion) {
-				needRebuild = false;
+			std::unique_ptr<ryml::Tree> libraryMetaYaml;
+			databaseHandle.ReadFromLibraryFile("meta", libraryMetaYaml);
+			if (libraryMetaYaml) {
+				LibraryMeshMeta meta;
+				SerializationContext c{ libraryMetaYaml->rootref() };
+				::Deserialize(c, meta);
+				if (meta.lastAssetChangeTime == expectedMeta.lastAssetChangeTime &&
+					meta.lastMetaChangeTime == expectedMeta.lastMetaChangeTime &&
+					meta.importerVersion == expectedMeta.importerVersion) {
+					needRebuild = false;
+				}
 			}
 		}
 
@@ -403,6 +409,10 @@ public:
 		if (bufferLoaded) {
 			auto meshAsset = DeserializeFromBuffer(buffer);
 			return meshAsset;
+		}
+		else if (!convertionAllowed) {
+			//TODO error
+			return nullptr;
 		}
 
 

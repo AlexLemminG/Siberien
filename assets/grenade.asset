@@ -7,7 +7,7 @@ GameObject:
   - $Grenade
   - $PointLight
 MeshRenderer:
-  mesh: meshes\grenade.glb$Mesh
+  mesh: meshes\grenade.blend$Mesh
   material: materials\scifi.asset
 Transform:
   scale: [1,1,1]

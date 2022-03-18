@@ -35,6 +35,11 @@ void LogError(const std::string& format, Args ... args) {
 }
 
 template<typename ... Args>
+void LogWarning(const std::string& format, Args ... args) {
+	std::cout << FormatString(format, args...) << std::endl;
+}
+
+template<typename ... Args>
 void Log(const std::string& format, Args ... args) {
 	std::cout << FormatString(format, args...) << std::endl;
 }

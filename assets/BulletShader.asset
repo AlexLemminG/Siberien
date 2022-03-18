@@ -1,3 +1,0 @@
-Shader:
-  vs: shaders\bullets\vs_bullets.vs
-  fs: shaders\bullets\fs_bullets.fs

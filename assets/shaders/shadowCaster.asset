@@ -1,3 +1,0 @@
-Shader:
-  vs: shaders\shadowCaster\vs_bump.vs
-  fs: shaders\shadowCaster\fs_bump.fs

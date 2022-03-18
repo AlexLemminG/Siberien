@@ -11,7 +11,7 @@ Scene:
           pos: [-6,1,15] #overrides
           scale: [0.3, 0.3, 0.3]
         MeshRenderer:
-          mesh: meshes\gatling.glb$Mesh #overrides
+          mesh: meshes\gatling.blend$Mesh #overrides
         PointLight: #new component
           color: 0xff0000ff
           radius: 4

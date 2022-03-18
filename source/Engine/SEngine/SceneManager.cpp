@@ -52,13 +52,15 @@ void SceneManager::Update() {
 	std::shared_ptr<Scene> scene;
 	{
 		OPTICK_EVENT("Load scene");
-		scene = assets->Load<Scene>(sceneName);
-		if (!scene) {
-			if (sceneName != "-") { //TODO tidy
+		if (sceneName != "-") { //TODO tidy
+			scene = assets->Load<Scene>(sceneName);
+			if (!scene) {
 				LogError("Failed to load scene '%s'", sceneName.c_str());
-				//ASSERT(false);
+				ASSERT(false);
 			}
-			return;
+		}
+		else {
+			scene = nullptr;
 		}
 	}
 

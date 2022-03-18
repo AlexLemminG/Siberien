@@ -1,3 +1,0 @@
-Shader:
-  vs: shaders\deferredCombine\vs.vs
-  fs: shaders\deferredCombine\fs.fs

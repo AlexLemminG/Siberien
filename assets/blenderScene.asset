@@ -3,7 +3,7 @@ GameObject:
   components:
     - $BlenderSceneLoader
 BlenderSceneLoader:
-  scene: meshes\scene.glb$FullMeshAsset
+  scene: meshes\scene.blend$FullMeshAsset
   mapping:
   - prefab: cube.asset
     name: Cube.001

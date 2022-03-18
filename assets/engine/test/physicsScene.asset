@@ -19,7 +19,7 @@ Transform$cubeTransform:
   pos: [0,3,0]
 
 MeshRenderer$cubeRenderer:
-  mesh: meshes\cube.glb$Cube.001
+  mesh: meshes\cube.blend$Cube.001
   material: materials\scifi.asset
 
 BoxCollider$cubeShape:
@@ -44,7 +44,7 @@ Transform$ghostCubeTransform:
   scale: [0.5, 2.5, 0.5]
 
 MeshRenderer$ghostCubeRenderer:
-  mesh: meshes\cube.glb$Cube.001
+  mesh: meshes\cube.blend$Cube.001
   material: materials\scifi.asset
 
 BoxCollider$ghostCubeShape:

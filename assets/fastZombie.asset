@@ -9,7 +9,7 @@ GameObject:
   - $Health
   - $Animator
 MeshRenderer:
-  mesh: meshes/zombie.glb$Zombie
+  mesh: meshes/zombie.blend$Zombie
   material: enemyMaterial.asset
 Transform:
   pos: [5,0.5,0]
@@ -22,10 +22,10 @@ EnemyCreepController:
   acc: 6
   angularAcc: 3.4
   velocityToAnimatorSpeed: 3.0
-  walkAnimation: meshes/zombie.glb$Walk
-  rollAnimation: meshes/zombie.glb$Roll
-  attackAnimation: meshes/zombie.glb$Attack
-  deadAnimation: meshes/zombie.glb$DeadFake
+  walkAnimation: meshes/zombie.blend$Walk
+  rollAnimation: meshes/zombie.blend$Roll
+  attackAnimation: meshes/zombie.blend$Attack
+  deadAnimation: meshes/zombie.blend$DeadFake
 SphereCollider:
   radius: 0.8
   center: [0, 0.6, 0]
@@ -40,5 +40,5 @@ Health:
   amount: 1
 Animator:
   speed: 10
-  defaultAnimation: meshes/zombie.glb$Walk
+  defaultAnimation: meshes/zombie.blend$Walk
   

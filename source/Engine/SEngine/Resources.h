@@ -59,6 +59,8 @@ public:
 	std::string GetLibraryPathFromId(const std::string& id) const;
 	std::string GetTempPathFromFileName(const std::string& fileName) const;
 
+	bool ConvertionAllowed() const;
+
 
 private:
 	bool ReadBinary(const std::string& fullPath, std::vector<uint8_t>& buffer);

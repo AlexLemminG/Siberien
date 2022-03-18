@@ -185,24 +185,37 @@ bool AssetDatabase::Init() {
 	ASSERT(changeListener == nullptr);
 	changeListener = new AssetDatabase_AssetChangeListener();
 
-	auto nodeMountDirs = CfgGetNode("mountDirs"); //TODO some other place for dll's to state their mount dirs
-	for (const auto& dir : nodeMountDirs) {
+	auto nodeMountAssets = CfgGetNode("mountAssets"); //TODO some other place for dll's to state their mount dirs
+	for (const auto& dir : nodeMountAssets) {
 		auto dirstr = dir.as<std::string>();
 		if (!PHYSFS_mount(dirstr.c_str(), "assets", 0)) {
 			LogError("Failed to mount physfs '%s': %s", dirstr, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+			ASSERT(false);
 			return false;
 		}
-		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-		changeListener->addWatch(converter.from_bytes(dirstr), changeListener, true);
+		//std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+		//changeListener->addWatch(converter.from_bytes(dirstr), changeListener, true);
 	}
-	if (!PHYSFS_mkdir("library")) {
-		// TODO not always needed/possible
-		LogError("Failed to mkdir library : %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-		return false;
-	}
-	if (!PHYSFS_mount("library", "library", 0)) {
-		LogError("Failed to mount physfs '%s': %s", "library", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-		return false;
+
+	auto nodeMountLibraries = CfgGetNode("mountLibraries"); //TODO some other place for dll's to state their mount dirs
+	for (const auto& dir : nodeMountLibraries) {
+		auto dirstr = dir.as<std::string>();
+
+		//creating default library folder
+		if (strcmpi(dirstr.c_str(), "library") == 0) {
+			if (!PHYSFS_mkdir("library")) {
+				// TODO not always needed/possible
+				LogError("Failed to mkdir library : %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+				ASSERT(false);
+				return false;
+			}
+		}
+
+		if (!PHYSFS_mount(dirstr.c_str(), "library", 0)) {
+			LogError("Failed to mount physfs '%s': %s", dirstr, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+			ASSERT(false);
+			return false;
+		}
 	}
 
 
@@ -488,29 +501,30 @@ void AssetDatabase::ProcessLoadingQueue() {
 									AddObjectToAsset(path, id, object);
 								}
 								else {
-									//TODO LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
+									LogError("failed to import '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
 								}
 							}
 							else {
-								ASSERT(false);
+								LogError("Unknown asset type '%s' from '%s'", type.c_str(), currentAssetLoadingPath.c_str());
 								//TODO error
 							}
 						}
 					}
 					else {
-						//TODO error
+						LogWarning("Empty asset file '%s'", path.c_str());
 					}
 				}
 				else {
-					//TORO error
+					LogError("Asset file not found '%s'", fileName.c_str());
 				}
 			}
 			else {
-				//TODO error
+				LogWarning("Already tried to load '%s' (asset probably had loading error)", path.c_str());
+				//TODO fix
 			}
 		}
 		else {
-			//TODO error
+			LogError("Unknown asset extension '%s' in '%s'", extention.c_str(), path.c_str());
 		}
 
 
@@ -711,6 +725,10 @@ void AssetDatabase_BinaryImporterHandle::EnsureForderForLibraryFileExists(std::s
 			CreateDirectoryA(subpath.c_str(), NULL);
 		}
 	}
+}
+
+bool AssetDatabase_BinaryImporterHandle::ConvertionAllowed() const {
+	return CfgGetBool("assetConvertionEnabled");
 }
 
 std::string AssetDatabase_BinaryImporterHandle::GetTempPathFromFileName(const std::string& fileName) const {

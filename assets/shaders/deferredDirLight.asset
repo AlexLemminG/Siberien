@@ -1,3 +1,0 @@
-Shader:
-  vs: shaders\deferredDirLight\vs.vs
-  fs: shaders\deferredDirLight\fs.fs

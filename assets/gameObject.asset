@@ -5,7 +5,7 @@ GameObject:
   - $DirLight
   - $FlyCameraMovement
 MeshRenderer:
-  mesh: hero.glb$hero_mesh
+  mesh: meshes\hero.glb$hero_mesh
   material: material.asset
 DirLight:
   color: 0xffffffff

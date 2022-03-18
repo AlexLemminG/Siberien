@@ -7,10 +7,10 @@ Transform:
   euler: [0,0,0]
   
 MeshRenderer$1:
-  mesh: engine\test\pbrScene\pbrBalls.glb$Spheres
+  mesh: engine\test\pbrScene\pbrBalls.blend$Spheres
   material: $M1
 MeshRenderer$2:
-  mesh: engine\test\pbrScene\pbrBalls.glb$SpheresText
+  mesh: engine\test\pbrScene\pbrBalls.blend$SpheresText
   material: $M1
   
 Material$M1:
