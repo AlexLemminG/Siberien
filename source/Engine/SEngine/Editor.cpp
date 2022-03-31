@@ -121,16 +121,9 @@ static bool Archive(std::string path, std::string archive, int compressionLevel,
 	DWORD sZLocSize = 1024;
 	char sZLoc[1024];
 	memset(sZLoc, 0, 1024);
-	auto find7zResult = AssocQueryStringA(ASSOCF_VERIFY, ASSOCSTR_EXECUTABLE, ".7z", nullptr, sZLoc, &sZLocSize);
-	if (find7zResult != 0) {
-		//TODO log error
-		return false;
-	}
-	std::string sZApp = sZLoc;
-	int launcherStrIdx = sZApp.find("7zFM.exe");
-	if (launcherStrIdx != -1) {
-		sZApp.replace(launcherStrIdx, strlen("7zFM.exe"), "7z.exe");
-	}
+
+	//TODO less hardcode
+	std::string sZApp = "engine\\tools\\7z.exe";
 
 	std::string params = "";
 	params += " a -r -tzip"; // cmd
@@ -277,7 +270,6 @@ static bool MakeBuild() {
 			return false;
 		}
 	}
-
 
 	//TODO
 	std::string buildType = "Retail";
