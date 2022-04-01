@@ -22,6 +22,8 @@ public:
 	static GameEvent<> onSceneLoaded;
 	static GameEvent<> onBeforeSceneEnabled;
 	static GameEvent<> onAfterSceneDisabled;
+
+	static GameEvent<>& onBeforeSceneDisabled();
 private:
 	//TODO less static stuff
 	static std::string lastLoadRequest;

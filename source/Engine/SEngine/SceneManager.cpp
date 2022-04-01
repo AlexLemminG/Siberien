@@ -10,6 +10,7 @@
 std::string SceneManager::lastLoadRequest;
 std::shared_ptr<Scene> SceneManager::currentScene;
 GameEvent<> SceneManager::onBeforeSceneEnabled;
+static GameEvent<> onBeforeSceneDisabledEvent;
 GameEvent<> SceneManager::onAfterSceneDisabled;
 GameEvent<> SceneManager::onSceneLoaded;
 bool lastLoadRequestIsForEditing = false;
@@ -31,6 +32,7 @@ void SceneManager::Update() {
 	}
 
 	if (currentScene) {
+		onBeforeSceneDisabledEvent.Invoke();
 		currentScene->Term();
 		onAfterSceneDisabled.Invoke();
 
@@ -106,3 +108,5 @@ std::string SceneManager::GetCurrentScenePath() {
 
 	return currentScene != nullptr ? currentScene->name : "-";
 }
+
+GameEvent<>& SceneManager::onBeforeSceneDisabled() { return onBeforeSceneDisabledEvent; }

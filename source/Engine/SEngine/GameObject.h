@@ -27,6 +27,7 @@ public:
 	}
 
 	virtual void OnBeforeSerializeCallback(SerializationContext& context) const override;
+	virtual std::string GetDbgName() const override;
 
 	static std::shared_ptr<GameObject> FindWithTag(const std::string& tag);
 

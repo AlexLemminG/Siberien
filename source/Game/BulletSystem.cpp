@@ -13,6 +13,7 @@
 #include "Mesh.h"
 #include "Light.h"
 #include "Scene.h"
+#include "SceneManager.h"
 #include "GameObject.h"
 
 REGISTER_GAME_SYSTEM(BulletSystem);
@@ -26,7 +27,18 @@ bool BulletSystem::Init() {
 	bullets.push_back(BulletsVector{ bulletSettings, std::vector<Bullet>() });
 	bullets.push_back(BulletsVector{ bulletDamageParticleSettings, std::vector<Bullet>() });
 	bullets.push_back(BulletsVector{ bloodParticle, std::vector<Bullet>() });
+
+	onBeforeSceneUnloadedHandle = SceneManager::onBeforeSceneDisabled().Subscribe([this]() {
+		addedLightsCount = 0;
+		for (auto& v : bullets) {
+			v.bullets.clear();
+		}}
+	);
 	return true;
+}
+
+void BulletSystem::Term() {
+	SceneManager::onBeforeSceneDisabled().Unsubscribe(onBeforeSceneUnloadedHandle);
 }
 
 void BulletSystem::Update() {
@@ -169,14 +181,14 @@ void BulletSystem::DrawBullets(BulletsVector& bulletsVector) {
 
 	// figure out how big of a buffer is available
 	uint32_t drawnCubes = bgfx_get_avail_instance_data_buffer(totalCubes, instanceStride);
-	
+
 
 	// save how many we couldn't draw due to buffer room so we can display it
 	int m_lastFrameMissing = totalCubes - drawnCubes;
 
 	bgfx::InstanceDataBuffer idb;
 	bgfx_alloc_instance_data_buffer((bgfx_instance_data_buffer_t*)&idb, drawnCubes, instanceStride);
-	
+
 
 	uint8_t* data = idb.data;
 
@@ -215,7 +227,7 @@ void BulletSystem::DrawBullets(BulletsVector& bulletsVector) {
 
 	bgfx_set_vertex_buffer(0, *(bgfx_vertex_buffer_handle_t*)(&bulletsVector.settings->renderer->mesh->vertexBuffer), 0, UINT32_MAX);
 	bgfx_set_index_buffer(*(bgfx_index_buffer_handle_t*)(&bulletsVector.settings->renderer->mesh->indexBuffer), 0, UINT32_MAX);
-	
+
 
 	// Set instance data buffer.
 	bgfx_set_instance_data_buffer((bgfx_instance_data_buffer_t*)&idb, 0, UINT32_MAX);
@@ -227,8 +239,6 @@ void BulletSystem::DrawBullets(BulletsVector& bulletsVector) {
 
 	bgfx_submit(kRenderPassGeometry, *(bgfx_program_handle_t*)(&bulletsVector.settings->renderer->material->shader->program), 0, BGFX_DISCARD_ALL);
 }
-
-void BulletSystem::Term() {}
 
 void BulletSystem::CreateBullet(const Vector3& pos, const Vector3& velocity, const Color& color) {
 	CreateBullet(0, pos, velocity, color);
