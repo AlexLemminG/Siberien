@@ -1,5 +1,5 @@
 # Siberien
-zombiepunk2077 game and custom engine game for [gaijin game jam 2021](https://alexlemming.itch.io/zombiepunk)
+zombiepunk2077 game and custom engine game for [gaijin game jam 2021](https://alexlemming.itch.io/zombiepunk). Originally made within 2 weeks
 <img src="https://user-images.githubusercontent.com/3332929/159026770-e06d081f-6295-43a0-aafc-8131cda31286.png" width="881">
 <img src="https://user-images.githubusercontent.com/3332929/159026785-57d8acbb-85ce-4e01-bd02-237646301a59.png" width="881">
 <img src="https://user-images.githubusercontent.com/3332929/159026790-447086b6-16d9-4e2e-81b6-f29baad89b92.png" width="881">
