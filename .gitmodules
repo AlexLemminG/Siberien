@@ -1,3 +1,3 @@
 [submodule "optick"]
-	path = _optick
+	path = source/libs/_optick
 	url = https://github.com/bombomby/optick
