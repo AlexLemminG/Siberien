@@ -189,7 +189,7 @@ bool AssetDatabase::Init() {
 	for (const auto& dir : nodeMountAssets) {
 		auto dirstr = dir.as<std::string>();
 		if (!PHYSFS_mount(dirstr.c_str(), "assets", 0)) {
-			LogError("Failed to mount physfs '%s': %s", dirstr, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+			LogError("Failed to mount physfs '%s': %s", dirstr.c_str(), PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
 			ASSERT(false);
 			return false;
 		}

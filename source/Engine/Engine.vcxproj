@@ -275,6 +275,7 @@
     <ClInclude Include="SEngine\Sound.h" />
     <ClInclude Include="SEngine\SphericalHarmonics.h" />
     <ClInclude Include="SEngine\STime.h" />
+    <ClInclude Include="SEngine\StringUtils.h" />
     <ClInclude Include="SEngine\System.h" />
     <ClInclude Include="SEngine\Texture.h" />
     <ClInclude Include="SEngine\Transform.h" />

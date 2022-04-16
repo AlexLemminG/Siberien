@@ -19,3 +19,8 @@ void GameObject::SetActive(bool isActive) {
 
 	Bits::SetMask(flags, FLAGS::IS_ACTIVE, isActive);
 }
+
+std::string GameObject::GetDbgName() const
+{
+	return "GameObject '" + tag + "'";
+}

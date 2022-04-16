@@ -106,7 +106,7 @@ void Scene::ProcessRemovedGameObjects() {
 				addedGameObjects.erase(it);
 			}
 			else {
-				ASSERT(false);
+				ASSERT_FAILED("Trying to remove game object '%s' but it's not added", gameObject->GetDbgName().c_str());
 			}
 		}
 

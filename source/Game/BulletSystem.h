@@ -3,6 +3,7 @@
 #include "System.h"
 #include "SMath.h"
 #include "MeshRenderer.h"//TODO need for serializing shared_ptr
+#include "GameEvents.h"
 
 class MeshRenderer;
 class BulletSettings;
@@ -54,9 +55,11 @@ private:
 
 	std::vector<std::shared_ptr<GameObject>> lights;
 	int addedLightsCount = 0;
+
+	GameEventHandle onBeforeSceneUnloadedHandle;
 };
 
-class BulletSettings : public Object{
+class BulletSettings : public Object {
 public:
 	std::shared_ptr<MeshRenderer> renderer;
 	float impulse = 1.f;

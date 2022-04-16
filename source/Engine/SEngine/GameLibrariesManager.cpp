@@ -42,8 +42,7 @@ bool GameLibrariesManager::Init() {
 
 		objectHandle = SDL_LoadObject(libName.c_str());
 		if (!objectHandle) {
-			auto error = SDL_GetError();
-			ASSERT(false);
+			ASSERT_FAILED("Failed to load lib '%s': '%s'", libName.c_str(), SDL_GetError());
 			continue;
 		}
 
