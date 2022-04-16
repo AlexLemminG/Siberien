@@ -1,15 +1,13 @@
 
 
 #include <iostream>
-#include "bgfx/bgfx.h"
 #include "Common.h"
 
 #include "Render.h"
 
+#include "dear-imgui/imgui_impl_sdl.h"
+#include "imgui/imgui.h"
 #include "SDL.h"
-#include "yaml-cpp/yaml.h"
-#include <SDL_syswm.h>
-#include <bgfx/platform.h>
 #include "Resources.h"
 #include "Serialization.h"
 #include "Camera.h"
@@ -22,10 +20,8 @@
 #include "Engine.h"
 #include "Graphics.h"
 #include "Config.h"
-#include "imgui/imgui.h"
 #include "GameLibrariesManager.h"
 #include "Cmd.h"
-#include <dear-imgui/imgui_impl_sdl.h>
 
 std::string GetFirstSceneName() {
 	return CfgGetString("scene") + ".asset";
