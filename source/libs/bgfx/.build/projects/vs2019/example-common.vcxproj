@@ -17,7 +17,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A788128C-9356-0692-7CEA-76B86857E2F6}</ProjectGuid>
     <RootNamespace>example-common</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectName>bgfx-example-common</ProjectName>
   </PropertyGroup>
