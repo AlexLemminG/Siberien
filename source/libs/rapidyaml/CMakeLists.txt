@@ -101,6 +101,8 @@ endif()
 
 c4_add_dev_targets()
 
-add_custom_target(uninstall
-    "${CMAKE_COMMAND}" -P "${PROJECT_SOURCE_DIR}/cmake/uninstall.cmake"
-)
+if (NOT TARGET uninstall)
+	add_custom_target(uninstall
+		"${CMAKE_COMMAND}" -P "${PROJECT_SOURCE_DIR}/cmake/uninstall.cmake"
+	)
+endif()

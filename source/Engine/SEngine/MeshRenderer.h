@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "SMath.h"
 #include "bgfx/bgfx.h"
-#include <assimp/scene.h>
+#include "assimp/scene.h"
 
 struct aiMesh;
 //class aiScene;
