@@ -1,5 +1,5 @@
 #include "Compression.h"
-#include "zlib.h"
+//#include "zlib.h"
 #include "lz4.h"
 #include "System.h"
 #include "Cmd.h"
@@ -32,7 +32,7 @@ bool Compression::Decompress(const BinaryBuffer& from, BinaryBuffer& to) {
 	std::vector<uint8_t> uncopressBuff;
 	uint64_t size;
 	memcpy(&size, data.data() + data.size() - sizeof(uint64_t), sizeof(uint64_t));
-	uLongf decompressed_size = (uLongf)size;
+	auto decompressed_size = size;
 	ResizeVectorNoInit(uncopressBuff, decompressed_size);
 
 	int final_decompressed_size = LZ4_decompress_safe((const char*)data.data(), (char*)uncopressBuff.data(), data.size() - sizeof(uint64_t), decompressed_size);

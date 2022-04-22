@@ -215,6 +215,7 @@ if _OPTIONS["with-profiler"] then
 	}
 end
 
+windowstargetplatformversion("10.0.19041.0")
 function exampleProjectDefaults()
 
 	debugdir (path.join(BGFX_DIR, "examples/runtime"))

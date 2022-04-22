@@ -10,7 +10,7 @@
 #include "sdl.h"
 #include "shlwapi.h"
 #include "config.h"
-#include <physfs.h>
+#include "physfs.h"
 
 
 DBG_VAR_BOOL(dbg_isEditMode, "EditMode", false)
