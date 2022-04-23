@@ -344,8 +344,8 @@ CMP_STATIC CMP_EndPoints cgu_CompressRGBBlockX( CMP_IN CGU_Vec3f   BlkInBGRf_UV[
             {
                 Prj0[i] = Prj[i] = dot(BlkSh[i], LineDir);
                 PrjErr[i]        = dot(BlkSh[i] - LineDir * Prj[i], BlkSh[i] - LineDir * Prj[i]);
-                PrjBnd0          = min(PrjBnd0, Prj[i]);
-                PrjBnd1          = max(PrjBnd1, Prj[i]);
+                PrjBnd0          = std::min(PrjBnd0, Prj[i]);
+                PrjBnd1          = std::max(PrjBnd1, Prj[i]);
             }
 
             //  2. Run 1 dimensional search (see scalar case) to find an (sub) optimal
@@ -507,21 +507,21 @@ CMP_STATIC CMP_EndPoints cgu_CompressRGBBlockX( CMP_IN CGU_Vec3f   BlkInBGRf_UV[
         else
         {
             inpRmpEndPts0.x += floor(128.f / Fctrs1.x) - floor(inpRmpEndPts0.x / Fctrs1.x);
-            inpRmpEndPts0.x = min(inpRmpEndPts0.x, _Max);
+            inpRmpEndPts0.x = std::min(inpRmpEndPts0.x, _Max);
         }
         if (inpRmpEndPts0.y <= _Min)
             inpRmpEndPts0.y = _Min;
         else
         {
             inpRmpEndPts0.y += floor(128.f / Fctrs1.y) - floor(inpRmpEndPts0.y / Fctrs1.y);
-            inpRmpEndPts0.y = min(inpRmpEndPts0.y, _Max);
+            inpRmpEndPts0.y = std::min(inpRmpEndPts0.y, _Max);
         }
         if (inpRmpEndPts0.z <= _Min)
             inpRmpEndPts0.z = _Min;
         else
         {
             inpRmpEndPts0.z += floor(128.f / Fctrs1.z) - floor(inpRmpEndPts0.z / Fctrs1.z);
-            inpRmpEndPts0.z = min(inpRmpEndPts0.z, _Max);
+            inpRmpEndPts0.z = std::min(inpRmpEndPts0.z, _Max);
         }
 
         inpRmpEndPts0 = floor(inpRmpEndPts0 / Fctrs0) * Fctrs0;
@@ -532,21 +532,21 @@ CMP_STATIC CMP_EndPoints cgu_CompressRGBBlockX( CMP_IN CGU_Vec3f   BlkInBGRf_UV[
         else
         {
             inpRmpEndPts1.x += floor(128.f / Fctrs1.x) - floor(inpRmpEndPts1.x / Fctrs1.x);
-            inpRmpEndPts1.x = min(inpRmpEndPts1.x, _Max);
+            inpRmpEndPts1.x = std::min(inpRmpEndPts1.x, _Max);
         }
         if (inpRmpEndPts1.y <= _Min)
             inpRmpEndPts1.y = _Min;
         else
         {
             inpRmpEndPts1.y += floor(128.f / Fctrs1.y) - floor(inpRmpEndPts1.y / Fctrs1.y);
-            inpRmpEndPts1.y = min(inpRmpEndPts1.y, _Max);
+            inpRmpEndPts1.y = std::min(inpRmpEndPts1.y, _Max);
         }
         if (inpRmpEndPts1.z <= _Min)
             inpRmpEndPts1.z = _Min;
         else
         {
             inpRmpEndPts1.z += floor(128.f / Fctrs1.z) - floor(inpRmpEndPts1.z / Fctrs1.z);
-            inpRmpEndPts1.z = min(inpRmpEndPts1.z, _Max);
+            inpRmpEndPts1.z = std::min(inpRmpEndPts1.z, _Max);
         }
 
         inpRmpEndPts1 = floor(inpRmpEndPts1 / Fctrs0) * Fctrs0;
@@ -2170,8 +2170,8 @@ CMP_STATIC CGU_FLOAT cmp_Refine(CGU_FLOAT _OutRmpPnts[NUM_CHANNELS][NUM_ENDPOINT
     // Now blue
     for(CGU_INT i = nRefineStart; i <= nRefineEnd; i++) {
         for(CGU_INT j = nRefineStart; j <= nRefineEnd; j++) {
-            InpRmp[BC][0] = min(max(InpRmp0[BC][0] + i * Fctrs[BC], 0.f), 255.f);
-            InpRmp[BC][1] = min(max(InpRmp0[BC][1] + j * Fctrs[BC], 0.f), 255.f);
+            InpRmp[BC][0] = std::min(std::max(InpRmp0[BC][0] + i * Fctrs[BC], 0.f), 255.f);
+            InpRmp[BC][1] = std::min(std::max(InpRmp0[BC][1] + j * Fctrs[BC], 0.f), 255.f);
 
             cpu_MkWkRmpPts(Eq, WkRmpPts, InpRmp, nRedBits, nGreenBits, nBlueBits);
             cpu_BldClrRmp(Rmp[BC], WkRmpPts[BC], dwNumPoints);
@@ -2183,7 +2183,7 @@ CMP_STATIC CGU_FLOAT cmp_Refine(CGU_FLOAT _OutRmpPnts[NUM_CHANNELS][NUM_ENDPOINT
                 for(CGU_INT r = 0; r < rmp_l; r++) {
                     CGU_FLOAT Dist = (Rmp[BC][r] - Blk[k][BC]);
                     CGU_FLOAT Err = RmpErr[r][k] +  Dist * Dist * fWeightBlue;
-                    MinErr = min(MinErr, Err);
+                    MinErr = std::min(MinErr, Err);
                 }
                 mse += MinErr * _Rpt[k];
             }
@@ -2547,8 +2547,8 @@ CMP_STATIC bool cpu_CompressRGBBlockX(  CMP_OUT CGU_FLOAT  _RsltRmpPnts[NUM_CHAN
                             + (BlkSh[i][1] - LineDir[1] * Prj[i]) * (BlkSh[i][1] - LineDir[1] * Prj[i])
                             + (BlkSh[i][2] - LineDir[2] * Prj[i]) * (BlkSh[i][2] - LineDir[2] * Prj[i]);
 
-                PrjBnd[0] = min(PrjBnd[0], Prj[i]);
-                PrjBnd[1] = max(PrjBnd[1], Prj[i]);
+                PrjBnd[0] = std::min(PrjBnd[0], Prj[i]);
+                PrjBnd[1] = std::max(PrjBnd[1], Prj[i]);
             }
 
             //  2. Run 1 dimensional search (see scalar case) to find an (sub) optimal pair of end points.

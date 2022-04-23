@@ -119,6 +119,7 @@
 #endif
 
 #ifdef _WIN32
+#define NOMINMAX
 //#define USE_ASPM_CODE
 #include <cmath>
 #endif

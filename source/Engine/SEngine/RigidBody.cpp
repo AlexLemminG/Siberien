@@ -34,11 +34,11 @@ void RigidBody::OnEnable() {
 
 	auto scale = transform->GetScale();
 	if (Vector3::DistanceSquared(scale, Vector3_one) > Mathf::epsilon) {
-		auto meshShape = std::dynamic_pointer_cast<btBvhTriangleMeshShape>(shape);
-		if (meshShape) {
+		if (shape->getShapeType() == TRIANGLE_MESH_SHAPE_PROXYTYPE) {
+			auto meshShape = (btBvhTriangleMeshShape*)(shape.get());
 			//TODO praying for shape to be in storage
-			ASSERT(meshShape.use_count() > 2);//TODO assert messages
-			shape = std::make_shared<btScaledBvhTriangleMeshShape>(meshShape.get(), btConvert(scale));
+			ASSERT(shape.use_count() > 2);//TODO assert messages
+			shape = std::make_shared<btScaledBvhTriangleMeshShape>(meshShape, btConvert(scale));
 		}
 		else {
 			shape->setLocalScaling(btConvert(scale));

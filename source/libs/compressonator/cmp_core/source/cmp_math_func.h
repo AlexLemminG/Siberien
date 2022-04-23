@@ -38,7 +38,7 @@
 //============================================================================
 
 #include <algorithm>
-using namespace std;
+//using namespace std;
 
 static CGU_INT QSortFCmp(const void *Elem1, const void *Elem2) {
     CGU_INT ret = 0;

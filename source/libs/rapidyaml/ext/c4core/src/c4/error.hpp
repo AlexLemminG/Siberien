@@ -247,7 +247,7 @@ struct srcloc
 #   ifdef NDEBUG
 #       define C4_USE_ASSERT 0
 #   else
-#       define C4_USE_ASSERT 1
+#       define C4_USE_ASSERT 0//TODO 1
 #   endif
 #endif
 
