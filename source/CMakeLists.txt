@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.1)
 # set the project name
 project(SiberienEngine)
 
+
 # Rebuilding BGFX cmakelists
 # set(SDL2_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs/SDL")
 # set(BUILD_BGFX_CMD "${CMAKE_CURRENT_SOURCE_DIR}/../tools/genie.exe")
@@ -14,17 +15,6 @@ project(SiberienEngine)
 # MESSAGE( STATUS "BGFX_BUILD_ERROR:" ${CMD_ERROR})
 # MESSAGE( STATUS "BGFX_BUILD_OUTPUT:" ${CMD_OUTPUT})
 
-add_definitions(-DUNICODE)
-if (MSVC)
-    add_definitions("/MP")
-endif()
-
-set(CMAKE_BUILD_TYPE "Debug")
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
-set(BUILD_SHARED_LIBS OFF)
 
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
@@ -100,6 +90,7 @@ add_subdirectory(libs/assimp)
 
 add_subdirectory(libs/optick)
 
+set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
 add_subdirectory(libs/SDL)
 
 add_subdirectory(libs/rapidyaml)
@@ -135,3 +126,5 @@ add_subdirectory(libs/compressonator)
 # add_subdirectory(libs/compressonator/cmp_compressonatorlib)
 
 add_subdirectory(Engine/SEngine)
+
+set_target_properties(SiberienEngine PROPERTIES ENABLE_EXPORTS on)

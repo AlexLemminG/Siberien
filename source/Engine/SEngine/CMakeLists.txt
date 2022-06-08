@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.1)
+
+project(SEngine)
 # add_executable(SiberienEngine
 				# Main.cpp
 				# Animation.cpp)
@@ -12,21 +15,22 @@ source_group("SiberienEngine" FILES ${SIBERIEN_ENGINE_SRC})
 add_executable(SiberienEngine ${SIBERIEN_ENGINE_SRC})
 
 target_link_libraries(SiberienEngine PUBLIC OptickCored)
-target_include_directories(SiberienEngine PRIVATE "${Optick_SOURCE_DIR}/src")
+target_include_directories(SiberienEngine PUBLIC "${Optick_SOURCE_DIR}/src")
 
-target_link_libraries(SiberienEngine PUBLIC SDL2-staticd)
-target_link_libraries(SiberienEngine PUBLIC SDL2maind)
-target_include_directories(SiberienEngine PRIVATE "${SDL2_SOURCE_DIR}/include")
+target_link_libraries(SiberienEngine PUBLIC debug SDL2d)
+target_link_libraries(SiberienEngine PUBLIC debug SDL2maind)
+target_include_directories(SiberienEngine PUBLIC "${SDL2_SOURCE_DIR}/include")
 
 #TODO looks strange
 target_link_libraries(SiberienEngine PUBLIC assimp-vc142-mtd)
 target_include_directories(SiberienEngine PRIVATE "${Assimp_SOURCE_DIR}/include")
 
 target_link_libraries(SiberienEngine PUBLIC rymld)
-target_include_directories(SiberienEngine PRIVATE "${ryml_SOURCE_DIR}/src")
+target_include_directories(SiberienEngine PUBLIC "${ryml_SOURCE_DIR}/src")
 target_link_libraries(SiberienEngine PUBLIC c4cored)
-target_include_directories(SiberienEngine PRIVATE "${c4core_SOURCE_DIR}/src")
+target_include_directories(SiberienEngine PUBLIC "${c4core_SOURCE_DIR}/src")
 
+#TODO delete lib
 target_link_libraries(SiberienEngine PUBLIC yaml-cppd)
 target_include_directories(SiberienEngine PRIVATE "${YAML_CPP_SOURCE_DIR}/include")
 
@@ -56,10 +60,10 @@ target_link_libraries(SiberienEngine PUBLIC Bullet3Dynamicsd)
 target_link_libraries(SiberienEngine PUBLIC BulletDynamicsd)
 target_link_libraries(SiberienEngine PUBLIC LinearMathd)
 target_link_libraries(SiberienEngine PUBLIC Bullet2FileLoaderd)
-target_include_directories(SiberienEngine PRIVATE "${BULLET_PHYSICS_SOURCE_DIR}/src")
+target_include_directories(SiberienEngine PUBLIC "${BULLET_PHYSICS_SOURCE_DIR}/src")
 
 target_link_libraries(SiberienEngine PUBLIC bgfxd)
-target_include_directories(SiberienEngine PRIVATE "${bgfx_SOURCE_DIR}/../../../../../bgfx/include")
+target_include_directories(SiberienEngine PUBLIC "${bgfx_SOURCE_DIR}/../../../../../bgfx/include")
 
 target_link_libraries(SiberienEngine PUBLIC bxd)
 target_include_directories(SiberienEngine PRIVATE "${bx_SOURCE_DIR}/../../../../../bx/include")
@@ -73,11 +77,11 @@ target_include_directories(SiberienEngine PRIVATE "${bimg_decode_SOURCE_DIR}/../
 
 target_link_libraries(SiberienEngine PUBLIC bgfx-example-commond)
 #TEMP HACKS ?
-target_include_directories(SiberienEngine PRIVATE "${PROJECT_SOURCE_DIR}/libs/mathfu/include")
+target_include_directories(SiberienEngine PUBLIC "${SiberienEngine_SOURCE_DIR}/libs/mathfu/include")
 
-target_include_directories(SiberienEngine PRIVATE "${PROJECT_SOURCE_DIR}/libs/bgfx/include")
-target_include_directories(SiberienEngine PRIVATE "${PROJECT_SOURCE_DIR}/libs/bgfx/3rdparty")
-target_include_directories(SiberienEngine PRIVATE "${PROJECT_SOURCE_DIR}/libs/bgfx/examples/common")
+target_include_directories(SiberienEngine PRIVATE "${SiberienEngine_SOURCE_DIR}/libs/bgfx/include")
+target_include_directories(SiberienEngine PRIVATE "${SiberienEngine_SOURCE_DIR}/libs/bgfx/3rdparty")
+target_include_directories(SiberienEngine PRIVATE "${SiberienEngine_SOURCE_DIR}/libs/bgfx/examples/common")
 
 target_link_libraries(SiberienEngine PUBLIC CMP_Compressonatord)
 target_link_libraries(SiberienEngine PUBLIC CMP_Cored)
@@ -96,8 +100,8 @@ target_link_libraries(SiberienEngine PUBLIC version) # TODO hack for sdl
 # include_external_msproject(bimg ${PROJECT_SOURCE_DIR}/libs/bgfx/.build/projects/vs2019/bimg.vcxproj)
 # target_link_libraries(SiberienEngine PUBLIC ${PROJECT_SOURCE_DIR}/libs/bgfx/.build/win64_vs2019/bin/bx$<CONFIG>.lib)
 
-# get_cmake_property(_variableNames VARIABLES)
-# list (SORT _variableNames)
-# foreach (_variableName ${_variableNames})
-    # message(STATUS "${_variableName}=${${_variableName}}")
-# endforeach()
+get_cmake_property(_variableNames VARIABLES)
+list (SORT _variableNames)
+foreach (_variableName ${_variableNames})
+    message(STATUS "${_variableName}=${${_variableName}}")
+endforeach()

@@ -13,6 +13,7 @@
 #include "Render.h"
 #include "Material.h"
 #include "Mesh.h"
+#include "assimp/scene.h"
 //#include "bgfx_utils.h"
 
 
