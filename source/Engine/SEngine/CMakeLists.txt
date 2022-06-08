@@ -14,20 +14,20 @@ file(GLOB SIBERIEN_ENGINE_SRC "*.*")
 source_group("SiberienEngine" FILES ${SIBERIEN_ENGINE_SRC})
 add_executable(SiberienEngine ${SIBERIEN_ENGINE_SRC})
 
-target_link_libraries(SiberienEngine PUBLIC OptickCored)
+target_link_libraries(SiberienEngine PRIVATE OptickCored)
 target_include_directories(SiberienEngine PUBLIC "${Optick_SOURCE_DIR}/src")
 
-target_link_libraries(SiberienEngine PUBLIC debug SDL2d)
-target_link_libraries(SiberienEngine PUBLIC debug SDL2maind)
+target_link_libraries(SiberienEngine PRIVATE debug SDL2d)
+target_link_libraries(SiberienEngine PRIVATE debug SDL2maind)
 target_include_directories(SiberienEngine PUBLIC "${SDL2_SOURCE_DIR}/include")
 
 #TODO looks strange
-target_link_libraries(SiberienEngine PUBLIC assimp-vc142-mtd)
+target_link_libraries(SiberienEngine PRIVATE assimp-vc142-mtd)
 target_include_directories(SiberienEngine PRIVATE "${Assimp_SOURCE_DIR}/include")
 
-target_link_libraries(SiberienEngine PUBLIC rymld)
+target_link_libraries(SiberienEngine PRIVATE rymld)
 target_include_directories(SiberienEngine PUBLIC "${ryml_SOURCE_DIR}/src")
-target_link_libraries(SiberienEngine PUBLIC c4cored)
+target_link_libraries(SiberienEngine PRIVATE c4cored)
 target_include_directories(SiberienEngine PUBLIC "${c4core_SOURCE_DIR}/src")
 
 #TODO delete lib

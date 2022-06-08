@@ -128,3 +128,5 @@ add_subdirectory(libs/compressonator)
 add_subdirectory(Engine/SEngine)
 
 set_target_properties(SiberienEngine PROPERTIES ENABLE_EXPORTS on)
+
+set_property(TARGET SiberienEngine PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
