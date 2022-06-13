@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.7)
 
 # set the project name
 project(SiberienEngine LANGUAGES CXX)
@@ -93,6 +93,7 @@ add_subdirectory(libs/optick)
 set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
 
 set(SDL_SHARED ON CACHE BOOL "" FORCE)
+set(SDL_CMAKE_DEBUG_POSTFIX "" CACHE BOOL "" FORCE)
 add_subdirectory(libs/SDL)
 
 add_subdirectory(libs/rapidyaml)
@@ -132,3 +133,24 @@ add_subdirectory(Engine/SEngine)
 set_target_properties(SiberienEngine PROPERTIES ENABLE_EXPORTS on)
 
 set_property(TARGET SiberienEngine PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
+# set(target_list "" CACHE INTERNAL "target_list")
+
+# changing project libs folder to Libs
+function(get_all_targets var)
+    set(targets)
+    get_all_targets_recursive(targets ${CMAKE_CURRENT_SOURCE_DIR})
+    set(${var} ${targets} PARENT_SCOPE)
+endfunction()
+macro(get_all_targets_recursive targets dir)
+    get_property(subdirectories DIRECTORY ${dir} PROPERTY SUBDIRECTORIES)
+    foreach(subdir ${subdirectories})
+        get_all_targets_recursive(${targets} ${subdir})
+    endforeach()
+
+    get_property(current_targets DIRECTORY ${dir} PROPERTY BUILDSYSTEM_TARGETS)
+    list(APPEND ${targets} ${current_targets})
+endmacro()
+get_all_targets(all_targets)
+set_target_properties(${all_targets} PROPERTIES FOLDER "Libs")
+set_target_properties(SiberienEngine PROPERTIES FOLDER "")

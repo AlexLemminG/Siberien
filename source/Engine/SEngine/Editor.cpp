@@ -11,6 +11,7 @@
 #include "shlwapi.h"
 #include "config.h"
 #include "physfs.h"
+#include <codecvt>
 
 
 DBG_VAR_BOOL(dbg_isEditMode, "EditMode", false)
@@ -203,6 +204,7 @@ static bool MakeBuild() {
 	//TODO ensure deleted
 	silently_remove_directory("build");
 	if (!PHYSFS_mkdir("build")) {
+		ASSERT_FAILED("Failed to make build folder");
 		return false;
 	}
 	std::set<std::string> libs;
@@ -215,12 +217,14 @@ static bool MakeBuild() {
 		if (dirstr.find(".zip") != -1) {
 			std::string out_file = dirstr;
 			if (!CopyFileA(dirstr.c_str(), (std::string("build/") + dirstr).c_str(), false)) {
+				ASSERT_FAILED("Failed to copy '%s' to '%s'", dirstr.c_str(), (std::string("build/") + dirstr).c_str());
 				return false;
 			}
 			assets.insert(out_file);
 		}
 		else {
 			if (!Archive(dirstr, "build/assets.zip", 0, "*.asset")) {
+				ASSERT_FAILED("Failed to archive assets");
 				return false;
 			}
 			assets.insert("assets.zip");
@@ -235,12 +239,14 @@ static bool MakeBuild() {
 		if (dirstr.find(".zip") != -1) {
 			std::string out_file = dirstr;
 			if (!CopyFileA(dirstr.c_str(), (std::string("build/") + out_file).c_str(), false)) {
+				ASSERT_FAILED("Failed to copy '%s' to '%s'", dirstr.c_str(), (std::string("build/") + out_file).c_str());
 				return false;
 			}
 			libs.insert(out_file);
 		}
 		else {
 			if (!Archive(dirstr, "build/library.zip", 0)) {
+				ASSERT_FAILED("Failed to archive library");
 				return false;
 			}
 			libs.insert("library.zip");
@@ -267,25 +273,38 @@ static bool MakeBuild() {
 		fout << cfg;
 
 		if (!CopyFileA("settings.yaml", ("build/settings.yaml"), false)) {
+			ASSERT_FAILED("Failed to copy settings");
 			return false;
 		}
 	}
 
+	WCHAR exePath[MAX_PATH];
+	GetModuleFileNameW(NULL, exePath, MAX_PATH);
+
 	//TODO
-	std::string buildType = "Retail";
-	std::string binFolder = "engine/bin/x64/" + buildType + "/";
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	std::string fullExePath = converter.to_bytes(exePath);
+
+	//std::string buildType = "Retail";
+	int binFolderLength = fullExePath.find_last_of('\\');
+	std::string binFolder = fullExePath.substr(0, binFolderLength) + "\\";
+	std::string binName = fullExePath.substr(binFolderLength + 1, fullExePath.length() - binFolderLength - 1);
+
 	std::vector<std::string> binsToCopy;
-	binsToCopy.push_back("Engine.exe");
+	binsToCopy.push_back(binName);
+	binsToCopy.push_back("SDL2.dll");//TODO not always
 	auto nodeDlls = CfgGetNode("libraries"); //TODO some other place for dll's to state their mount dirs
 	for (const auto& dll : nodeDlls) {
 		binsToCopy.push_back(dll.as<std::string>());
 	}
 	for (auto bin : binsToCopy) {
 		if (!CopyFileA((binFolder + bin).c_str(), (std::string("build/") + bin).c_str(), false)) {
+			ASSERT_FAILED("Failed to copy '%s' to '%s'", (binFolder + bin).c_str(), (std::string("build/") + bin).c_str());
 			return false;
 		}
 	}
 	if (!Archive("build", "build.zip", 9)) {
+		ASSERT_FAILED("Failed to archive build");
 		return false;
 	}
 

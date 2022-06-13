@@ -55,7 +55,7 @@ target_link_libraries(SiberienEngine PUBLIC bx)
 target_include_directories(SiberienEngine PRIVATE "${bx_SOURCE_DIR}/../../../../../bx/include")#TODO do we need separate include ?
 target_include_directories(SiberienEngine PRIVATE "${bx_SOURCE_DIR}/../../../../../bx/include/compat/msvc")#TODO do we need separate include ?
 
-target_link_libraries(SiberienEngine PUBLIC bimg)
+target_link_libraries(SiberienEngine PRIVATE bimg)
 target_include_directories(SiberienEngine PRIVATE "${bimg_SOURCE_DIR}/../../../../../bimg/include")#TODO do we need separate include ?
 
 target_link_libraries(SiberienEngine PUBLIC bimg_decode)
