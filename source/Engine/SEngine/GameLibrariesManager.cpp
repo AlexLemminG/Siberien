@@ -3,6 +3,7 @@
 #include "Engine.h"
 #include "SDL.h"
 #include "Common.h"
+#include "ryml_std.hpp"
 
 class EngineLib : public GameLibrary {
 public:
@@ -35,7 +36,9 @@ bool GameLibrariesManager::Init() {
 
 	auto libNames = CfgGetNode("libraries");
 	for (auto node : libNames) {
-		auto libName = node.as<std::string>();
+		c4::csubstr s;
+		node >> s;
+		std::string libName = std::string(s.str, s.len);
 		void* objectHandle = nullptr;
 		char* createLibraryFuncName = "SEngine_CreateLibrary";
 		GameLibrary* (*createLibraryFunc)();

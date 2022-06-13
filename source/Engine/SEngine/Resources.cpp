@@ -4,7 +4,6 @@
 
 #include "SMath.h"
 #include "Config.h"
-#include "yaml-cpp/yaml.h"
 #include "ryml.hpp"
 #include "Resources.h"
 #include <memory>
@@ -14,6 +13,7 @@
 #include <filesystem>
 #include <locale>
 #include <codecvt>
+#include <sstream>
 
 #include "physfs.h"
 
@@ -187,9 +187,11 @@ bool AssetDatabase::Init() {
 
 	auto nodeMountAssets = CfgGetNode("mountAssets"); //TODO some other place for dll's to state their mount dirs
 	for (const auto& dir : nodeMountAssets) {
-		auto dirstr = dir.as<std::string>();
-		if (!PHYSFS_mount(dirstr.c_str(), "assets", 0)) {
-			LogError("Failed to mount physfs '%s': %s", dirstr.c_str(), PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		c4::csubstr csubstr;
+		dir >> csubstr;
+		std::string dirStr = std::string(csubstr.str, csubstr.len);
+		if (!PHYSFS_mount(dirStr.c_str(), "assets", 0)) {
+			LogError("Failed to mount physfs '%s': %s", dirStr.c_str(), PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
 			ASSERT(false);
 			return false;
 		}
@@ -199,10 +201,12 @@ bool AssetDatabase::Init() {
 
 	auto nodeMountLibraries = CfgGetNode("mountLibraries"); //TODO some other place for dll's to state their mount dirs
 	for (const auto& dir : nodeMountLibraries) {
-		auto dirstr = dir.as<std::string>();
+		c4::csubstr csubstr;
+		dir >> csubstr;
+		std::string dirStr = std::string(csubstr.str, csubstr.len);
 
 		//creating default library folder
-		if (strcmpi(dirstr.c_str(), "library") == 0) {
+		if (strcmpi(dirStr.c_str(), "library") == 0) {
 			if (!PHYSFS_mkdir("library")) {
 				// TODO not always needed/possible
 				LogError("Failed to mkdir library : %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
@@ -211,8 +215,8 @@ bool AssetDatabase::Init() {
 			}
 		}
 
-		if (!PHYSFS_mount(dirstr.c_str(), "library", 0)) {
-			LogError("Failed to mount physfs '%s': %s", dirstr, PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		if (!PHYSFS_mount(dirStr.c_str(), "library", 0)) {
+			LogError("Failed to mount physfs '%s': %s", dirStr.c_str(), PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
 			ASSERT(false);
 			return false;
 		}

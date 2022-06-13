@@ -98,11 +98,6 @@ add_subdirectory(libs/SDL)
 
 add_subdirectory(libs/rapidyaml)
 
-set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
-set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-add_subdirectory(libs/yaml-cpp)
-
 add_subdirectory(libs/lz4/lib)
 
 set(RECASTNAVIGATION_DEMO OFF CACHE BOOL "" FORCE)

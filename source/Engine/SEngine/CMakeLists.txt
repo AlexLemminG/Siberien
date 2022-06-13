@@ -23,9 +23,6 @@ target_link_libraries(SiberienEngine PRIVATE assimp)
 target_link_libraries(SiberienEngine PUBLIC ryml)
 target_link_libraries(SiberienEngine PUBLIC c4core)
 
-#TODO delete lib
-target_link_libraries(SiberienEngine PUBLIC yaml-cpp)
-
 target_link_libraries(SiberienEngine PUBLIC zlibstatic)
 
 target_link_libraries(SiberienEngine PUBLIC lz4)

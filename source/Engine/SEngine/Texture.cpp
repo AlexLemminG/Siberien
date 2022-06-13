@@ -8,7 +8,6 @@
 #include <windows.h>
 #include "Serialization.h"
 #include "bimg/decode.h"
-#include "yaml-cpp/yaml.h"
 #include "Compression.h"
 #include "DbgVars.h"
 #include "Compressonator.h"
