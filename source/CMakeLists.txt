@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 # set the project name
-project(SiberienEngine)
+project(SiberienEngine LANGUAGES CXX)
 
 
 # Rebuilding BGFX cmakelists
@@ -91,6 +91,8 @@ add_subdirectory(libs/assimp)
 add_subdirectory(libs/optick)
 
 set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
+
+set(SDL_SHARED ON CACHE BOOL "" FORCE)
 add_subdirectory(libs/SDL)
 
 add_subdirectory(libs/rapidyaml)

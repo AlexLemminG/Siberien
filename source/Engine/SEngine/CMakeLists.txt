@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(SEngine)
+project(SEngine LANGUAGES CXX)
 				
 add_definitions(-DSE_BUILD)
 
@@ -10,10 +10,12 @@ link_directories("${Assimp_BINARY_DIR}/lib")#TODO assimp is a special boy for so
 file(GLOB SIBERIEN_ENGINE_SRC "*.*")
 source_group("SiberienEngine" FILES ${SIBERIEN_ENGINE_SRC})
 add_executable(SiberienEngine ${SIBERIEN_ENGINE_SRC})
+target_include_directories(SiberienEngine PUBLIC "")
+
 
 target_link_libraries(SiberienEngine PUBLIC OptickCore)
 
-target_link_libraries(SiberienEngine PUBLIC SDL2-static)
+target_link_libraries(SiberienEngine PUBLIC SDL2)
 target_link_libraries(SiberienEngine PUBLIC SDL2main)
 
 target_link_libraries(SiberienEngine PRIVATE assimp)
@@ -78,6 +80,7 @@ target_link_libraries(SiberienEngine PUBLIC winmm) # TODO hack for sdl
 target_link_libraries(SiberienEngine PUBLIC imm32) # TODO hack for sdl
 target_link_libraries(SiberienEngine PUBLIC setupapi) # TODO hack for sdl
 target_link_libraries(SiberienEngine PUBLIC version) # TODO hack for sdl
+
 
 # get_cmake_property(_variableNames VARIABLES)
 # list (SORT _variableNames)
