@@ -1,20 +1,151 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.7)
 
 # set the project name
-project(SiberienEngine)
+project(SiberienEngine LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# Rebuilding BGFX cmakelists
+# set(SDL2_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs/SDL")
+# set(BUILD_BGFX_CMD "${CMAKE_CURRENT_SOURCE_DIR}/../tools/genie.exe")
+# MESSAGE("COMMAND: ${BUILD_BGFX_CMD}")
+# execute_process(COMMAND ${BUILD_BGFX_CMD} --with-examples --with-sdl vs2019
+   # RESULT_VARIABLE CMD_ERROR
+   # OUTPUT_FILE CMD_OUTPUT
+   # WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/bgfx)
+# MESSAGE( STATUS "BGFX_BUILD_ERROR:" ${CMD_ERROR})
+# MESSAGE( STATUS "BGFX_BUILD_OUTPUT:" ${CMD_OUTPUT})
+
 
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+#TODO to separate file
+add_definitions(    -DASSIMP_BUILD_NO_C4D_IMPORTER
+					-DASSIMP_BUILD_NO_COLLADA_EXPORTER
+					-DASSIMP_BUILD_NO_X_EXPORTER
+					-DASSIMP_BUILD_NO_STEP_EXPORTER
+					-DASSIMP_BUILD_NO_OBJ_EXPORTER
+					-DASSIMP_BUILD_NO_STL_EXPORTER
+					-DASSIMP_BUILD_NO_PLY_EXPORTER
+					-DASSIMP_BUILD_NO_3DS_EXPORTER
+					-DASSIMP_BUILD_NO_ASSBIN_EXPORTER
+					-DASSIMP_BUILD_NO_ASSXML_EXPORTER
+					-DASSIMP_BUILD_NO_X3D_EXPORTER
+					-DASSIMP_BUILD_NO_FBX_EXPORTER
+					-DASSIMP_BUILD_NO_M3D_EXPORTER
+					-DASSIMP_BUILD_NO_3MF_EXPORTER
+					-DASSIMP_BUILD_NO_ASSJSON_EXPORTER
+					-DASSIMP_BUILD_NO_3D_IMPORTER
+					-DASSIMP_BUILD_NO_3DS_IMPORTER
+					-DASSIMP_BUILD_NO_3MF_IMPORTER
+					-DASSIMP_BUILD_NO_AC_IMPORTER
+					-DASSIMP_BUILD_NO_AMF_IMPORTER
+					-DASSIMP_BUILD_NO_ASE_IMPORTER
+					-DASSIMP_BUILD_NO_ASSBIN_IMPORTER
+					-DASSIMP_BUILD_NO_B3D_IMPORTER
+					-DASSIMP_BUILD_NO_BLEND_IMPORTER
+					-DASSIMP_BUILD_NO_BVH_IMPORTER
+					-DASSIMP_BUILD_NO_C4D_IMPORTER
+					-DASSIMP_BUILD_NO_COB_IMPORTER
+					-DASSIMP_BUILD_NO_COLLADA_IMPORTER
+					-DASSIMP_BUILD_NO_CSM_IMPORTER
+					-DASSIMP_BUILD_NO_DXF_IMPORTER
+					-DASSIMP_BUILD_NO_FBX_IMPORTER
+					-DASSIMP_BUILD_NO_HMP_IMPORTER
+					-DASSIMP_BUILD_NO_IFC_IMPORTER
+					-DASSIMP_BUILD_NO_IRR_IMPORTER
+					-DASSIMP_BUILD_NO_IRRMESH_IMPORTER
+					-DASSIMP_BUILD_NO_LWO_IMPORTER
+					-DASSIMP_BUILD_NO_LWS_IMPORTER
+					-DASSIMP_BUILD_NO_M3D_IMPORTER
+					-DASSIMP_BUILD_NO_MD2_IMPORTER
+					-DASSIMP_BUILD_NO_MD3_IMPORTER
+					-DASSIMP_BUILD_NO_MD5_IMPORTER
+					-DASSIMP_BUILD_NO_MDC_IMPORTER
+					-DASSIMP_BUILD_NO_MDL_IMPORTER
+					-DASSIMP_BUILD_NO_MMD_IMPORTER
+					-DASSIMP_BUILD_NO_MS3D_IMPORTER
+					-DASSIMP_BUILD_NO_NDO_IMPORTER
+					-DASSIMP_BUILD_NO_NFF_IMPORTER
+					-DASSIMP_BUILD_NO_OBJ_IMPORTER
+					-DASSIMP_BUILD_NO_OFF_IMPORTER
+					-DASSIMP_BUILD_NO_OGRE_IMPORTER
+					-DASSIMP_BUILD_NO_OPENGEX_IMPORTER
+					-DASSIMP_BUILD_NO_PLY_IMPORTER
+					-DASSIMP_BUILD_NO_Q3BSP_IMPORTER
+					-DASSIMP_BUILD_NO_Q3D_IMPORTER
+					-DASSIMP_BUILD_NO_RAW_IMPORTER
+					-DASSIMP_BUILD_NO_SIB_IMPORTER
+					-DASSIMP_BUILD_NO_SMD_IMPORTER
+					-DASSIMP_BUILD_NO_STEP_IMPORTER
+					-DASSIMP_BUILD_NO_STL_IMPORTER
+					-DASSIMP_BUILD_NO_TERRAGEN_IMPORTER
+					-DASSIMP_BUILD_NO_X_IMPORTER
+					-DASSIMP_BUILD_NO_X3D_IMPORTER
+					-DASSIMP_BUILD_NO_XGL_IMPORTER
+					-DASSIMP_BUILD_NO_GLTF_EXPORTER
+					-DASSIMP_BUILD_NO_PBRT_EXPORTER
+ )
 add_subdirectory(libs/assimp)
 
 add_subdirectory(libs/optick)
 
+set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
+
+set(SDL_SHARED ON CACHE BOOL "" FORCE)
+set(SDL_CMAKE_DEBUG_POSTFIX "" CACHE BOOL "" FORCE)
 add_subdirectory(libs/SDL)
 
 add_subdirectory(libs/rapidyaml)
 
-add_subdirectory(libs/yaml-cpp)
+add_subdirectory(libs/lz4/lib)
+
+set(RECASTNAVIGATION_DEMO OFF CACHE BOOL "" FORCE)
+set(RECASTNAVIGATION_TESTS OFF CACHE BOOL "" FORCE)
+set(RECASTNAVIGATION_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(libs/RecastDetour)
+
+add_subdirectory(libs/physfs)
+
+set(BUILD_EXTRAS OFF CACHE BOOL "" FORCE)
+set(BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+set(USE_MSVC_RUNTIME_LIBRARY_DLL ON)
+set(BULLET2_MULTITHREADING ON CACHE BOOL "" FORCE)
+add_subdirectory(libs/bullet)
+
+add_subdirectory(libs/bgfx/.build/projects/cmake/bgfx)
+add_subdirectory(libs/bgfx/.build/projects/cmake/bx)
+add_subdirectory(libs/bgfx/.build/projects/cmake/bimg)
+add_subdirectory(libs/bgfx/.build/projects/cmake/bimg_decode)
+add_subdirectory(libs/bgfx/.build/projects/cmake/example-common)
+
+add_subdirectory(libs/compressonator)
+# add_subdirectory(libs/compressonator/cmp_framework)
+# add_subdirectory(libs/compressonator/cmp_compressonatorlib)
 
 add_subdirectory(Engine/SEngine)
+
+set_target_properties(SiberienEngine PROPERTIES ENABLE_EXPORTS on)
+
+set_property(TARGET SiberienEngine PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
+# set(target_list "" CACHE INTERNAL "target_list")
+
+# changing project libs folder to Libs
+function(get_all_targets var)
+    set(targets)
+    get_all_targets_recursive(targets ${CMAKE_CURRENT_SOURCE_DIR})
+    set(${var} ${targets} PARENT_SCOPE)
+endfunction()
+macro(get_all_targets_recursive targets dir)
+    get_property(subdirectories DIRECTORY ${dir} PROPERTY SUBDIRECTORIES)
+    foreach(subdir ${subdirectories})
+        get_all_targets_recursive(${targets} ${subdir})
+    endforeach()
+
+    get_property(current_targets DIRECTORY ${dir} PROPERTY BUILDSYSTEM_TARGETS)
+    list(APPEND ${targets} ${current_targets})
+endmacro()
+get_all_targets(all_targets)
+set_target_properties(${all_targets} PROPERTIES FOLDER "Libs")
+set_target_properties(SiberienEngine PROPERTIES FOLDER "")

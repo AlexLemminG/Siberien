@@ -388,7 +388,7 @@ static CMP_BC15Options CalculateColourWeightings(CGU_Vec4f rgbaBlock[BLOCK_SIZE_
         medianB /= BLOCK_SIZE_4X4;
 
         // Now skew the colour weightings based on the gravity center of the block
-        float largest = max(max(medianR, medianG), medianB);
+        float largest = std::max(std::max(medianR, medianG), medianB);
 
         if (largest > 0)
         {
@@ -454,7 +454,7 @@ static CMP_BC15Options CalculateColourWeightings3f(CGU_Vec3f rgbBlock[BLOCK_SIZE
         medianB /= BLOCK_SIZE_4X4;
 
         // Now skew the colour weightings based on the gravity center of the block
-        float largest = max(max(medianR, medianG), medianB);
+        float largest = std::max(std::max(medianR, medianG), medianB);
 
         if (largest > 0)
         {
@@ -627,8 +627,8 @@ static CGU_FLOAT cmp_linearBlockRefine(CGU_FLOAT _Blk[BLOCK_SIZE_4X4],
             CGU_FLOAT cr_min = min_ex + _m_step * sMvF[mode / SCH_STPS];
             CGU_FLOAT cr_max = max_ex + _m_step * sMvF[mode % SCH_STPS];
 
-            cr_min = max(cr_min, _min_bnd);
-            cr_max = min(cr_max, _max_bnd);
+            cr_min = std::max(cr_min, _min_bnd);
+            cr_max = std::min(cr_max, _max_bnd);
 
             CGU_FLOAT error;
             error = cmp_getRampError(_Blk, _Rpt, maxerror, cr_min, cr_max, _NmbrClrs);
@@ -671,8 +671,8 @@ static CGU_Vec2f cmp_getLinearEndPoints(CGU_FLOAT _Blk[BLOCK_SIZE_4X4], CMP_IN C
         cmpMinMax.y = _Blk[0];
         for (i = 1; i < BLOCK_SIZE_4X4; ++i)
         {
-            cmpMinMax.x = min(cmpMinMax.x, _Blk[i]);
-            cmpMinMax.y = max(cmpMinMax.y, _Blk[i]);
+            cmpMinMax.x = std::min(cmpMinMax.x, _Blk[i]);
+            cmpMinMax.y = std::max(cmpMinMax.y, _Blk[i]);
         }
         return cmpMinMax;
     }
@@ -2312,8 +2312,8 @@ static CMP_EndPoints CompressRGBBlock_Slow(CGU_Vec3f  BlkInBGRf_UV[BLOCK_SIZE_4X
             {
                 Prj0[i] = Prj[i] = dot(BlkSh[i], LineDir);
                 PrjErr[i]        = dot(BlkSh[i] - LineDir * Prj[i], BlkSh[i] - LineDir * Prj[i]);
-                PrjBnd0          = min(PrjBnd0, Prj[i]);
-                PrjBnd1          = max(PrjBnd1, Prj[i]);
+                PrjBnd0          = std::min(PrjBnd0, Prj[i]);
+                PrjBnd1          = std::max(PrjBnd1, Prj[i]);
             }
 
             //  2. Run 1 dimensional search (see scalar case) to find an (sub) optimal
@@ -2475,21 +2475,21 @@ static CMP_EndPoints CompressRGBBlock_Slow(CGU_Vec3f  BlkInBGRf_UV[BLOCK_SIZE_4X
         else
         {
             inpRmpEndPts0.x += floor(128.f / Fctrs1.x) - floor(inpRmpEndPts0.x / Fctrs1.x);
-            inpRmpEndPts0.x = min(inpRmpEndPts0.x, _Max);
+            inpRmpEndPts0.x = std::min(inpRmpEndPts0.x, _Max);
         }
         if (inpRmpEndPts0.y <= _Min)
             inpRmpEndPts0.y = _Min;
         else
         {
             inpRmpEndPts0.y += floor(128.f / Fctrs1.y) - floor(inpRmpEndPts0.y / Fctrs1.y);
-            inpRmpEndPts0.y = min(inpRmpEndPts0.y, _Max);
+            inpRmpEndPts0.y = std::min(inpRmpEndPts0.y, _Max);
         }
         if (inpRmpEndPts0.z <= _Min)
             inpRmpEndPts0.z = _Min;
         else
         {
             inpRmpEndPts0.z += floor(128.f / Fctrs1.z) - floor(inpRmpEndPts0.z / Fctrs1.z);
-            inpRmpEndPts0.z = min(inpRmpEndPts0.z, _Max);
+            inpRmpEndPts0.z = std::min(inpRmpEndPts0.z, _Max);
         }
 
         inpRmpEndPts0 = floor(inpRmpEndPts0 / Fctrs0) * Fctrs0;
@@ -2500,21 +2500,21 @@ static CMP_EndPoints CompressRGBBlock_Slow(CGU_Vec3f  BlkInBGRf_UV[BLOCK_SIZE_4X
         else
         {
             inpRmpEndPts1.x += floor(128.f / Fctrs1.x) - floor(inpRmpEndPts1.x / Fctrs1.x);
-            inpRmpEndPts1.x = min(inpRmpEndPts1.x, _Max);
+            inpRmpEndPts1.x = std::min(inpRmpEndPts1.x, _Max);
         }
         if (inpRmpEndPts1.y <= _Min)
             inpRmpEndPts1.y = _Min;
         else
         {
             inpRmpEndPts1.y += floor(128.f / Fctrs1.y) - floor(inpRmpEndPts1.y / Fctrs1.y);
-            inpRmpEndPts1.y = min(inpRmpEndPts1.y, _Max);
+            inpRmpEndPts1.y = std::min(inpRmpEndPts1.y, _Max);
         }
         if (inpRmpEndPts1.z <= _Min)
             inpRmpEndPts1.z = _Min;
         else
         {
             inpRmpEndPts1.z += floor(128.f / Fctrs1.z) - floor(inpRmpEndPts1.z / Fctrs1.z);
-            inpRmpEndPts1.z = min(inpRmpEndPts1.z, _Max);
+            inpRmpEndPts1.z = std::min(inpRmpEndPts1.z, _Max);
         }
 
         inpRmpEndPts1 = floor(inpRmpEndPts1 / Fctrs0) * Fctrs0;

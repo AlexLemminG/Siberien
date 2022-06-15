@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-add_library(CMP_Framework STATIC "")
+add_library(CMP_Framework STATIC)
 
 
 if(CMP_HOST_WINDOWS)

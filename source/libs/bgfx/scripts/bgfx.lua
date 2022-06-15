@@ -115,6 +115,9 @@ function bgfxProjectBase(_kind, _defines)
 		defines {
 			"BGFX_CONFIG_DEBUG=1",
 		}
+		flags {
+			"Cpp17",
+		}
 
 	configuration { "vs* or mingw*", "not durango" }
 		includedirs {

@@ -6,10 +6,10 @@
 #include <algorithm>
 #include "SMath.h"
 #include "bgfx/bgfx.h"
-#include "assimp/scene.h"
 
 struct aiMesh;
-//class aiScene;
+class aiScene;
+class aiNode;
 class MeshAnimation;
 class Material;
 class Mesh;

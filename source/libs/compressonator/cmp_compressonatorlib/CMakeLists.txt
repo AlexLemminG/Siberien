@@ -98,11 +98,11 @@ target_include_directories(CMP_Compressonator
                            etc/etcpack/
                            gt
                            common
-                           ${PROJECT_SOURCE_DIR}/cmp_core/shaders
-                           ${PROJECT_SOURCE_DIR}/cmp_core/source
-                           ${PROJECT_SOURCE_DIR}/cmp_framework/common
-                           ${PROJECT_SOURCE_DIR}/cmp_framework/common/half
-                           ${PROJECT_SOURCE_DIR}/applications/_plugins/common
+                           ../cmp_core/shaders
+                           ../cmp_core/source
+                           ../cmp_framework/common
+                           ../cmp_framework/common/half
+                           ../applications/_plugins/common
                            )
 
 set_target_properties(CMP_Compressonator PROPERTIES FOLDER "Libs")

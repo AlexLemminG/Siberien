@@ -27,6 +27,8 @@
 
 #ifndef ASPM_GPU
 
+#include <intrin.h>
+
 void cmp_cpuid(int cpuInfo[4], int function_id) {
     // subfunction_id = 0
 #ifdef _WIN32

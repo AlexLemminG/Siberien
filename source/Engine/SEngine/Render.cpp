@@ -8,7 +8,6 @@
 #include "Render.h"
 
 #include "SDL.h"
-#include "yaml-cpp/yaml.h"
 #include <SDL_syswm.h>
 #include <bgfx/platform.h>
 #include "Camera.h"
