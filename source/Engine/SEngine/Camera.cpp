@@ -7,6 +7,7 @@
 #include "Graphics.h"
 #include "MeshRenderer.h"
 #include "Mesh.h"
+#include "RenderEvents.h"
 
 DECLARE_TEXT_ASSET(Camera);
 
@@ -93,6 +94,8 @@ void ICamera::OnBeforeRender() {
 	frustum.SetFromViewProjection(viewProjectionMatrix);
 
 	//position = GetPos(GetViewMatrix().Inverse());//not good not terrible
+
+	RenderEvents::Get()->onBeforeCameraRender.Invoke(*this);
 }
 
 bool ICamera::IsVisible(const Sphere& sphere) const {

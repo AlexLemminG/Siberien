@@ -21,6 +21,7 @@ public:
 	void Term();
 
 	void AddGameObject(std::shared_ptr<GameObject> go);
+	void AddGameObjectImmediately(std::shared_ptr<GameObject> go);
 	void RemoveGameObject(std::shared_ptr<GameObject> go);
 	void RemoveGameObjectImmediately(std::shared_ptr<GameObject> go);
 

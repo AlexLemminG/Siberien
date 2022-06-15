@@ -178,6 +178,12 @@ void Scene::AddGameObject(std::shared_ptr<GameObject> go) {
 	addedGameObjects.push_back(go);
 }
 
+//TODO might be good idea to always add/remove immediately
+void Scene::AddGameObjectImmediately(std::shared_ptr<GameObject> go) {
+	AddGameObject(go);
+	ProcessAddedGameObjects();
+}
+
 
 void Scene::ActivateGameObjectInternal(std::shared_ptr<GameObject>& gameObject) {
 	//TODO assert no active
