@@ -123,6 +123,8 @@ add_subdirectory(libs/compressonator)
 # add_subdirectory(libs/compressonator/cmp_framework)
 # add_subdirectory(libs/compressonator/cmp_compressonatorlib)
 
+add_subdirectory(libs/luau)
+
 add_subdirectory(Engine/SEngine)
 
 set_target_properties(SiberienEngine PROPERTIES ENABLE_EXPORTS on)

@@ -222,7 +222,6 @@ bool AssetDatabase::Init() {
 		}
 	}
 
-
 	ASSERT(mainDatabase == nullptr);
 	mainDatabase = this;
 	return true;
@@ -470,6 +469,12 @@ void AssetDatabase::ProcessLoadingQueue() {
 		}
 		else if (extention == "fs" || extention == "vs") {
 			auto& importer = GetAssetImporter("Shader");
+			if (importer) {
+				importer->ImportAll(AssetDatabase_BinaryImporterHandle(this, path));//TODO mark path as failed on error
+			}
+		}
+		else if (extention == "lua") {
+			auto& importer = GetAssetImporter("LuaScript");
 			if (importer) {
 				importer->ImportAll(AssetDatabase_BinaryImporterHandle(this, path));//TODO mark path as failed on error
 			}

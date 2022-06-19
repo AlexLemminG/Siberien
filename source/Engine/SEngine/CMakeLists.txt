@@ -59,6 +59,11 @@ target_link_libraries(SiberienEngine PUBLIC bimg_decode)
 target_include_directories(SiberienEngine PRIVATE "${bimg_decode_SOURCE_DIR}/../../../../../bimg_decode/include")#TODO do we need separate include ?
 
 target_link_libraries(SiberienEngine PUBLIC bgfx-example-common)
+
+target_link_libraries(SiberienEngine PUBLIC Luau.VM)
+target_link_libraries(SiberienEngine PUBLIC Luau.Compiler)
+target_link_libraries(SiberienEngine PUBLIC Luau.Analysis)
+
 #TEMP HACKS ?
 target_include_directories(SiberienEngine PUBLIC "${SiberienEngine_SOURCE_DIR}/libs/mathfu/include")
 
