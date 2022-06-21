@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <functional>
 #include "Object.h"
 #include "Component.h"
 #include "magic_enum.hpp"
@@ -333,7 +334,7 @@ public:
 template<typename T>
 std::enable_if_t<is_shared_ptr<T>::value, ReflectedTypeBase*>
 inline GetReflectedType() {
-	static ReflectedTypeSharedPtr<T::element_type> type(std::string("shared_ptr<"));//TODOTODO +GetReflectedType<T::element_type>()->GetName() + ">");
+	static ReflectedTypeSharedPtr<T::element_type> type(std::string("shared_ptr<")/* + TODO */ +">");
 	return &type;
 }
 
@@ -441,6 +442,67 @@ public:
 	size_t offset;
 };
 
+class ReflectedMethod {
+public:
+	std::string name;
+	ReflectedTypeBase* returnType = nullptr;
+	ReflectedTypeBase* objectType = nullptr;
+	std::vector<ReflectedTypeBase*> argTypes;
+
+	std::string ToString() {
+		std::string info;
+		if (returnType != nullptr) {
+			info += returnType->GetName();
+		}
+		else {
+			info += "void";
+		}
+		info += " " + objectType->GetName() + "::" + name;
+		info += " (";
+		for (int i = 0; i < argTypes.size(); i++) {
+			if (i > 0) {
+				info += ", ";
+			}
+			info += argTypes[i]->GetName();
+		}
+		info += ")";
+		return info;
+	}
+};
+
+//TODO hide
+template<class, class, class...>struct types { using type = types; };
+template<class Sig> struct args;
+template<class R, class ClassT, class...Args>
+struct args<R(ClassT::*)(Args...)> :types < R, ClassT, Args... > {};
+
+template<class Sig> using args_t = typename args<Sig>::type;
+
+template <class T, class...Params>
+void GenerateMethodBindingArgs(ReflectedMethod* method) {
+	if constexpr (sizeof...(Params) > 0) {
+		method->argTypes.push_back(GetReflectedType<T>());
+		GenerateMethodBindingArgs<Params...>(method);
+	}
+}
+
+template <class ReturnType, class ObjectType, class...Params>
+ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType, ObjectType, Params...>) {
+	ReflectedMethod method;
+	method.name = name;
+	if constexpr (std::is_same<void, ReturnType>()) {
+		method.returnType = nullptr;
+	}
+	else {
+		method.returnType = GetReflectedType<ReturnType>();
+	}
+	method.objectType = GetReflectedType<ObjectType>();
+	if constexpr (sizeof...(Params) > 0) {
+		GenerateMethodBindingArgs<Params...>(&method);
+	}
+	return method;
+}
+
 template<typename T, typename U> constexpr size_t offsetOf(U T::* member)
 {
 	return (char*)&((T*)nullptr->*member) - (char*)nullptr;
@@ -451,6 +513,7 @@ class ReflectedTypeNonTemplated : public ReflectedTypeBase {
 public:
 	ReflectedTypeNonTemplated(std::string name) : ReflectedTypeBase(name) {}
 	std::vector<ReflectedField> fields;
+	std::vector<ReflectedMethod> methods;
 };
 
 template<typename T>
@@ -537,6 +600,7 @@ public:\
 class Type : public ReflectedType<##className> { \
 	using TYPE = ##className; \
 	public:\
+	std::vector<std::function<ReflectedMethod(void)>> methodInitializers;\
 	Type() : ReflectedType<##className>(#className) {\
 	if(AddComponentTags<##className>(this) != 0){\
 		__parentType__ = GetReflectedType<Component>();\
@@ -545,14 +609,26 @@ class Type : public ReflectedType<##className> { \
 #define REFLECT_VAR(varName)\
 		fields.push_back(ReflectedField(GetReflectedType<decltype(varName)>(), #varName, offsetOf(&TYPE::varName))); \
 
+#define REFLECT_METHOD(func)\
+		methodInitializers.push_back([](){return GenerateMethodBinding(#func, args_t<decltype(&TYPE::func )>{});}); \
+
 #define REFLECT_ATTRIBUTE(attribute)\
 		attributes.push_back(std::shared_ptr<Attribute>(new attribute)); \
 
 #define REFLECT_END() \
 		} \
+		void Init(){\
+			for(auto& initializer : methodInitializers){methods.push_back(initializer());}\
+			methodInitializers.clear();\
+		}\
 	}; \
 	static Type* TypeOf() {\
 		static Type t;\
+		static bool isInited = false;\
+		if (!isInited) {/* to properly init methods we need to be able to call TypeOf recursively TODO maybe create GetMethods() method and move initialization there*/\
+			isInited = true;\
+			t.Init();\
+		}\
 		return &t;\
 	}\
 	ReflectedTypeBase* GetType() const{ \
