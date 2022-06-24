@@ -165,6 +165,87 @@ private:
 
 };
 
+class ReflectedTypeBase;
+
+
+class ReflectedMethod {
+public:
+	std::string name;
+	ReflectedTypeBase* returnType = nullptr;
+	ReflectedTypeBase* objectType = nullptr;
+	std::vector<ReflectedTypeBase*> argTypes;
+
+	std::function<void(void*, std::vector<void*>, void*)> func; //obj, args, returnval
+
+	void Invoke(void* obj, std::vector<void*> args, void* result) {
+		func(obj, args, result);
+	}
+
+	std::string ToString();
+};
+
+//TODO hide
+template<class, class, class...>struct types { using type = types; };
+template<class Sig> struct args;
+template<class R, class ClassT, class...Args>
+struct args<R(ClassT::*)(Args...)> :types < R, ClassT, Args... > {};
+
+template<class Sig> using args_t = typename args<Sig>::type;
+
+template <class T, class...Params>
+void GenerateMethodBindingArgs(ReflectedMethod* method) {
+	method->argTypes.push_back(GetReflectedType<T>());
+	if constexpr (sizeof...(Params) > 0) {
+		GenerateMethodBindingArgs<Params...>(method);
+	}
+}
+template <int N=1, class...Params>
+void FillParams(std::tuple<Params...>& params, const std::vector<void*>& paramsRaw) {
+	std::get<N>(params) = *((std::remove_reference_t<decltype(std::get<N>(params))>*)paramsRaw[N - 1]);
+	if constexpr (N + 1 < sizeof...(Params)) {
+		FillParams<N+1>(params, paramsRaw);
+	}
+}
+
+template <class ReturnType, class ObjectType, class...Params>
+ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType, ObjectType, Params...>, ReturnType(ObjectType::* func)(Params...)) {
+	ReflectedMethod method;
+	method.name = name;
+	if constexpr (std::is_same<void, ReturnType>()) {
+		method.returnType = nullptr;
+	}
+	else {
+		method.returnType = GetReflectedType<ReturnType>();
+	}
+	method.objectType = GetReflectedType<ObjectType>();
+	if constexpr (sizeof...(Params) > 0) {
+		GenerateMethodBindingArgs<Params...>(&method);
+	}
+	method.func = [=](void* objRaw, std::vector<void*> argsRaw, void* returnRaw) {
+		ObjectType* obj = (ObjectType*)objRaw;
+		if constexpr (sizeof...(Params) > 0) {
+			std::tuple<ObjectType*, Params...> params;
+			std::get<0>(params) = obj;
+			FillParams(params, argsRaw);
+			if constexpr (std::is_void<ReturnType>()) {
+				std::apply(func, params);
+			}
+			else {
+				*((ReturnType*)returnRaw) = std::apply(func, params);
+			}
+		}
+		else {
+			if constexpr (std::is_void<ReturnType>()) {
+				std::invoke(func, obj);
+			}
+			else {
+				*((ReturnType*)returnRaw) = std::invoke(func, obj);
+			}
+		}
+	};
+	return method;
+}
+
 class ReflectedTypeBase {
 public:
 	virtual void Serialize(SerializationContext& context, const void* object) = 0;
@@ -178,6 +259,9 @@ public:
 
 	ReflectedTypeBase* GetParentType() const { return __parentType__; }
 
+	const std::vector<ReflectedMethod>& GetMethods() const { return __methods__; };
+
+	virtual size_t SizeOf() const = 0;
 
 	std::vector<std::string> tags;//TODO make protected
 	std::vector<std::shared_ptr<Attribute>> attributes;
@@ -186,6 +270,8 @@ protected:
 	ReflectedTypeBase(const std::string& name) : __name__(name) {}
 
 	ReflectedTypeBase* __parentType__ = nullptr;
+
+	std::vector<ReflectedMethod> __methods__;
 private:
 	std::string __name__;
 };
@@ -207,6 +293,10 @@ public:
 			context >> (*(T*)object);
 		}
 	}
+	virtual size_t SizeOf() const override
+	{
+		return sizeof(T);
+	}
 };
 
 class SE_CPP_API ReflectedTypeString : public ReflectedTypeBase {
@@ -216,6 +306,7 @@ public:
 	}
 	virtual void Serialize(SerializationContext& context, const void* object) override;
 	virtual void Deserialize(const SerializationContext& context, void* object) override;
+	virtual size_t SizeOf() const override { return sizeof(std::string); }
 };
 //TODO export to dll to make type objects single instanced
 template<typename T>
@@ -248,6 +339,7 @@ public:
 			context >> (*(uint64_t*)(T*)object);
 		}
 	}
+	virtual size_t SizeOf() const override { return sizeof(T); }
 
 	virtual const std::vector<std::pair<uint64_t, std::string>>& GetEnumEntries() override {
 		static std::vector<std::pair<uint64_t, std::string>> result;
@@ -329,6 +421,7 @@ public:
 			context.RequestDeserialization(ptr, path);
 		}
 	}
+	virtual size_t SizeOf() const override { return sizeof(std::shared_ptr<T>); }
 };
 
 template<typename T>
@@ -385,6 +478,8 @@ public:
 		}
 	}
 
+	virtual size_t SizeOf() const override { return sizeof(std::vector<T>); }
+
 	virtual ReflectedTypeBase* GetElementType() override {
 		return ::GetReflectedType<T>();
 	}
@@ -422,7 +517,7 @@ public:
 		T& t = *(T*)object;
 		df(context, t);
 	}
-
+	virtual size_t SizeOf() const override { return sizeof(T); }
 };
 
 #define REFLECT_CUSTOM_EXT(typeName, Serialize, Deserialize) template<> inline ReflectedTypeBase * GetReflectedType<##typeName>() { \
@@ -442,66 +537,6 @@ public:
 	size_t offset;
 };
 
-class ReflectedMethod {
-public:
-	std::string name;
-	ReflectedTypeBase* returnType = nullptr;
-	ReflectedTypeBase* objectType = nullptr;
-	std::vector<ReflectedTypeBase*> argTypes;
-
-	std::string ToString() {
-		std::string info;
-		if (returnType != nullptr) {
-			info += returnType->GetName();
-		}
-		else {
-			info += "void";
-		}
-		info += " " + objectType->GetName() + "::" + name;
-		info += " (";
-		for (int i = 0; i < argTypes.size(); i++) {
-			if (i > 0) {
-				info += ", ";
-			}
-			info += argTypes[i]->GetName();
-		}
-		info += ")";
-		return info;
-	}
-};
-
-//TODO hide
-template<class, class, class...>struct types { using type = types; };
-template<class Sig> struct args;
-template<class R, class ClassT, class...Args>
-struct args<R(ClassT::*)(Args...)> :types < R, ClassT, Args... > {};
-
-template<class Sig> using args_t = typename args<Sig>::type;
-
-template <class T, class...Params>
-void GenerateMethodBindingArgs(ReflectedMethod* method) {
-	if constexpr (sizeof...(Params) > 0) {
-		method->argTypes.push_back(GetReflectedType<T>());
-		GenerateMethodBindingArgs<Params...>(method);
-	}
-}
-
-template <class ReturnType, class ObjectType, class...Params>
-ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType, ObjectType, Params...>) {
-	ReflectedMethod method;
-	method.name = name;
-	if constexpr (std::is_same<void, ReturnType>()) {
-		method.returnType = nullptr;
-	}
-	else {
-		method.returnType = GetReflectedType<ReturnType>();
-	}
-	method.objectType = GetReflectedType<ObjectType>();
-	if constexpr (sizeof...(Params) > 0) {
-		GenerateMethodBindingArgs<Params...>(&method);
-	}
-	return method;
-}
 
 template<typename T, typename U> constexpr size_t offsetOf(U T::* member)
 {
@@ -513,7 +548,6 @@ class ReflectedTypeNonTemplated : public ReflectedTypeBase {
 public:
 	ReflectedTypeNonTemplated(std::string name) : ReflectedTypeBase(name) {}
 	std::vector<ReflectedField> fields;
-	std::vector<ReflectedMethod> methods;
 };
 
 template<typename T>
@@ -551,6 +585,8 @@ public:
 		}
 		CallOnAfterDeserialize(context, object);
 	}
+
+	virtual size_t SizeOf() const override { return sizeof(T); }
 
 	template<typename T>
 	std::enable_if_t<!std::is_assignable<Object, T>::value, void>
@@ -610,7 +646,7 @@ class Type : public ReflectedType<##className> { \
 		fields.push_back(ReflectedField(GetReflectedType<decltype(varName)>(), #varName, offsetOf(&TYPE::varName))); \
 
 #define REFLECT_METHOD(func)\
-		methodInitializers.push_back([](){return GenerateMethodBinding(#func, args_t<decltype(&TYPE::func )>{});}); \
+		methodInitializers.push_back([](){return GenerateMethodBinding(#func, args_t<decltype(&TYPE::func )>{}, &TYPE::func);}); \
 
 #define REFLECT_ATTRIBUTE(attribute)\
 		attributes.push_back(std::shared_ptr<Attribute>(new attribute)); \
@@ -618,9 +654,10 @@ class Type : public ReflectedType<##className> { \
 #define REFLECT_END() \
 		} \
 		void Init(){\
-			for(auto& initializer : methodInitializers){methods.push_back(initializer());}\
+			for(auto& initializer : methodInitializers){__methods__.push_back(initializer());}\
 			methodInitializers.clear();\
 		}\
+		virtual size_t SizeOf() const override { return sizeof(TYPE); }\
 	}; \
 	static Type* TypeOf() {\
 		static Type t;\

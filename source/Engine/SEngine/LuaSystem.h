@@ -15,13 +15,14 @@ public:
 		char* code = nullptr;
 		size_t size = 0;
 	};
+	//TODO private or rename or getter
+	lua_State* L = nullptr;
 private:
 
 	std::unordered_map<std::string, CompiledCode> compiledCode;
 
 	bool Init() override;
 	void Term() override;
-	lua_State* L = nullptr;
 
 	void RegisterAndRunAll();
 

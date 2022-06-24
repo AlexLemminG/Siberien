@@ -261,3 +261,23 @@ void ReflectedTypeString::Deserialize(const SerializationContext& context, void*
 		context >> *((std::string*)object);
 	}
 }
+
+std::string ReflectedMethod::ToString() {
+	std::string info;
+	if (returnType != nullptr) {
+		info += returnType->GetName();
+	}
+	else {
+		info += "void";
+	}
+	info += " " + objectType->GetName() + "::" + name;
+	info += " (";
+	for (int i = 0; i < argTypes.size(); i++) {
+		if (i > 0) {
+			info += ", ";
+		}
+		info += argTypes[i]->GetName();
+	}
+	info += ")";
+	return info;
+}
