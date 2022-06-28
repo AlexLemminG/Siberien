@@ -22,6 +22,15 @@ public:
 		return nullptr;
 	}
 
+	std::shared_ptr<Component> GetComponent(const std::string& type) {
+		for (int i = 0; i < components.size(); i++) {
+			if (components[i].get()->GetType()->GetName() == type) {
+				return std::dynamic_pointer_cast<Component>(components[i]);
+			}
+		}
+		return nullptr;
+	}
+
 	std::shared_ptr<Transform> transform() {
 		return GetComponent<Transform>();
 	}
@@ -37,6 +46,7 @@ public:
 	REFLECT_BEGIN(GameObject, Object);
 	REFLECT_VAR(tag);
 	REFLECT_VAR(components);
+	REFLECT_METHOD_EXPLICIT("GetComponent", static_cast<std::shared_ptr<Component>(GameObject::*)(const std::string&)>(&GameObject::GetComponent));
 	REFLECT_END();
 
 	uint64_t flags = 0;//TODO back to private

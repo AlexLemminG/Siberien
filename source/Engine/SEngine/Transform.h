@@ -51,5 +51,8 @@ public:
 	static void Deserialize(const SerializationContext& so, Transform& t);
 	static void Serialize(SerializationContext& so, const Transform& t);
 
-	REFLECT_CUSTOM(Transform, Transform::Serialize, Transform::Deserialize);
+	REFLECT_BEGIN(Transform);
+	REFLECT_METHOD(SetPosition);
+	REFLECT_METHOD(GetPosition);
+	REFLECT_END_CUSTOM(Transform::Serialize, Transform::Deserialize);
 };

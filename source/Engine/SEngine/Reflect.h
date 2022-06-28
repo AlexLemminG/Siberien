@@ -190,11 +190,14 @@ template<class Sig> struct args;
 template<class R, class ClassT, class...Args>
 struct args<R(ClassT::*)(Args...)> :types < R, ClassT, Args... > {};
 
+template<class R, class ClassT, class...Args>
+struct args<R(ClassT::*)(Args...)const> :types < R, ClassT, Args... > {};
+
 template<class Sig> using args_t = typename args<Sig>::type;
 
 template <class T, class...Params>
 void GenerateMethodBindingArgs(ReflectedMethod* method) {
-	method->argTypes.push_back(GetReflectedType<T>());
+	method->argTypes.push_back(GetReflectedType<std::decay_t<T>>());
 	if constexpr (sizeof...(Params) > 0) {
 		GenerateMethodBindingArgs<Params...>(method);
 	}
@@ -207,8 +210,14 @@ void FillParams(std::tuple<Params...>& params, const std::vector<void*>& paramsR
 	}
 }
 
+template <typename ... Ts>
+constexpr auto decay_types(std::tuple<Ts...> const&)
+->std::tuple<std::remove_cv_t<std::remove_reference_t<Ts>>...>;
+template <typename T>
+using decay_tuple = decltype(decay_types(std::declval<T>()));
+
 template <class ReturnType, class ObjectType, class...Params>
-ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType, ObjectType, Params...>, ReturnType(ObjectType::* func)(Params...)) {
+ReflectedMethod GenerateMethodBindingNoFunc(const std::string& name, types<ReturnType, ObjectType, Params...>) {
 	ReflectedMethod method;
 	method.name = name;
 	if constexpr (std::is_same<void, ReturnType>()) {
@@ -221,10 +230,50 @@ ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType,
 	if constexpr (sizeof...(Params) > 0) {
 		GenerateMethodBindingArgs<Params...>(&method);
 	}
+	return method;
+}
+
+template <class ReturnType, class ObjectType, class...Params>
+ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType, ObjectType, Params...> types, ReturnType(ObjectType::* func)(Params...)) {
+	auto method = GenerateMethodBindingNoFunc(name, types);
 	method.func = [=](void* objRaw, std::vector<void*> argsRaw, void* returnRaw) {
+		//void* objRaw;
+		//std::vector<void*> argsRaw;
+		//void* returnRaw;
 		ObjectType* obj = (ObjectType*)objRaw;
 		if constexpr (sizeof...(Params) > 0) {
-			std::tuple<ObjectType*, Params...> params;
+			decay_tuple<std::tuple<ObjectType*, Params...>> params;
+			std::get<0>(params) = obj;
+			FillParams(params, argsRaw);
+			if constexpr (std::is_void<ReturnType>()) {
+				std::apply(func, params);
+			}
+			else {
+				*((ReturnType*)returnRaw) = std::apply(func, params);
+			}
+		}
+		else {
+			if constexpr (std::is_void<ReturnType>()) {
+				std::invoke(func, obj);
+			}
+			else {
+				*((ReturnType*)returnRaw) = std::invoke(func, obj);
+			}
+		}
+	};
+	return method;
+}
+
+template <class ReturnType, class ObjectType, class...Params>
+ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType, ObjectType, Params...> types, ReturnType(ObjectType::* func)(Params...) const){
+	auto method = GenerateMethodBindingNoFunc(name, types);
+	method.func = [=](void* objRaw, std::vector<void*> argsRaw, void* returnRaw) {
+		//void* objRaw;
+		//std::vector<void*> argsRaw;
+		//void* returnRaw;
+		ObjectType* obj = (ObjectType*)objRaw;
+		if constexpr (sizeof...(Params) > 0) {
+			decay_tuple<std::tuple<ObjectType*, Params...>> params;
 			std::get<0>(params) = obj;
 			FillParams(params, argsRaw);
 			if constexpr (std::is_void<ReturnType>()) {
@@ -674,6 +723,18 @@ class Type : public ReflectedType<##className> { \
 	ReflectedTypeBase* GetType() const{ \
 		return TypeOf(); \
 	}
+
+//TODO try to not duplicate
+#define REFLECT_END_CUSTOM(Serialize, Deserialize) \
+	}\
+	virtual void Serialize(SerializationContext& context, const void* object) override {\
+		const TYPE& t = *(TYPE*)object;\
+		Serialize(context, t);\
+	}\
+	virtual void Deserialize(const SerializationContext& context, void* object) override {\
+		TYPE& t = *(TYPE*)object;\
+		Deserialize(context, t);\
+	REFLECT_END()
 
 
 

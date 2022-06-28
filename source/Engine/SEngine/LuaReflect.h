@@ -16,6 +16,7 @@ int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src);
 //TODO unordered_map if possible
 extern std::map<std::weak_ptr<Object>, int, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
 
+//TODO nontemplated version and stuff
 //TODO WIP
 template<class T> class Luna {
 public:
@@ -28,12 +29,16 @@ public:
         lua_pop(L, 1);
     }
 
-    static void RegisterShared(lua_State* L) {
-        lua_pushcfunction(L, &Luna<T>::constructorShared, (GetReflectedType<T>()->GetName() + "::ConstructorShared").c_str());
-        lua_setglobal(L, (GetReflectedType<T>()->GetName() + "/shared_ptr").c_str());
+    static void RegisterShared(lua_State* L, ReflectedTypeBase* type) {
+        //TODO not Luna<T>::constructorShared
+        lua_pushcfunction(L, &Luna<T>::constructorShared, (type->GetName() + "::ConstructorShared").c_str());
+        lua_setglobal(L, (type->GetName() + "/shared_ptr").c_str());
 
-        luaL_newmetatable(L, (GetReflectedType<T>()->GetName() + "/shared_ptr").c_str());
+        luaL_newmetatable(L, (type->GetName() + "/shared_ptr").c_str());
         lua_pop(L, 1);
+    }
+    static void RegisterShared(lua_State* L) {
+        RegisterShared(L, GetReflectedType<T>());
     }
 
 
@@ -50,9 +55,10 @@ public:
         *a = obj;
         luaL_getmetatable(L, (type->GetName() + "/shared_ptr").c_str());
         if (lua_isnil(L, -1)) {
-            RegisterShared(L);
+            RegisterShared(L, type);
             lua_pop(L, 1);
             luaL_getmetatable(L, (type->GetName() + "/shared_ptr").c_str());
+            //ASSERT(!lua_isnil(L, -1), "Unknown type for lua '%s'", type->GetName().c_str());
         }
         //lua_pushvalue(L, -1);
         //lua_setmetatable(L, -5);//table metatable
@@ -140,8 +146,11 @@ private:
     }
 
     static int call_method(lua_State* L, int index, T* obj) {
-        //TODO push/convert params, pop/convert result
-        const auto& method = GetReflectedType<T>()->GetMethods()[index];
+        return call_method(L, index, obj, GetReflectedType<T>(obj));
+    }
+    static int call_method(lua_State* L, int index, T* obj, ReflectedTypeBase* type) {
+        //TODO memory is probably leaking due to no destructors calls
+        const auto& method = type->GetMethods()[index];
 
         size_t totalSize = 0;
         for (auto argType : method.argTypes) {
@@ -178,10 +187,12 @@ private:
         lua_pushnumber(L, 0);
         lua_gettable(L, 1);
 
-        std::shared_ptr<T>& obj = *static_cast<std::shared_ptr<T>*>(luaL_checkudata(L, -1, (GetReflectedType<T>()->GetName() + "/shared_ptr").c_str()));
+        //TODO typecheck and stuff
+        std::shared_ptr<T>& obj = *static_cast<std::shared_ptr<T>*> (lua_touserdata(L, -1));
+        //std::shared_ptr<Object>& obj = *static_cast<std::shared_ptr<Object>*>(luaL_checkudata(L, -1, (GetReflectedType<Object>()->GetName() + "/shared_ptr").c_str()));
         lua_remove(L, -1);
 
-        return call_method(L, i, obj.get());
+        return call_method(L, i, obj.get(), obj.get()->GetType());
     }
 
     static int thunkSimple(lua_State* L) {

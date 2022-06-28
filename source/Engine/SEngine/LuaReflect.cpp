@@ -6,12 +6,13 @@
 #include "Common.h"
 #include "LuaSystem.h"
 #include "LuaReflect.h"
+#include "SMath.h"
 
 
 std::map<std::weak_ptr<Object>, int, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
 
 //TODO cleanup
-
+//TODO const func test
 class Foo : public Object {
 public:
     int foo(int i) {
@@ -89,6 +90,7 @@ class TestSys : public System<TestSys> {
 };
 REGISTER_SYSTEM(TestSys);
 
+//TODO optimize
 void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int idx) {
     SerializationContext context{};
     if (lua_isnumber(L, idx)) {
@@ -104,6 +106,10 @@ void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int id
     else if (lua_isstring(L, idx)) {
         std::string str = lua_tostring(L, idx);
         context << str;
+    }
+    else if (lua_isvector(L, idx)) {
+        Vector3 vec(lua_tovector(L, idx));
+        Serialize(context, vec);
     }
     else {
         ASSERT(lua_istable(L, idx));
@@ -132,6 +138,11 @@ int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
     }
     else if (dynamic_cast<ReflectedTypeSharedPtrBase*>(type)) { //TODO costy and not good generaly
         Luna<Object>::Push(L, *(std::shared_ptr<Object>*)(src), ((std::shared_ptr<Object>*)(src))->get()->GetType());//TODO not good at all
+        return 1;
+    }
+    else if (type == GetReflectedType<Vector3>()) {
+        Vector3 vec = *(Vector3*)src;
+        lua_pushvector(L, vec.x, vec.y, vec.z);
         return 1;
     }
     else {
