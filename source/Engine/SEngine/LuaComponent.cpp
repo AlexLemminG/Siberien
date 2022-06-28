@@ -1,6 +1,9 @@
 #include "LuaComponent.h"
 #include "LuaSystem.h"
 #include "lua.h"
+#include "GameObject.h"
+#include "LuaReflect.h"
+
 
 void LuaComponent::Call(char* funcName) {
 	if (ref == LUA_REFNIL) {
@@ -23,6 +26,8 @@ void LuaComponent::Call(char* funcName) {
 void LuaComponent::OnEnable() {
 	auto L = LuaSystem::Get()->L;
 
+	Luna<LuaComponent>::RegisterShared(L);
+
 	LuaSystem::Get()->PushModule(script.c_str());
 	if (lua_isnil(L, -1)) {
 		lua_pop(L, 1);
@@ -34,9 +39,18 @@ void LuaComponent::OnEnable() {
 	lua_pushnil(L);
 	lua_call(LuaSystem::Get()->L, 2, 1);
 	ref = lua_ref(L, -1);
+
+	//TODO check if binded
+	for (auto& c : gameObject()->components) {
+		if(c.get() == this) {
+			Luna<LuaComponent>::Bind(L, std::dynamic_pointer_cast<LuaComponent>(c), -1, ref);
+			break;
+		}
+	}
 	lua_pop(L, 2);
 
 	Call("OnEnable");
+
 }
 
 void LuaComponent::OnDisable() {

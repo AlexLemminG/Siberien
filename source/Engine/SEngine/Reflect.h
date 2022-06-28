@@ -648,6 +648,9 @@ class Type : public ReflectedType<##className> { \
 #define REFLECT_METHOD(func)\
 		methodInitializers.push_back([](){return GenerateMethodBinding(#func, args_t<decltype(&TYPE::func )>{}, &TYPE::func);}); \
 
+#define REFLECT_METHOD_EXPLICIT(funcName, func)\
+		methodInitializers.push_back([](){return GenerateMethodBinding(funcName, args_t<decltype(func)>{}, func);}); \
+
 #define REFLECT_ATTRIBUTE(attribute)\
 		attributes.push_back(std::shared_ptr<Attribute>(new attribute)); \
 

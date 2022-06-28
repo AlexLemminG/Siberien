@@ -1,96 +1,147 @@
 #pragma once 
 
+#include "lua.h"
+#include "luaLib.h"
 #include "Reflect.h"
 #include "ryml.hpp"
+#include <map>
 
-void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int idx) {
-    SerializationContext context{};
-    if (lua_isnumber(L, idx)) {
-        double num = lua_tonumber(L, idx);
-        if (type == GetReflectedType<int>()) {
-            context << (int)num;
-        }
-        else {
-            ASSERT(type == GetReflectedType<float>());
-            context << (float)num;
-        }
-    }
-    else if(lua_isstring(L, idx)) {
-        std::string str = lua_tostring(L, idx);
-        context << str;
-    }
-    else {
-        ASSERT(lua_istable(L, idx));
-        //TODO
-    }
-    type->Deserialize(context, dst);
-}
+void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int idx);
 
-int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
-    SerializationContext context{};
-    if (type == GetReflectedType<int>()) {
-        int val = *(int*)src;
-        lua_pushnumber(L, val);
-    }
-    else if (type == GetReflectedType<float>()) {
-        float val = *(float*)src;
-        lua_pushnumber(L, val);
-    }
-    else if (type == GetReflectedType<std::string>()) {
-        std::string str = *(std::string*)src;
-        lua_pushstring(L, str.c_str());
-    }
-    else {
-        ASSERT_FAILED("Unknown type for lua: '%s'", type->GetName());
-        //TODO
-    }
-    return 1;
-}
+int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src);
+
+//TODO try to remove or replace "/shared_ptr"
+
+//TODO not static
+//TODO unordered_map if possible
+extern std::map<std::weak_ptr<Object>, int, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
 
 //TODO WIP
 template<class T> class Luna {
 public:
+    //Registers T() function/constuctor in lua
     static void Register(lua_State* L) {
-        lua_pushcfunction(L, &Luna<T>::constructor, (GetReflectedType<T>()->GetName() + "::Constructor").c_str());
+        lua_pushcfunction(L, &Luna<T>::constructorSimple, (GetReflectedType<T>()->GetName() + "::Constructor").c_str());
         lua_setglobal(L, GetReflectedType<T>()->GetName().c_str());
         
         luaL_newmetatable(L, GetReflectedType<T>()->GetName().c_str());
-        lua_pushstring(L, "__gc");
-        lua_pushcfunction(L, &Luna<T>::gc_obj, (GetReflectedType<T>()->GetName() + "::GC_OBJ").c_str());
-        lua_settable(L, -3);
+        lua_pop(L, 1);
     }
 
-    static int constructor(lua_State* L) {
+    static void RegisterShared(lua_State* L) {
+        lua_pushcfunction(L, &Luna<T>::constructorShared, (GetReflectedType<T>()->GetName() + "::ConstructorShared").c_str());
+        lua_setglobal(L, (GetReflectedType<T>()->GetName() + "/shared_ptr").c_str());
+
+        luaL_newmetatable(L, (GetReflectedType<T>()->GetName() + "/shared_ptr").c_str());
+        lua_pop(L, 1);
+    }
+
+
+    //does not pop
+    //TODO checks
+    static void Bind(lua_State* L, std::shared_ptr<T> obj, int stackIdx, int refId = LUA_REFNIL) {
+        Bind(L, std::static_pointer_cast<Object>(obj), GetReflectedType<T>(), stackIdx, refId);
+    }
+    static void Bind(lua_State* L, std::shared_ptr<Object> obj, ReflectedTypeBase* type, int stackIdx, int refId = LUA_REFNIL) {
+        lua_pushnumber(L, 0);
+        std::shared_ptr<Object>* a = (std::shared_ptr<Object>*)lua_newuserdatadtor(L, sizeof(std::shared_ptr<Object>), &destructor_shared_ptr);
+        //clearing a so destructor wont be called
+        memcpy(a, &std::shared_ptr<Object>(), sizeof(std::shared_ptr<Object>));
+        *a = obj;
+        luaL_getmetatable(L, (type->GetName() + "/shared_ptr").c_str());
+        if (lua_isnil(L, -1)) {
+            RegisterShared(L);
+            lua_pop(L, 1);
+            luaL_getmetatable(L, (type->GetName() + "/shared_ptr").c_str());
+        }
+        //lua_pushvalue(L, -1);
+        //lua_setmetatable(L, -5);//table metatable
+        lua_setmetatable(L, -2);//userdata metatable
+        lua_settable(L, -3); // table[0] = obj;
+
+        bindMethodsShared(L, type);
+
+        if (refId == LUA_REFNIL) {
+            refId = lua_ref(L, -1);
+        }
+        std::weak_ptr<Object> weakObj = std::static_pointer_cast<Object>(obj);
+        sharedPointersInLua[weakObj] = refId;
+    }
+
+    // Pushes obj to top of the stack and binds if required
+    static void Push(lua_State* L, std::shared_ptr<Object> obj, ReflectedTypeBase* type) {
+        if (obj == nullptr) {
+            lua_pushnil(L);
+            return;
+        }
+        auto baseObj = std::static_pointer_cast<Object>(obj);
+        std::weak_ptr<Object> weakObj = baseObj;
+        auto it = sharedPointersInLua.find(weakObj);
+        if (it != sharedPointersInLua.end()) {
+            lua_rawgeti(L, LUA_REGISTRYINDEX, it->second);
+            return;
+        }
+
+        lua_newtable(L);
+        Bind(L, obj, type, -1);
+    }
+    static void Push(lua_State* L, std::shared_ptr<T> obj) {
+        Push(L, obj, GetReflectedType<T>());
+    }
+private:
+    static int constructorSimple(lua_State* L) {
         T* obj = new T();
 
         lua_newtable(L);
         lua_pushnumber(L, 0);
-        T** a = (T**)lua_newuserdata(L, sizeof(T*));
+        T** a = (T**)lua_newuserdatadtor(L, sizeof(T*), &destructor_simple);
         *a = obj;
         luaL_getmetatable(L, GetReflectedType<T>()->GetName().c_str());
-        lua_setmetatable(L, -2);
+        //lua_pushvalue(L, -1);
+        //lua_setmetatable(L, -5);//table metatable
+        lua_setmetatable(L, -2);//userdata metatable
         lua_settable(L, -3); // table[0] = obj;
 
+        bindMethodsSimple(L);
 
-        for (int i = 0; i < GetReflectedType<T>()->GetMethods().size(); i++) {
-            lua_pushstring(L, GetReflectedType<T>()->GetMethods()[i].name.c_str());
-            lua_pushnumber(L, i);
-            lua_pushcclosure(L, &Luna<T>::thunk, (GetReflectedType<T>()->GetMethods()[i].name + " Luna::thunk").c_str(), 1);
-            lua_settable(L, -3);
-        }
+        return 1;
+    }
+    static int constructorShared(lua_State* L) {
+        Push(L, std::make_shared<T>());
         return 1;
     }
 
-    static int thunk(lua_State* L) {
-        int i = (int)lua_tonumber(L, lua_upvalueindex(1));
-        lua_pushnumber(L, 0);
-        lua_gettable(L, 1);
+    static void destructor_simple(void* obj_raw) {
+        T* obj = *(T**)obj_raw;
+        delete obj;
+    }
 
-        T** obj = static_cast<T**>(luaL_checkudata(L, -1, GetReflectedType<T>()->GetName().c_str()));
-        lua_remove(L, -1);
+    static void destructor_shared_ptr(void* obj_raw) {
+        std::shared_ptr<T>& obj = *(std::shared_ptr<T>*)obj_raw;
+        obj = nullptr;
+    }
 
+    static void bindMethodsSimple(lua_State* L) {
+        for (int i = 0; i < GetReflectedType<T>()->GetMethods().size(); i++) {
+            lua_pushstring(L, GetReflectedType<T>()->GetMethods()[i].name.c_str());
+            lua_pushnumber(L, i);
+            lua_pushcclosure(L, &Luna<T>::thunkSimple, (GetReflectedType<T>()->GetMethods()[i].name + " Luna::thunk").c_str(), 1);
+            lua_settable(L, -3);
+        }
+    }
+
+    static void bindMethodsShared(lua_State* L, ReflectedTypeBase* type) {
+        for (int i = 0; i < type->GetMethods().size(); i++) {
+            lua_pushstring(L, type->GetMethods()[i].name.c_str());
+            lua_pushnumber(L, i);
+            lua_pushcclosure(L, &Luna<T>::thunkShared, (type->GetMethods()[i].name + " Luna::thunk").c_str(), 1);
+            lua_settable(L, -3);
+        }
+    }
+
+    static int call_method(lua_State* L, int index, T* obj) {
         //TODO push/convert params, pop/convert result
-        const auto& method = GetReflectedType<T>()->GetMethods()[i];
+        const auto& method = GetReflectedType<T>()->GetMethods()[index];
 
         size_t totalSize = 0;
         for (auto argType : method.argTypes) {
@@ -113,14 +164,35 @@ public:
         }
         std::vector<char> rawResultData(resultSize, 0);
 
-        method.func(*obj, params, rawResultData.data());
+        method.func(obj, params, rawResultData.data());
 
         int resultCount = 0;
         if (method.returnType != nullptr) {
             resultCount += PushToLua(L, method.returnType, rawResultData.data());
         }
         return resultCount;
-        //return ((*obj)->*(GetReflectedType<T>()->methods[i].mfunc))(L);
+    }
+
+    static int thunkShared(lua_State* L) {
+        int i = (int)lua_tonumber(L, lua_upvalueindex(1));
+        lua_pushnumber(L, 0);
+        lua_gettable(L, 1);
+
+        std::shared_ptr<T>& obj = *static_cast<std::shared_ptr<T>*>(luaL_checkudata(L, -1, (GetReflectedType<T>()->GetName() + "/shared_ptr").c_str()));
+        lua_remove(L, -1);
+
+        return call_method(L, i, obj.get());
+    }
+
+    static int thunkSimple(lua_State* L) {
+        int i = (int)lua_tonumber(L, lua_upvalueindex(1));
+        lua_pushnumber(L, 0);
+        lua_gettable(L, 1);
+
+        T** obj = static_cast<T**>(luaL_checkudata(L, -1, GetReflectedType<T>()->GetName().c_str()));
+        lua_remove(L, -1);
+
+        return call_method(L, i, *obj);
     }
 
     static int gc_obj(lua_State* L) {

@@ -7,6 +7,9 @@
 #include "LuaSystem.h"
 #include "LuaReflect.h"
 
+
+std::map<std::weak_ptr<Object>, int, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
+
 //TODO cleanup
 
 class Foo : public Object {
@@ -22,6 +25,11 @@ public:
 
     void boo() {
         printf("in boo\n");
+    }
+
+    virtual ~Foo() {
+        printf("Foo no more\n");
+
     }
 
     int i = 0;
@@ -57,7 +65,7 @@ static void Test() {
     Luna<Foo>::Register(LuaSystem::Get()->L);
 
     auto func = std::function(&Teste2);
-    Foo f;
+    //Foo f;
     Teste(&Foo::foo);
 }
 
@@ -80,3 +88,55 @@ class TestSys : public System<TestSys> {
     }
 };
 REGISTER_SYSTEM(TestSys);
+
+void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int idx) {
+    SerializationContext context{};
+    if (lua_isnumber(L, idx)) {
+        double num = lua_tonumber(L, idx);
+        if (type == GetReflectedType<int>()) {
+            context << (int)num;
+        }
+        else {
+            ASSERT(type == GetReflectedType<float>());
+            context << (float)num;
+        }
+    }
+    else if (lua_isstring(L, idx)) {
+        std::string str = lua_tostring(L, idx);
+        context << str;
+    }
+    else {
+        ASSERT(lua_istable(L, idx));
+        //TODO
+    }
+    type->Deserialize(context, dst);
+}
+
+
+int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
+    SerializationContext context{};
+    if (type == GetReflectedType<int>()) {
+        int val = *(int*)src;
+        lua_pushnumber(L, val);
+        return 1;
+    }
+    else if (type == GetReflectedType<float>()) {
+        float val = *(float*)src;
+        lua_pushnumber(L, val);
+        return 1;
+    }
+    else if (type == GetReflectedType<std::string>()) {
+        std::string str = *(std::string*)src;
+        lua_pushstring(L, str.c_str());
+        return 1;
+    }
+    else if (dynamic_cast<ReflectedTypeSharedPtrBase*>(type)) { //TODO costy and not good generaly
+        Luna<Object>::Push(L, *(std::shared_ptr<Object>*)(src), ((std::shared_ptr<Object>*)(src))->get()->GetType());//TODO not good at all
+        return 1;
+    }
+    else {
+        ASSERT_FAILED("Unknown type for lua: '%s'", type->GetName().c_str());
+        //TODO
+    }
+    return 0;
+}

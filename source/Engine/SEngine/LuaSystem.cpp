@@ -201,4 +201,5 @@ void LuaSystem::Update() {
 		//TODO move hotkeys to one place
 		ReloadScripts();
 	}
+	lua_gc(L, LUA_GCCOLLECT, 0);
 }

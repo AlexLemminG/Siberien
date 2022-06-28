@@ -18,7 +18,11 @@ public:
 	virtual void OnValidate();
 	virtual void OnDrawGizmos();
 
+private:
+	//std::shared_ptr<Component> GetComponent(const std::string& typeName);
+
 	REFLECT_BEGIN(LuaComponent);
 	REFLECT_VAR(script);
+	REFLECT_METHOD_EXPLICIT("gameObject", static_cast<std::shared_ptr<GameObject>(Component::*)()>(&Component::gameObject));
 	REFLECT_END();
 };
