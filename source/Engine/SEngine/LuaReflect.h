@@ -94,6 +94,10 @@ public:
     static void Push(lua_State* L, std::shared_ptr<T> obj) {
         Push(L, obj, GetReflectedType<T>());
     }
+
+    static int CallFunctionFromLua(lua_State* L, const ReflectedMethod& method) {
+        return Luna<void>::call_function(L, method, nullptr);
+    }
 private:
     static int constructorSimple(lua_State* L) {
         T* obj = new T();
@@ -144,14 +148,7 @@ private:
             lua_settable(L, -3);
         }
     }
-
-    static int call_method(lua_State* L, int index, T* obj) {
-        return call_method(L, index, obj, GetReflectedType<T>(obj));
-    }
-    static int call_method(lua_State* L, int index, T* obj, ReflectedTypeBase* type) {
-        //TODO memory is probably leaking due to no destructors calls
-        const auto& method = type->GetMethods()[index];
-
+    static int call_function(lua_State* L, const ReflectedMethod& method, T* obj) {
         size_t totalSize = 0;
         for (auto argType : method.argTypes) {
             totalSize += argType->SizeOf();
@@ -162,7 +159,7 @@ private:
         char* currentPtr = rawParamsData.data();
         for (int i = 0; i < method.argTypes.size(); i++) {
             params[i] = (void*)currentPtr;
-            int stackIdx = -method.argTypes.size() + i;
+            int stackIdx = i - method.argTypes.size();
             DeserializeFromLua(L, method.argTypes[i], params[i], stackIdx);
             currentPtr += method.argTypes[i]->SizeOf();
         }
@@ -180,6 +177,16 @@ private:
             resultCount += PushToLua(L, method.returnType, rawResultData.data());
         }
         return resultCount;
+    }
+
+    static int call_method(lua_State* L, int index, T* obj) {
+        return call_method(L, index, obj, GetReflectedType<T>(obj));
+    }
+    static int call_method(lua_State* L, int index, T* obj, ReflectedTypeBase* type) {
+        //TODO memory is probably leaking due to no destructors calls
+        const auto& method = type->GetMethods()[index];
+
+        return call_function(L, method, obj);
     }
 
     static int thunkShared(lua_State* L) {

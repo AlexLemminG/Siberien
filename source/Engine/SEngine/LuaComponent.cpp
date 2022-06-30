@@ -3,6 +3,7 @@
 #include "lua.h"
 #include "GameObject.h"
 #include "LuaReflect.h"
+#include "Common.h"
 
 
 void LuaComponent::Call(char* funcName) {
@@ -19,7 +20,12 @@ void LuaComponent::Call(char* funcName) {
 		return;
 	}
 	lua_getref(L, ref);
-	lua_call(LuaSystem::Get()->L, 1, 0);
+	auto callResult = lua_pcall(L, 1, 0, 0);
+	if(callResult != 0) {
+		std::string error = lua_tostring(L, -1);
+		Log(error.c_str());
+		lua_pop(L, 1);
+	}
 	lua_pop(L, 1);
 }
 

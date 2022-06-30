@@ -187,11 +187,15 @@ public:
 //TODO hide
 template<class, class, class...>struct types { using type = types; };
 template<class Sig> struct args;
+
 template<class R, class ClassT, class...Args>
 struct args<R(ClassT::*)(Args...)> :types < R, ClassT, Args... > {};
 
 template<class R, class ClassT, class...Args>
 struct args<R(ClassT::*)(Args...)const> :types < R, ClassT, Args... > {};
+
+template<class R, class...Args>
+struct args<R(*)(Args...)> :types < R, void, Args... > {};
 
 template<class Sig> using args_t = typename args<Sig>::type;
 
@@ -202,11 +206,11 @@ void GenerateMethodBindingArgs(ReflectedMethod* method) {
 		GenerateMethodBindingArgs<Params...>(method);
 	}
 }
-template <int N=1, class...Params>
+template <bool isClassMethodCall, int N=0, class...Params>
 void FillParams(std::tuple<Params...>& params, const std::vector<void*>& paramsRaw) {
-	std::get<N>(params) = *((std::remove_reference_t<decltype(std::get<N>(params))>*)paramsRaw[N - 1]);
-	if constexpr (N + 1 < sizeof...(Params)) {
-		FillParams<N+1>(params, paramsRaw);
+	std::get<N + (isClassMethodCall ? 1 : 0)>(params) = *((std::remove_reference_t<decltype(std::get<N + (isClassMethodCall ? 1 : 0)>(params))>*)paramsRaw[N]);
+	if constexpr (N +(isClassMethodCall ? 1 : 0) + 1 < sizeof...(Params)) {
+		FillParams<isClassMethodCall, N+1>(params, paramsRaw);
 	}
 }
 
@@ -233,6 +237,36 @@ ReflectedMethod GenerateMethodBindingNoFunc(const std::string& name, types<Retur
 	return method;
 }
 
+//TODO less duplication
+template <class ReturnType, class...Params>
+ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType, void, Params...> types, ReturnType(*func)(Params...)) {
+	auto method = GenerateMethodBindingNoFunc(name, types);
+	method.func = [=](void* objRaw, std::vector<void*> argsRaw, void* returnRaw) {
+		//void* objRaw;
+		//std::vector<void*> argsRaw;
+		//void* returnRaw;
+		if constexpr (sizeof...(Params) > 0) {
+			decay_tuple<std::tuple<Params...>> params;
+			FillParams<false>(params, argsRaw);
+			if constexpr (std::is_void<ReturnType>()) {
+				std::apply(func, params);
+			}
+			else {
+				*((ReturnType*)returnRaw) = std::apply(func, params);
+			}
+		}
+		else {
+			if constexpr (std::is_void<ReturnType>()) {
+				std::invoke(func, obj);
+			}
+			else {
+				*((ReturnType*)returnRaw) = std::invoke(func);
+			}
+		}
+	};
+	return method;
+}
+
 template <class ReturnType, class ObjectType, class...Params>
 ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType, ObjectType, Params...> types, ReturnType(ObjectType::* func)(Params...)) {
 	auto method = GenerateMethodBindingNoFunc(name, types);
@@ -244,7 +278,7 @@ ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType,
 		if constexpr (sizeof...(Params) > 0) {
 			decay_tuple<std::tuple<ObjectType*, Params...>> params;
 			std::get<0>(params) = obj;
-			FillParams(params, argsRaw);
+			FillParams<true>(params, argsRaw);
 			if constexpr (std::is_void<ReturnType>()) {
 				std::apply(func, params);
 			}
@@ -275,7 +309,7 @@ ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType,
 		if constexpr (sizeof...(Params) > 0) {
 			decay_tuple<std::tuple<ObjectType*, Params...>> params;
 			std::get<0>(params) = obj;
-			FillParams(params, argsRaw);
+			FillParams<true>(params, argsRaw);
 			if constexpr (std::is_void<ReturnType>()) {
 				std::apply(func, params);
 			}
@@ -364,7 +398,6 @@ GetReflectedType() {
 	return T::TypeOf();
 }
 
-
 class ReflectedTypeEnumBase : public ReflectedTypeBase {
 public:
 	ReflectedTypeEnumBase(std::string name) : ReflectedTypeBase(name) { }
@@ -402,6 +435,21 @@ public:
 	virtual const bool IsFlags() override { return is_flags; };
 };
 
+class SE_CPP_API ReflectedTypeVoid : public ReflectedTypeBase {
+public:
+	ReflectedTypeVoid(std::string name) : ReflectedTypeBase(name) {}
+	//TODO warnings ?
+	virtual void Serialize(SerializationContext& context, const void* object) override {}
+	virtual void Deserialize(const SerializationContext& context, void* object) override {}
+	virtual size_t SizeOf() const override { return 0; }
+};
+
+
+template<>
+inline ReflectedTypeBase* GetReflectedType<void>() {
+	static ReflectedTypeVoid type("void");
+	return &type;
+}
 
 template<>
 inline ReflectedTypeBase* GetReflectedType<int>() {

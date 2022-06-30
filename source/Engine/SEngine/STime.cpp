@@ -5,6 +5,7 @@
 #include "SDL.h"
 #include "Config.h"
 #include "Resources.h"
+#include "LuaSystem.h"
 
 REGISTER_SYSTEM(Time);
 
@@ -50,6 +51,8 @@ bool Time::Init() {
 
 	m_prevTicks = SDL_GetTicks();
 	m_startTicks = m_prevTicks;
+
+	LuaSystem::Get()->RegisterFunction("deltaTime", &deltaTime);
 
 	return true;
 }

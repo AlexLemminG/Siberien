@@ -5,6 +5,7 @@
 #include "Common.h"
 #include "Resources.h"
 #include "Input.h"
+#include "LuaReflect.h"
 
 static constexpr char* scriptsFolder = "scripts/";
 
@@ -75,7 +76,7 @@ bool LuaSystem::RegisterAndRun(const char* moduleName, const char* sourceCode, s
 	}
 
 	CompiledCode code;
-	code.code = luau_compile(sourceCode, sourceCodeLength, NULL, &code.size);
+	code.code = luau_compile(sourceCode, sourceCodeLength, compilerOptions, &code.size);
 	if (code.code == nullptr) {
 		ASSERT_FAILED("Failed to compile module '%s'", moduleNameStr.c_str());
 		return false;
@@ -130,6 +131,18 @@ bool LuaSystem::PushModule(const char* moduleName) {
 }
 
 bool LuaSystem::Init() {
+
+	ASSERT(!compilerOptions);
+	compilerOptions = new lua_CompileOptions();
+	compilerOptions->optimizationLevel = 1;
+	compilerOptions->debugLevel = 1;
+	compilerOptions->coverageLevel = 0;
+
+	compilerOptions->vectorLib = nullptr;
+	compilerOptions->vectorCtor = "vector";
+
+	compilerOptions->mutableGlobals = nullptr;
+	
 	ASSERT(!L);
 	L = luaL_newstate();
 	ASSERT(L);
@@ -148,23 +161,32 @@ bool LuaSystem::Init() {
 	lua_pop(L, 1);
 
 	// ***EXAMPLE***
-	auto sourceA = R"(local A = {} print("A") function A.pp() print("Hello LuaA!") end A.pp() return A)";
-	auto sourceB = R"(print("B") local A = require("A") A.pp())";
-	RegisterAndRun("A", sourceA, strlen(sourceA));
-	RegisterAndRun("B", sourceB, strlen(sourceB));
+	//auto sourceA = R"(local A = {} print("A") function A.pp() print("Hello LuaA!") end A.pp() return A)";
+	//auto sourceB = R"(print("B") local A = require("A") A.pp())";
+	//RegisterAndRun("A", sourceA, strlen(sourceA));
+	//RegisterAndRun("B", sourceB, strlen(sourceB));
 
 	RegisterAndRunAll();
 
 	return true;
 }
 
-void LuaSystem::Term() {
+
+//TODO rename
+void LuaSystem::TermInternal() {
 	for (auto& kv : compiledCode) {
 		free(kv.second.code);
 	}
 	compiledCode.clear();
 	lua_close(L);
 	L = nullptr;
+	SAFE_DELETE(compilerOptions);
+}
+
+
+void LuaSystem::Term() {
+	TermInternal();
+	registeredFunctions.clear();
 }
 
 
@@ -202,4 +224,32 @@ void LuaSystem::Update() {
 		ReloadScripts();
 	}
 	lua_gc(L, LUA_GCCOLLECT, 0);
+}
+
+void LuaSystem::RegisterFunction(const ReflectedMethod& method) {
+	registeredFunctions.push_back(method);
+	if (L != nullptr) {
+		RegisterFunctionInternal(registeredFunctions.size()-1);
+	}
+}
+void LuaSystem::RegisterFunctionInternal(int functionIdx) {
+	ASSERT(L);
+	if (functionIdx < 0 || functionIdx >= registeredFunctions.size()) {
+		ASSERT("Illegal RegisterFunctionInternal functionIdx");
+		return;
+	}
+
+	auto method = registeredFunctions[functionIdx];
+	static auto callFunc = [](lua_State* L) {
+		int i = (int)lua_tonumber(L, lua_upvalueindex(1));
+		const ReflectedMethod& func = LuaSystem::Get()->registeredFunctions[i];
+		return Luna<void>::CallFunctionFromLua(LuaSystem::Get()->L, func);
+	};
+
+	lua_pushvalue(L, LUA_GLOBALSINDEX);
+	lua_pushnumber(L, functionIdx);
+	lua_pushcclosure(L, callFunc, method.name.c_str(), 1);
+	lua_setfield(L, -2, method.name.c_str());
+
+	lua_pop(L, 1);
 }
