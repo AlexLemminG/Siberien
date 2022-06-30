@@ -65,7 +65,8 @@ public:
 
 	std::vector<BoneInfo> bones;
 
-	std::unique_ptr<MeshPhysicsData> physicsData;
+	//TODO unique_ptr
+	std::shared_ptr<MeshPhysicsData> physicsData;
 
 	AABB aabb;
 	Sphere boundingSphere;

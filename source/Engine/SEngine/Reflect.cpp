@@ -250,12 +250,16 @@ class TestInh {
 	REFLECT_END();
 };
 
-void ReflectedTypeString::Serialize(SerializationContext& context, const void* object)
+void ReflectedTypeString::Construct(void* ptr) const {
+	new(ptr)(std::string);
+}
+
+void ReflectedTypeString::Serialize(SerializationContext& context, const void* object) const
 {
 	context << *((std::string*)object);
 }
 
-void ReflectedTypeString::Deserialize(const SerializationContext& context, void* object)
+void ReflectedTypeString::Deserialize(const SerializationContext& context, void* object) const
 {
 	if (context.IsDefined()) {
 		context >> *((std::string*)object);

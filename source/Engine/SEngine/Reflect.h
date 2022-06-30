@@ -331,12 +331,13 @@ ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType,
 
 class ReflectedTypeBase {
 public:
-	virtual void Serialize(SerializationContext& context, const void* object) = 0;
-	virtual void Deserialize(const SerializationContext& context, void* object) = 0;
-	const std::string& GetName() {
+	virtual void Construct(void* ptr) const {}// = 0;//TODO destruct
+	virtual void Serialize(SerializationContext& context, const void* object) const = 0;
+	virtual void Deserialize(const SerializationContext& context, void* object) const = 0;
+	const std::string& GetName() const {
 		return __name__;
 	}
-	bool HasTag(const std::string tag) {
+	bool HasTag(const std::string tag) const {
 		return std::find(tags.begin(), tags.end(), tag) != tags.end();
 	}
 
@@ -366,11 +367,15 @@ public:
 	ReflectedTypeSimple(std::string name) : ReflectedTypeBase(name) {
 
 	}
-	virtual void Serialize(SerializationContext& context, const void* object) override
+
+	virtual void Construct(void* ptr) const override {
+		new(ptr)(T);
+	}
+	virtual void Serialize(SerializationContext& context, const void* object) const override
 	{
 		context << *((T*)object);
 	}
-	virtual void Deserialize(const SerializationContext& context, void* object) override
+	virtual void Deserialize(const SerializationContext& context, void* object) const override
 	{
 		if (context.IsDefined()) {
 			context >> (*(T*)object);
@@ -387,8 +392,9 @@ public:
 	ReflectedTypeString(std::string name) : ReflectedTypeBase(name) {
 
 	}
-	virtual void Serialize(SerializationContext& context, const void* object) override;
-	virtual void Deserialize(const SerializationContext& context, void* object) override;
+	virtual void Construct(void* ptr) const override;
+	virtual void Serialize(SerializationContext& context, const void* object) const override;
+	virtual void Deserialize(const SerializationContext& context, void* object) const override;
 	virtual size_t SizeOf() const override { return sizeof(std::string); }
 };
 //TODO export to dll to make type objects single instanced
@@ -411,15 +417,18 @@ public:
 	ReflectedTypeEnum(std::string name) : ReflectedTypeEnumBase(name) {
 
 	}
-	virtual void Serialize(SerializationContext& context, const void* object) override
+	virtual void Serialize(SerializationContext& context, const void* object) const override
 	{
 		context << *((uint64_t*)(T*)object);
 	}
-	virtual void Deserialize(const SerializationContext& context, void* object) override
+	virtual void Deserialize(const SerializationContext& context, void* object) const override
 	{
 		if (context.IsDefined()) {
 			context >> (*(uint64_t*)(T*)object);
 		}
+	}
+	virtual void Construct(void* ptr) const override {
+		new(ptr)(T);
 	}
 	virtual size_t SizeOf() const override { return sizeof(T); }
 
@@ -439,8 +448,9 @@ class SE_CPP_API ReflectedTypeVoid : public ReflectedTypeBase {
 public:
 	ReflectedTypeVoid(std::string name) : ReflectedTypeBase(name) {}
 	//TODO warnings ?
-	virtual void Serialize(SerializationContext& context, const void* object) override {}
-	virtual void Deserialize(const SerializationContext& context, void* object) override {}
+	virtual void Construct(void* ptr) const override { return; }
+	virtual void Serialize(SerializationContext& context, const void* object) const override {}
+	virtual void Deserialize(const SerializationContext& context, void* object) const override {}
 	virtual size_t SizeOf() const override { return 0; }
 };
 
@@ -499,12 +509,12 @@ class ReflectedTypeSharedPtr : public ReflectedTypeSharedPtrBase {
 public:
 	ReflectedTypeSharedPtr(const std::string& name) : ReflectedTypeSharedPtrBase(name) {}
 
-	virtual void Serialize(SerializationContext& context, const void* object) override
+	virtual void Serialize(SerializationContext& context, const void* object) const override
 	{
 		std::shared_ptr<T>& ptr = *(std::shared_ptr<T>*)object;
 		context.RequestSerialization(ptr);
 	}
-	virtual void Deserialize(const SerializationContext& context, void* object) override
+	virtual void Deserialize(const SerializationContext& context, void* object) const override
 	{
 		std::shared_ptr<T>& ptr = *(std::shared_ptr<T>*)object;
 		if (!context.IsDefined()) {
@@ -519,6 +529,9 @@ public:
 		}
 	}
 	virtual size_t SizeOf() const override { return sizeof(std::shared_ptr<T>); }
+	virtual void Construct(void* ptr) const override {
+		new(ptr)(std::shared_ptr<T>);
+	}
 };
 
 template<typename T>
@@ -539,16 +552,16 @@ template<typename T>
 class ReflectedTypeStdVector : public ReflectedTypeStdVectorBase {
 public:
 	ReflectedTypeStdVector(const std::string& name) : ReflectedTypeStdVectorBase(name) {}
-	virtual void Serialize(SerializationContext& context, const void* object) override {
+	virtual void Serialize(SerializationContext& context, const void* object) const override {
 		const std::vector<T>& t = *(std::vector<T>*)object;
 		Serialize(context, t);
 	}
-	virtual void Deserialize(const SerializationContext& context, void* object) override {
+	virtual void Deserialize(const SerializationContext& context, void* object) const override {
 		std::vector<T>& t = *(std::vector<T>*)object;
 		Deserialize(context, t);
 	}
 
-	void Serialize(SerializationContext& context, const std::vector<T>& object) {
+	void Serialize(SerializationContext& context, const std::vector<T>& object) const {
 		context.SetType(SerializationContextType::Sequence);
 		for (int i = 0; i < object.size(); i++) {
 			auto child = context.Child(i);
@@ -560,7 +573,7 @@ public:
 			}
 		}
 	}
-	void Deserialize(const SerializationContext& context, std::vector<T>& object) {
+	void Deserialize(const SerializationContext& context, std::vector<T>& object) const {
 		if (!context.IsDefined()) {
 			return;
 		}
@@ -573,6 +586,10 @@ public:
 		for (int i = 0; i < object.size(); i++) {
 			::Deserialize(context.Child(i), object[i]);
 		}
+	}
+
+	virtual void Construct(void* ptr) const override {
+		new(ptr)(std::vector<T>);
 	}
 
 	virtual size_t SizeOf() const override { return sizeof(std::vector<T>); }
@@ -606,11 +623,14 @@ public:
 	serializeFunc sf;
 	deserializeFunc df;
 
-	virtual void Serialize(SerializationContext& context, const void* object) override {
+	virtual void Construct(void* ptr) const override {
+		new(ptr)(T);
+	}
+	virtual void Serialize(SerializationContext& context, const void* object) const override {
 		const T& t = *(T*)object;
 		sf(context, t);
 	}
-	virtual void Deserialize(const SerializationContext& context, void* object) override {
+	virtual void Deserialize(const SerializationContext& context, void* object) const override {
 		T& t = *(T*)object;
 		df(context, t);
 	}
@@ -653,16 +673,16 @@ public:
 	ReflectedType(std::string name) :ReflectedTypeNonTemplated(name) {
 
 	}
-	virtual void Serialize(SerializationContext& context, const void* object) override {
+	virtual void Serialize(SerializationContext& context, const void* object) const override {
 		const T& t = *(T*)object;
 		Serialize(context, t);
 	}
-	virtual void Deserialize(const SerializationContext& context, void* object) override {
+	virtual void Deserialize(const SerializationContext& context, void* object) const override {
 		T& t = *(T*)object;
 		Deserialize(context, t);
 	}
 
-	void Serialize(SerializationContext& context, const T& object) {
+	void Serialize(SerializationContext& context, const T& object) const {
 		CallOnBeforeSerialize(context, object);
 		context.SetType(SerializationContextType::Map);
 		for (const auto& var : fields) {
@@ -670,7 +690,7 @@ public:
 			var.type->Serialize(childContext, ((char*)&object) + var.offset);
 		}
 	}
-	void Deserialize(const SerializationContext& context, T& object) {
+	void Deserialize(const SerializationContext& context, T& object) const {
 		if (context.IsDefined()) {
 			for (const auto& var : fields) {
 				const auto child = context.Child(var.name);
@@ -683,17 +703,25 @@ public:
 		CallOnAfterDeserialize(context, object);
 	}
 
+	virtual void Construct(void* ptr) const override {
+		if constexpr (std::is_default_constructible<T>()) {
+			new(ptr)(T);
+		}
+		else {
+			static_assert(std::is_abstract<T>());
+		}
+	}
 	virtual size_t SizeOf() const override { return sizeof(T); }
 
 	template<typename T>
 	std::enable_if_t<!std::is_assignable<Object, T>::value, void>
-		CallOnAfterDeserialize(const SerializationContext& context, T& object) {
+		CallOnAfterDeserialize(const SerializationContext& context, T& object) const {
 		//object.OnAfterDeserializeCallback(context);
 	}
 
 	template<typename T>
 	std::enable_if_t<std::is_assignable<Object, T>::value, void>
-		CallOnAfterDeserialize(const SerializationContext& context, T& object) {
+		CallOnAfterDeserialize(const SerializationContext& context, T& object) const {
 		//TODO rename 
 		//TODO not raw pointer ?
 		context.rootDeserializedObjects->push_back(&object);
@@ -701,13 +729,13 @@ public:
 
 	template<typename T>
 	std::enable_if_t<!std::is_assignable<Object, T>::value, void>
-		CallOnBeforeSerialize(SerializationContext& context, const T& object) {
+		CallOnBeforeSerialize(SerializationContext& context, const T& object) const {
 		//object.OnBeforeSerializeCallback(context);
 	}
 
 	template<typename T>
 	std::enable_if_t<std::is_assignable<Object, T>::value, void>
-		CallOnBeforeSerialize(SerializationContext& context, const T& object) {
+		CallOnBeforeSerialize(SerializationContext& context, const T& object) const {
 		object.OnBeforeSerializeCallback(context);
 	}
 };
@@ -775,11 +803,11 @@ class Type : public ReflectedType<##className> { \
 //TODO try to not duplicate
 #define REFLECT_END_CUSTOM(Serialize, Deserialize) \
 	}\
-	virtual void Serialize(SerializationContext& context, const void* object) override {\
+	virtual void Serialize(SerializationContext& context, const void* object) const override {\
 		const TYPE& t = *(TYPE*)object;\
 		Serialize(context, t);\
 	}\
-	virtual void Deserialize(const SerializationContext& context, void* object) override {\
+	virtual void Deserialize(const SerializationContext& context, void* object) const override {\
 		TYPE& t = *(TYPE*)object;\
 		Deserialize(context, t);\
 	REFLECT_END()

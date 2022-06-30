@@ -10,11 +10,15 @@ void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int id
 
 int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src);
 
-//TODO try to remove or replace "/shared_ptr"
+//TODO try to remove or replace "_shared_ptr"
+
+constexpr char* shared_ptr_suffix = "";
+//constexpr char* shared_ptr_suffix = "_shared_ptr";
 
 //TODO not static
 //TODO unordered_map if possible
 extern std::map<std::weak_ptr<Object>, int, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
+extern std::vector<ReflectedTypeBase*> registeredTypesInLua;
 
 //TODO nontemplated version and stuff
 //TODO WIP
@@ -30,11 +34,13 @@ public:
     }
 
     static void RegisterShared(lua_State* L, ReflectedTypeBase* type) {
-        //TODO not Luna<T>::constructorShared
-        lua_pushcfunction(L, &Luna<T>::constructorShared, (type->GetName() + "::ConstructorShared").c_str());
-        lua_setglobal(L, (type->GetName() + "/shared_ptr").c_str());
+        lua_pushnumber(L, registeredTypesInLua.size());
+        registeredTypesInLua.push_back(type);
+        //TODO remove T
+        lua_pushcclosure(L, &Luna<T>::constructorShared, (type->GetName() + "::ConstructorShared").c_str(), 1);
+        lua_setglobal(L, (type->GetName() + shared_ptr_suffix).c_str());
 
-        luaL_newmetatable(L, (type->GetName() + "/shared_ptr").c_str());
+        luaL_newmetatable(L, (type->GetName() + shared_ptr_suffix).c_str());
         lua_pop(L, 1);
     }
     static void RegisterShared(lua_State* L) {
@@ -50,14 +56,13 @@ public:
     static void Bind(lua_State* L, std::shared_ptr<Object> obj, ReflectedTypeBase* type, int stackIdx, int refId = LUA_REFNIL) {
         lua_pushnumber(L, 0);
         std::shared_ptr<Object>* a = (std::shared_ptr<Object>*)lua_newuserdatadtor(L, sizeof(std::shared_ptr<Object>), &destructor_shared_ptr);
-        //clearing a so destructor wont be called
-        memcpy(a, &std::shared_ptr<Object>(), sizeof(std::shared_ptr<Object>));
+        new(a)(std::shared_ptr<Object>);
         *a = obj;
-        luaL_getmetatable(L, (type->GetName() + "/shared_ptr").c_str());
+        luaL_getmetatable(L, (type->GetName() + shared_ptr_suffix).c_str());
         if (lua_isnil(L, -1)) {
             RegisterShared(L, type);
             lua_pop(L, 1);
-            luaL_getmetatable(L, (type->GetName() + "/shared_ptr").c_str());
+            luaL_getmetatable(L, (type->GetName() + shared_ptr_suffix).c_str());
             //ASSERT(!lua_isnil(L, -1), "Unknown type for lua '%s'", type->GetName().c_str());
         }
         //lua_pushvalue(L, -1);
@@ -67,7 +72,11 @@ public:
 
         bindMethodsShared(L, type);
 
+
         if (refId == LUA_REFNIL) {
+            //TODO dont
+            //this creates persistent pointer to object which is not always needed and messes up garbage collector
+            //need some kind of shared pointer or something
             refId = lua_ref(L, -1);
         }
         std::weak_ptr<Object> weakObj = std::static_pointer_cast<Object>(obj);
@@ -117,7 +126,15 @@ private:
         return 1;
     }
     static int constructorShared(lua_State* L) {
-        Push(L, std::make_shared<T>());
+        //TODO asserts
+        int i = (int)lua_tonumber(L, lua_upvalueindex(1));
+        auto* type = registeredTypesInLua[i];
+        //TODO callConstructor
+        Object* rawObj = (Object*)(void*)new char[type->SizeOf()];
+        type->Construct(rawObj);
+        SerializationContext context;
+        type->Deserialize(context, rawObj);
+        Push(L, std::shared_ptr<Object>(rawObj), type);
         return 1;
     }
 
@@ -196,7 +213,7 @@ private:
 
         //TODO typecheck and stuff
         std::shared_ptr<T>& obj = *static_cast<std::shared_ptr<T>*> (lua_touserdata(L, -1));
-        //std::shared_ptr<Object>& obj = *static_cast<std::shared_ptr<Object>*>(luaL_checkudata(L, -1, (GetReflectedType<Object>()->GetName() + "/shared_ptr").c_str()));
+        //std::shared_ptr<Object>& obj = *static_cast<std::shared_ptr<Object>*>(luaL_checkudata(L, -1, (GetReflectedType<Object>()->GetName() + shared_ptr_suffix).c_str()));
         lua_remove(L, -1);
 
         return call_method(L, i, obj.get(), obj.get()->GetType());
