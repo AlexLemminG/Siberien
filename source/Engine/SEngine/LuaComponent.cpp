@@ -7,19 +7,19 @@
 
 
 void LuaComponent::Call(char* funcName) {
-	if (ref == LUA_REFNIL) {
+	if (!ref) {
 		return;
 	}
 	
 	auto L = LuaSystem::Get()->L;
-	lua_getref(L, ref);
+	ref->PushToStack(L);
 	lua_getfield(LuaSystem::Get()->L, -1, funcName);//TODO cache
 	if (lua_isnil(L, -1)) {
 		lua_pop(L, 1);
 		lua_pop(L, 1);
 		return;
 	}
-	lua_getref(L, ref);
+	ref->PushToStack(L);
 	auto callResult = lua_pcall(L, 1, 0, 0);
 	if(callResult != 0) {
 		std::string error = lua_tostring(L, -1);
@@ -30,11 +30,22 @@ void LuaComponent::Call(char* funcName) {
 }
 
 void LuaComponent::OnEnable() {
+	InitLua();
+
+	onBeforeScriptsReloadingHandler = LuaSystem::Get()->onBeforeScriptsReloading.Subscribe([this]() {TermLua(); Call("OnDisable"); });
+	onAfterScriptsReloadingHandler = LuaSystem::Get()->onAfterScriptsReloading.Subscribe([this]() {InitLua(); Call("OnEnable"); });
+
+	Call("OnEnable");
+
+}
+
+
+void LuaComponent::InitLua() {
 	auto L = LuaSystem::Get()->L;
 
 	Luna<LuaComponent>::RegisterShared(L);
 
-	LuaSystem::Get()->PushModule(script.c_str());
+	LuaSystem::Get()->PushModule(luaObj.scriptName.c_str());
 	if (lua_isnil(L, -1)) {
 		lua_pop(L, 1);
 		return;
@@ -44,27 +55,31 @@ void LuaComponent::OnEnable() {
 	lua_pushvalue(L, -2);
 	lua_pushnil(L);
 	lua_call(LuaSystem::Get()->L, 2, 1);
-	ref = lua_ref(L, -1);
+
+	//TODO deserialize luaObj to table
+
+	MergeToLua(LuaSystem::Get()->L, luaObj.GetType(), luaObj.data.data(), -1, "");
 
 	//TODO check if binded
 	for (auto& c : gameObject()->components) {
-		if(c.get() == this) {
-			Luna<LuaComponent>::Bind(L, std::dynamic_pointer_cast<LuaComponent>(c), -1, ref);
+		if (c.get() == this) {
+			ref = Luna<LuaComponent>::Bind(L, std::dynamic_pointer_cast<LuaComponent>(c), -1);
 			break;
 		}
 	}
+
 	lua_pop(L, 2);
-
-	Call("OnEnable");
-
+}
+void LuaComponent::TermLua() {
+	ref = nullptr;
 }
 
 void LuaComponent::OnDisable() {
 	Call("OnDisable");
 
-	auto L = LuaSystem::Get()->L;
-	lua_unref(L, ref);
-	ref = LUA_REFNIL;
+	LuaSystem::Get()->onBeforeScriptsReloading.Unsubscribe(onBeforeScriptsReloadingHandler);
+	LuaSystem::Get()->onAfterScriptsReloading.Unsubscribe(onAfterScriptsReloadingHandler);
+	TermLua();
 }
 
 void LuaComponent::Update() {
@@ -78,6 +93,14 @@ void LuaComponent::FixedUpdate() {
 }
 
 void LuaComponent::OnValidate() {
+	if (!ref) {
+		return;
+	}
+	auto L = LuaSystem::Get()->L;
+	ref->PushToStack(L);
+	MergeToLua(LuaSystem::Get()->L, luaObj.GetType(), luaObj.data.data(), -1, "");
+	lua_pop(L, 1);
+
 	Call("OnValidate");
 }
 

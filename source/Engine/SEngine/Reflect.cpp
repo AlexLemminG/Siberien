@@ -48,11 +48,17 @@ const bool SerializationContext::IsDefined() const {
 }
 
 const SerializationContext SerializationContext::Child(const std::string& name) const {
-	if (!GetYamlNode().is_map()) {
+	if (!GetYamlNode().valid() || !GetYamlNode().is_map()) {
 		return SerializationContext(ryml::NodeRef(), *this);
 	}
 	else {
-		return SerializationContext(GetYamlNode()[c4::csubstr(name.c_str(), name.length())], *this);
+		auto cname = c4::csubstr(name.c_str(), name.length());
+		if (GetYamlNode().has_child(cname)) {
+			return SerializationContext(GetYamlNode()[cname], *this);
+		}
+		else {
+			return SerializationContext(ryml::NodeRef(), *this);
+		}
 	}
 }
 

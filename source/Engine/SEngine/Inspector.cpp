@@ -29,6 +29,8 @@
 #include "DbgVars.h"
 #include "BoxCollider.h"
 #include "magic_enum.hpp"
+#include "LuaComponent.h"
+#include "LuaSystem.h"
 
 DBG_VAR_BOOL(dbg_showInspector, "Inspector", false);
 bool s_drawGizmos = true;
@@ -344,28 +346,30 @@ public:
 			SetValue(GetReflectedType(t), (void*)t);
 		}
 		void SetValue(ReflectedTypeBase* type, const void* val) {
-			if (root == nullptr) {
-				return;
-			}
-			SerializationContext rootContext{ root };
-			SerializationContext context = rootContext;
-			//TODO for prefabs we need to also change or reload overrides
-			for (auto& name : path) {
-				if (name.size() > 0 && name[0] >= '0' && name[1] <= '9') {
-					int idx = std::stoi(name);
-					for (int i = 0; i < idx; i++) {
-						context.Child(i);//creating empty children
+			if (root != nullptr) {
+				SerializationContext rootContext{ root };
+				SerializationContext context = rootContext;
+				//TODO for prefabs we need to also change or reload overrides
+				for (auto& name : path) {
+					if (name.size() > 0 && name[0] >= '0' && name[0] <= '9') {
+						int idx = std::stoi(name);
+						for (int i = 0; i < idx; i++) {
+							context.Child(i);//creating empty children
+						}
+						context = context.Child(idx);
 					}
-					context = context.Child(idx);
+					else {
+						context = context.Child(name);
+					}
 				}
-				else {
-					context = context.Child(name);
-				}
+				type->Serialize(context, val);
 			}
-			Editor::SetDirty(rootObjToSave);
-			type->Serialize(context, val);
-
-			CallOnValidate(rootObjToCallValidate);
+			if (rootObjToSave) {
+				Editor::SetDirty(rootObjToSave);
+			}
+			if (rootObjToCallValidate) {
+				CallOnValidate(rootObjToCallValidate);
+			}
 		}
 		void ResetValue(ReflectedTypeBase* type, void* val) {
 			//find and clear value from yaml
@@ -512,6 +516,46 @@ public:
 				*str = std::string(buff);
 				varInfo.SetValue(str);
 				changed = true;
+			}
+			EndInspector(varInfo);
+		}
+		else if (type->GetName() == ::GetReflectedType<LuaObject>()->GetName()) {
+			BeginInspector(varInfo);
+			ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+			if (ImGui::TreeNode(name.c_str())) {
+				LuaObject* luaObj = (LuaObject*)(object);
+				{
+					auto childVarInfo = varInfo.Child("scriptName");
+					changed |= DrawInspector((char*)&luaObj->scriptName, "scriptName", GetReflectedType<std::string>(), childVarInfo);
+				}
+				auto dynamicType = luaObj->GetType();
+				if (dynamicType != nullptr) {
+					auto childVarInfo = varInfo.Child("data");
+					if (luaObj->data.size() != dynamicType->SizeOf() || changed) {
+						dynamicType->Construct(luaObj);
+						ASSERT(luaObj->data.size() == dynamicType->SizeOf());
+					}
+					BeginInspector(childVarInfo);
+					ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+					if (ImGui::TreeNode("data")) {
+						for (auto field : dynamicType->fields) {
+							changed |= DrawInspector((char*)field.GetPtr(luaObj->data.data()), field.name, field.type, childVarInfo.Child(field.name));
+						}
+						ImGui::TreePop();
+					}
+					EndInspector(childVarInfo);
+				}
+				ImGui::TreePop();
+			}
+			EndInspector(varInfo);
+		}
+		else if (type->GetName() == ::GetReflectedType<LuaObjectRaw>()->GetName()) {
+			BeginInspector(varInfo);
+			if (ImGui::TreeNode(name.c_str())) {
+				for (auto field : type->fields) {
+					changed |= DrawInspector((char*)field.GetPtr(object), field.name, field.type, varInfo.Child(field.name));
+				}
+				ImGui::TreePop();
 			}
 			EndInspector(varInfo);
 		}
@@ -769,7 +813,7 @@ public:
 					}
 
 					for (const auto& field : typeNonBase->fields) {
-						char* var = object + field.offset;
+						char* var = (char*)field.GetPtr(object);
 						auto childInfo = varInfo.Child(field.name);
 						changed |= DrawInspector(var, field.name, field.type, childInfo);
 					}
@@ -828,9 +872,9 @@ public:
 	}
 
 	template<typename T>
-	void DrawInspector(T& object, VarInfo& varInfo) {
+	bool DrawInspector(T& object, VarInfo& varInfo) {
 		auto typeBase = object.GetType();
-		DrawInspector((((char*)&object)), "", typeBase, varInfo, true);
+		return DrawInspector((((char*)&object)), "", typeBase, varInfo, true);
 	}
 	bool isSettings = false;
 	void DrawOutliner() {

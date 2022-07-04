@@ -43,10 +43,13 @@ public:
 	bool IsActive() const;
 	void SetActive(bool isActive);
 
+	std::shared_ptr<Scene> GetScene() const;
+
 	REFLECT_BEGIN(GameObject, Object);
 	REFLECT_VAR(tag);
 	REFLECT_VAR(components);
 	REFLECT_METHOD_EXPLICIT("GetComponent", static_cast<std::shared_ptr<Component>(GameObject::*)(const std::string&)>(&GameObject::GetComponent));
+	REFLECT_METHOD(GetScene);
 	REFLECT_END();
 
 	uint64_t flags = 0;//TODO back to private

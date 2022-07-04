@@ -1,9 +1,29 @@
 #pragma once
 
 #include "System.h"
+#include "GameEvents.h"
+#include "Asserts.h"
 
 struct lua_State;
 struct lua_CompileOptions;
+
+//Dummy class for inspector to reinterpret memory according to type
+class LuaObjectRaw {
+
+	REFLECT_BEGIN(LuaObjectRaw);
+	REFLECT_END();
+};
+
+class LuaObject : public LuaObjectRaw {
+public:
+	std::string scriptName;
+
+	std::vector<char> data;
+	mutable std::unique_ptr<ReflectedTypeNonTemplated> type;
+
+	static ReflectedTypeBase* TypeOf();
+	virtual	ReflectedTypeBase* GetType() const;
+};
 
 class LuaSystem : public System<LuaSystem> {
 	friend class LuaComponent;
@@ -20,6 +40,11 @@ public:
 	}
 	void RegisterFunction(const ReflectedMethod& method);
 
+	std::unique_ptr<ReflectedTypeNonTemplated> ConstructLuaObjectType(const std::string& scriptName);
+
+	GameEvent<> onBeforeScriptsReloading;
+	GameEvent<> onAfterScriptsReloading;
+
 	struct CompiledCode {
 		char* code = nullptr;
 		size_t size = 0;
@@ -34,7 +59,8 @@ private:
 	bool Init() override;
 	void Term() override;
 
-	void TermInternal();
+	void TermLua();
+	bool InitLua();
 
 	void RegisterAndRunAll();
 

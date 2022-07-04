@@ -53,6 +53,7 @@ bool Time::Init() {
 	m_startTicks = m_prevTicks;
 
 	LuaSystem::Get()->RegisterFunction("deltaTime", &deltaTime);
+	LuaSystem::Get()->RegisterFunction("time", &time);
 
 	return true;
 }

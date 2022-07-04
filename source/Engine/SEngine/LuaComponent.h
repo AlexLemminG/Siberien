@@ -1,15 +1,19 @@
 #pragma once
 
 #include "Component.h"
+#include "GameEvents.h"
+#include "LuaSystem.h"
 
 class LuaScript;
+class LuaObjectRef;
 
 class LuaComponent : public Component {
 private:
-	std::string script;
-	int ref = 0;
+	LuaObject luaObj;
 
 	void Call(char* funcName);
+	void InitLua();
+	void TermLua();
 public:
 	virtual void OnEnable();
 	virtual void Update();
@@ -18,11 +22,17 @@ public:
 	virtual void OnValidate();
 	virtual void OnDrawGizmos();
 
-private:
-	//std::shared_ptr<Component> GetComponent(const std::string& typeName);
+	std::string GetScriptName() const{ return luaObj.scriptName; }
+	std::vector<char> dataForLua;//TODO
 
+private:
+	GameEventHandle onBeforeScriptsReloadingHandler;
+	GameEventHandle onAfterScriptsReloadingHandler;
+
+	//std::shared_ptr<Component> GetComponent(const std::string& typeName);
+	std::shared_ptr<LuaObjectRef> ref;
 	REFLECT_BEGIN(LuaComponent);
-	REFLECT_VAR(script);
+	REFLECT_VAR(luaObj);
 	REFLECT_METHOD_EXPLICIT("gameObject", static_cast<std::shared_ptr<GameObject>(Component::*)()>(&Component::gameObject));
 	REFLECT_END();
 };

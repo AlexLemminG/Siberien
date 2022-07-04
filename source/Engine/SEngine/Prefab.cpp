@@ -36,8 +36,15 @@ std::shared_ptr<GameObject> PrefabInstance::CreateGameObject() const {
 		ASSERT(false);
 		return nullptr;
 	}
+	//TODO there are bugs with named objects/multiple objects with same type
 	ryml::Tree serNodeClone = *serNode;
 	DuplicateSerialized(overrides.rootref(), serNodeClone.rootref());
+
+	/*char str[10000];
+	memset(str, 0, 10000);
+	
+	ryml::emit(serNodeClone, c4::substr(str, str + 10000));
+	printf(str);*/
 
 	SerializationContext c{ serNodeClone };
 	c.database = AssetDatabase::Get();

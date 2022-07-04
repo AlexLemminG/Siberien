@@ -329,11 +329,26 @@ ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType,
 	return method;
 }
 
+class ReflectedField {
+public:
+	ReflectedField(ReflectedTypeBase* type,
+		std::string name,
+		size_t offset) :type(type), name(name), offset(offset) {
+	}
+	virtual void* GetPtr(void* baseObject) const { return (char*)baseObject + offset; }
+	virtual const void* GetPtr(const void* baseObject) const { return (char*)baseObject + offset; }
+	ReflectedTypeBase* type;
+	std::string name;
+	size_t offset;
+};
+
 class ReflectedTypeBase {
 public:
 	virtual void Construct(void* ptr) const {}// = 0;//TODO destruct
 	virtual void Serialize(SerializationContext& context, const void* object) const = 0;
 	virtual void Deserialize(const SerializationContext& context, void* object) const = 0;
+	virtual size_t SizeOf() const = 0;
+
 	const std::string& GetName() const {
 		return __name__;
 	}
@@ -345,10 +360,10 @@ public:
 
 	const std::vector<ReflectedMethod>& GetMethods() const { return __methods__; };
 
-	virtual size_t SizeOf() const = 0;
 
 	std::vector<std::string> tags;//TODO make protected
 	std::vector<std::shared_ptr<Attribute>> attributes;
+	std::vector<ReflectedField> fields;
 
 protected:
 	ReflectedTypeBase(const std::string& name) : __name__(name) {}
@@ -643,16 +658,6 @@ public:
 }
 
 
-class ReflectedField {
-public:
-	ReflectedField(ReflectedTypeBase* type,
-		std::string name,
-		size_t offset) :type(type), name(name), offset(offset) {
-	}
-	ReflectedTypeBase* type;
-	std::string name;
-	size_t offset;
-};
 
 
 template<typename T, typename U> constexpr size_t offsetOf(U T::* member)
@@ -664,7 +669,6 @@ template<typename T, typename U> constexpr size_t offsetOf(U T::* member)
 class ReflectedTypeNonTemplated : public ReflectedTypeBase {
 public:
 	ReflectedTypeNonTemplated(std::string name) : ReflectedTypeBase(name) {}
-	std::vector<ReflectedField> fields;
 };
 
 template<typename T>

@@ -75,5 +75,6 @@ private:
 	REFLECT_VAR(prefabInstances);
 	REFLECT_VAR(sphericalHarmonics);
 	REFLECT_VAR(gameObjects);
+	REFLECT_METHOD(FindGameObjectByTag);
 	REFLECT_END();
 };

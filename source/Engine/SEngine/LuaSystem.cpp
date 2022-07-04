@@ -37,7 +37,7 @@ int LuaSystem::LuaRequire(lua_State* L)
 	return 1;
 }
 
-class LuaScript : public Object{
+class LuaScript : public Object {
 	REFLECT_BEGIN(LuaScript);
 	REFLECT_END();
 };
@@ -131,7 +131,18 @@ bool LuaSystem::PushModule(const char* moduleName) {
 }
 
 bool LuaSystem::Init() {
-
+	return InitLua();
+}
+void LuaSystem::TermLua() {
+	for (auto& kv : compiledCode) {
+		free(kv.second.code);
+	}
+	compiledCode.clear();
+	lua_close(L);
+	L = nullptr;
+	SAFE_DELETE(compilerOptions);
+}
+bool LuaSystem::InitLua() {
 	ASSERT(!compilerOptions);
 	compilerOptions = new lua_CompileOptions();
 	compilerOptions->optimizationLevel = 1;
@@ -142,7 +153,7 @@ bool LuaSystem::Init() {
 	compilerOptions->vectorCtor = "vector";
 
 	compilerOptions->mutableGlobals = nullptr;
-	
+
 	ASSERT(!L);
 	L = luaL_newstate();
 	ASSERT(L);
@@ -168,24 +179,16 @@ bool LuaSystem::Init() {
 
 	RegisterAndRunAll();
 
+	for (int i = 0; i < registeredFunctions.size(); i++) {
+		RegisterFunctionInternal(i);
+	}
+
 	return true;
 }
 
 
-//TODO rename
-void LuaSystem::TermInternal() {
-	for (auto& kv : compiledCode) {
-		free(kv.second.code);
-	}
-	compiledCode.clear();
-	lua_close(L);
-	L = nullptr;
-	SAFE_DELETE(compilerOptions);
-}
-
-
 void LuaSystem::Term() {
-	TermInternal();
+	TermLua();
 	registeredFunctions.clear();
 }
 
@@ -208,14 +211,18 @@ void LuaSystem::RegisterAndRunAll() {
 }
 
 void LuaSystem::ReloadScripts() {
+	onBeforeScriptsReloading.Invoke();
+
 	for (auto& kv : compiledCode) {
 		std::string assetName = kv.first;
 		assetName = scriptsFolder + assetName + ".lua";
 		AssetDatabase::Get()->Unload(assetName);
 	}
-	Term();//TODO not fully
+	TermLua();
 
-	Init();
+	InitLua();
+	onAfterScriptsReloading.Invoke();
+
 }
 
 void LuaSystem::Update() {
@@ -229,7 +236,7 @@ void LuaSystem::Update() {
 void LuaSystem::RegisterFunction(const ReflectedMethod& method) {
 	registeredFunctions.push_back(method);
 	if (L != nullptr) {
-		RegisterFunctionInternal(registeredFunctions.size()-1);
+		RegisterFunctionInternal(registeredFunctions.size() - 1);
 	}
 }
 void LuaSystem::RegisterFunctionInternal(int functionIdx) {
@@ -252,4 +259,168 @@ void LuaSystem::RegisterFunctionInternal(int functionIdx) {
 	lua_setfield(L, -2, method.name.c_str());
 
 	lua_pop(L, 1);
+}
+
+
+class ReflectedLuaType : public ReflectedTypeNonTemplated {
+	//TODO make sure ReflectedTypeBase has virtual destructor
+	//TODO destructor should delete inner ReflectedLuaType types
+public:
+	//TODO make sure nobody uses name to compare types
+	ReflectedLuaType() : ReflectedTypeNonTemplated("LuaObjectRaw") {}
+	ReflectedLuaType(const std::string& name) : ReflectedTypeNonTemplated(name) {}
+	std::vector<std::unique_ptr<ReflectedTypeBase>> dynamicFieldTypes;
+
+	virtual void Construct(void* ptr) const override {
+		for (auto field : fields) {
+			field.type->Construct(field.GetPtr(ptr));//TODO default values from lua
+		}
+	}
+	virtual void Serialize(SerializationContext& context, const void* object) const override {
+		for (auto field : fields) {
+			field.type->Serialize(context.Child(field.name), field.GetPtr(object));
+		}
+	}
+	virtual void Deserialize(const SerializationContext& context, void* object) const override {
+		for (auto field : fields) {
+			field.type->Deserialize(context.Child(field.name), field.GetPtr(object));
+		}
+	}
+
+	//TODO it is not applicable here!!!
+	virtual size_t SizeOf() const {
+		size_t size = 0;
+		for (auto field : fields) {
+			size += field.type->SizeOf();
+		}
+		return size;
+	};
+};
+
+class ReflectedLuaTypeWithScript : public ReflectedLuaType {
+public:
+	std::string scriptName;
+
+	virtual void Serialize(SerializationContext& context, const void* object) const override {
+		auto obj = (LuaObject*)object;
+		context.Child("scriptName") << obj->scriptName;
+		auto dynamicType = obj->GetType();
+		if (dynamicType) {
+			ReflectedLuaType::Serialize(context, obj->data.data());
+		}
+	}
+	virtual void Deserialize(const SerializationContext& context, void* object) const override {
+		auto obj = (LuaObject*)object;
+		context.Child("scriptName") >> obj->scriptName;
+		auto dynamicType = obj->GetType();
+		if (dynamicType) {
+			dynamicType->Construct(object);
+			const auto dataContext = context.Child("data");
+			for (auto field : dynamicType->fields) {
+				field.type->Deserialize(dataContext.Child(field.name), field.GetPtr(obj->data.data()));
+			}
+		}
+	}
+
+	ReflectedLuaTypeWithScript() : ReflectedLuaType("LuaObject") {}
+	virtual void Construct(void* ptr) const override {
+		auto obj = (LuaObject*)ptr;
+		obj->data.resize(SizeOf());
+		for (auto field : fields) {
+			field.type->Construct(field.GetPtr(obj->data.data()));
+		}
+	}
+};
+
+std::unique_ptr<ReflectedTypeNonTemplated> ConstructLuaObjectType(lua_State* L, int idx, std::string scriptName) {
+
+	/* table is in the stack at index 't' */
+	lua_pushnil(L);  /* first key */
+	int tableIdx = idx - 1;
+
+	std::vector<std::unique_ptr<ReflectedTypeBase>> dynamicFieldTypes;
+	auto fields = std::vector<ReflectedField>();
+	int currentOffset = 0;
+	while (lua_next(L, tableIdx) != 0) {
+		/* uses 'key' (at index -2) and 'value' (at index -1) */
+		auto key = lua_tostring(L, -2);
+		//printf("%s ", key);
+		//printf("%s - %s\n",
+		//	lua_typename(L, lua_type(L, -2)),
+		//	lua_typename(L, lua_type(L, -1)));
+		/* removes 'value'; keeps 'key' for next iteration */
+
+
+		auto valueType = lua_type(L, -1);
+		ReflectedTypeBase* type = nullptr;
+		if (strcmp(key, "__index") == 0) {
+			//skipping
+		}else
+		if (valueType == lua_Type::LUA_TNUMBER) {
+			type = GetReflectedType<float>();
+		}
+		else if (valueType == lua_Type::LUA_TTABLE) {
+			auto unique_type = ConstructLuaObjectType(L, -1, "");
+			type = unique_type.get();
+			dynamicFieldTypes.push_back(std::move(unique_type));
+		}
+		else if (valueType == lua_Type::LUA_TSTRING) {
+			type = GetReflectedType<std::string>();
+		}
+		else if (valueType == lua_Type::LUA_TBOOLEAN) {
+			type = GetReflectedType<bool>();
+		}
+		else if (valueType == lua_Type::LUA_TVECTOR) {
+			type = GetReflectedType<Vector3>();
+		}
+
+		if (type != nullptr) {
+			fields.push_back(ReflectedField(type, key, currentOffset));
+			currentOffset += type->SizeOf();
+		}
+		lua_pop(L, 1);
+	}
+
+	std::unique_ptr<ReflectedLuaType> type;
+	if (scriptName.empty()) {
+		type = std::make_unique<ReflectedLuaType>();
+	}
+	else {
+		auto t = std::make_unique<ReflectedLuaTypeWithScript>();
+		t->scriptName = scriptName;
+		type = std::move(t);
+	}
+	type->fields = fields;
+	type->dynamicFieldTypes = std::move(dynamicFieldTypes);
+
+	//lua_settable
+	return type;
+}
+std::unique_ptr<ReflectedTypeNonTemplated> LuaSystem::ConstructLuaObjectType(const std::string& scriptName) {
+	PushModule(scriptName.c_str());
+	if (lua_isnil(L, -1)) {
+		lua_pop(L, 1);
+		return nullptr;
+	}
+
+	//TODO non table support
+	if (!lua_istable(L, -1)) {
+		lua_pop(L, 1);
+		return nullptr;
+	}
+
+	auto type = ::ConstructLuaObjectType(L, -1, scriptName);
+	lua_pop(L, 1);
+	return type;
+}
+
+ReflectedTypeBase* LuaObject::TypeOf() {
+	static ReflectedLuaTypeWithScript type;
+	return &type;
+}
+ReflectedTypeBase* LuaObject::GetType() const {
+	if (type == nullptr) {
+		type = std::move(LuaSystem::Get()->ConstructLuaObjectType(scriptName));
+	}
+	return type.get();
 }

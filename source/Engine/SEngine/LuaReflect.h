@@ -5,11 +5,27 @@
 #include "Reflect.h"
 #include "ryml.hpp"
 #include <map>
+#include "Asserts.h"
 
 void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int idx);
 
+class LuaObjectRef{
+public:
+    LuaObjectRef(lua_State* L, int stackIdx):L(L),refId(lua_ref(L, stackIdx)) {
+    }
+    ~LuaObjectRef(){
+        lua_unref(L, refId);
+    }
+    void PushToStack(lua_State* L) {
+        ASSERT(L == this->L);
+        lua_getref(L, refId);
+    }
+private:
+    lua_State* L = nullptr;
+    int refId = 0;
+};
 int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src);
-
+void MergeToLua(lua_State* L, ReflectedTypeBase* srcType, void* src, int targetIdx, const std::string& targetField);
 //TODO try to remove or replace "_shared_ptr"
 
 constexpr char* shared_ptr_suffix = "";
@@ -17,13 +33,14 @@ constexpr char* shared_ptr_suffix = "";
 
 //TODO not static
 //TODO unordered_map if possible
-extern std::map<std::weak_ptr<Object>, int, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
+extern std::map<std::weak_ptr<Object>, std::weak_ptr<LuaObjectRef>, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
 extern std::vector<ReflectedTypeBase*> registeredTypesInLua;
 
 //TODO nontemplated version and stuff
 //TODO WIP
 template<class T> class Luna {
 public:
+    //TODO add to some registered list so we would know what to do, when scripts are reloaded
     //Registers T() function/constuctor in lua
     static void Register(lua_State* L) {
         lua_pushcfunction(L, &Luna<T>::constructorSimple, (GetReflectedType<T>()->GetName() + "::Constructor").c_str());
@@ -33,6 +50,7 @@ public:
         lua_pop(L, 1);
     }
 
+    //TODO add to some registered list so we would know what to do, when scripts are reloaded
     static void RegisterShared(lua_State* L, ReflectedTypeBase* type) {
         lua_pushnumber(L, registeredTypesInLua.size());
         registeredTypesInLua.push_back(type);
@@ -50,10 +68,11 @@ public:
 
     //does not pop
     //TODO checks
-    static void Bind(lua_State* L, std::shared_ptr<T> obj, int stackIdx, int refId = LUA_REFNIL) {
-        Bind(L, std::static_pointer_cast<Object>(obj), GetReflectedType<T>(), stackIdx, refId);
+    static std::shared_ptr<LuaObjectRef> Bind(lua_State* L, std::shared_ptr<T> obj, int stackIdx) {
+        return Bind(L, std::static_pointer_cast<Object>(obj), GetReflectedType<T>(), stackIdx);
     }
-    static void Bind(lua_State* L, std::shared_ptr<Object> obj, ReflectedTypeBase* type, int stackIdx, int refId = LUA_REFNIL) {
+    static std::shared_ptr<LuaObjectRef> Bind(lua_State* L, std::shared_ptr<Object> obj, ReflectedTypeBase* type, int stackIdx) {
+        //TODO stackIdx not used
         lua_pushnumber(L, 0);
         std::shared_ptr<Object>* a = (std::shared_ptr<Object>*)lua_newuserdatadtor(L, sizeof(std::shared_ptr<Object>), &destructor_shared_ptr);
         new(a)(std::shared_ptr<Object>);
@@ -72,15 +91,11 @@ public:
 
         bindMethodsShared(L, type);
 
+        auto ref = std::make_shared<LuaObjectRef>(L, -1);
 
-        if (refId == LUA_REFNIL) {
-            //TODO dont
-            //this creates persistent pointer to object which is not always needed and messes up garbage collector
-            //need some kind of shared pointer or something
-            refId = lua_ref(L, -1);
-        }
         std::weak_ptr<Object> weakObj = std::static_pointer_cast<Object>(obj);
-        sharedPointersInLua[weakObj] = refId;
+        sharedPointersInLua[weakObj] = std::weak_ptr(ref);
+        return ref;
     }
 
     // Pushes obj to top of the stack and binds if required
@@ -93,8 +108,12 @@ public:
         std::weak_ptr<Object> weakObj = baseObj;
         auto it = sharedPointersInLua.find(weakObj);
         if (it != sharedPointersInLua.end()) {
-            lua_rawgeti(L, LUA_REGISTRYINDEX, it->second);
-            return;
+            auto locked = it->second.lock();
+            if (locked) {
+                ASSERT(!it->first.expired());
+                locked->PushToStack(L);
+                return;
+            }
         }
 
         lua_newtable(L);

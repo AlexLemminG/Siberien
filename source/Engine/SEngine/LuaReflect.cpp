@@ -9,7 +9,7 @@
 #include "SMath.h"
 
 
-std::map<std::weak_ptr<Object>, int, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
+std::map<std::weak_ptr<Object>, std::weak_ptr<LuaObjectRef>, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
 std::vector<ReflectedTypeBase*> registeredTypesInLua;
 
 //TODO cleanup
@@ -119,7 +119,82 @@ void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int id
     type->Deserialize(context, dst);
 }
 
-
+void MergeToLua(lua_State* L, ReflectedTypeBase* srcType, void* src, int targetIdx, const std::string& targetField) {
+    if (srcType == GetReflectedType<int>()) {
+        int val = *(int*)src;
+        if (targetField.empty()) {
+            lua_pushnumber(L, val);
+            lua_replace(L, targetIdx - 1);
+        }
+        else {
+            lua_pushstring(L, targetField.c_str());
+            lua_pushnumber(L, val);
+            lua_settable(L, targetIdx - 2);
+        }
+    }
+    else if (srcType == GetReflectedType<std::string>()) {
+        std::string& val = *(std::string*)src;
+        if (targetField.empty()) {
+            lua_pushstring(L, val.c_str());
+            lua_replace(L, targetIdx - 1);
+        }
+        else {
+            lua_pushstring(L, targetField.c_str());
+            lua_pushstring(L, val.c_str());
+            lua_settable(L, targetIdx - 2);
+        }
+    }
+    else if (srcType == GetReflectedType<float>()) {
+        float val = *(float*)src;
+        if (targetField.empty()) {
+            lua_pushnumber(L, val);
+            lua_replace(L, targetIdx - 1);
+        }
+        else {
+            lua_pushstring(L, targetField.c_str());
+            lua_pushnumber(L, val);
+            lua_settable(L, targetIdx - 2);
+        }
+    }
+    else if (srcType == GetReflectedType<bool>()) {
+        bool val = *(bool*)src;
+        if (targetField.empty()) {
+            lua_pushboolean(L, val);
+            lua_replace(L, targetIdx - 1);
+        }
+        else {
+            lua_pushstring(L, targetField.c_str());
+            lua_pushboolean(L, val);
+            lua_settable(L, targetIdx - 2);
+        }
+    }
+    else {
+        //TODO check
+        if (targetField.empty()) {
+            if (!lua_istable(L, targetIdx)) {
+                //TODO assert if it's not
+                lua_newtable(L);
+                lua_replace(L, targetIdx - 1);
+            }
+            for (auto field : srcType->fields) {
+                MergeToLua(L, field.type, field.GetPtr(src), targetIdx, field.name);
+            }
+        }
+        else {
+            lua_getfield(L, targetIdx, targetField.c_str());
+            if (lua_isnil(L, -1) || !lua_istable(L, -1)) {
+                lua_pop(L, 1);
+                lua_pushstring(L, targetField.c_str());
+                lua_newtable(L);
+                lua_settable(L, targetIdx - 2);
+                lua_getfield(L, targetIdx, targetField.c_str());
+            }
+            ASSERT(!lua_isnil(L, -1) && lua_istable(L, -1));
+            MergeToLua(L, srcType, src, -1, "");
+            lua_pop(L, 1);
+        }
+    }
+}
 int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
     SerializationContext context{};
     if (type == GetReflectedType<int>()) {
@@ -138,7 +213,13 @@ int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
         return 1;
     }
     else if (dynamic_cast<ReflectedTypeSharedPtrBase*>(type)) { //TODO costy and not good generaly
-        Luna<Object>::Push(L, *(std::shared_ptr<Object>*)(src), ((std::shared_ptr<Object>*)(src))->get()->GetType());//TODO not good at all
+        auto obj = *(std::shared_ptr<Object>*)(src);
+        if (obj) {
+            Luna<Object>::Push(L, obj, obj->GetType());
+        }
+        else {
+            lua_pushnil(L);
+        }
         return 1;
     }
     else if (type == GetReflectedType<Vector3>()) {

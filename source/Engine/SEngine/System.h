@@ -4,7 +4,7 @@
 #include "Defines.h"
 #include "Engine.h"
 
-class SE_CPP_API SystemBase {
+class SE_CPP_API SystemBase : public Object {
 public:
 	SystemBase();
 	virtual ~SystemBase();

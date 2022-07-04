@@ -20,6 +20,11 @@ void GameObject::SetActive(bool isActive) {
 	Bits::SetMask(flags, FLAGS::IS_ACTIVE, isActive);
 }
 
+std::shared_ptr<Scene> GameObject::GetScene() const { 
+	//TODO actual scene of GameObject
+	return Scene::Get();
+}
+
 std::string GameObject::GetDbgName() const
 {
 	return "GameObject '" + tag + "'";
