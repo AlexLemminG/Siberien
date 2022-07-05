@@ -71,8 +71,6 @@ start:
 			return -1;
 		}
 
-		Input::Init();
-
 		SceneManager::Init();
 
 		Cmd::Get()->ProcessCommands(argc, argv);
@@ -138,7 +136,6 @@ start:
 
 	{
 		OPTICK_EVENT("Term");
-		Input::Term();
 
 		SceneManager::Term();
 

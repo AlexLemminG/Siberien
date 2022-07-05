@@ -3,6 +3,7 @@
 #include "Common.h"
 #include "System.h"
 #include "SMath.h"
+#include "LuaSystem.h"
 
 SystemsManager* SystemsManager::manager;
 
@@ -14,6 +15,11 @@ bool SystemsManager::Init() {
 		systems.push_back(registrator->CreateSystem());
 	}
 
+	for (int i = 0; i < registrators.size(); i++) {
+		auto system = systems[i];
+		//TODO unregister
+		LuaSystem::Get()->RegisterFunction(registrators[i]->systemName, std::function([system]() { return system; }));
+	}
 	std::sort(systems.begin(), systems.end(),
 		[](const auto& x, const auto& y) {
 			return x->GetPriorityInfo().order < y->GetPriorityInfo().order;

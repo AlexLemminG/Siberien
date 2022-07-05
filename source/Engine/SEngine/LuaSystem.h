@@ -33,8 +33,12 @@ public:
 	bool PushModule(const char* moduleName);
 
 	template <class ReturnType, class...Params>
-	void RegisterFunction(const std::string& name, ReturnType(func)(Params...)) {
-		auto args = args_t<decltype(func)>{};
+	void RegisterFunction(const std::string& name, ReturnType(*func)(Params...)) {
+		RegisterFunction(name, std::function<ReturnType(Params...)>(func));
+	}
+	template <class ReturnType, class...Params>
+	void RegisterFunction(const std::string& name, std::function<ReturnType(Params...)> func) {
+		auto args = args_t<ReturnType(*)(Params...)>{};
 		ReflectedMethod method = GenerateMethodBinding(name, args, func);
 		RegisterFunction(method);
 	}

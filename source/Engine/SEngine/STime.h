@@ -21,4 +21,9 @@ private:
 	std::shared_ptr<TimeSettings> settings;
 	uint32_t m_prevTicks = 0;
 	uint32_t m_startTicks = 0;
+
+	REFLECT_BEGIN(Time);
+	REFLECT_METHOD(time);
+	REFLECT_METHOD(deltaTime);
+	REFLECT_END();
 };

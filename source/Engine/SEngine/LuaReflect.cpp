@@ -227,6 +227,11 @@ int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
         lua_pushvector(L, vec.x, vec.y, vec.z);
         return 1;
     }
+    else if (type == GetReflectedType<bool>()) {
+        bool b = *(bool*)src;
+        lua_pushboolean(L, b);
+        return 1;
+    }
     else {
         ASSERT_FAILED("Unknown type for lua: '%s'", type->GetName().c_str());
         //TODO

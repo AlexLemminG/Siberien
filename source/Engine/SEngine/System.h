@@ -51,9 +51,10 @@ private:
 
 class SystemRegistratorBase {
 public:
-	SystemRegistratorBase() {}
+	SystemRegistratorBase(const std::string& systemName) : systemName(systemName) {}
 	virtual ~SystemRegistratorBase() {}
 	virtual std::shared_ptr<SystemBase> CreateSystem() = 0;
+	std::string systemName;
 };
 
 class SE_CPP_API SystemsManager {
@@ -84,7 +85,7 @@ private:
 template<typename T>
 class SystemRegistrator : public SystemRegistratorBase {
 public:
-	SystemRegistrator() :SystemRegistratorBase() {
+	SystemRegistrator(std::string systemName) :SystemRegistratorBase(systemName) {
 		GameLibraryStaticStorage::Get().systemRegistrators.push_back(this);//TODO remove ?
 	}
 	~SystemRegistrator() {
@@ -94,7 +95,7 @@ public:
 
 //TODO remove from include/
 #define REGISTER_SYSTEM(systemName) \
-static SystemRegistrator<##systemName> SystemRegistrator_##systemName{}; \
+static SystemRegistrator<##systemName> SystemRegistrator_##systemName{#systemName}; \
 template<> \
 ##systemName*& System<##systemName>::GetInternal() { \
 	static systemName* instance = nullptr; \
@@ -102,7 +103,7 @@ template<> \
 }
 
 #define REGISTER_GAME_SYSTEM(systemName) \
-static SystemRegistrator<##systemName> SystemRegistrator_##systemName{}; \
+static SystemRegistrator<##systemName> SystemRegistrator_##systemName{#systemName}; \
 template<> \
 ##systemName*& GameSystem<##systemName>::GetInternal() { \
 	static systemName* instance = nullptr; \

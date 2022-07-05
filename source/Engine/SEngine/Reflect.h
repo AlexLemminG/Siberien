@@ -237,9 +237,13 @@ ReflectedMethod GenerateMethodBindingNoFunc(const std::string& name, types<Retur
 	return method;
 }
 
-//TODO less duplication
 template <class ReturnType, class...Params>
 ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType, void, Params...> types, ReturnType(*func)(Params...)) {
+	return GenerateMethodBinding(name, types, std::function<ReturnType(Params...)>(func));
+}
+//TODO less duplication
+template <class ReturnType, class...Params>
+ReflectedMethod GenerateMethodBinding(const std::string& name, types<ReturnType, void, Params...> types, const std::function<ReturnType(Params...)>& func) {
 	auto method = GenerateMethodBindingNoFunc(name, types);
 	method.func = [=](void* objRaw, std::vector<void*> argsRaw, void* returnRaw) {
 		//void* objRaw;

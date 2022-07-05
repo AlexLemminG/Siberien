@@ -2,6 +2,7 @@
 #include "Input.h"
 #include <SDL.h>
 #include <dear-imgui/imgui_impl_sdl.h>
+#include "magic_enum.hpp"
 
 static std::vector<bool> justPressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
 static std::vector<bool> pressed = std::vector<bool>(((int)SDL_Scancode::SDL_NUM_SCANCODES), false);
@@ -12,12 +13,32 @@ static Uint32 prevMouseState = 0;
 static Vector2 mousePos = Vector2{ 0,0 };
 static Vector2 mouseDeltaPos = Vector2{ 0,0 };
 static float mouseScrollY = 0.f;
+static std::unordered_map<std::string, SDL_Scancode> scancodeFromName;
+
+REGISTER_SYSTEM(Input)
+
+
+static SDL_Scancode GetScancodeFromName(const std::string& name) {
+	auto it = scancodeFromName.find(name);
+	if (it == scancodeFromName.end()) {
+		ASSERT("Unknown scancode name '%s'", name.c_str());
+		return SDL_Scancode::SDL_SCANCODE_UNKNOWN;
+	}
+	return it->second;
+}
+
 
 bool Input::Init() {
 	OPTICK_EVENT();
 	std::fill(justPressed.begin(), justPressed.end(), false);
 	std::fill(pressed.begin(), pressed.end(), false);
 	std::fill(justReleased.begin(), justReleased.end(), false);
+
+	//TODO maybe use SDL_GetScancodeFromName ?
+	
+	for (const auto& e : magic_enum::enum_values<SDL_Scancode>()) {
+		scancodeFromName[SDL_GetScancodeName(e)] = e;
+	}
 
 	return true;
 }
@@ -94,6 +115,18 @@ bool Input::GetKey(SDL_Scancode code) {
 
 bool Input::GetKeyUp(SDL_Scancode code) {
 	return justReleased[code];
+}
+
+bool Input::GetKeyDown(const std::string& code) const {
+	return GetKeyDown(GetScancodeFromName(code));
+}
+
+bool Input::GetKey(const std::string& code) const {
+	return GetKey(GetScancodeFromName(code));
+}
+
+bool Input::GetKeyUp(const std::string& code) const {
+	return GetKeyUp(GetScancodeFromName(code));
 }
 
 bool Input::GetMouseButton(int button) {

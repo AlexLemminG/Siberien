@@ -100,15 +100,21 @@ bool LuaSystem::RegisterAndRun(const char* moduleName, const char* sourceCode, s
 
 
 	int stackDepth = lua_gettop(ML);
-	lua_resume(ML, L, 0);
-	if (lua_gettop(ML) == stackDepth) { // pointer to call module changed to pointer to module object
-		//TODO additional checks if it is valid return obj
-		//TODO check lua_ref + stored in compiledCode map
+	int resumeResult = lua_resume(ML, L, 0);
+	if (resumeResult != 0) {
+		std::string error = lua_tostring(ML, -1);
+		Log(error.c_str());
+		lua_pop(ML, 1);
+	}
+	else if (lua_gettop(ML) == stackDepth) { // pointer to call module changed to pointer to module object
+			//TODO additional checks if it is valid return obj
+			//TODO check lua_ref + stored in compiledCode map
 		luaL_findtable(L, LUA_REGISTRYINDEX, "_MODULES", 1);
 		lua_xmove(ML, L, 1);
 		lua_setfield(L, -2, moduleName);
 		lua_pop(L, 1); //LUA_REGISTRYINDEX
 	}
+
 	lua_pop(L, 1); // ML
 
 	compiledCode[moduleNameStr] = code;
@@ -355,8 +361,8 @@ std::unique_ptr<ReflectedTypeNonTemplated> ConstructLuaObjectType(lua_State* L, 
 		ReflectedTypeBase* type = nullptr;
 		if (strcmp(key, "__index") == 0) {
 			//skipping
-		}else
-		if (valueType == lua_Type::LUA_TNUMBER) {
+		}
+		else if (valueType == lua_Type::LUA_TNUMBER) {
 			type = GetReflectedType<float>();
 		}
 		else if (valueType == lua_Type::LUA_TTABLE) {
