@@ -14,6 +14,10 @@ class LuaObjectRaw {
 	REFLECT_END();
 };
 
+namespace Luau {
+	class Frontend;
+}
+
 class LuaObject : public LuaObjectRaw {
 public:
 	std::string scriptName;
@@ -57,6 +61,7 @@ public:
 	lua_State* L = nullptr;
 private:
 	lua_CompileOptions* compilerOptions = nullptr;
+	Luau::Frontend* frontend = nullptr;
 
 	std::unordered_map<std::string, CompiledCode> compiledCode;
 

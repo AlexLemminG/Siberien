@@ -42,8 +42,8 @@ start:
 	bool needReload = false;
 
 	Config config;
-	AssetDatabase assets;
-	Render render;
+	//AssetDatabase assets;
+	//Render render;
 	SystemsManager systemsManager;
 	Engine engine;
 	::engine = &engine;
@@ -55,17 +55,17 @@ start:
 			return -1;
 		}
 
-		if (!assets.Init()) {
-			return -1;
-		}
+		//if (!assets.Init()) {
+		//	return -1;
+		//}
 
 		if (!libs.Init()) {
 			return -1;
 		}
 
-		if (!render.Init()) {
-			return -1;
-		}
+		//if (!render.Init()) {
+		//	return -1;
+		//}
 
 		if (!systemsManager.Init()) {
 			return -1;
@@ -101,7 +101,7 @@ start:
 		}
 		systemsManager.Update();
 
-		render.Draw(systemsManager);
+		Render::Get()->Draw(systemsManager);
 
 		quit |= Input::GetQuit() | Engine::Get()->IsQuitPending();
 		if (CfgGetBool("godMode")) {
@@ -125,7 +125,7 @@ start:
 		if (needSceneReload) {
 			needSceneReload = false;
 			SceneManager::LoadScene(SceneManager::GetCurrentScenePath());
-			assets.UnloadAll();
+			AssetDatabase::Get()->UnloadAll();
 		}
 
 		SceneManager::Update();
@@ -141,11 +141,11 @@ start:
 
 		systemsManager.Term();
 
-		assets.Term();
+		//assets.Term();
 
 		libs.Term();
 
-		render.Term();
+		//render.Term();
 
 		config.Term();
 

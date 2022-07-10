@@ -147,6 +147,8 @@ public:
 	ryml::NodeRef& GetYamlNode();
 	const ryml::NodeRef& GetYamlNode() const;
 
+	bool isLua = false;
+
 private:
 	RymlNodeRefDummy yamlNode{};
 	std::shared_ptr<ryml::Tree> yamlTree{};
@@ -181,7 +183,7 @@ public:
 		func(obj, args, result);
 	}
 
-	std::string ToString();
+	std::string ToString() const;
 };
 
 //TODO hide
@@ -716,7 +718,7 @@ public:
 			new(ptr)(T);
 		}
 		else {
-			static_assert(std::is_abstract<T>());
+			static_assert(std::is_abstract<T>());//TODO message
 		}
 	}
 	virtual size_t SizeOf() const override { return sizeof(T); }

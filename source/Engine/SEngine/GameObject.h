@@ -12,7 +12,8 @@ public:
 	std::vector<std::shared_ptr<Component>> components;
 
 	template<typename T>
-	std::shared_ptr<T> GetComponent() {
+	std::enable_if_t<std::is_assignable<Component, T>::value, std::shared_ptr<T>>
+	GetComponent() {
 		for (int i = 0; i < components.size(); i++) {
 			T* casted = dynamic_cast<T*>(components[i].get());
 			if (casted != nullptr) {

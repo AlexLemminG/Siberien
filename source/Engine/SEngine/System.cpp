@@ -15,8 +15,10 @@ bool SystemsManager::Init() {
 		systems.push_back(registrator->CreateSystem());
 	}
 
+	std::unordered_map<SystemBase*, std::string> systemNames; //TODO less hacky way
 	for (int i = 0; i < registrators.size(); i++) {
 		auto system = systems[i];
+		systemNames[system.get()] = registrators[i]->systemName;
 		//TODO unregister
 		LuaSystem::Get()->RegisterFunction(registrators[i]->systemName, std::function([system]() { return system; }));
 	}
@@ -28,6 +30,7 @@ bool SystemsManager::Init() {
 
 	for (auto system : systems) {
 		if (!system->Init()) {
+			LogCritical("Failed to init '%s' system", systemNames[system.get()].c_str());
 			return false;
 		}
 	}

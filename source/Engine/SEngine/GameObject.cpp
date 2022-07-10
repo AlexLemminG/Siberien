@@ -10,7 +10,7 @@ void GameObject::OnBeforeSerializeCallback(SerializationContext& context) const 
 	}
 }
 
-std::shared_ptr<GameObject> GameObject::FindWithTag(const std::string& tag) { return Scene::FindGameObjectByTag(tag); }
+std::shared_ptr<GameObject> GameObject::FindWithTag(const std::string& tag) { return Scene::Get()->FindGameObjectByTag(tag); }
 
 bool GameObject::IsActive() const { return Bits::IsMaskTrue(flags, FLAGS::IS_ACTIVE); }
 void GameObject::SetActive(bool isActive) {

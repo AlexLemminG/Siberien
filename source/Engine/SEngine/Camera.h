@@ -6,7 +6,7 @@
 #include "Component.h"
 
 class Sphere;
-class MeshRenderer;
+class MeshRendererAbstract;
 
 class ICamera {
 public:
@@ -17,7 +17,7 @@ public:
 
 	bool IsVisible(const Sphere& sphere) const;
 	bool IsVisible(const AABB& aabb) const;
-	bool IsVisible(const MeshRenderer& renderer) const;
+	bool IsVisible(const MeshRendererAbstract& renderer) const;
 
 
 	virtual void OnBeforeRender();

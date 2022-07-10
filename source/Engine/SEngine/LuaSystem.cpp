@@ -6,12 +6,145 @@
 #include "Resources.h"
 #include "Input.h"
 #include "LuaReflect.h"
+#include "Luau/Frontend.h"
+#include <Luau/BuiltinDefinitions.h>
+#include "../../libs/luau/VM/src/ltable.h"
 
 static constexpr char* scriptsFolder = "scripts/";
 
+class LuaScript : public Object {
+public:
+	LuaScript() {}
+	LuaScript(const std::string& sourceCode) :sourceCode(sourceCode) {}
+	std::string sourceCode;
+
+	REFLECT_BEGIN(LuaScript);
+	REFLECT_END();
+};
+
+static void report(const char* name, const Luau::Location& loc, const char* type, const char* message)
+{
+	LogError("%s(%d,%d): %s: %s\n", name, loc.begin.line + 1, loc.begin.column + 1, type, message);
+}
+
+static void reportError(const Luau::Frontend& frontend, const Luau::TypeError& error)
+{
+	std::string humanReadableName = frontend.fileResolver->getHumanReadableModuleName(error.moduleName);
+
+	if (const Luau::SyntaxError* syntaxError = Luau::get_if<Luau::SyntaxError>(&error.data))
+		report(humanReadableName.c_str(), error.location, "SyntaxError", syntaxError->message.c_str());
+	else
+		report(humanReadableName.c_str(), error.location, "TypeError", Luau::toString(error).c_str());
+}
+
+class LuaScriptImporter : public AssetImporter {
+	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override;
+};
+DECLARE_BINARY_ASSET(LuaScript, LuaScriptImporter);
+
+struct CliFileResolver : Luau::FileResolver
+{
+	std::optional<Luau::SourceCode> readSource(const Luau::ModuleName& name) override
+	{
+		Luau::SourceCode::Type sourceType;
+		std::optional<std::string> source = std::nullopt;
+
+		// If the module name is "-", then read source from stdin
+		if (name == "-")
+		{
+			//source = readStdin();
+			sourceType = Luau::SourceCode::Script;
+		}
+		else
+		{
+			std::string fileName = scriptsFolder;
+			fileName += name;
+			auto asset = AssetDatabase::Get()->Load<LuaScript>(fileName);
+			if (!asset) {
+				return std::nullopt;
+			}
+			source = asset->sourceCode;
+			sourceType = Luau::SourceCode::Module;
+		}
+
+		if (!source)
+			return std::nullopt;
+
+		return Luau::SourceCode{ *source, sourceType };
+	}
+
+	std::optional<Luau::ModuleInfo> resolveModule(const Luau::ModuleInfo* context, Luau::AstExpr* node) override
+	{
+		if (Luau::AstExprConstantString* expr = node->as<Luau::AstExprConstantString>())
+		{
+			Luau::ModuleName name = std::string(expr->value.data, expr->value.size) + ".luau";
+			auto asset = AssetDatabase::Get()->Load<LuaScript>(scriptsFolder + name);
+			if (!asset)
+			{
+				// fall back to .lua if a module with .luau doesn't exist
+				name = std::string(expr->value.data, expr->value.size) + ".lua";
+			}
+
+			return { {name} };
+		}
+
+		return std::nullopt;
+	}
+
+	std::string getHumanReadableModuleName(const Luau::ModuleName& name) const override
+	{
+		if (name == "-")
+			return "stdin";
+		return name;
+	}
+};
+
+struct CliConfigResolver : Luau::ConfigResolver
+{
+	Luau::Config defaultConfig;
+
+	mutable std::unordered_map<std::string, Luau::Config> configCache;
+	mutable std::vector<std::pair<std::string, std::string>> configErrors;
+
+	CliConfigResolver()
+	{
+		defaultConfig.mode = Luau::Mode::Nonstrict;
+	}
+
+	const Luau::Config& getConfig(const Luau::ModuleName& name) const override
+	{
+		std::optional<std::string> path = std::nullopt;// getParentPath(name);
+		if (!path)
+			return defaultConfig;
+
+		return readConfigRec(*path);
+	}
+
+	const Luau::Config& readConfigRec(const std::string& path) const
+	{
+		auto it = configCache.find(path);
+		if (it != configCache.end())
+			return it->second;
+
+		std::optional<std::string> parent = nullptr;// getParentPath(path);
+		Luau::Config result = parent ? readConfigRec(*parent) : defaultConfig;
+
+		std::string configPath = "";// joinPaths(path, Luau::kConfigName);
+
+		if (std::optional<std::string> contents = nullptr /* readFile(configPath) */)
+		{
+			std::optional<std::string> error = Luau::parseConfig(*contents, result);
+			if (error)
+				configErrors.push_back({ configPath, *error });
+		}
+
+		return configCache[path] = result;
+	}
+};
+
 static int finishrequire(lua_State* L) {
 	if (lua_isstring(L, -1))
-		lua_error(L);
+		lua_error(L);//TODO need to push error first
 
 	return 1;
 }
@@ -37,16 +170,6 @@ int LuaSystem::LuaRequire(lua_State* L)
 	return 1;
 }
 
-class LuaScript : public Object {
-	REFLECT_BEGIN(LuaScript);
-	REFLECT_END();
-};
-
-class LuaScriptImporter : public AssetImporter {
-	virtual bool ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle) override;
-};
-DECLARE_BINARY_ASSET(LuaScript, LuaScriptImporter);
-
 REGISTER_SYSTEM(LuaSystem);
 
 bool LuaScriptImporter::ImportAll(AssetDatabase_BinaryImporterHandle& databaseHandle)
@@ -59,8 +182,9 @@ bool LuaScriptImporter::ImportAll(AssetDatabase_BinaryImporterHandle& databaseHa
 	}
 	//TODO asserts
 	name = name.substr(strlen(scriptsFolder), name.length() - strlen(scriptsFolder) - strlen(".lua"));//TODO constexpr ".lua"
-	LuaSystem::Get()->RegisterAndRun(name.c_str(), (char*)&buffer[0], buffer.size());
-	databaseHandle.AddAssetToLoaded("script", std::make_shared<LuaScript>());//just a mock to prevent double loading
+	LuaSystem::Get()->RegisterAndRun(name.c_str(), (char*)buffer.data(), buffer.size());
+	auto scriptObj = std::make_shared<LuaScript>(std::string((char*)buffer.data(), buffer.size()));
+	databaseHandle.AddAssetToLoaded("script", scriptObj);//just a mock to prevent double loading
 	return true;
 }
 
@@ -83,7 +207,6 @@ bool LuaSystem::RegisterAndRun(const char* moduleName, const char* sourceCode, s
 	}
 
 
-
 	// module needs to run in a new thread, isolated from the rest
 	lua_State* GL = lua_mainthread(L);
 	lua_State* ML = lua_newthread(GL);
@@ -92,9 +215,13 @@ bool LuaSystem::RegisterAndRun(const char* moduleName, const char* sourceCode, s
 	// new thread needs to have the globals sandboxed
 	luaL_sandboxthread(ML);
 
+
 	int loadResult = luau_load(ML, moduleName, code.code, code.size, 0);
 	if (loadResult != 0) {
-		ASSERT_FAILED("Failed to load module '%s'", moduleNameStr.c_str());
+		std::string error = lua_tostring(ML, -1);
+		Log("Failed to load module '%s' : %s", moduleNameStr.c_str(), error.c_str());
+		lua_pop(ML, 1);
+		lua_pop(L, 1); // ML
 		return false;
 	}
 
@@ -103,8 +230,10 @@ bool LuaSystem::RegisterAndRun(const char* moduleName, const char* sourceCode, s
 	int resumeResult = lua_resume(ML, L, 0);
 	if (resumeResult != 0) {
 		std::string error = lua_tostring(ML, -1);
-		Log(error.c_str());
+		Log("Failed to load module '%s' : %s", moduleNameStr.c_str(), error.c_str());
 		lua_pop(ML, 1);
+		lua_pop(L, 1); // ML
+		return false;
 	}
 	else if (lua_gettop(ML) == stackDepth) { // pointer to call module changed to pointer to module object
 			//TODO additional checks if it is valid return obj
@@ -130,7 +259,7 @@ bool LuaSystem::PushModule(const char* moduleName) {
 	lua_remove(L, -2);
 	if (!lua_isnil(L, -1)) {
 		if (lua_isstring(L, -1))
-			lua_error(L);
+			lua_error(L);//TODO need to push error first
 		return true;
 	}
 	return false;
@@ -140,12 +269,18 @@ bool LuaSystem::Init() {
 	return InitLua();
 }
 void LuaSystem::TermLua() {
+	for (auto it : sharedPointersInLua) {
+		it.second->HandleLuaStateDestroyed();
+	}
+	sharedPointersInLua.clear();
+	lua_close(L);
+	L = nullptr;
+
 	for (auto& kv : compiledCode) {
 		free(kv.second.code);
 	}
 	compiledCode.clear();
-	lua_close(L);
-	L = nullptr;
+
 	SAFE_DELETE(compilerOptions);
 }
 bool LuaSystem::InitLua() {
@@ -163,6 +298,18 @@ bool LuaSystem::InitLua() {
 	ASSERT(!L);
 	L = luaL_newstate();
 	ASSERT(L);
+
+
+	Luau::FrontendOptions frontendOptions;
+	//frontendOptions.retainFullTypeGraphs = annotate;
+	
+	static CliFileResolver fileResolver;
+	static CliConfigResolver configResolver;
+	frontend = new Luau::Frontend(&fileResolver, &configResolver, frontendOptions);
+	Luau::registerBuiltinTypes(frontend->typeChecker);
+	//TODO delete
+
+
 	lua_setsafeenv(L, LUA_ENVIRONINDEX, true);
 	luaL_openlibs(L);
 
@@ -183,10 +330,15 @@ bool LuaSystem::InitLua() {
 	//RegisterAndRun("A", sourceA, strlen(sourceA));
 	//RegisterAndRun("B", sourceB, strlen(sourceB));
 
-	RegisterAndRunAll();
-
+	RegisterFunction("Instantiate", static_cast<std::shared_ptr<Object>(*)(std::shared_ptr<Object>)>(&Object::Instantiate));
 	for (int i = 0; i < registeredFunctions.size(); i++) {
 		RegisterFunctionInternal(i);
+	}
+
+	RegisterAndRunAll();
+	auto checkRes = frontend->check("Grid.lua");
+	for (auto err : checkRes.errors) {
+		reportError(*frontend, err);
 	}
 
 	return true;
@@ -237,6 +389,14 @@ void LuaSystem::Update() {
 		ReloadScripts();
 	}
 	lua_gc(L, LUA_GCCOLLECT, 0);
+	for (auto iter = sharedPointersInLua.begin(); iter != sharedPointersInLua.end(); ) {
+		if (iter->first.expired() || iter->first.use_count() == 1) { // noone cakes about lua object from c++ or c++ object is only referenced from lua 
+			iter = sharedPointersInLua.erase(iter);
+		}
+		else {
+			++iter;
+		}
+	}
 }
 
 void LuaSystem::RegisterFunction(const ReflectedMethod& method) {
@@ -256,7 +416,7 @@ void LuaSystem::RegisterFunctionInternal(int functionIdx) {
 	static auto callFunc = [](lua_State* L) {
 		int i = (int)lua_tonumber(L, lua_upvalueindex(1));
 		const ReflectedMethod& func = LuaSystem::Get()->registeredFunctions[i];
-		return Luna<void>::CallFunctionFromLua(LuaSystem::Get()->L, func);
+		return Luna::CallFunctionFromLua(LuaSystem::Get()->L, func);
 	};
 
 	lua_pushvalue(L, LUA_GLOBALSINDEX);

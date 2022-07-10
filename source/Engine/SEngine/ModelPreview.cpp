@@ -104,7 +104,7 @@ void ModelPreview::UpdateCamera() {
 		auto deltaRot = Input::GetMousePosition() - mouseDownPos;
 		currentRotation = mouseDownRotation + deltaRot * 0.15f;
 
-		auto camera = Scene::FindGameObjectByTag("camera");
+		auto camera = gameObject()->GetScene()->FindGameObjectByTag("camera");
 		if (camera) {
 			Matrix4 matr = (Quaternion::FromAngleAxis(Mathf::DegToRad(currentRotation.x), Vector3_up) * Quaternion::FromAngleAxis(Mathf::DegToRad(currentRotation.y), Vector3_right)).ToMatrix4();
 			SetPos(matr, matr * Vector3_forward * (-5.f));

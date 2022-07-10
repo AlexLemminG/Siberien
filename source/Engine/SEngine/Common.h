@@ -20,13 +20,18 @@ if(var) \
 {delete var; var = nullptr;}
 
 template<typename ... Args>
+void LogCritical(const std::string & format, Args ... args) {
+	std::cerr << "Critical: " << FormatString(format, args...) << std::endl;
+}
+
+template<typename ... Args>
 void LogError(const std::string& format, Args ... args) {
-	std::cerr << FormatString(format, args...) << std::endl;
+	std::cerr << "Error: " << FormatString(format, args...) << std::endl;
 }
 
 template<typename ... Args>
 void LogWarning(const std::string& format, Args ... args) {
-	std::cout << FormatString(format, args...) << std::endl;
+	std::cout << "Warning: " << FormatString(format, args...) << std::endl;
 }
 
 template<typename ... Args>

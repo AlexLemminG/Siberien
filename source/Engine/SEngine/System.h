@@ -16,6 +16,13 @@ public:
 
 	struct PriorityInfo {
 		int order = 0;
+		PriorityInfo() {}
+		PriorityInfo(int order):order(order) {}
+		enum Order : int {
+			ASSET_DATABASE = -1000,
+			RENDER = -500,
+			DEFAULT = 0
+		};
 	};
 	virtual PriorityInfo GetPriorityInfo() const;
 };

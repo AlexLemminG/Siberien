@@ -292,7 +292,7 @@ void Scene::ProcessAddedGameObjects() {
 
 std::shared_ptr<GameObject> Scene::FindGameObjectByTag(std::string tag) {
 	OPTICK_EVENT();
-	for (auto& go : Get()->gameObjects) {
+	for (auto& go : gameObjects) {
 		if (go->tag == tag) {
 			return go;
 		}

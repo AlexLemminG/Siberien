@@ -333,6 +333,8 @@ DECLARE_BINARY_ASSET(Texture, TextureImporter);
 
 
 Texture::~Texture() {
+	// TODO way to manually destroy textures or something like that
+	// so we can be sure all texture handles are destroyed before terminating bgfx itself
 	if (bgfx::isValid(handle)) {
 		bgfx::destroy(handle);
 	}

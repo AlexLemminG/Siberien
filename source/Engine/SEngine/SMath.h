@@ -501,13 +501,43 @@ inline void SerializeVector(SerializationContext& context, const Vector3& src) {
 	context.Child(2) << src.z;
 }
 inline void DeserializeVector(const SerializationContext& context, Vector3& dst) {
-	if (!context.IsDefined() || !context.IsSequence() || context.Size() < 3) {
+	if (!context.IsDefined() || !context.IsSequence() || context.Size() < 2) {
 		//v = defaultValue;
 		return;
 	}
 	context.Child(0) >> dst.x;
 	context.Child(1) >> dst.y;
 	context.Child(2) >> dst.z;
+}
+inline void SerializeVector2Int(SerializationContext& context, const Vector2Int& src) {
+	context.SetType(SerializationContextType::Sequence);
+
+	if (context.isLua) {
+		context.Child("x") << src.x;
+		context.Child("y") << src.y;
+	}
+	else {
+		context.Child(0) << src.x;
+		context.Child(1) << src.y;
+	}
+}
+inline void DeserializeVector2Int(const SerializationContext& context, Vector2Int& dst) {
+	if (!context.IsDefined() || context.Size() < 2) {
+		//v = defaultValue;
+		return;
+	}
+	if (context.IsSequence()) {
+		context.Child(0) >> dst.x;
+		context.Child(1) >> dst.y;
+	}
+	else {
+		if (context.Child("x").IsDefined()) {
+			context.Child("x") >> dst.x;
+		}
+		if (context.Child("y").IsDefined()) {
+			context.Child("y") >> dst.y;
+		}
+	}
 }
 inline void SerializeVector4(SerializationContext& context, const Vector4& src) {
 	context.SetType(SerializationContextType::Sequence);
@@ -544,6 +574,7 @@ private:
 };
 
 REFLECT_CUSTOM_EXT(Vector3, SerializeVector, DeserializeVector);
+REFLECT_CUSTOM_EXT(Vector2Int, SerializeVector2Int, DeserializeVector2Int);
 REFLECT_CUSTOM_EXT(Vector4, SerializeVector4, DeserializeVector4);
 REFLECT_CUSTOM_EXT(Matrix4, SerializeMatrix4, DeserializeMatrix4);
 REFLECT_CUSTOM_EXT(Color, Color::Serialize, Color::Deserialize);

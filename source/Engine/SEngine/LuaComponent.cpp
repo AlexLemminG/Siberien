@@ -43,7 +43,8 @@ void LuaComponent::OnEnable() {
 void LuaComponent::InitLua() {
 	auto L = LuaSystem::Get()->L;
 
-	Luna<LuaComponent>::RegisterShared(L);
+	//TODO remove double register
+	Luna::RegisterShared<LuaComponent>(L);
 
 	LuaSystem::Get()->PushModule(luaObj.scriptName.c_str());
 	if (lua_isnil(L, -1)) {
@@ -58,12 +59,12 @@ void LuaComponent::InitLua() {
 
 	//TODO deserialize luaObj to table
 
-	MergeToLua(LuaSystem::Get()->L, luaObj.GetType(), luaObj.data.data(), -1, "");
+	MergeToLua(LuaSystem::Get()->L, luaObj.GetType(), &luaObj, -1, "");
 
 	//TODO check if binded
 	for (auto& c : gameObject()->components) {
 		if (c.get() == this) {
-			ref = Luna<LuaComponent>::Bind(L, std::dynamic_pointer_cast<LuaComponent>(c), -1);
+			ref = Luna::Bind(L, c, -1);
 			break;
 		}
 	}
@@ -98,7 +99,7 @@ void LuaComponent::OnValidate() {
 	}
 	auto L = LuaSystem::Get()->L;
 	ref->PushToStack(L);
-	MergeToLua(LuaSystem::Get()->L, luaObj.GetType(), luaObj.data.data(), -1, "");
+	MergeToLua(LuaSystem::Get()->L, luaObj.GetType(), &luaObj, -1, "");
 	lua_pop(L, 1);
 
 	Call("OnValidate");

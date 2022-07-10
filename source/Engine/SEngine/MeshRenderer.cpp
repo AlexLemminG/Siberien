@@ -31,12 +31,12 @@ void PrintHierarchy(aiNode* node, int offset) {
 DECLARE_TEXT_ASSET(MeshRenderer);
 
 
-void MeshRenderer::OnEnable() {
+void MeshRendererAbstract::OnEnable() {
 	addedToRenderers = material != nullptr && mesh != nullptr;
 	if (addedToRenderers) {
-		enabledMeshRenderers.push_back(this);
+		MeshRenderer::enabledMeshRenderers.push_back(this);
 		if (castsShadows) {
-			enabledShadowCasters.push_back(this);
+			MeshRenderer::enabledShadowCasters.push_back(this);
 		}
 	}
 	if (mesh && mesh->bones.size() > 0) {
@@ -47,21 +47,28 @@ void MeshRenderer::OnEnable() {
 	if (material && material->randomColorTextures.size() > 0) {
 		randomColorTextureIdx = Random::Range(0, material->randomColorTextures.size());
 	}
-	m_transform = gameObject()->transform().get();
 }
 
-void MeshRenderer::OnDisable() {
+void MeshRendererAbstract::OnDisable() {
 	if (addedToRenderers) {
-		auto it = std::find(enabledMeshRenderers.begin(), enabledMeshRenderers.end(), this);
-		enabledMeshRenderers[it - enabledMeshRenderers.begin()] = enabledMeshRenderers.back();
-		enabledMeshRenderers.pop_back();
+		auto it = std::find(MeshRenderer::enabledMeshRenderers.begin(), MeshRenderer::enabledMeshRenderers.end(), this);
+		MeshRenderer::enabledMeshRenderers[it - MeshRenderer::enabledMeshRenderers.begin()] = MeshRenderer::enabledMeshRenderers.back();
+		MeshRenderer::enabledMeshRenderers.pop_back();
 		if (castsShadows) {
-			auto it2 = std::find(enabledShadowCasters.begin(), enabledShadowCasters.end(), this);
-			enabledShadowCasters[it2 - enabledShadowCasters.begin()] = enabledShadowCasters.back();
-			enabledShadowCasters.pop_back();
+			auto it2 = std::find(MeshRenderer::enabledShadowCasters.begin(), MeshRenderer::enabledShadowCasters.end(), this);
+			MeshRenderer::enabledShadowCasters[it2 - MeshRenderer::enabledShadowCasters.begin()] = MeshRenderer::enabledShadowCasters.back();
+			MeshRenderer::enabledShadowCasters.pop_back();
 		}
 		addedToRenderers = false;
 	}
 }
-std::vector<MeshRenderer*> MeshRenderer::enabledMeshRenderers;
-std::vector<MeshRenderer*> MeshRenderer::enabledShadowCasters;
+void MeshRenderer::OnEnable() {
+	MeshRendererAbstract::OnEnable();
+	m_transform = gameObject()->transform().get();
+}
+
+void MeshRenderer::OnDisable() {
+	MeshRendererAbstract::OnDisable();
+}
+std::vector<MeshRendererAbstract*> MeshRenderer::enabledMeshRenderers;
+std::vector<MeshRendererAbstract*> MeshRenderer::enabledShadowCasters;

@@ -19,6 +19,8 @@
 
 #include "FileWatcher/FileWatcher.h"
 
+REGISTER_SYSTEM(AssetDatabase);
+
 
 class AssetDatabase_AssetChangeListener : public FW::FileWatchListener, public FW::FileWatcher {
 public:
@@ -113,6 +115,7 @@ static std::unique_ptr<ryml::Tree> StreamToYAML(std::ifstream& input) {
 
 AssetDatabase* AssetDatabase::mainDatabase = nullptr;
 AssetDatabase* AssetDatabase::Get() {
+	ASSERT(mainDatabase);
 	return mainDatabase;
 }
 
@@ -173,6 +176,12 @@ static void DbgLogAllAssets() {
 }
 
 bool AssetDatabase::Init() {
+	if (mainDatabase) {
+		// first init is from main, second is from systemsManager.
+		// ignoring second one
+		ASSERT(mainDatabase == this);
+		return true;
+	}
 	OPTICK_EVENT();
 	if (!PHYSFS_init(nullptr)) {//TODO pass args
 		LogError("Failed to init physfs: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
@@ -240,6 +249,10 @@ void AssetDatabase::Term() {
 	onBeforeUnloaded.UnsubscribeAll();
 
 	PHYSFS_deinit();
+}
+
+SystemBase::PriorityInfo AssetDatabase::GetPriorityInfo() const {
+	return SystemBase::PriorityInfo(SystemBase::PriorityInfo::ASSET_DATABASE);
 }
 
 

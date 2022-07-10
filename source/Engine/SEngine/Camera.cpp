@@ -109,7 +109,7 @@ bool ICamera::IsVisible(const AABB& aabb) const {
 	return frustum.IsOverlapingSphere(sphere);
 }
 
-bool ICamera::IsVisible(const MeshRenderer& renderer) const {
+bool ICamera::IsVisible(const MeshRendererAbstract& renderer) const {
 	//TODO optimize
 	auto sphere = renderer.mesh->boundingSphere;
 	const auto& scale = renderer.m_transform->GetScale();

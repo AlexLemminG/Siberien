@@ -9,7 +9,7 @@
 #include "SMath.h"
 
 
-std::map<std::weak_ptr<Object>, std::weak_ptr<LuaObjectRef>, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
+std::map<std::weak_ptr<Object>, std::shared_ptr<LuaObjectRef>, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
 std::vector<ReflectedTypeBase*> registeredTypesInLua;
 
 //TODO cleanup
@@ -64,7 +64,7 @@ static void Test() {
     auto t = std::make_tuple(3, 3.44, "sdfs");
     //std::make_from_tuple(t);
 
-    Luna<Foo>::Register(LuaSystem::Get()->L);
+    Luna::Register<Foo>(LuaSystem::Get()->L);
 
     auto func = std::function(&Teste2);
     //Foo f;
@@ -92,17 +92,18 @@ class TestSys : public System<TestSys> {
 REGISTER_SYSTEM(TestSys);
 
 //TODO optimize
-void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int idx) {
-    SerializationContext context{};
+static void DeserializeFromLuaToContext(lua_State* L, int idx, SerializationContext& context) {
     if (lua_isnumber(L, idx)) {
+
         double num = lua_tonumber(L, idx);
-        if (type == GetReflectedType<int>()) {
-            context << (int)num;
-        }
-        else {
-            ASSERT(type == GetReflectedType<float>());
-            context << (float)num;
-        }
+        context << (float)num;
+        //if (type == GetReflectedType<int>()) {
+        //    context << (int)num;
+        //}
+        //else {
+        //    ASSERT(type == GetReflectedType<float>());
+        //    context << (float)num;
+        //}
     }
     else if (lua_isstring(L, idx)) {
         std::string str = lua_tostring(L, idx);
@@ -112,60 +113,118 @@ void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int id
         Vector3 vec(lua_tovector(L, idx));
         Serialize(context, vec);
     }
-    else {
-        ASSERT(lua_istable(L, idx));
-        //TODO
+    else if(lua_isuserdata(L, idx)) {
+        //TODO ?
     }
+    else if (lua_isnil(L, idx)) {
+        //TODO ?
+    } else{
+        ASSERT(lua_istable(L, idx));
+
+        lua_pushnil(L);  /* first key */
+        int tableIdx = idx - 1;
+
+        int currentOffset = 0;
+        while (lua_next(L, tableIdx) != 0) {
+            bool keyWasString = lua_type(L, -2) == lua_Type::LUA_TSTRING;
+            const char* key;
+
+            if (!keyWasString) {
+                lua_pushvalue(L, -2);
+                key = lua_tostring(L, -1);
+                lua_pushvalue(L, -2);
+            }
+            else {
+                key = lua_tostring(L, -2);
+            }
+
+            DeserializeFromLuaToContext(L, -1, context.Child(key));
+            if (!keyWasString) {
+                lua_pop(L, 2);
+            }
+            lua_pop(L, 1);
+        }
+    }
+}
+//TODO optimize
+void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int idx) {
+
+    if (dynamic_cast<ReflectedTypeSharedPtrBase*>(type) != nullptr) {
+        //TODO think about it. Do we need deserialize the rest of lua object or not in that case?
+
+        lua_pushnumber(L, 0);
+        lua_gettable(L, idx-1);
+
+        //TODO typecheck and stuff
+        auto& dstObj = *(std::shared_ptr<Object>*)(dst);
+        dstObj = *static_cast<std::shared_ptr<Object>*> (lua_touserdata(L, -1));
+        //std::shared_ptr<Object>& obj = *static_cast<std::shared_ptr<Object>*>(luaL_checkudata(L, -1, (GetReflectedType<Object>()->GetName() + shared_ptr_suffix).c_str()));
+        lua_remove(L, -1);
+        return;
+    }
+    SerializationContext context{};
+    context.isLua = true;
+    DeserializeFromLuaToContext(L, idx, context);
     type->Deserialize(context, dst);
 }
 
-void MergeToLua(lua_State* L, ReflectedTypeBase* srcType, void* src, int targetIdx, const std::string& targetField) {
-    if (srcType == GetReflectedType<int>()) {
-        int val = *(int*)src;
-        if (targetField.empty()) {
-            lua_pushnumber(L, val);
-            lua_replace(L, targetIdx - 1);
-        }
-        else {
-            lua_pushstring(L, targetField.c_str());
-            lua_pushnumber(L, val);
-            lua_settable(L, targetIdx - 2);
-        }
+static void MergeToLua(lua_State* L, const SerializationContext& context, int targetIdx, const std::string& targetField) {
+    //TODO remove GetName() // currently required for lib / engine interaction
+    if (!context.IsDefined()) {
+        return;
     }
-    else if (srcType == GetReflectedType<std::string>()) {
-        std::string& val = *(std::string*)src;
-        if (targetField.empty()) {
-            lua_pushstring(L, val.c_str());
-            lua_replace(L, targetIdx - 1);
+    const auto node = context.GetYamlNode();
+    auto tag = ryml::to_tag(node.val_tag());
+    if (!context.IsMap()) {
+        float f;
+        int i;
+        bool b; if (c4::from_chars(node.val(), &i)) {
+            int val = i;
+            if (targetField.empty()) {
+                lua_pushnumber(L, val);
+                lua_replace(L, targetIdx - 1);
+            }
+            else {
+                lua_pushstring(L, targetField.c_str());
+                lua_pushnumber(L, val);
+                lua_settable(L, targetIdx - 2);
+            }
+        }
+        else if (c4::from_chars(node.val(), &f)) {
+            float val = f;
+            if (targetField.empty()) {
+                lua_pushnumber(L, val);
+                lua_replace(L, targetIdx - 1);
+            }
+            else {
+                lua_pushstring(L, targetField.c_str());
+                lua_pushnumber(L, val);
+                lua_settable(L, targetIdx - 2);
+            }
+        }
+        else if (c4::from_chars(node.val(), &b)) {
+            bool val = b;
+            if (targetField.empty()) {
+                lua_pushboolean(L, val);
+                lua_replace(L, targetIdx - 1);
+            }
+            else {
+                lua_pushstring(L, targetField.c_str());
+                lua_pushboolean(L, val);
+                lua_settable(L, targetIdx - 2);
+            }
         }
         else {
-            lua_pushstring(L, targetField.c_str());
-            lua_pushstring(L, val.c_str());
-            lua_settable(L, targetIdx - 2);
-        }
-    }
-    else if (srcType == GetReflectedType<float>()) {
-        float val = *(float*)src;
-        if (targetField.empty()) {
-            lua_pushnumber(L, val);
-            lua_replace(L, targetIdx - 1);
-        }
-        else {
-            lua_pushstring(L, targetField.c_str());
-            lua_pushnumber(L, val);
-            lua_settable(L, targetIdx - 2);
-        }
-    }
-    else if (srcType == GetReflectedType<bool>()) {
-        bool val = *(bool*)src;
-        if (targetField.empty()) {
-            lua_pushboolean(L, val);
-            lua_replace(L, targetIdx - 1);
-        }
-        else {
-            lua_pushstring(L, targetField.c_str());
-            lua_pushboolean(L, val);
-            lua_settable(L, targetIdx - 2);
+            std::string val = node.val().str;
+            if (targetField.empty()) {
+                lua_pushstring(L, val.c_str());
+                lua_replace(L, targetIdx - 1);
+            }
+            else {
+                lua_pushstring(L, targetField.c_str());
+                lua_pushstring(L, val.c_str());
+                lua_settable(L, targetIdx - 2);
+            }
         }
     }
     else {
@@ -176,8 +235,8 @@ void MergeToLua(lua_State* L, ReflectedTypeBase* srcType, void* src, int targetI
                 lua_newtable(L);
                 lua_replace(L, targetIdx - 1);
             }
-            for (auto field : srcType->fields) {
-                MergeToLua(L, field.type, field.GetPtr(src), targetIdx, field.name);
+            for (auto field : context.GetChildrenNames()) {
+                MergeToLua(L, context.Child(field), targetIdx, field);
             }
         }
         else {
@@ -190,24 +249,32 @@ void MergeToLua(lua_State* L, ReflectedTypeBase* srcType, void* src, int targetI
                 lua_getfield(L, targetIdx, targetField.c_str());
             }
             ASSERT(!lua_isnil(L, -1) && lua_istable(L, -1));
-            MergeToLua(L, srcType, src, -1, "");
+            MergeToLua(L, context, -1, "");
             lua_pop(L, 1);
         }
     }
 }
-int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
+void MergeToLua(lua_State* L, ReflectedTypeBase* srcType, void* src, int targetIdx, const std::string& targetField) {
     SerializationContext context{};
-    if (type == GetReflectedType<int>()) {
+    context.isLua = true;
+    srcType->Serialize(context, src);
+    MergeToLua(L, context, targetIdx, targetField);
+}
+int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
+    //TODO get rid of ->GetName()
+    SerializationContext context{};
+    context.isLua = true;
+    if (type->GetName() == GetReflectedType<int>()->GetName()) {
         int val = *(int*)src;
         lua_pushnumber(L, val);
         return 1;
     }
-    else if (type == GetReflectedType<float>()) {
+    else if (type->GetName() == GetReflectedType<float>()->GetName()) {
         float val = *(float*)src;
         lua_pushnumber(L, val);
         return 1;
     }
-    else if (type == GetReflectedType<std::string>()) {
+    else if (type->GetName() == GetReflectedType<std::string>()->GetName()) {
         std::string str = *(std::string*)src;
         lua_pushstring(L, str.c_str());
         return 1;
@@ -215,26 +282,27 @@ int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
     else if (dynamic_cast<ReflectedTypeSharedPtrBase*>(type)) { //TODO costy and not good generaly
         auto obj = *(std::shared_ptr<Object>*)(src);
         if (obj) {
-            Luna<Object>::Push(L, obj, obj->GetType());
+            Luna::Push(L, obj);
         }
         else {
             lua_pushnil(L);
         }
         return 1;
     }
-    else if (type == GetReflectedType<Vector3>()) {
+    else if (type->GetName() == GetReflectedType<Vector3>()->GetName()) {
         Vector3 vec = *(Vector3*)src;
         lua_pushvector(L, vec.x, vec.y, vec.z);
         return 1;
     }
-    else if (type == GetReflectedType<bool>()) {
+    else if (type->GetName() == GetReflectedType<bool>()->GetName()) {
         bool b = *(bool*)src;
         lua_pushboolean(L, b);
         return 1;
     }
     else {
-        ASSERT_FAILED("Unknown type for lua: '%s'", type->GetName().c_str());
-        //TODO
+        lua_newtable(L);
+        MergeToLua(L, type, src, -1, "");
+        return 1;
     }
     return 0;
 }

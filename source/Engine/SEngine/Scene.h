@@ -8,7 +8,7 @@
 class GameObject;
 
 class SphericalHarmonics;
-
+//TODO const correctness
 class SE_CPP_API Scene : public Object {
 	friend class Component;//TODO why?
 	friend class InspectorWindow;
@@ -25,7 +25,7 @@ public:
 	void RemoveGameObject(std::shared_ptr<GameObject> go);
 	void RemoveGameObjectImmediately(std::shared_ptr<GameObject> go);
 
-	static std::shared_ptr<GameObject> FindGameObjectByTag(std::string tag);
+	std::shared_ptr<GameObject> FindGameObjectByTag(std::string tag);
 
 	static std::shared_ptr<Scene> Get();//TODO remove singletons
 	virtual void OnBeforeSerializeCallback(SerializationContext& context) const override;
@@ -76,5 +76,6 @@ private:
 	REFLECT_VAR(sphericalHarmonics);
 	REFLECT_VAR(gameObjects);
 	REFLECT_METHOD(FindGameObjectByTag);
+	REFLECT_METHOD(AddGameObject);
 	REFLECT_END();
 };

@@ -190,7 +190,8 @@ SerializationContext::SerializationContext(ryml::NodeRef yamlNode, const Seriali
 	, rootObjectsRequestedToSerialize(parent.rootObjectsRequestedToSerialize)
 	, rootObjectsAllowedToSerialize(parent.rootObjectsAllowedToSerialize)
 	, rootDeserializedObjects(parent.rootDeserializedObjects)
-	, rootObjectsRequestedToSerializeRequesters(parent.rootObjectsRequestedToSerializeRequesters) {}
+	, rootObjectsRequestedToSerializeRequesters(parent.rootObjectsRequestedToSerializeRequesters)
+	, isLua(parent.isLua) {}
 
 void SerializationContext::RequestDeserialization(void* ptr, const std::string& assetPath) const {
 	if (databaseHandle) {
@@ -272,7 +273,7 @@ void ReflectedTypeString::Deserialize(const SerializationContext& context, void*
 	}
 }
 
-std::string ReflectedMethod::ToString() {
+std::string ReflectedMethod::ToString() const {
 	std::string info;
 	if (returnType != nullptr) {
 		info += returnType->GetName();

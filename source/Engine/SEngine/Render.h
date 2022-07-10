@@ -16,13 +16,15 @@ class Camera;
 class ShadowRenderer;
 class ICamera;
 class RenderSettings;
+class MeshRendererAbstract;
 
-class Render {
+class Render : public System<Render>{
 	friend class ShadowRenderer;
 public:
-	bool Init();
+	virtual bool Init() override;
 	void Draw(SystemsManager& systems);
-	void Term();
+	virtual void Term() override;
+	virtual PriorityInfo GetPriorityInfo() const { return PriorityInfo::RENDER; }
 
 	int GetWidth() { return prevWidth; }
 	int GetHeight() { return prevHeight; }
@@ -40,7 +42,7 @@ public:
 	void ApplyMaterialProperties(const Material* material);
 
 	//TODO move viewId to camera
-	void DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial, const std::vector<MeshRenderer*>* renderers = nullptr);
+	void DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial, const std::vector<MeshRendererAbstract*>* renderers = nullptr);
 
 	bgfx::UniformHandle GetOrCreateVectorUniform(const std::string& name);
 
@@ -67,7 +69,7 @@ private:
 
 	int currentFreeViewId = 0;
 
-	void DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId = 0); //returns true if was not culled
+	void DrawMesh(const MeshRendererAbstract* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId = 0); //returns true if was not culled
 	void UpdateLights(Vector3 poi);
 
 	bool IsFullScreen();

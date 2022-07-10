@@ -18,17 +18,15 @@ namespace bimg {
 	class ImageContainer;
 }
 class Transform;
-class MeshRenderer : public Component {
+class SE_CPP_API MeshRendererAbstract : public Component {
 public:
 	std::shared_ptr<Mesh> mesh;
 	std::shared_ptr<Material> material;
-	static std::vector<MeshRenderer*> enabledMeshRenderers;
-	static std::vector<MeshRenderer*> enabledShadowCasters;
 
-	void OnEnable() override;
-	void OnDisable() override;
+	virtual void OnEnable() override;
+	virtual void OnDisable() override;
 
-	REFLECT_BEGIN(MeshRenderer, Component);
+	REFLECT_BEGIN(MeshRendererAbstract, Component);
 	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_VAR(mesh);
 	REFLECT_VAR(material);
@@ -41,7 +39,20 @@ public:
 	Transform* m_transform = nullptr;
 	int randomColorTextureIdx = 0;//TODO no sins
 
-private:
+protected:
 	bool castsShadows = true;
 	bool addedToRenderers = false;
+};
+
+class SE_CPP_API MeshRenderer : public MeshRendererAbstract {
+public:
+
+	static std::vector<MeshRendererAbstract*> enabledMeshRenderers;
+	static std::vector<MeshRendererAbstract*> enabledShadowCasters;
+
+	virtual void OnEnable() override;
+	virtual void OnDisable() override;
+
+	REFLECT_BEGIN(MeshRenderer, MeshRendererAbstract);
+	REFLECT_END();
 };

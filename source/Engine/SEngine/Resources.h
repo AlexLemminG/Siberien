@@ -69,13 +69,13 @@ private:
 	AssetDatabase* database = nullptr;
 };
 
-class SE_CPP_API AssetDatabase {
+class SE_CPP_API AssetDatabase : public System<AssetDatabase>{
 	friend AssetDatabase_BinaryImporterHandle;
 	friend AssetDatabase_TextImporterHandle;
 public:
-	bool Init();
-
-	void Term();
+	virtual bool Init() override;
+	virtual void Term() override;
+	virtual SystemBase::PriorityInfo GetPriorityInfo() const override;
 
 	//TODO currently only required for scene editing hack. consider removing
 	void Unload(const std::string& path);
@@ -108,6 +108,9 @@ public:
 		}
 		return loaded;
 	}
+	REFLECT_BEGIN(AssetDatabase);
+	REFLECT_METHOD_EXPLICIT("Load", static_cast<std::shared_ptr<Object>(AssetDatabase::*)(const std::string&)>(&Load));
+	REFLECT_END();
 
 	//TODO where T is Object
 	template<typename T>

@@ -50,6 +50,8 @@ DBG_VAR_BOOL(dbg_drawBones, "Draw Bones", false);
 
 REFLECT_ENUM(bgfx::RendererType::Enum);
 
+REGISTER_SYSTEM(Render);
+
 static std::shared_ptr<RenderSettings> s_renderSettings;
 class RenderSettings : public Object {
 public:
@@ -877,6 +879,7 @@ void Render::Term()
 	}
 	Dbg::Term();
 	UnloadAssets();
+	AssetDatabase::Get()->UnloadAll();//HACK because we need to dump away all textures before 
 
 	for (auto u : textureUniforms) {
 		bgfx::destroy(u.second);
@@ -1014,11 +1017,11 @@ void Render::UpdateLights(Vector3 poi) {
 		}
 	}
 }
-void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial, const std::vector<MeshRenderer*>* ptrRenderers) {
+void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material> overrideMaterial, const std::vector<MeshRendererAbstract*>* ptrRenderers) {
 	//TODO setup camera
 	OPTICK_EVENT();
 
-	std::vector<MeshRenderer*> renderers = ptrRenderers != nullptr ? *ptrRenderers : MeshRenderer::enabledMeshRenderers;
+	std::vector<MeshRendererAbstract*> renderers = ptrRenderers != nullptr ? *ptrRenderers : MeshRenderer::enabledMeshRenderers;
 
 	if (renderSettings->frustumCulling) {
 		int size = renderers.size();
@@ -1034,7 +1037,7 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 	}
 
 	if (!overrideMaterial) {
-		static auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
+		static auto renderersSort = [](const MeshRendererAbstract* r1, const MeshRendererAbstract* r2) {
 			if (r1->mesh.get() < r2->mesh.get()) {
 				return true;
 			}
@@ -1059,7 +1062,7 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 
 		OPTICK_EVENT("DrawRenderers");
 		bool prevEq = false;
-		const MeshRenderer* meshNext;
+		const MeshRendererAbstract* meshNext;
 		bool nextEq;
 		//TODO get rid of std::vector / std::string
 		if (renderSettings->tryToMinimizeStateChanges) {
@@ -1085,7 +1088,7 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 	else {
 		//TODO refactor duplicated code
 
-		static auto renderersSort = [](const MeshRenderer* r1, const MeshRenderer* r2) {
+		static auto renderersSort = [](const MeshRendererAbstract* r1, const MeshRendererAbstract* r2) {
 			return r1->mesh.get() < r2->mesh.get();
 		};
 		if (renderSettings->preSortShadowRenderers) {
@@ -1124,7 +1127,7 @@ void Render::DrawAll(int viewId, const ICamera& camera, std::shared_ptr<Material
 	}
 }
 
-void Render::DrawMesh(const MeshRenderer* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId) {
+void Render::DrawMesh(const MeshRendererAbstract* renderer, const Material* material, const ICamera& camera, bool clearMaterialState, bool clearMeshState, bool updateMaterialState, bool updateMeshState, int viewId) {
 	if (!material || !material->shader || !bgfx::isValid(material->shader->program)) {
 		material = brokenMat.get();//PERF checking and fixing cornercase
 	}
