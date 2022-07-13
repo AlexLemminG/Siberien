@@ -77,5 +77,6 @@ private:
 	REFLECT_VAR(gameObjects);
 	REFLECT_METHOD(FindGameObjectByTag);
 	REFLECT_METHOD(AddGameObject);
+	REFLECT_METHOD(RemoveGameObject);
 	REFLECT_END();
 };

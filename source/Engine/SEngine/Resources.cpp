@@ -18,31 +18,8 @@
 #include "physfs.h"
 
 #include "FileWatcher/FileWatcher.h"
-
-REGISTER_SYSTEM(AssetDatabase);
-
-
-class AssetDatabase_AssetChangeListener : public FW::FileWatchListener, public FW::FileWatcher {
-public:
-	virtual AssetDatabase_AssetChangeListener::~AssetDatabase_AssetChangeListener() override {
-
-	}
-	virtual void handleFileAction(FW::WatchID watchid, const FW::String& dir, const FW::String& filename, FW::Action action) {
-		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-		std::string narrow = converter.to_bytes(filename);
-		std::string actionStr = action == FW::Actions::Modified ? "Modified" : (action == FW::Actions::Add ? "Added" : "Deleted");
-		Log(converter.to_bytes(dir) + "/" + converter.to_bytes(filename) + " " + actionStr);
-	}
-};
-AssetDatabase_AssetChangeListener* changeListener = nullptr;
-
-class AssetDatabase_AssetChangeListenerSystem : public System<AssetDatabase_AssetChangeListenerSystem> {
-	void Update() override {
-		//TODO this is expensive, need to move to separate thread
-		//changeListener->update();
-	}
-};
-REGISTER_SYSTEM(AssetDatabase_AssetChangeListenerSystem);
+#include <condition_variable>
+#include <set>
 
 
 static std::vector<std::string> split(const std::string& s, char delim) {
@@ -89,6 +66,120 @@ static void SanitizeBackslashes(std::string& path) {
 		}
 	}
 }
+
+REGISTER_SYSTEM(AssetDatabase);
+
+class AssetDatabase_AssetChangeListenerSystem :
+	public System<AssetDatabase_AssetChangeListenerSystem>,
+	public FW::FileWatchListener,
+	public FW::FileWatcher
+{
+public:
+	virtual AssetDatabase_AssetChangeListenerSystem::~AssetDatabase_AssetChangeListenerSystem() override {
+
+	}
+	virtual void handleFileAction(FW::WatchID watchid, const FW::String& dir, const FW::String& filename, FW::Action action) {
+		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+		std::string narrow = converter.to_bytes(filename);
+		std::string actionStr = action == FW::Actions::Modified ? "Modified" : (action == FW::Actions::Add ? "Added" : "Deleted");
+		modifiedFiles.emplace(dir +  L"\\" + filename, action);
+	}
+
+	//TODO private with friend
+	void AddWatchDirectory(std::wstring dir) {
+		std::unique_lock lock{ m };
+		dirsToWatch.push_back(dir);
+	}
+
+	GameEventHandle AddFileListener(std::string file, GameEvent<std::string>::HANDLER_TYPE func) {
+		return eventListeners[file].Subscribe(func);
+	}
+	void RemoveFileListener(std::string file, GameEventHandle handle) {
+		return eventListeners[file].Unsubscribe(handle);
+	}
+
+private:
+	std::condition_variable cv;
+	bool listenerThreadIsRunning = false;
+	bool needListenerUpdate = false;
+	bool needListenerShutdown = false;
+	std::mutex m;
+	std::thread listenerThread;
+
+	std::vector<std::wstring> dirsToWatch;
+	std::set<std::pair<std::wstring, FW::Action>> modifiedFiles;
+
+	std::unordered_map<std::string, GameEvent<std::string>> eventListeners;
+
+
+	void UpdateListenerThread() {
+		while (!needListenerShutdown) {
+			std::unique_lock lock{ m };
+			cv.wait(lock, [this] {
+				return needListenerUpdate
+					|| needListenerShutdown; });
+			if (needListenerShutdown) {
+				break;
+			}
+			for (auto dir : dirsToWatch) {
+				addWatch(dir, this, true);
+			}
+			dirsToWatch.clear();
+
+			needListenerUpdate = false;
+			update(); //FileWatchListener::update
+
+			//TODO do we need it here?
+			lock.unlock();
+		}
+		listenerThreadIsRunning = false;
+		cv.notify_one();
+	}
+
+	virtual bool Init() override {
+		listenerThread = std::thread([this] { UpdateListenerThread(); });
+		listenerThreadIsRunning = true;
+		return true;
+	}
+	void Update() override {
+		std::set<std::pair<std::wstring, FW::Action>> modifiedFiles;
+
+		{
+			std::lock_guard guard{ m };
+			needListenerUpdate = true;
+			modifiedFiles = this->modifiedFiles;
+			this->modifiedFiles.clear();
+		}
+		cv.notify_one();
+
+		for (auto mf : modifiedFiles) {
+			std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+			std::string actionStr = mf.second== FW::Actions::Modified ? "Modified" : (mf.second == FW::Actions::Add ? "Added" : "Deleted");
+			Log("%s - %s", converter.to_bytes(mf.first).c_str(), actionStr.c_str());
+			auto path = AssetDatabase::Get()->GetVirtualPath(converter.to_bytes(mf.first));
+			eventListeners[path].Invoke(path);
+		}
+	}
+	
+	void Term() {
+		{
+			std::lock_guard guard{ m };
+			needListenerShutdown = true;
+		}
+		cv.notify_one();
+		//TODO yield
+		std::unique_lock lock{ m };
+		cv.wait(lock, [this] { return !listenerThreadIsRunning; });
+		listenerThread.join();
+		
+	}
+	virtual PriorityInfo GetPriorityInfo() const override {
+		return PriorityInfo(PriorityInfo::ASSET_DATABASE - 1);
+	}
+};
+REGISTER_SYSTEM(AssetDatabase_AssetChangeListenerSystem);
+
+
 
 static std::unique_ptr<ryml::Tree> FileToYAML(PHYSFS_File* file) {
 	//TODO error checks
@@ -191,9 +282,6 @@ bool AssetDatabase::Init() {
 		LogError("Failed to set physfs write dir: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
 		return false;
 	}
-	ASSERT(changeListener == nullptr);
-	changeListener = new AssetDatabase_AssetChangeListener();
-
 	auto nodeMountAssets = CfgGetNode("mountAssets"); //TODO some other place for dll's to state their mount dirs
 	for (const auto& dir : nodeMountAssets) {
 		c4::csubstr csubstr;
@@ -204,8 +292,8 @@ bool AssetDatabase::Init() {
 			ASSERT(false);
 			return false;
 		}
-		//std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-		//changeListener->addWatch(converter.from_bytes(dirstr), changeListener, true);
+		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+		AssetDatabase_AssetChangeListenerSystem::Get()->AddWatchDirectory(converter.from_bytes(dirStr));
 	}
 
 	auto nodeMountLibraries = CfgGetNode("mountLibraries"); //TODO some other place for dll's to state their mount dirs
@@ -238,9 +326,6 @@ bool AssetDatabase::Init() {
 
 void AssetDatabase::Term() {
 	OPTICK_EVENT();
-	ASSERT(changeListener != nullptr);
-	delete changeListener;
-	changeListener = nullptr;
 	ASSERT(mainDatabase == this);
 	mainDatabase = nullptr;
 	//TODO little bit hacky
@@ -415,6 +500,14 @@ std::string AssetDatabase::RemoveObjectFromAsset(const std::shared_ptr<Object>& 
 	}
 	objectPaths.erase(object);
 	return desc.assetId;
+}
+
+GameEventHandle AssetDatabase::AddFileListener(const std::string& path, GameEvent<std::string>::HANDLER_TYPE func) {
+	return AssetDatabase_AssetChangeListenerSystem::Get()->AddFileListener(path, func);
+}
+
+void AssetDatabase::RemoveFileListener(const std::string& path, GameEventHandle handle) {
+	return AssetDatabase_AssetChangeListenerSystem::Get()->RemoveFileListener(path, handle);
 }
 
 void AssetDatabase::AddObjectToAsset(const std::string& path, const std::string& id, const std::shared_ptr<Object>& object) {
@@ -851,6 +944,25 @@ bool AssetDatabase_BinaryImporterHandle::ReadYAML(const std::string& fullPath, s
 	return node != nullptr;
 }
 
-std::string AssetDatabase::PathDescriptor::ToFullPath() {
+AssetDatabase::PathDescriptor::PathDescriptor(std::string path) {
+	auto lastIdChar = path.find_last_of('$');
+	if (lastIdChar == -1) {
+		this->assetId = "";
+		this->assetPath = path;
+	}
+	else {
+		this->assetId = path.substr(lastIdChar + 1, path.length() - lastIdChar - 1);
+		this->assetPath = path.substr(0, lastIdChar);
+	}
+	SanitizeBackslashes(this->assetPath);
+}
+
+AssetDatabase::PathDescriptor::PathDescriptor(std::string assetPath, std::string id) {
+	this->assetId = id;
+	this->assetPath = assetPath;
+	SanitizeBackslashes(this->assetPath);
+}
+
+std::string AssetDatabase::PathDescriptor::ToFullPath() const {
 	return assetId.size() > 0 ? FormatString("%s$%s", assetPath.c_str(), assetId.c_str()) : assetPath;
 }

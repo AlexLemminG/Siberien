@@ -30,6 +30,7 @@ public:
 };
 
 class LuaSystem : public System<LuaSystem> {
+	friend class LuaScriptImporter;
 	friend class LuaComponent;
 public:
 	bool RegisterAndRun(const char* moduleName, const char* sourceCode, size_t sourceCodeLength);
@@ -81,5 +82,9 @@ private:
 
 	static int LuaRequire(lua_State* L);
 
+	void HandleScriptChanged(const std::string& script) { needToReloadScripts = true; }
+
 	std::vector<ReflectedMethod> registeredFunctions;
+	bool needToReloadScripts = false;
+	std::vector<std::pair<std::string, GameEventHandle>> subscribers;
 };

@@ -131,6 +131,9 @@ public:
 	std::string AddObjectToAsset(const std::string& path, const std::shared_ptr<Object>& object);//returns id
 	std::string RemoveObjectFromAsset(const std::shared_ptr<Object>& object);//returns old id
 
+	GameEventHandle AddFileListener(const std::string& path, GameEvent<std::string>::HANDLER_TYPE func);
+	void RemoveFileListener(const std::string& path, GameEventHandle handle);
+
 	static AssetDatabase* Get();
 
 	GameEvent<> onBeforeUnloaded;
@@ -192,27 +195,14 @@ private:
 		};
 		std::vector<SingleObject> objects;
 	};
-	class PathDescriptor {
+	class SE_CPP_API PathDescriptor {
 	public:
-		PathDescriptor(std::string path) {
-			auto lastIdChar = path.find_last_of('$');
-			if (lastIdChar == -1) {
-				this->assetId = "";
-				this->assetPath = path;
-			}
-			else {
-				this->assetId = path.substr(lastIdChar + 1, path.length() - lastIdChar - 1);
-				this->assetPath = path.substr(0, lastIdChar);
-			}
-		}
-		PathDescriptor(std::string assetPath, std::string id) {
-			this->assetId = id;
-			this->assetPath = assetPath;
-		}
+		PathDescriptor(std::string path);
+		PathDescriptor(std::string assetPath, std::string id);
 		std::string assetPath;
 		std::string assetId;
 
-		std::string ToFullPath();
+		std::string ToFullPath() const;
 	};
 	class LoadingRequest {
 	public:
@@ -236,9 +226,9 @@ private:
 	std::string currentAssetLoadingPath;
 	std::vector<LoadingRequest> loadingQueue;
 
-	std::string assetsRootFolder = "assets\\";
-	std::string libraryRootFolder = "library\\assets\\";
-	std::string tempFolder = "temp\\";
+	std::string assetsRootFolder = "assets/";
+	std::string libraryRootFolder = "library/assets/";
+	std::string tempFolder = "temp/";
 
 	static AssetDatabase* mainDatabase;
 };

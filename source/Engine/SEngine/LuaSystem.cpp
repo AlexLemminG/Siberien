@@ -180,8 +180,14 @@ bool LuaScriptImporter::ImportAll(AssetDatabase_BinaryImporterHandle& databaseHa
 	if (buffer.size() == 0) {
 		return false;
 	}
+
+	auto handle = AssetDatabase::Get()->AddFileListener(databaseHandle.GetAssetPath(), [this](const std::string& script) {LuaSystem::Get()->HandleScriptChanged(script); });
+	LuaSystem::Get()->subscribers.emplace_back(name, handle);
+
 	//TODO asserts
 	name = name.substr(strlen(scriptsFolder), name.length() - strlen(scriptsFolder) - strlen(".lua"));//TODO constexpr ".lua"
+
+
 	LuaSystem::Get()->RegisterAndRun(name.c_str(), (char*)buffer.data(), buffer.size());
 	auto scriptObj = std::make_shared<LuaScript>(std::string((char*)buffer.data(), buffer.size()));
 	databaseHandle.AddAssetToLoaded("script", scriptObj);//just a mock to prevent double loading
@@ -193,6 +199,7 @@ bool LuaSystem::RegisterAndRun(const char* moduleName, const char* sourceCode, s
 		ASSERT_FAILED("Trying to register module with empty name");
 		return false;
 	}
+
 	std::string moduleNameStr = moduleName;
 	if ((compiledCode.find(moduleNameStr) != compiledCode.end())) {
 		ASSERT_FAILED("Module with name '%s' already registered", moduleNameStr.c_str());
@@ -269,6 +276,9 @@ bool LuaSystem::Init() {
 	return InitLua();
 }
 void LuaSystem::TermLua() {
+	for (auto s : subscribers) {
+		AssetDatabase::Get()->RemoveFileListener(s.first, s.second);
+	}
 	for (auto it : sharedPointersInLua) {
 		it.second->HandleLuaStateDestroyed();
 	}
@@ -369,6 +379,8 @@ void LuaSystem::RegisterAndRunAll() {
 }
 
 void LuaSystem::ReloadScripts() {
+	Log("Reloading Lua scripts");
+	needToReloadScripts = false;
 	onBeforeScriptsReloading.Invoke();
 
 	for (auto& kv : compiledCode) {
@@ -384,7 +396,7 @@ void LuaSystem::ReloadScripts() {
 }
 
 void LuaSystem::Update() {
-	if (Input::GetKeyDown(SDL_SCANCODE_F7)) {
+	if (Input::GetKeyDown(SDL_SCANCODE_F7) || needToReloadScripts) {
 		//TODO move hotkeys to one place
 		ReloadScripts();
 	}

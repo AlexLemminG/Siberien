@@ -32,7 +32,7 @@ void LuaComponent::Call(char* funcName) {
 void LuaComponent::OnEnable() {
 	InitLua();
 
-	onBeforeScriptsReloadingHandler = LuaSystem::Get()->onBeforeScriptsReloading.Subscribe([this]() {TermLua(); Call("OnDisable"); });
+	onBeforeScriptsReloadingHandler = LuaSystem::Get()->onBeforeScriptsReloading.Subscribe([this]() {Call("OnDisable"); TermLua(); });
 	onAfterScriptsReloadingHandler = LuaSystem::Get()->onAfterScriptsReloading.Subscribe([this]() {InitLua(); Call("OnEnable"); });
 
 	Call("OnEnable");
