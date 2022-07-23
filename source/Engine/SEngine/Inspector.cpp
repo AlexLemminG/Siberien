@@ -520,6 +520,7 @@ public:
 			EndInspector(varInfo);
 		}
 		else if (type->GetName() == ::GetReflectedType<LuaObject>()->GetName()) {
+			//TODO better treat and store it as a yaml node instead ?
 			BeginInspector(varInfo);
 			ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 			if (ImGui::TreeNode(name.c_str())) {
