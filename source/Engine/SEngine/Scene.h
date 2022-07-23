@@ -24,6 +24,8 @@ public:
 	void AddGameObjectImmediately(std::shared_ptr<GameObject> go);
 	void RemoveGameObject(std::shared_ptr<GameObject> go);
 	void RemoveGameObjectImmediately(std::shared_ptr<GameObject> go);
+	void AddComponent(std::shared_ptr<GameObject> go, std::shared_ptr<Component> component);
+	void AddComponent(GameObject* go, std::shared_ptr<Component> component);
 
 	std::shared_ptr<GameObject> FindGameObjectByTag(std::string tag);
 
@@ -77,6 +79,7 @@ private:
 	REFLECT_VAR(gameObjects);
 	REFLECT_METHOD(FindGameObjectByTag);
 	REFLECT_METHOD(AddGameObject);
+	REFLECT_METHOD(AddGameObjectImmediately);
 	REFLECT_METHOD(RemoveGameObject);
 	REFLECT_END();
 };

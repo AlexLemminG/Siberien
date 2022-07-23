@@ -22,12 +22,18 @@ public:
 		auto l = [handle](const HandleWithHandler& x) { return x.handleId == handle.id; };
 		auto it = std::find_if(handlers.begin(), handlers.end(), l);
 		if (it != handlers.end()) {
+			int idx = it - handlers.begin();
+			if (nextHandleInvokeIdx <= idx) {
+				nextHandleInvokeIdx--;
+			}
 			handlers.erase(it);
 		}
 	}
 	void Invoke(Args... args) {
-		for (HandleWithHandler& handler : handlers) {
-			handler.handler(args...);
+		nextHandleInvokeIdx = 0;
+		while(nextHandleInvokeIdx < handlers.size()) {
+			handlers[nextHandleInvokeIdx].handler(args...);
+			nextHandleInvokeIdx++;
 		}
 	}
 	void UnsubscribeAll() {
@@ -35,6 +41,7 @@ public:
 	}
 
 private:
+	int nextHandleInvokeIdx = 0;
 	int nextHandleIdx = 0;
 	class HandleWithHandler {
 	public:

@@ -25,7 +25,7 @@ public:
 	void SetEulerAngles(const Vector3& euler) {
 		SetRotation(Quaternion::FromEulerAngles(euler));
 	}
-	const Vector3& GetScale() const {
+	Vector3 GetScale() const {
 		return scale;
 	}
 	void SetScale(const Vector3& scale);
@@ -52,6 +52,8 @@ public:
 	static void Serialize(SerializationContext& so, const Transform& t);
 
 	REFLECT_BEGIN(Transform);
+	REFLECT_METHOD(GetScale);
+	REFLECT_METHOD(SetScale);
 	REFLECT_METHOD(SetPosition);
 	REFLECT_METHOD(GetPosition);
 	REFLECT_END_CUSTOM(Transform::Serialize, Transform::Deserialize);

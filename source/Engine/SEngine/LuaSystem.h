@@ -3,6 +3,7 @@
 #include "System.h"
 #include "GameEvents.h"
 #include "Asserts.h"
+#include <unordered_set>
 
 struct lua_State;
 struct lua_CompileOptions;
@@ -65,6 +66,7 @@ private:
 	Luau::Frontend* frontend = nullptr;
 
 	std::unordered_map<std::string, CompiledCode> compiledCode;
+	std::unordered_set<std::string> allLuaAssets;
 
 	bool Init() override;
 	void Term() override;

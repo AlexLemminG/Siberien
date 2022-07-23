@@ -206,6 +206,7 @@ bool LuaSystem::RegisterAndRun(const char* moduleName, const char* sourceCode, s
 		return false;
 	}
 
+	allLuaAssets.emplace(moduleName);
 	CompiledCode code;
 	code.code = luau_compile(sourceCode, sourceCodeLength, compilerOptions, &code.size);
 	if (code.code == nullptr) {
@@ -226,7 +227,7 @@ bool LuaSystem::RegisterAndRun(const char* moduleName, const char* sourceCode, s
 	int loadResult = luau_load(ML, moduleName, code.code, code.size, 0);
 	if (loadResult != 0) {
 		std::string error = lua_tostring(ML, -1);
-		Log("Failed to load module '%s' : %s", moduleNameStr.c_str(), error.c_str());
+		LogError("Failed to load module '%s' : %s", moduleNameStr.c_str(), error.c_str());
 		lua_pop(ML, 1);
 		lua_pop(L, 1); // ML
 		return false;
@@ -237,7 +238,7 @@ bool LuaSystem::RegisterAndRun(const char* moduleName, const char* sourceCode, s
 	int resumeResult = lua_resume(ML, L, 0);
 	if (resumeResult != 0) {
 		std::string error = lua_tostring(ML, -1);
-		Log("Failed to load module '%s' : %s", moduleNameStr.c_str(), error.c_str());
+		LogError("Failed to load module '%s' : %s", moduleNameStr.c_str(), error.c_str());
 		lua_pop(ML, 1);
 		lua_pop(L, 1); // ML
 		return false;
@@ -289,6 +290,7 @@ void LuaSystem::TermLua() {
 	for (auto& kv : compiledCode) {
 		free(kv.second.code);
 	}
+	allLuaAssets.clear();
 	compiledCode.clear();
 
 	SAFE_DELETE(compilerOptions);
@@ -383,10 +385,9 @@ void LuaSystem::ReloadScripts() {
 	needToReloadScripts = false;
 	onBeforeScriptsReloading.Invoke();
 
-	for (auto& kv : compiledCode) {
-		std::string assetName = kv.first;
-		assetName = scriptsFolder + assetName + ".lua";
-		AssetDatabase::Get()->Unload(assetName);
+	for (auto& assetName : allLuaAssets) {
+		auto fulleAssetName = scriptsFolder + assetName + ".lua";
+		AssetDatabase::Get()->Unload(fulleAssetName);
 	}
 	TermLua();
 
@@ -428,7 +429,7 @@ void LuaSystem::RegisterFunctionInternal(int functionIdx) {
 	static auto callFunc = [](lua_State* L) {
 		int i = (int)lua_tonumber(L, lua_upvalueindex(1));
 		const ReflectedMethod& func = LuaSystem::Get()->registeredFunctions[i];
-		return Luna::CallFunctionFromLua(LuaSystem::Get()->L, func);
+		return Luna::CallFunctionFromLua(L, func);
 	};
 
 	lua_pushvalue(L, LUA_GLOBALSINDEX);
@@ -489,8 +490,15 @@ public:
 	}
 	virtual void Deserialize(const SerializationContext& context, void* object) const override {
 		auto obj = (LuaObject*)object;
-		context.Child("scriptName") >> obj->scriptName;
+		auto scriptNameNode = context.Child("scriptName");
+		if (scriptNameNode.IsDefined()) {
+			scriptNameNode >> obj->scriptName;
+		}
+		else {
+			obj->scriptName = "";
+		}
 		auto dynamicType = obj->GetType();
+		//TODO it looks weird overal. obj->GetType is supposed to work with scriptName and is cached
 		if (dynamicType) {
 			dynamicType->Construct(object);
 			const auto dataContext = context.Child("data");

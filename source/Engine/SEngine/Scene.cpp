@@ -47,6 +47,7 @@ void Scene::Init(bool isEditMode) {
 
 
 	for (auto& go : gameObjects) {
+		go->thisWeak = go;
 		for (auto c : go->components) {
 			c->m_gameObject = go;
 		}
@@ -83,6 +84,24 @@ void Scene::FixedUpdate() {
 void Scene::RemoveGameObjectImmediately(std::shared_ptr<GameObject> gameObject) {
 	RemoveGameObject(gameObject);
 	ProcessRemovedGameObjects();
+}
+
+void Scene::AddComponent(std::shared_ptr<GameObject> go, std::shared_ptr<Component> component) {
+	go->components.push_back(component);
+	component->m_gameObject = go;
+	//TODO if enabled
+	bool isActive = std::find(activeGameObjects.begin(), activeGameObjects.end(), go) != activeGameObjects.end();
+	SetComponentEnabledInternal(component.get(), isActive);
+}
+
+void Scene::AddComponent(GameObject* go, std::shared_ptr<Component> component) {
+	auto shared = go->thisWeak.lock();
+	if (shared) {
+		AddComponent(shared, component);
+	}
+	else {
+		go->components.push_back(component);
+	}
 }
 
 void Scene::RemoveGameObject(std::shared_ptr<GameObject> gameObject) {

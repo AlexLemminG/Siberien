@@ -61,6 +61,8 @@ public:
 	REFLECT_ATTRIBUTE(ExecuteInEditModeAttribute());
 	REFLECT_VAR(speed);
 	REFLECT_VAR(defaultAnimation);
+	REFLECT_METHOD(SetAnimation);
+	REFLECT_METHOD(ResetTime);
 	REFLECT_END();
 
 private:

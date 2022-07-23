@@ -23,14 +23,8 @@ public:
 		return nullptr;
 	}
 
-	std::shared_ptr<Component> GetComponent(const std::string& type) {
-		for (int i = 0; i < components.size(); i++) {
-			if (components[i].get()->GetType()->GetName() == type) {
-				return std::dynamic_pointer_cast<Component>(components[i]);
-			}
-		}
-		return nullptr;
-	}
+	std::shared_ptr<Component> GetComponent(const std::string& type);
+	std::shared_ptr<Component> AddComponent(const std::string& type);
 
 	std::shared_ptr<Transform> transform() {
 		return GetComponent<Transform>();
@@ -49,6 +43,7 @@ public:
 	REFLECT_BEGIN(GameObject, Object);
 	REFLECT_VAR(tag);
 	REFLECT_VAR(components);
+	REFLECT_METHOD_EXPLICIT("AddComponent", static_cast<std::shared_ptr<Component>(GameObject::*)(const std::string&)>(&GameObject::AddComponent));
 	REFLECT_METHOD_EXPLICIT("GetComponent", static_cast<std::shared_ptr<Component>(GameObject::*)(const std::string&)>(&GameObject::GetComponent));
 	REFLECT_METHOD(GetScene);
 	REFLECT_END();
@@ -60,8 +55,14 @@ public:
 			IS_HIDDEN_IN_INSPECTOR = 1 << 1
 		};
 	};
+
+	//TODO optimize
+	//HACK to reference shared this for scene GOs
+	std::weak_ptr<GameObject> thisWeak;
+
 private:
 
 	//TODO optimize
 	std::shared_ptr<GameObject> prefab;
+
 };

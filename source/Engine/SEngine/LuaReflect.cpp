@@ -150,13 +150,16 @@ static void DeserializeFromLuaToContext(lua_State* L, int idx, SerializationCont
 void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int idx) {
 
     if (dynamic_cast<ReflectedTypeSharedPtrBase*>(type) != nullptr) {
+        //TODO typecheck and stuff
+        auto& dstObj = *(std::shared_ptr<Object>*)(dst);
         //TODO think about it. Do we need deserialize the rest of lua object or not in that case?
-
+        if (lua_isnil(L, -1)) {
+            dstObj = std::shared_ptr<Object>();
+            return;
+        }
         lua_pushnumber(L, 0);
         lua_gettable(L, idx-1);
 
-        //TODO typecheck and stuff
-        auto& dstObj = *(std::shared_ptr<Object>*)(dst);
         dstObj = *static_cast<std::shared_ptr<Object>*> (lua_touserdata(L, -1));
         //std::shared_ptr<Object>& obj = *static_cast<std::shared_ptr<Object>*>(luaL_checkudata(L, -1, (GetReflectedType<Object>()->GetName() + shared_ptr_suffix).c_str()));
         lua_remove(L, -1);
@@ -215,7 +218,7 @@ static void MergeToLua(lua_State* L, const SerializationContext& context, int ta
             }
         }
         else {
-            std::string val = node.val().str;
+            std::string val = std::string(node.val().str, node.val().len);
             if (targetField.empty()) {
                 lua_pushstring(L, val.c_str());
                 lua_replace(L, targetIdx - 1);
@@ -305,4 +308,8 @@ int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
         return 1;
     }
     return 0;
+}
+
+LuaObjectRef::LuaObjectRef(lua_State* L, int stackIdx) :L(L), refId(lua_ref(L, stackIdx)) {
+    ASSERT(L == LuaSystem::Get()->L);
 }

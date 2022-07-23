@@ -11,8 +11,7 @@ SE_CPP_API void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* 
 
 class LuaObjectRef{
 public:
-    LuaObjectRef(lua_State* L, int stackIdx):L(L),refId(lua_ref(L, stackIdx)) {
-    }
+    LuaObjectRef(lua_State* L, int stackIdx);
     ~LuaObjectRef(){
         if (L) {
             lua_unref(L, refId);
@@ -73,6 +72,12 @@ public:
         lua_setglobal(L, (type->GetName() + shared_ptr_suffix).c_str());
 
         luaL_newmetatable(L, (type->GetName() + shared_ptr_suffix).c_str());
+        lua_pushstring(L, "__newindex");
+        lua_pushcclosure(L, &Luna::__newindexShared, "__newindexShared", 0);
+        lua_settable(L, -3);
+        lua_pushstring(L, "__index");
+        lua_pushcclosure(L, &Luna::__indexShared, "__indexShared", 0);
+        lua_settable(L, -3);
         lua_pop(L, 1);
     }
     template<class T>
@@ -94,6 +99,7 @@ public:
     }
     static std::shared_ptr<LuaObjectRef> Bind(lua_State* L, std::shared_ptr<Object> obj, ReflectedTypeBase* type, int stackIdx) {
         //TODO stackIdx not used
+        bindMethodsShared(L, type);
         lua_pushnumber(L, 0);
         std::shared_ptr<Object>* a = (std::shared_ptr<Object>*)lua_newuserdatadtor(L, sizeof(std::shared_ptr<Object>), &destructor_shared_ptr);
         new(a)(std::shared_ptr<Object>);
@@ -105,18 +111,56 @@ public:
             luaL_getmetatable(L, (type->GetName() + shared_ptr_suffix).c_str());
             //ASSERT(!lua_isnil(L, -1), "Unknown type for lua '%s'", type->GetName().c_str());
         }
-        //lua_pushvalue(L, -1);
-        //lua_setmetatable(L, -5);//table metatable
-        lua_setmetatable(L, -2);//userdata metatable
-        lua_settable(L, -3); // table[0] = obj;
 
-        bindMethodsShared(L, type);
+
+        lua_pushvalue(L, -4);
+        bool hasMeta = lua_getmetatable(L, -1);
+        if (hasMeta && lua_equal(L, -1, -2)) {
+            hasMeta = false;
+            lua_pop(L, 1);
+        }
+        int metatablesCount = 0;
+        while (hasMeta) {
+            metatablesCount++;
+            hasMeta = lua_getmetatable(L, -1);
+            if (hasMeta && lua_equal(L, -1, -2)) {
+                hasMeta = false;
+                lua_pop(L, 1);
+            }
+        }
+        lua_pushvalue(L, -2 - metatablesCount);
+        lua_setmetatable(L, -2);
+        lua_pop(L, metatablesCount + 1);
+
+        lua_setmetatable(L, -2);//userdata metatable
+        lua_rawset(L, -3); // table[0] = obj;
+
+
+        lua_getmetatable(L, -1);
+        lua_pushstring(L, "__newindex");
+        lua_pushcclosure(L, &Luna::__newindexShared, "__newindexShared", 0);
+        lua_settable(L, -3);
+        lua_pop(L, 1);
+
 
         auto ref = std::make_shared<LuaObjectRef>(L, -1);
 
         std::weak_ptr<Object> weakObj = obj;
         sharedPointersInLua[weakObj] = ref;
         return ref;
+    }
+
+    //returns nullptr if not binded
+    static std::shared_ptr<LuaObjectRef> TryGetRef(lua_State* L, std::shared_ptr<Object> obj) {
+        if (obj == nullptr) {
+            return nullptr;
+        }
+        std::weak_ptr<Object> weakObj = obj;
+        auto it = sharedPointersInLua.find(weakObj);
+        if (it != sharedPointersInLua.end()) {
+            return it->second;
+        }
+        return nullptr;
     }
 
     // Pushes obj to top of the stack and binds if required
@@ -200,6 +244,34 @@ private:
             lua_pushcclosure(L, &Luna::thunkShared, (type->GetMethods()[i].name + " Luna::thunk").c_str(), 1);
             lua_settable(L, -3);
         }
+    }
+    static int __newindexShared(lua_State* L) {
+        //TODO typecheck and stuff
+        //TODO should return not 0 ?
+        lua_pushnumber(L, 0);
+        lua_rawget(L, -4);
+        if (!lua_isnil(L, -1)) {
+            std::shared_ptr<Object>& obj = *static_cast<std::shared_ptr<Object>*> (lua_touserdata(L, -1));
+            lua_pop(L, 1);
+            if (obj != nullptr) {
+                std::string fieldName = lua_tostring(L, -2);
+                for (auto field : obj->GetType()->fields) {
+                    if (field.name == fieldName) {
+                        DeserializeFromLua(L, field.type, field.GetPtr(obj.get()), -1);
+                        return 0;
+                    }
+                }
+            }
+        }
+        else {
+            lua_pop(L, 1);
+        }
+        lua_rawset(L, -3);
+        return 0;
+    }
+    static int __indexShared(lua_State* L) {
+        //TODO get from user data if exists
+        return lua_rawget(L, -2);
     }
     static int call_function(lua_State* L, const ReflectedMethod& method, void* obj) {
         size_t totalSize = 0;

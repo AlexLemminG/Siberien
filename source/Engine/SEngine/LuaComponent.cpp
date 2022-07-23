@@ -13,6 +13,7 @@ void LuaComponent::Call(char* funcName) {
 	
 	auto L = LuaSystem::Get()->L;
 	ref->PushToStack(L);
+
 	lua_getfield(LuaSystem::Get()->L, -1, funcName);//TODO cache
 	if (lua_isnil(L, -1)) {
 		lua_pop(L, 1);
@@ -41,6 +42,9 @@ void LuaComponent::OnEnable() {
 
 
 void LuaComponent::InitLua() {
+	if (ref != nullptr) {
+		return; // already inited, probably new object created while reloading
+	}
 	auto L = LuaSystem::Get()->L;
 
 	//TODO remove double register
@@ -52,22 +56,32 @@ void LuaComponent::InitLua() {
 		return;
 	}
 
-	lua_getfield(LuaSystem::Get()->L, -1, "new");
+	std::shared_ptr<Component> thisShared;
+	for (auto& c : gameObject()->components) {
+		if (c.get() == this) {
+			thisShared = c;
+			break;
+		}
+	}
+
+	lua_getfield(L, -1, "new");
 	lua_pushvalue(L, -2);
-	lua_pushnil(L);
+	auto existingRef = Luna::TryGetRef(L, thisShared);
+	if (existingRef != nullptr) {
+		existingRef->PushToStack(L);
+	}
+	else {
+		lua_pushnil(L);
+	}
 	lua_call(LuaSystem::Get()->L, 2, 1);
 
 	//TODO deserialize luaObj to table
 
 	MergeToLua(LuaSystem::Get()->L, luaObj.GetType(), &luaObj, -1, "");
 
-	//TODO check if binded
-	for (auto& c : gameObject()->components) {
-		if (c.get() == this) {
-			ref = Luna::Bind(L, c, -1);
-			break;
-		}
-	}
+	//Luna::Push(L, thisShared);//binds if not yet //TODO separate method for that ?
+	//lua_pop(L, 1);
+	ref = Luna::Bind(L, thisShared, -1);
 
 	lua_pop(L, 2);
 }
