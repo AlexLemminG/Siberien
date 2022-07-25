@@ -115,5 +115,8 @@ class SE_CPP_API RigidBody : public PhysicsBody {
     REFLECT_METHOD(GetLinearVelocity);
     REFLECT_METHOD(SetLinearVelocity);
     REFLECT_METHOD(SetAngularVelocity);
+    REFLECT_METHOD(Activate);
+    REFLECT_METHOD(GetTransform);
+    REFLECT_METHOD(SetTransform);
     REFLECT_END();
 };

@@ -8,6 +8,12 @@
 #include "Asserts.h"
 
 SE_CPP_API void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int idx);
+SE_CPP_API void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void** dst, int idx);
+
+struct SimpleUserData {
+    ReflectedTypeBase* type;
+    void* dataPtr;
+};
 
 class LuaObjectRef{
 public:
@@ -50,17 +56,28 @@ public:
     //TODO add to some registered list so we would know what to do, when scripts are reloaded
     //Registers T() function/constuctor in lua
 
-    static void Register(lua_State* L, lua_CFunction fn, ReflectedTypeBase* type) {
-        lua_pushcfunction(L, fn, (type->GetName() + "::Constructor").c_str());
+    static void Register(lua_State* L, lua_CFunction constructorFn, int(bindFn)(lua_State*, ReflectedTypeBase*), ReflectedTypeBase* type) {
+        lua_newtable(L);
+        lua_pushstring(L, "new");
+        lua_pushlightuserdata(L, type);
+        lua_pushcclosure(L, constructorFn, (type->GetName() + "::Constructor").c_str(), 1);
+        lua_settable(L, -3);
+        bindFn(L, type);
         lua_setglobal(L, type->GetName().c_str());
 
         luaL_newmetatable(L, type->GetName().c_str());
+        lua_pushstring(L, "__newindex");
+        lua_pushcclosure(L, &Luna::__newindexSimple, "__newindexSimple", 0);
+        lua_settable(L, -3);
+        lua_pushstring(L, "__index");
+        lua_pushcclosure(L, &Luna::__indexSimple, "__indexSimple", 0);
+        lua_settable(L, -3);
         lua_pop(L, 1);
     }
 
     template<class T>
     static void Register(lua_State* L) {
-        Register(L, &Luna::constructorSimple<T>, GetReflectedType<T>());
+        Register(L, &Luna::__constructorSimple, &Luna::bindMethodsSimple, GetReflectedType<T>());
     }
 
     //TODO add to some registered list so we would know what to do, when scripts are reloaded
@@ -70,6 +87,7 @@ public:
         //TODO remove T
         lua_pushcclosure(L, &Luna::constructorShared, (type->GetName() + "::ConstructorShared").c_str(), 1);
         lua_setglobal(L, (type->GetName() + shared_ptr_suffix).c_str());
+
 
         luaL_newmetatable(L, (type->GetName() + shared_ptr_suffix).c_str());
         lua_pushstring(L, "__newindex");
@@ -163,6 +181,28 @@ public:
         return nullptr;
     }
 
+    static void Push(lua_State* L, ReflectedTypeBase* type, void* src) {
+        if (src == nullptr) {
+            lua_pushnil(L);
+            return;
+        }
+
+        constructorSimple(L, type);
+
+        lua_pushnumber(L, 0);
+        lua_rawget(L, -2);
+        if (!lua_isnil(L, -1)) {
+            SimpleUserData& obj = *static_cast<SimpleUserData*> (lua_touserdata(L, -1));
+            lua_pop(L, 1);
+            //TODO use type to copy instead memcpy
+            memcpy(obj.dataPtr, src, type->SizeOf());
+        }
+        else {
+            ASSERT(false);
+            lua_pop(L, 1);
+        }
+    }
+
     // Pushes obj to top of the stack and binds if required
     static void Push(lua_State* L, std::shared_ptr<Object> obj) {
         if (obj == nullptr) {
@@ -184,21 +224,29 @@ public:
         return call_function(L, method, nullptr);
     }
 private:
-    template<class T>
-    static int constructorSimple(lua_State* L) {
-        T* obj = new T();
+
+    static int __constructorSimple(lua_State* L) {
+        ReflectedTypeBase* type = (ReflectedTypeBase*)lua_tolightuserdata(L, lua_upvalueindex(1));
+        return constructorSimple(L, type);
+    }
+
+    static int constructorSimple(lua_State * L, ReflectedTypeBase * type) {
+
+        void* rawObj = (void*)new char[type->SizeOf()];
+        type->Construct(rawObj);
 
         lua_newtable(L);
         lua_pushnumber(L, 0);
-        T** a = (T**)lua_newuserdatadtor(L, sizeof(T*), &destructor_simple<T>);
-        *a = obj;
-        luaL_getmetatable(L, GetReflectedType<T>()->GetName().c_str());
-        //lua_pushvalue(L, -1);
-        //lua_setmetatable(L, -5);//table metatable
+        SimpleUserData* a = (SimpleUserData*)lua_newuserdatadtor(L, sizeof(SimpleUserData), &destructor_simple);
+        a->type = type;
+        a->dataPtr = rawObj;
+        luaL_getmetatable(L, type->GetName().c_str());
+        lua_pushvalue(L, -1);
+        lua_setmetatable(L, -5);//table metatable
         lua_setmetatable(L, -2);//userdata metatable
-        lua_settable(L, -3); // table[0] = obj;
+        lua_rawset(L, -3); // table[0] = obj;
 
-        bindMethodsSimple<T>(L);
+        bindMethodsSimple(L, type);
 
         return 1;
     }
@@ -215,10 +263,11 @@ private:
         return 1;
     }
 
-    template<class T>
-    static void destructor_simple(void* obj_raw) {
-        T* obj = *(T**)obj_raw;
-        delete obj;
+    static void destructor_simple(void* ud_raw) {
+        SimpleUserData* ud = (SimpleUserData*)ud_raw;
+        //TODO
+        //ud->type->Destructor(ud->dataPtr);
+        delete ud->dataPtr;
     }
 
     static void destructor_shared_ptr(void* obj_raw) {
@@ -227,14 +276,16 @@ private:
         obj = nullptr;
     }
 
-    template<class T>
-    static void bindMethodsSimple(lua_State* L) {
-        for (int i = 0; i < GetReflectedType<T>()->GetMethods().size(); i++) {
-            lua_pushstring(L, GetReflectedType<T>()->GetMethods()[i].name.c_str());
-            lua_pushnumber(L, i);
-            lua_pushcclosure(L, &Luna::thunkSimple<T>, (GetReflectedType<T>()->GetMethods()[i].name + " Luna::thunk").c_str(), 1);
-            lua_settable(L, -3);
+    static int bindMethodsSimple(lua_State* L, ReflectedTypeBase* type) {
+        //TODO is it even necessary since we have __index and __newindex metamethods ?
+        for (int i = 0; i < type->GetMethods().size(); i++) {
+            lua_pushstring(L, type->GetMethods()[i].name.c_str());
+            lua_pushnumber(L, (i + 1) * (type->GetMethods()[i].objectType == GetReflectedType<void>() ? -1 : 1));
+            lua_pushlightuserdata(L, type);
+            lua_pushcclosure(L, &thunkSimple, (type->GetMethods()[i].name + " Luna::thunk").c_str(), 2);
+            lua_rawset(L, -3);
         }
+        return 0;
     }
 
     static void bindMethodsShared(lua_State* L, ReflectedTypeBase* type) {
@@ -269,7 +320,33 @@ private:
         lua_rawset(L, -3);
         return 0;
     }
+    static int __newindexSimple(lua_State* L) {
+        //TODO typecheck and stuff
+        //TODO should return not 0 ?
+        lua_pushnumber(L, 0);
+        lua_rawget(L, -4);
+        if (!lua_isnil(L, -1)) {
+            SimpleUserData& obj = *static_cast<SimpleUserData*> (lua_touserdata(L, -1));
+            lua_pop(L, 1);
+            std::string fieldName = lua_tostring(L, -2);
+            for (auto field : obj.type->fields) {
+                if (field.name == fieldName) {
+                    DeserializeFromLua(L, field.type, field.GetPtr(obj.dataPtr), -1);
+                    return 0;
+                }
+            }
+        }
+        else {
+            lua_pop(L, 1);
+        }
+        lua_rawset(L, -3);
+        return 0;
+    }
     static int __indexShared(lua_State* L) {
+        //TODO get from user data if exists
+        return lua_rawget(L, -2);
+    }
+    static int __indexSimple(lua_State* L) {
         //TODO get from user data if exists
         return lua_rawget(L, -2);
     }
@@ -298,7 +375,7 @@ private:
         for (int i = 0; i < method.argTypes.size(); i++) {
             params[i] = (void*)currentPtr;
             int stackIdx = i - method.argTypes.size();
-            DeserializeFromLua(L, method.argTypes[i], params[i], stackIdx);
+            DeserializeFromLua(L, method.argTypes[i], &(params[i]), stackIdx);
             currentPtr += method.argTypes[i]->SizeOf();
         }
 
@@ -337,15 +414,23 @@ private:
         return call_method(L, i, obj.get(), obj.get()->GetType());
     }
 
-    template<class T>
     static int thunkSimple(lua_State* L) {
         int i = (int)lua_tonumber(L, lua_upvalueindex(1));
+        ReflectedTypeBase* type = (ReflectedTypeBase*)lua_tolightuserdata(L, lua_upvalueindex(2));
+        bool isStatic = false;
+        if (i < 0) {
+            i = -i;
+            isStatic = true;
+        }
+        i -= 1;
+        if (isStatic) {
+            return call_method(L, i, nullptr, type);
+        }
         lua_pushnumber(L, 0);
         lua_gettable(L, 1);
-
-        T** obj = static_cast<T**>(luaL_checkudata(L, -1, GetReflectedType<T>()->GetName().c_str()));
+        SimpleUserData* obj = static_cast<SimpleUserData*>(luaL_checkudata(L, -1, type->GetName().c_str()));
         lua_remove(L, -1);
 
-        return call_method(L, i, *obj, GetReflectedType<T>());
+        return call_method(L, i, obj->dataPtr, type);
     }
 };

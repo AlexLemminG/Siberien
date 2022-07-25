@@ -147,28 +147,63 @@ static void DeserializeFromLuaToContext(lua_State* L, int idx, SerializationCont
     }
 }
 //TODO optimize
-void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int idx) {
+static void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void** dst, int idx, bool canChangePtr) {
 
     if (dynamic_cast<ReflectedTypeSharedPtrBase*>(type) != nullptr) {
         //TODO typecheck and stuff
-        auto& dstObj = *(std::shared_ptr<Object>*)(dst);
+        auto& dstObj = *(std::shared_ptr<Object>*)(*dst);
         //TODO think about it. Do we need deserialize the rest of lua object or not in that case?
         if (lua_isnil(L, -1)) {
             dstObj = std::shared_ptr<Object>();
             return;
         }
         lua_pushnumber(L, 0);
-        lua_gettable(L, idx-1);
+        lua_gettable(L, idx - 1);
 
         dstObj = *static_cast<std::shared_ptr<Object>*> (lua_touserdata(L, -1));
         //std::shared_ptr<Object>& obj = *static_cast<std::shared_ptr<Object>*>(luaL_checkudata(L, -1, (GetReflectedType<Object>()->GetName() + shared_ptr_suffix).c_str()));
         lua_remove(L, -1);
         return;
     }
+
+    if (lua_istable(L, idx)) {
+        lua_pushnumber(L, 0);
+        lua_rawget(L, idx - 1);
+        if (!lua_isnil(L, -1)) {
+            SimpleUserData& obj = *static_cast<SimpleUserData*> (lua_touserdata(L, -1));
+            lua_pop(L, 1);
+            if (type == obj.type) {
+                //TODO use type to copy instead memcpy
+                if (canChangePtr) {
+                    *dst = obj.dataPtr;
+                }
+                else {
+                    memcpy(*dst, obj.dataPtr, type->SizeOf());
+                }
+                return;
+            }
+            else {
+                ASSERT(false);
+            }
+        }
+        else {
+            lua_pop(L, 1);
+        }
+    }
+
+
     SerializationContext context{};
     context.isLua = true;
     DeserializeFromLuaToContext(L, idx, context);
-    type->Deserialize(context, dst);
+    type->Deserialize(context, *dst);
+}
+
+void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void** dst, int idx) {
+    DeserializeFromLua(L, type, dst, idx, true);
+}
+
+void DeserializeFromLua(lua_State* L, ReflectedTypeBase* type, void* dst, int idx) {
+    DeserializeFromLua(L, type, &dst, idx, false);
 }
 
 static void MergeToLua(lua_State* L, const SerializationContext& context, int targetIdx, const std::string& targetField) {
@@ -257,12 +292,14 @@ static void MergeToLua(lua_State* L, const SerializationContext& context, int ta
         }
     }
 }
+
 void MergeToLua(lua_State* L, ReflectedTypeBase* srcType, void* src, int targetIdx, const std::string& targetField) {
     SerializationContext context{};
     context.isLua = true;
     srcType->Serialize(context, src);
     MergeToLua(L, context, targetIdx, targetField);
 }
+
 int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
     //TODO get rid of ->GetName()
     SerializationContext context{};
@@ -303,8 +340,8 @@ int PushToLua(lua_State* L, ReflectedTypeBase* type, void* src) {
         return 1;
     }
     else {
-        lua_newtable(L);
-        MergeToLua(L, type, src, -1, "");
+        //TODO bind c++ methods and stuff (not just raw table) and maybe just bind userdata and go on
+        Luna::Push(L, type, src);
         return 1;
     }
     return 0;

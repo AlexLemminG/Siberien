@@ -295,6 +295,12 @@ bool LuaSystem::InitLua() {
     static CliConfigResolver configResolver;
     frontend = new Luau::Frontend(&fileResolver, &configResolver, frontendOptions);
     Luau::registerBuiltinTypes(frontend->typeChecker);
+    
+    //TODO generalize
+    Luna::Register<Mathf>(L);
+    Luna::Register<Quaternion>(L);
+    Luna::Register<Matrix4>(L);
+
     // TODO delete
 
     lua_setsafeenv(L, LUA_ENVIRONINDEX, true);
