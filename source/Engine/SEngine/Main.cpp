@@ -24,136 +24,132 @@
 #include "Cmd.h"
 
 std::string GetFirstSceneName() {
-	return CfgGetString("scene") + ".asset";
+    return CfgGetString("scene") + ".asset";
 }
 
-
+std::vector<LogHandler*> logHandlers;
 static Engine* engine = nullptr;
 Engine* Engine::Get() {
-	//TODO not here
-	return engine;
+    // TODO not here
+    return engine;
 }
 
-
 int main(int argc, char* argv[]) {
-	//TODO no sins here please
+    // TODO no sins here please
 
 start:
-	bool needReload = false;
+    bool needReload = false;
 
-	Config config;
-	//AssetDatabase assets;
-	//Render render;
-	SystemsManager systemsManager;
-	Engine engine;
-	::engine = &engine;
-	GameLibrariesManager libs;
+    Config config;
+    // AssetDatabase assets;
+    // Render render;
+    SystemsManager systemsManager;
+    Engine engine;
+    ::engine = &engine;
+    GameLibrariesManager libs;
 
-	{
-		OPTICK_EVENT("Init");
-		if (!config.Init()) {
-			return -1;
-		}
+    {
+        OPTICK_EVENT("Init");
+        if (!config.Init()) {
+            return -1;
+        }
 
-		//if (!assets.Init()) {
-		//	return -1;
-		//}
+        // if (!assets.Init()) {
+        //	return -1;
+        // }
 
-		if (!libs.Init()) {
-			return -1;
-		}
+        if (!libs.Init()) {
+            return -1;
+        }
 
-		//if (!render.Init()) {
-		//	return -1;
-		//}
+        // if (!render.Init()) {
+        //	return -1;
+        // }
 
-		if (!systemsManager.Init()) {
-			return -1;
-		}
+        if (!systemsManager.Init()) {
+            return -1;
+        }
 
-		SceneManager::Init();
+        SceneManager::Init();
 
-		Cmd::Get()->ProcessCommands(argc, argv);
+        Cmd::Get()->ProcessCommands(argc, argv);
 
-		SceneManager::LoadScene(GetFirstSceneName());
+        SceneManager::LoadScene(GetFirstSceneName());
 
-		SceneManager::Update();
-	}
+        SceneManager::Update();
+    }
 
-	bool quit = false;
-	bool needConstantSceneReload = false;
-	bool needSceneReload = false;
-	while (!quit) {
-		OPTICK_FRAME("MainThread");
+    bool quit = false;
+    bool needConstantSceneReload = false;
+    bool needSceneReload = false;
+    while (!quit) {
+        OPTICK_FRAME("MainThread");
 
-		Input::Update();
+        Input::Update();
 
-		//TODO move away
-		{
-			OPTICK_FRAME("ImGui newframe");
-			ImGui_ImplSDL2_NewFrame();
-			imguiBeginFrame();
-		}
+        // TODO move away
+        {
+            OPTICK_FRAME("ImGui newframe");
+            ImGui_ImplSDL2_NewFrame();
+            imguiBeginFrame();
+        }
 
+        if (Scene::Get()) {
+            Scene::Get()->Update();
+        }
+        systemsManager.Update();
 
-		if (Scene::Get()) {
-			Scene::Get()->Update();
-		}
-		systemsManager.Update();
+        Render::Get()->Draw(systemsManager);
 
-		Render::Get()->Draw(systemsManager);
+        quit |= Input::GetQuit() | Engine::Get()->IsQuitPending();
+        if (CfgGetBool("godMode")) {
+            if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F5)) {
+                quit = true;
+                needReload = true;
+            }
+            if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F6)) {
+                if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LSHIFT)) {
+                    needConstantSceneReload = !needConstantSceneReload;
+                } else {
+                    needSceneReload = true;
+                }
+            }
+        }
 
-		quit |= Input::GetQuit() | Engine::Get()->IsQuitPending();
-		if (CfgGetBool("godMode")) {
-			if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F5)) {
-				quit = true;
-				needReload = true;
-			}
-			if (Input::GetKeyDown(SDL_Scancode::SDL_SCANCODE_F6)) {
-				if (Input::GetKey(SDL_Scancode::SDL_SCANCODE_LSHIFT)) {
-					needConstantSceneReload = !needConstantSceneReload;
-				}
-				else {
-					needSceneReload = true;
-				}
-			}
-		}
+        if (needConstantSceneReload) {
+            needSceneReload = true;
+        }
+        if (needSceneReload) {
+            needSceneReload = false;
+            SceneManager::LoadScene(SceneManager::GetCurrentScenePath());
+            AssetDatabase::Get()->UnloadAll();
+        }
 
-		if (needConstantSceneReload) {
-			needSceneReload = true;
-		}
-		if (needSceneReload) {
-			needSceneReload = false;
-			SceneManager::LoadScene(SceneManager::GetCurrentScenePath());
-			AssetDatabase::Get()->UnloadAll();
-		}
+        SceneManager::Update();
 
-		SceneManager::Update();
+        imguiEndFrame();
+    }
 
+    {
+        OPTICK_EVENT("Term");
 
-		imguiEndFrame();
-	}
+        SceneManager::Term();
 
-	{
-		OPTICK_EVENT("Term");
+        systemsManager.Term();
 
-		SceneManager::Term();
+        // assets.Term();
 
-		systemsManager.Term();
+        libs.Term();
 
-		//assets.Term();
+        // render.Term();
 
-		libs.Term();
+        config.Term();
 
-		//render.Term();
+        ::engine = nullptr;
+    }
+    if (needReload) {
+        goto start;
+    }
 
-		config.Term();
-
-		::engine = nullptr;
-	}
-	if (needReload) {
-		goto start;
-	}
-
-	return 0;
+    return 0;
 }

@@ -12,8 +12,15 @@
 
 // TODO rename file
 
-#define LOG_ERROR(msg) \
-    std::cout << msg << std::endl;
+// TODO move to separate file
+class LogHandler {
+public:
+    virtual void Log(const std::string& str) = 0;
+    virtual void LogError(const std::string& str) { Log("Error: " + str); }
+    virtual void LogWarning(const std::string& str) { Log("Warning: " + str); }
+    virtual void LogCritical(const std::string& str) { Log("Critical: " + str); }
+};
+extern std::vector<LogHandler*> logHandlers;
 
 #define SAFE_DELETE(var) \
     if (var) {           \
@@ -24,21 +31,33 @@
 template <typename... Args>
 void LogCritical(const std::string& format, Args... args) {
     std::cerr << "Critical: " << FormatString(format, args...) << std::endl;
+    for (auto h : logHandlers) {
+        h->LogCritical(FormatString(format, args...));
+    }
 }
 
 template <typename... Args>
 void LogError(const std::string& format, Args... args) {
     std::cerr << "Error: " << FormatString(format, args...) << std::endl;
+    for (auto h : logHandlers) {
+        h->LogError(FormatString(format, args...));
+    }
 }
 
 template <typename... Args>
 void LogWarning(const std::string& format, Args... args) {
     std::cout << "Warning: " << FormatString(format, args...) << std::endl;
+    for (auto h : logHandlers) {
+        h->LogWarning(FormatString(format, args...));
+    }
 }
 
 template <typename... Args>
 void Log(const std::string& format, Args... args) {
     std::cout << FormatString(format, args...) << std::endl;
+    for (auto h : logHandlers) {
+        h->Log(FormatString(format, args...));
+    }
 }
 
 class BinaryBuffer {

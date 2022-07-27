@@ -47,6 +47,7 @@ constexpr char* shared_ptr_suffix = "";
 //TODO unordered_map if possible
 extern std::map<std::weak_ptr<Object>, std::shared_ptr<LuaObjectRef>, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
 extern std::vector<ReflectedTypeBase*> registeredTypesInLua;
+extern std::vector<ReflectedTypeBase*> registeredTypesSimpleInLua;
 
 
 //TODO nontemplated version and stuff
@@ -56,13 +57,14 @@ public:
     //TODO add to some registered list so we would know what to do, when scripts are reloaded
     //Registers T() function/constuctor in lua
 
-    static void Register(lua_State* L, lua_CFunction constructorFn, int(bindFn)(lua_State*, ReflectedTypeBase*), ReflectedTypeBase* type) {
+    static void Register(lua_State* L, ReflectedTypeBase* type) {
+        registeredTypesSimpleInLua.push_back(type);
         lua_newtable(L);
         lua_pushstring(L, "new");
         lua_pushlightuserdata(L, type);
-        lua_pushcclosure(L, constructorFn, (type->GetName() + "::Constructor").c_str(), 1);
+        lua_pushcclosure(L, __constructorSimple, (type->GetName() + "::Constructor").c_str(), 1);
         lua_settable(L, -3);
-        bindFn(L, type);
+        bindMethodsSimple(L, type);
         lua_setglobal(L, type->GetName().c_str());
 
         luaL_newmetatable(L, type->GetName().c_str());
@@ -77,7 +79,7 @@ public:
 
     template<class T>
     static void Register(lua_State* L) {
-        Register(L, &Luna::__constructorSimple, &Luna::bindMethodsSimple, GetReflectedType<T>());
+        Register(L, GetReflectedType<T>());
     }
 
     //TODO add to some registered list so we would know what to do, when scripts are reloaded
@@ -343,11 +345,46 @@ private:
         return 0;
     }
     static int __indexShared(lua_State* L) {
-        //TODO get from user data if exists
+        //TODO test(copied from __indexSimple)
+        //TODO typecheck and stuff
+        lua_pushnumber(L, 0);
+        lua_rawget(L, -3);
+        if (!lua_isnil(L, -1)) {
+            std::shared_ptr<Object>& obj = *static_cast<std::shared_ptr<Object>*> (lua_touserdata(L, -1));
+            lua_pop(L, 1);
+            std::string fieldName = lua_tostring(L, -1);
+            if (obj != nullptr) {
+                for (auto field : obj->GetType()->fields) {
+                    if (field.name == fieldName) {
+                        lua_pop(L, 1);
+                        return PushToLua(L, field.type, field.GetPtr(obj.get()));
+                    }
+                }
+            }
+        }
+        else {
+            lua_pop(L, 1);
+        }
         return lua_rawget(L, -2);
     }
     static int __indexSimple(lua_State* L) {
-        //TODO get from user data if exists
+        //TODO typecheck and stuff
+        lua_pushnumber(L, 0);
+        lua_rawget(L, -3);
+        if (!lua_isnil(L, -1)) {
+            SimpleUserData& obj = *static_cast<SimpleUserData*> (lua_touserdata(L, -1));
+            lua_pop(L, 1);
+            std::string fieldName = lua_tostring(L, -1);
+            for (auto field : obj.type->fields) {
+                if (field.name == fieldName) {
+                    lua_pop(L, 1);
+                    return PushToLua(L, field.type, field.GetPtr(obj.dataPtr));
+                }
+            }
+        }
+        else {
+            lua_pop(L, 1);
+        }
         return lua_rawget(L, -2);
     }
     static int call_function(lua_State* L, const ReflectedMethod& method, void* obj) {

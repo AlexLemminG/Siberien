@@ -11,6 +11,7 @@
 
 std::map<std::weak_ptr<Object>, std::shared_ptr<LuaObjectRef>, std::owner_less<std::weak_ptr<Object>>> sharedPointersInLua;
 std::vector<ReflectedTypeBase*> registeredTypesInLua;
+std::vector<ReflectedTypeBase*> registeredTypesSimpleInLua;
 
 //TODO cleanup
 //TODO const func test

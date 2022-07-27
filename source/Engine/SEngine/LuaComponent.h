@@ -8,31 +8,33 @@ class LuaScript;
 class LuaObjectRef;
 
 class LuaComponent : public Component {
-private:
-	LuaObject luaObj;
+   private:
+    LuaObject luaObj;
 
-	void Call(char* funcName);
-	void InitLua();
-	void TermLua();
-public:
-	virtual void OnEnable();
-	virtual void Update();
-	virtual void FixedUpdate();
-	virtual void OnDisable();
-	virtual void OnValidate();
-	virtual void OnDrawGizmos();
+    void Call(char* funcName);
+    void InitLua();
+    void TermLua();
 
-	std::string GetScriptName() const{ return luaObj.scriptName; }
-	std::vector<char> dataForLua;//TODO
+   public:
+    virtual void OnEnable();
+    virtual void Update();
+    virtual void FixedUpdate();
+    virtual void OnDisable();
+    virtual void OnValidate();
+    virtual void OnDrawGizmos();
 
-private:
-	GameEventHandle onBeforeScriptsReloadingHandler;
-	GameEventHandle onAfterScriptsReloadingHandler;
+    std::string GetScriptName() const { return luaObj.scriptName; }
+    std::vector<char> dataForLua;  // TODO
 
-	//std::shared_ptr<Component> GetComponent(const std::string& typeName);
-	std::shared_ptr<LuaObjectRef> ref;
-	REFLECT_BEGIN(LuaComponent);
-	REFLECT_VAR(luaObj);
-	REFLECT_METHOD_EXPLICIT("gameObject", static_cast<std::shared_ptr<GameObject>(Component::*)()>(&Component::gameObject));
-	REFLECT_END();
+   private:
+    GameEventHandle onBeforeScriptsReloadingHandler;
+    GameEventHandle onAfterScriptsReloadingHandler;
+
+    bool onBeforeReloadingCalled = false;
+    // std::shared_ptr<Component> GetComponent(const std::string& typeName);
+    std::shared_ptr<LuaObjectRef> ref;
+    REFLECT_BEGIN(LuaComponent);
+    REFLECT_VAR(luaObj);
+    REFLECT_METHOD_EXPLICIT("gameObject", static_cast<std::shared_ptr<GameObject> (Component::*)()>(&Component::gameObject));
+    REFLECT_END();
 };

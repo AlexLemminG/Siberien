@@ -8,78 +8,82 @@
 class GameObject;
 
 class SphericalHarmonics;
-//TODO const correctness
+// TODO const correctness
 class SE_CPP_API Scene : public Object {
-	friend class Component;//TODO why?
-	friend class InspectorWindow;
-public:
-	std::string name;
+    friend class Component;  // TODO why?
+    friend class InspectorWindow;
 
-	void Init(bool isEditMode);
-	void Update();
-	void FixedUpdate();
-	void Term();
+   public:
+    std::string name;
 
-	void AddGameObject(std::shared_ptr<GameObject> go);
-	void AddGameObjectImmediately(std::shared_ptr<GameObject> go);
-	void RemoveGameObject(std::shared_ptr<GameObject> go);
-	void RemoveGameObjectImmediately(std::shared_ptr<GameObject> go);
-	void AddComponent(std::shared_ptr<GameObject> go, std::shared_ptr<Component> component);
-	void AddComponent(GameObject* go, std::shared_ptr<Component> component);
+    void Init(bool isEditMode);
+    void Update();
+    void FixedUpdate();
+    void Term();
 
-	std::shared_ptr<GameObject> FindGameObjectByTag(std::string tag);
+    void AddGameObject(std::shared_ptr<GameObject> go);
+    void AddGameObjectImmediately(std::shared_ptr<GameObject> go);
+    void RemoveGameObject(std::shared_ptr<GameObject> go);
+    void RemoveGameObjectImmediately(std::shared_ptr<GameObject> go);
+    void AddComponent(std::shared_ptr<GameObject> go, std::shared_ptr<Component> component);
+    void AddComponent(GameObject* go, std::shared_ptr<Component> component);
 
-	static std::shared_ptr<Scene> Get();//TODO remove singletons
-	virtual void OnBeforeSerializeCallback(SerializationContext& context) const override;
+    std::shared_ptr<GameObject> FindGameObjectByTag(std::string tag);
 
-	const std::vector<std::shared_ptr<GameObject>>& GetAllGameObjects() { return gameObjects; }
+    static std::shared_ptr<Scene> Get();  // TODO remove singletons
+    virtual void OnBeforeSerializeCallback(SerializationContext& context) const override;
 
-	bool IsInEditMode()const { return isEditMode; }
-	int GetInstantiatedPrefabIdx(const GameObject* gameObject) const;//TODO less strange name
-	std::shared_ptr<GameObject> GetSourcePrefab(const GameObject* instantiatedGameObject) const;//TODO are you sure this stuff belongs here?
+    const std::vector<std::shared_ptr<GameObject>>& GetAllGameObjects() { return gameObjects; }
 
-	std::shared_ptr<SphericalHarmonics> sphericalHarmonics; //TODO not here
-private:
-	std::vector<std::shared_ptr<GameObject>> gameObjects; // all gameObjects
+    bool IsInEditMode() const { return isEditMode; }
+    int GetInstantiatedPrefabIdx(const GameObject* gameObject) const;                             // TODO less strange name
+    std::shared_ptr<GameObject> GetSourcePrefab(const GameObject* instantiatedGameObject) const;  // TODO are you sure this stuff belongs here?
 
-	std::vector<PrefabInstance> prefabInstances; //+ some extra game objects which are not included in 'all' before init
+    std::shared_ptr<SphericalHarmonics> sphericalHarmonics;  // TODO not here
+   private:
+    std::vector<std::shared_ptr<GameObject>> gameObjects;  // all gameObjects
 
-	std::vector<std::shared_ptr<GameObject>> activeGameObjects;
+    std::vector<PrefabInstance> prefabInstances;  //+ some extra game objects which are not included in 'all' before init
 
-	bool isInited = false;
-	bool isEditMode = false;
+    std::vector<std::shared_ptr<GameObject>> activeGameObjects;
 
-	std::vector<std::shared_ptr<GameObject>> addedGameObjects;
-	std::vector<std::shared_ptr<GameObject>> removedGameObjects;
+    bool isInited = false;
+    bool isEditMode = false;
 
-	//WOW you love danger!
-	std::vector<Component*> enabledUpdateComponents;
-	std::vector<Component*> enabledFixedUpdateComponents;
+    std::vector<std::shared_ptr<GameObject>> addedGameObjects;
+    std::vector<std::shared_ptr<GameObject>> removedGameObjects;
 
-	std::vector<std::shared_ptr<GameObject>> instantiatedPrefabs;
+    // WOW you love danger!
+    std::vector<Component*> enabledUpdateComponents;
+    std::vector<Component*> enabledFixedUpdateComponents;
 
-	int currentUpdateIdx = -1;//not really efficient
-	int currentFixedUpdateIdx = -1;
+    std::vector<std::shared_ptr<GameObject>> instantiatedPrefabs;
 
-	void ActivateGameObjectInternal(std::shared_ptr<GameObject>& gameObject);
-	void DeactivateGameObjectInternal(std::shared_ptr<GameObject>& gameObject);
+    int currentUpdateIdx = -1;  // not really efficient
+    int currentFixedUpdateIdx = -1;
+    int currentProcessAddedGameObjectsIdx = -1;
+    bool isInsideRemoveGameObject = false;
+    bool isInsideAddGameObject = false;
 
-	void SetComponentEnabledInternal(Component* component, bool isEnabled);
+    void ActivateGameObjectInternal(std::shared_ptr<GameObject> gameObject);
+    void DeactivateGameObjectInternal(std::shared_ptr<GameObject> gameObject);
 
-	void ProcessAddedGameObjects();
-	void ProcessRemovedGameObjects();
+    void SetComponentEnabledInternal(Component* component, bool isEnabled);
 
-	void HandleGameObjectEdited(std::shared_ptr<GameObject>& go);
+    void ProcessAddedGameObjects();
+    void ProcessRemovedGameObjects();
 
-	GameEventHandle gameObjectEditedHandle;
+    void HandleGameObjectEdited(std::shared_ptr<GameObject>& go);
 
-	REFLECT_BEGIN(Scene);
-	REFLECT_VAR(prefabInstances);
-	REFLECT_VAR(sphericalHarmonics);
-	REFLECT_VAR(gameObjects);
-	REFLECT_METHOD(FindGameObjectByTag);
-	REFLECT_METHOD(AddGameObject);
-	REFLECT_METHOD(AddGameObjectImmediately);
-	REFLECT_METHOD(RemoveGameObject);
-	REFLECT_END();
+    GameEventHandle gameObjectEditedHandle;
+
+    REFLECT_BEGIN(Scene);
+    REFLECT_VAR(prefabInstances);
+    REFLECT_VAR(sphericalHarmonics);
+    REFLECT_VAR(gameObjects);
+    REFLECT_METHOD(FindGameObjectByTag);
+    REFLECT_METHOD(AddGameObject);
+    REFLECT_METHOD(AddGameObjectImmediately);
+    REFLECT_METHOD(RemoveGameObject);
+    REFLECT_END();
 };

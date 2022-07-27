@@ -12,6 +12,26 @@
 
 static constexpr char* scriptsFolder = "scripts/";
 
+static void writestring(const char* s, size_t l) {
+    fwrite(s, 1, l, stdout);
+}
+
+static int lua_print(lua_State* L) {
+    int n = lua_gettop(L); /* number of arguments */
+    std::string str;
+    for (int i = 1; i <= n; i++) {
+        size_t l;
+        const char* s = luaL_tolstring(L, i, &l); /* convert to string using __tostring et al */
+        if (i > 1) {
+            str += " ";
+        }
+        str += s;
+        lua_pop(L, 1); /* pop result */
+    }
+    Log(str);
+    return 0;
+}
+
 class LuaScript : public Object {
    public:
     LuaScript() {}
@@ -295,8 +315,21 @@ bool LuaSystem::InitLua() {
     static CliConfigResolver configResolver;
     frontend = new Luau::Frontend(&fileResolver, &configResolver, frontendOptions);
     Luau::registerBuiltinTypes(frontend->typeChecker);
-    
-    //TODO generalize
+
+
+    //TODO temp hack. Need cleanup
+    auto registeredSimple = registeredTypesSimpleInLua;
+    auto registeredShared = registeredTypesInLua;
+    registeredTypesSimpleInLua.clear();
+    registeredTypesInLua.clear();
+    for (auto type : registeredSimple) {
+        Luna::Register(L, type);
+    }
+    for (auto type : registeredShared) {
+        Luna::RegisterShared(L, type);
+    }
+
+    // TODO generalize
     Luna::Register<Mathf>(L);
     Luna::Register<Quaternion>(L);
     Luna::Register<Matrix4>(L);
@@ -309,6 +342,7 @@ bool LuaSystem::InitLua() {
     static const luaL_Reg funcs[] = {
         //{"loadstring", lua_loadstring},
         {"require", LuaRequire},
+        {"print", lua_print},
         //{"collectgarbage", lua_collectgarbage},
         {NULL, NULL},
     };
