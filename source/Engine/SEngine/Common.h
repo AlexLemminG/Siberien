@@ -13,14 +13,14 @@
 // TODO rename file
 
 // TODO move to separate file
-class LogHandler {
+class SE_CPP_API LogHandler {
 public:
     virtual void Log(const std::string& str) = 0;
     virtual void LogError(const std::string& str) { Log("Error: " + str); }
     virtual void LogWarning(const std::string& str) { Log("Warning: " + str); }
     virtual void LogCritical(const std::string& str) { Log("Critical: " + str); }
 };
-extern std::vector<LogHandler*> logHandlers;
+SE_CPP_API extern std::vector<LogHandler*> logHandlers;
 
 #define SAFE_DELETE(var) \
     if (var) {           \

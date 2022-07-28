@@ -27,7 +27,7 @@ std::string GetFirstSceneName() {
     return CfgGetString("scene") + ".asset";
 }
 
-std::vector<LogHandler*> logHandlers;
+SE_CPP_API std::vector<LogHandler*> logHandlers;
 static Engine* engine = nullptr;
 Engine* Engine::Get() {
     // TODO not here
